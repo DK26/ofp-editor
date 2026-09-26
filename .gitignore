@@ -1,0 +1,6 @@
+# Local-only material that must never be published (see AGENTS.md,
+# "Public Repository Hygiene").
+/private/
+
+# Rust build output
+/target/
