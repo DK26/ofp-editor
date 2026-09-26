@@ -30,7 +30,7 @@ ui: "Unit dialog > Side: Empty"
 
 - Health 0 is not a wreck. For a wreck put `this setDammage 1` in the init line.
 - A low Health on a crewed (non-Empty) vehicle damages the vehicle only; its crew start unhurt.
-- Locked does not stop enemy AI from using the vehicle.
+- Locked does not stop AI groups the player does not lead, friend or enemy, from using the vehicle.
 - Parked empty vehicles inside a "Civilian" or "Anybody" Present trigger trip it, and keep a matching Not present trigger from firing (read from code; in-game probe pending).
 - In cargo soldiers never board an Empty vehicle; use `moveInCargo` ([special-placement](special-placement.md)).
 

@@ -30,7 +30,7 @@ Every house, bridge and tree that comes with the island wears a hidden number ta
 
 - "What are these numbers?" and "the button is missing": switch to Advanced mode and zoom in.
 - Island updates and mods may renumber objects, which silently breaks missions that use raw IDs (unverified; test after island changes).
-- Plain objects such as trees probably cannot be used as Static trigger targets (unverified).
+- A Static trigger counts only objects the engine models as AI entities, so plain objects such as trees probably never count as present ([bound-triggers](bound-triggers.md); which objects qualify is unverified).
 - Prefer linking in the editor over typing numbers into scripts: the link is visible and checkable.
 
 ## Tiny example

@@ -23,12 +23,12 @@ Info age is how stale the player side's recon report on this unit is when the mi
 
 ## When to use it
 
-- "Recon spotted T-72s at the crossroads this morning": set those tanks to 60 or 120 minutes.
+- "Recon spotted T-72s at the crossroads this morning": set those tanks to 30 or 60 minutes (120 minutes is forgotten at once).
 - "The partisans just radioed their position": set the allied squad to Actual.
 
 ## Gotchas
 
-- Unknown and 120 minutes behave the same: the seeded report is dropped at once, so the side starts with no knowledge of the unit.
+- Unknown and 120 minutes behave the same: the seeded report is dropped at once, so the side starts with no knowledge of the unit (read from code; in-game probe pending).
 - What the AI and the map do with the seeded knowledge that survives was not traced (unverified).
 - An enemy set to Actual inside a "Detected by (the player's side)" trigger fires that trigger at mission start: such triggers count reports less than 100 s old with good accuracy, and Actual is 0 s old. Any other age is too old to count (`BohemiaInteractive/CWR@ffc61838b7:engine/Poseidon/World/Detection/Detector.cpp#L923-L956`; read from code, in-game probe pending).
 - In the original editor's map, Unknown also hides such units from viewers with limited rights (`BohemiaInteractive/CWR@ffc61838b7:engine/Poseidon/UI/Map/UIMapExt.cpp#L705-L708`).
@@ -43,8 +43,8 @@ Allied GUER squad          Info age: Actual    -> WEST knows exactly where they 
 
 ## Try it
 
-1. Place an East tank with Info age Actual inside a trigger "East, Detected by West".
-2. Preview and note whether it fires at start (the code says it should; the probe confirms it).
+1. With a West player, place an East tank with Info age Actual inside a trigger "East, Detected by West".
+2. Preview and note whether it fires at start (the code says it should; this is the open probe question).
 3. Set the tank to 5 minutes and compare: now it fires only once West really spots it.
 
 ## Related

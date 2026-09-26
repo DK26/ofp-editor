@@ -36,8 +36,8 @@ Drag a trigger onto something and it stops watching "everyone" and starts watchi
 
 - Whole group + Not present fires as soon as **one** member steps outside; it does not mean "the group is gone".
 - A linked object must sit inside the trigger area, or Not present is true from the first second.
-- Linking to a plain map object that is not an AI-capable entity, such as a tree, probably never counts as present (unverified).
-- If the linked unit is missing at start (probability or condition of presence), the trigger watches nothing: Present can never fire, and Not present is normally true from the first second. This holds for Vehicle and for all three group kinds, even when the rest of the group is there (`BohemiaInteractive/CWR@ffc61838b7:engine/Poseidon/World/Detection/Detector.cpp#L639-L656`, `BohemiaInteractive/CWR@ffc61838b7:engine/Poseidon/World/Detection/Detector.cpp#L1001-L1217`; read from code, in-game probe pending). Link to a unit that is always present, such as the leader at 100 %.
+- A Static link counts only map objects the engine models as AI entities; any other object never counts as present, so Not present is true at once (`BohemiaInteractive/CWR@ffc61838b7:engine/Poseidon/World/Detection/Detector.cpp#L962-L981`). Which island objects (trees, fences) fall outside that group is unverified.
+- If the linked unit is missing at start (probability or condition of presence), the trigger watches nothing: Present can never fire, and Not present is normally true from the first second. This holds for Vehicle and for all three group kinds, even when the rest of the group is there (`BohemiaInteractive/CWR@ffc61838b7:engine/Poseidon/World/Detection/Detector.cpp#L639-L656`, `BohemiaInteractive/CWR@ffc61838b7:engine/Poseidon/World/Detection/Detector.cpp#L1001-L1217`; read from code, in-game probe pending). Link to a unit that is always present (100 % presence, Condition of presence `true`).
 
 ## Tiny example
 
