@@ -1,0 +1,1346 @@
+{
+ "suite": "pick",
+ "version": 1,
+ "as_of": "2026-09-27",
+ "notes": "Each item is a code-computed menu of 3-7 valid options plus the escape 'none_fit'. Keys are stable ids; run.py assigns letters A.. over a permutation seeded by (item id, sample) and always puts the escape last as X (doc 21 §3.2). Exactly one best answer per item. Cards are written for this spike and restate facts from the cited Standing Orders entries and research docs.",
+ "items": [
+  {
+   "id": "PW01",
+   "category": "waypoint",
+   "request": "Waypoint type for an East squad's second waypoint: the squad must stop at the crossroads and stay there until I release it later with a radio call.",
+   "options": [
+    {
+     "key": "move",
+     "label": "MOVE",
+     "desc": "goes to the spot; finishes on arrival, then the next waypoint starts"
+    },
+    {
+     "key": "hold",
+     "label": "HOLD",
+     "desc": "stays at the spot; never finishes until a Switch trigger moves the group on"
+    },
+    {
+     "key": "sentry",
+     "label": "SENTRY",
+     "desc": "watches the area; finishes as soon as an enemy is identified"
+    },
+    {
+     "key": "guard",
+     "label": "GUARD",
+     "desc": "joins the side's quick-reaction pool and is sent to known threats; never finishes"
+    },
+    {
+     "key": "cycle",
+     "label": "CYCLE",
+     "desc": "jumps back to the nearest earlier waypoint, forming a loop"
+    },
+    {
+     "key": "sad",
+     "label": "SEEK AND DESTROY",
+     "desc": "searches around the spot; finishes after five empty sweeps"
+    }
+   ],
+   "answer": "hold",
+   "card": "Standing Orders, waypoint types: MOVE finishes on arrival. HOLD, GUARD and SUPPORT never finish; a Switch trigger synced to the waypoint moves the group on. SENTRY finishes when an enemy is identified. CYCLE jumps back to the nearest earlier waypoint. SEEK AND DESTROY searches until five sweeps in a row find nothing.",
+   "rationale": "Stay until released = HOLD released by a Switch trigger (a radio trigger of type Switch works). SENTRY moves on by itself when it identifies an enemy; GUARD would be sent to threats elsewhere.",
+   "sources": [
+    "skills/standing-orders/references/waypoint-types.md"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PW02",
+   "category": "waypoint",
+   "request": "A West patrol has waypoints MOVE at the gate and MOVE at the well. Which type should the third waypoint, placed next to the gate, have so the patrol keeps walking gate, well, gate, well, and so on forever?",
+   "options": [
+    {
+     "key": "move",
+     "label": "MOVE",
+     "desc": "goes to the spot; finishes on arrival, then the next waypoint starts"
+    },
+    {
+     "key": "cycle",
+     "label": "CYCLE",
+     "desc": "jumps back to the nearest earlier waypoint, forming a loop"
+    },
+    {
+     "key": "hold",
+     "label": "HOLD",
+     "desc": "stays at the spot; never finishes until a Switch trigger moves the group on"
+    },
+    {
+     "key": "sentry",
+     "label": "SENTRY",
+     "desc": "watches the area; finishes as soon as an enemy is identified"
+    },
+    {
+     "key": "join",
+     "label": "JOIN",
+     "desc": "merges this group into the target group"
+    }
+   ],
+   "answer": "cycle",
+   "card": "Standing Orders, waypoint types: MOVE finishes on arrival. HOLD, GUARD and SUPPORT never finish; a Switch trigger synced to the waypoint moves the group on. SENTRY finishes when an enemy is identified. CYCLE jumps back to the nearest earlier waypoint. SEEK AND DESTROY searches until five sweeps in a row find nothing.",
+   "rationale": "CYCLE jumps back to the nearest earlier waypoint, which forms the loop; MOVE would end the route.",
+   "sources": [
+    "skills/standing-orders/references/cycle-waypoint.md",
+    "skills/standing-orders/references/waypoint-types.md"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PW03",
+   "category": "waypoint",
+   "request": "A separate infantry squad must board another group's truck at the crossroads, and the truck must wait until the squad is aboard. Which waypoint type does the INFANTRY squad get at the crossroads (it will be synced to the truck's waypoint)?",
+   "options": [
+    {
+     "key": "load",
+     "label": "LOAD",
+     "desc": "orders the group's own units into its own vehicles and moves on at once"
+    },
+    {
+     "key": "getin",
+     "label": "GET IN",
+     "desc": "boards the attached vehicle, or the other group's transport through a sync; its syncs complete only after boarding"
+    },
+    {
+     "key": "join",
+     "label": "JOIN",
+     "desc": "merges this group into the target group"
+    },
+    {
+     "key": "move",
+     "label": "MOVE",
+     "desc": "goes to the spot; finishes on arrival, then the next waypoint starts"
+    },
+    {
+     "key": "trunload",
+     "label": "TR UNLOAD",
+     "desc": "orders passengers from OTHER groups out of this group's vehicles; finishes when none remain"
+    }
+   ],
+   "answer": "getin",
+   "card": "Standing Orders, lifts: a pickup is a two-group handshake. The transport's waypoint (LOAD by convention, or MOVE) is synced to the infantry's GET IN, and GET IN completes its syncs only after boarding, so the transport waits. LOAD alone does not wait. UNLOAD empties the group's OWN passengers; TR UNLOAD empties OTHER groups' passengers; GET OUT dismounts the crew too.",
+   "rationale": "GET IN synced to the transport is the pickup handshake; it completes its syncs only after boarding, so the truck waits. LOAD is the transport side and does not wait by itself.",
+   "sources": [
+    "skills/standing-orders/references/transport-waypoints.md"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PW04",
+   "category": "waypoint",
+   "request": "A helicopter group carries a separate infantry group. At the landing zone the infantry must get out while the helicopter crew stays aboard and flies on. Which waypoint type goes on the HELICOPTER's route at the landing zone?",
+   "options": [
+    {
+     "key": "unload",
+     "label": "UNLOAD",
+     "desc": "the group's OWN passengers get out; the crew stays; does not wait"
+    },
+    {
+     "key": "trunload",
+     "label": "TR UNLOAD",
+     "desc": "orders passengers from OTHER groups out of this group's vehicles; finishes when none remain"
+    },
+    {
+     "key": "getout",
+     "label": "GET OUT",
+     "desc": "everybody gets out, crew included"
+    },
+    {
+     "key": "load",
+     "label": "LOAD",
+     "desc": "orders the group's own units into its own vehicles and moves on at once"
+    },
+    {
+     "key": "move",
+     "label": "MOVE",
+     "desc": "goes to the spot; finishes on arrival, then the next waypoint starts"
+    }
+   ],
+   "answer": "trunload",
+   "card": "Standing Orders, lifts: a pickup is a two-group handshake. The transport's waypoint (LOAD by convention, or MOVE) is synced to the infantry's GET IN, and GET IN completes its syncs only after boarding, so the transport waits. LOAD alone does not wait. UNLOAD empties the group's OWN passengers; TR UNLOAD empties OTHER groups' passengers; GET OUT dismounts the crew too.",
+   "rationale": "The passengers belong to another group, so TR UNLOAD; UNLOAD only empties the group's own passengers and GET OUT dismounts the crew as well.",
+   "sources": [
+    "skills/standing-orders/references/transport-waypoints.md"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PW05",
+   "category": "waypoint",
+   "request": "Two East reserve squads sit in the town. Whenever West troops are spotted anywhere nearby, the nearest free squad should rush to deal with them. Which waypoint type do the reserve squads get?",
+   "options": [
+    {
+     "key": "hold",
+     "label": "HOLD",
+     "desc": "stays at the spot; never finishes until a Switch trigger moves the group on"
+    },
+    {
+     "key": "sentry",
+     "label": "SENTRY",
+     "desc": "watches the area; finishes as soon as an enemy is identified"
+    },
+    {
+     "key": "guard",
+     "label": "GUARD",
+     "desc": "joins the side's quick-reaction pool and is sent to known threats; never finishes"
+    },
+    {
+     "key": "sad",
+     "label": "SEEK AND DESTROY",
+     "desc": "searches around the spot; finishes after five empty sweeps"
+    },
+    {
+     "key": "support",
+     "label": "SUPPORT",
+     "desc": "waits as repair, fuel, ammo or medical support; never finishes"
+    }
+   ],
+   "answer": "guard",
+   "card": "Standing Orders, GUARD: unsynced GUARD groups form the side's reaction pool. Every 25-35 s the side lists its known targets and sends the nearest free guard group to each. SENTRY only watches its own area; SEEK AND DESTROY searches one spot; HOLD stays put.",
+   "rationale": "Unsynced GUARD groups are the side's reaction pool and are dispatched to known targets.",
+   "sources": [
+    "skills/standing-orders/references/guard-and-guarded-by.md"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PT01",
+   "category": "trigger",
+   "request": "Objective trigger over the village: it must fire when the village has been cleared of East soldiers. Which Activation setting?",
+   "options": [
+    {
+     "key": "west_present",
+     "label": "West, Present",
+     "desc": "fires when a living West unit is inside the area"
+    },
+    {
+     "key": "east_present",
+     "label": "East, Present",
+     "desc": "fires when a living East unit is inside the area"
+    },
+    {
+     "key": "east_not_present",
+     "label": "East, Not present",
+     "desc": "fires when no living East unit is inside the area"
+    },
+    {
+     "key": "west_detected_by_east",
+     "label": "West, Detected by East",
+     "desc": "fires when East knows of West units inside the area"
+    },
+    {
+     "key": "activation_none",
+     "label": "None",
+     "desc": "no area test; only a custom Condition can fire it"
+    }
+   ],
+   "answer": "east_not_present",
+   "card": "Standing Orders, trigger activation: Present fires when at least one living unit of the chosen side is in the area; Not present fires when none is (dead soldiers never count). 'Village cleared' = East, Not present over the village. Detected by works on what the watching side believes (seen within 100 s), and that side must exist in the mission file. Activation None runs no area test.",
+   "rationale": "Cleared of East = East, Not present over the area; dead soldiers do not count as present.",
+   "sources": [
+    "skills/standing-orders/references/trigger-activation.md"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PT02",
+   "category": "trigger",
+   "request": "Raise the alarm when the East garrison notices the player's West team inside the base area. Which Activation setting?",
+   "options": [
+    {
+     "key": "west_present",
+     "label": "West, Present",
+     "desc": "any living West unit inside the area, seen or not"
+    },
+    {
+     "key": "east_detected_by_west",
+     "label": "East, Detected by West",
+     "desc": "West knows of East units inside the area"
+    },
+    {
+     "key": "west_detected_by_east",
+     "label": "West, Detected by East",
+     "desc": "East knows of West units inside the area"
+    },
+    {
+     "key": "east_not_present",
+     "label": "East, Not present",
+     "desc": "no living East unit inside the area"
+    },
+    {
+     "key": "radio_alpha",
+     "label": "Radio Alpha",
+     "desc": "a radio-menu entry that the player calls"
+    }
+   ],
+   "answer": "west_detected_by_east",
+   "card": "Standing Orders, Detected by: 'A, Detected by B' fires when side B's shared knowledge places a unit of side A inside the area (last seen within 100 s). A is the side being noticed; B is the side that notices, and B must have a group in the mission file. Present counts real positions, seen or not. There is no 'not detected by'.",
+   "rationale": "'Notices' means East's knowledge, so the activating side is West and the detecting side is East.",
+   "sources": [
+    "skills/standing-orders/references/detected-by.md"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PT03",
+   "category": "trigger",
+   "request": "Reinforcements trigger: after the alarm condition becomes true, the reinforcements must be released 60 to 120 seconds later, even if the alarm condition goes false meanwhile. Which timer setting?",
+   "options": [
+    {
+     "key": "countdown_60_90_120",
+     "label": "Countdown, min 60 / mid 90 / max 120",
+     "desc": "a random delay of 60-120 s that runs out whatever happens"
+    },
+    {
+     "key": "timeout_60_90_120",
+     "label": "Timeout, min 60 / mid 90 / max 120",
+     "desc": "a random delay of 60-120 s during which the condition must stay true"
+    },
+    {
+     "key": "countdown_60_90_0",
+     "label": "Countdown, min 60 / mid 90 / max 0",
+     "desc": "Countdown with the max box left at 0"
+    },
+    {
+     "key": "no_delay",
+     "label": "No delay",
+     "desc": "all three boxes at 0"
+    },
+    {
+     "key": "countdown_0_60_120",
+     "label": "Countdown, min 0 / mid 60 / max 120",
+     "desc": "a random delay of 0-120 s that runs out whatever happens"
+    }
+   ],
+   "answer": "countdown_60_90_120",
+   "card": "Standing Orders, Countdown vs Timeout: Countdown is a lit fuse: once the condition turns true it fires when the delay ends, even if the condition went false meanwhile. Timeout is a held breath: the condition must stay true for the whole delay or the clock resets. min/mid/max are ONE random delay bunched toward mid; a max below 0.1 s means no delay at all.",
+   "rationale": "Fires after the delay whatever happens = Countdown with min 60 and max 120; a max of 0 would mean no delay at all, and min 0 can release them before 60 s.",
+   "sources": [
+    "skills/standing-orders/references/countdown-vs-timeout.md"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PT04",
+   "category": "trigger",
+   "request": "Capture trigger: the zone counts as captured only if West units stay inside it for 30 seconds without leaving. Which timer setting?",
+   "options": [
+    {
+     "key": "countdown_30",
+     "label": "Countdown, min 30 / mid 30 / max 30",
+     "desc": "a 30 s delay that runs out whatever happens"
+    },
+    {
+     "key": "timeout_30",
+     "label": "Timeout, min 30 / mid 30 / max 30",
+     "desc": "a 30 s delay during which the condition must stay true"
+    },
+    {
+     "key": "timeout_30_30_0",
+     "label": "Timeout, min 30 / mid 30 / max 0",
+     "desc": "Timeout with the max box left at 0"
+    },
+    {
+     "key": "countdown_0_15_30",
+     "label": "Countdown, min 0 / mid 15 / max 30",
+     "desc": "a random 0-30 s delay that runs out whatever happens"
+    },
+    {
+     "key": "no_delay",
+     "label": "No delay",
+     "desc": "all three boxes at 0"
+    }
+   ],
+   "answer": "timeout_30",
+   "card": "Standing Orders, Countdown vs Timeout: Countdown is a lit fuse: once the condition turns true it fires when the delay ends, even if the condition went false meanwhile. Timeout is a held breath: the condition must stay true for the whole delay or the clock resets. min/mid/max are ONE random delay bunched toward mid; a max below 0.1 s means no delay at all.",
+   "rationale": "Must hold true for the whole wait = Timeout with min = mid = max = 30; a max of 0 means no delay.",
+   "sources": [
+    "skills/standing-orders/references/countdown-vs-timeout.md"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PT05",
+   "category": "trigger",
+   "request": "The mission must be lost if the escorted convoy is destroyed, even though the player is still alive. Which trigger Type?",
+   "options": [
+    {
+     "key": "type_none",
+     "label": "None",
+     "desc": "runs only its own On Activation code"
+    },
+    {
+     "key": "switch",
+     "label": "Switch",
+     "desc": "moves synced groups past their waypoint"
+    },
+    {
+     "key": "end1",
+     "label": "End #1",
+     "desc": "ends the mission with ending 1 when every End #1 trigger is active"
+    },
+    {
+     "key": "lose",
+     "label": "Lose",
+     "desc": "ends the mission as lost; beats every End trigger"
+    },
+    {
+     "key": "guarded_by",
+     "label": "Guarded by East",
+     "desc": "leaves only a guard point for East; runs no code"
+    }
+   ],
+   "answer": "lose",
+   "card": "Standing Orders, trigger types: Switch moves synced groups past their waypoint. End #n ends the mission with ending n only when every End #n trigger is active. Lose ends the mission as lost and beats every End trigger. Guarded by leaves only a guard point for that side and runs no code.",
+   "rationale": "A loss while the player lives is a Lose trigger (LOOSE in mission.sqm).",
+   "sources": [
+    "skills/standing-orders/references/trigger-end-types.md"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PM01",
+   "category": "module",
+   "request": "Let the player call mortar fire on a clicked map position through the radio, three times per mission.",
+   "options": [
+    {
+     "key": "fire_support",
+     "label": "Fire support",
+     "desc": "artillery, mortar or air strike; called by radio, action or map click; limited uses"
+    },
+    {
+     "key": "reinforcements",
+     "label": "Reinforcements",
+     "desc": "pre-placed groups held until a release condition, then sent along a route"
+    },
+    {
+     "key": "effect",
+     "label": "Effect",
+     "desc": "a smoke, fire, wreck-burn, dust or flare preset"
+    },
+    {
+     "key": "random_choice",
+     "label": "Random choice",
+     "desc": "picks one of N weighted candidates (positions, objects, objective sites) at start"
+    },
+    {
+     "key": "interaction",
+     "label": "Interaction",
+     "desc": "an action-menu entry on an object, with who, distance and one-shot options"
+    },
+    {
+     "key": "air_transport",
+     "label": "Air transport",
+     "desc": "a helicopter group with pickup and drop landing zones, called on demand"
+    }
+   ],
+   "answer": "fire_support",
+   "card": "Doc 31 first-party modules (wave 1): Objective, End state, Reinforcements, Fire support, Air transport, Respawn point, Spawn zone / ambient population, Patrol area, Convoy, Random choice, Interaction, Intel pickup, Hostage, Garrison, Time and weather director, Effect, Tracking marker, Save point, Conversation, Spectator / death sequence. Pick the most specific module whose parameters cover the request.",
+   "rationale": "Fire support covers mortar rounds, radio or map-click calls and a use count.",
+   "sources": [
+    "docs/research/31-no-code-ladder-modules-rules-and-scripting.md §4.6 row 4"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PM02",
+   "category": "module",
+   "request": "When I call it, a helicopter should pick my squad up at the field and drop us at the ridge.",
+   "options": [
+    {
+     "key": "air_transport",
+     "label": "Air transport",
+     "desc": "a helicopter group with pickup and drop landing zones, called on demand"
+    },
+    {
+     "key": "reinforcements",
+     "label": "Reinforcements",
+     "desc": "pre-placed groups held until a release condition, then sent along a route"
+    },
+    {
+     "key": "convoy",
+     "label": "Convoy",
+     "desc": "vehicles in a set order along a road route, with spacing and ambush reaction"
+    },
+    {
+     "key": "patrol_area",
+     "label": "Patrol area",
+     "desc": "a group loops or wanders a route or area"
+    },
+    {
+     "key": "fire_support",
+     "label": "Fire support",
+     "desc": "artillery, mortar or air strike; called by radio, action or map click; limited uses"
+    }
+   ],
+   "answer": "air_transport",
+   "card": "Doc 31 first-party modules (wave 1): Objective, End state, Reinforcements, Fire support, Air transport, Respawn point, Spawn zone / ambient population, Patrol area, Convoy, Random choice, Interaction, Intel pickup, Hostage, Garrison, Time and weather director, Effect, Tracking marker, Save point, Conversation, Spectator / death sequence. Pick the most specific module whose parameters cover the request.",
+   "rationale": "Air transport has pickup and drop landing zones and a call method.",
+   "sources": [
+    "docs/research/31-no-code-ladder-modules-rules-and-scripting.md §4.6 row 5"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PM03",
+   "category": "module",
+   "request": "The enemy officer should start in one of three houses, chosen at random each time the mission starts.",
+   "options": [
+    {
+     "key": "random_choice",
+     "label": "Random choice",
+     "desc": "picks one of N weighted candidates (positions, objects, objective sites) at start"
+    },
+    {
+     "key": "garrison",
+     "label": "Garrison",
+     "desc": "units placed at a picked building's positions, guarding it"
+    },
+    {
+     "key": "hostage",
+     "label": "Hostage",
+     "desc": "hostages, captors, rescue condition and extraction point; the hostage joins on rescue"
+    },
+    {
+     "key": "spawn_zone",
+     "label": "Spawn zone / ambient population",
+     "desc": "dormant groups brought into an area on activation, with a cap"
+    },
+    {
+     "key": "intel_pickup",
+     "label": "Intel pickup",
+     "desc": "an object that reveals markers or an objective when picked up"
+    }
+   ],
+   "answer": "random_choice",
+   "card": "Doc 31 first-party modules (wave 1): Objective, End state, Reinforcements, Fire support, Air transport, Respawn point, Spawn zone / ambient population, Patrol area, Convoy, Random choice, Interaction, Intel pickup, Hostage, Garrison, Time and weather director, Effect, Tracking marker, Save point, Conversation, Spectator / death sequence. Pick the most specific module whose parameters cover the request.",
+   "rationale": "Choosing one of N candidate positions at start is Random choice; Garrison only fills one building.",
+   "sources": [
+    "docs/research/31-no-code-ladder-modules-rules-and-scripting.md §4.6 row 10"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PM04",
+   "category": "module",
+   "request": "Put six East soldiers inside the church at its window positions, defending it.",
+   "options": [
+    {
+     "key": "garrison",
+     "label": "Garrison",
+     "desc": "units placed at a picked building's positions, guarding it"
+    },
+    {
+     "key": "patrol_area",
+     "label": "Patrol area",
+     "desc": "a group loops or wanders a route or area"
+    },
+    {
+     "key": "spawn_zone",
+     "label": "Spawn zone / ambient population",
+     "desc": "dormant groups brought into an area on activation, with a cap"
+    },
+    {
+     "key": "random_choice",
+     "label": "Random choice",
+     "desc": "picks one of N weighted candidates (positions, objects, objective sites) at start"
+    },
+    {
+     "key": "respawn_point",
+     "label": "Respawn point",
+     "desc": "where players come back after death"
+    }
+   ],
+   "answer": "garrison",
+   "card": "Doc 31 first-party modules (wave 1): Objective, End state, Reinforcements, Fire support, Air transport, Respawn point, Spawn zone / ambient population, Patrol area, Convoy, Random choice, Interaction, Intel pickup, Hostage, Garrison, Time and weather director, Effect, Tracking marker, Save point, Conversation, Spectator / death sequence. Pick the most specific module whose parameters cover the request.",
+   "rationale": "Units at a picked building's positions = Garrison.",
+   "sources": [
+    "docs/research/31-no-code-ladder-modules-rules-and-scripting.md §4.6 row 14"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PM05",
+   "category": "module",
+   "request": "A captured West pilot is held by East guards in the barn. When the player frees him, the pilot should join the player's squad and head for the extraction point.",
+   "options": [
+    {
+     "key": "hostage",
+     "label": "Hostage",
+     "desc": "hostages, captors, rescue condition and extraction point; the hostage joins on rescue"
+    },
+    {
+     "key": "conversation",
+     "label": "Conversation",
+     "desc": "scripted spoken or radio lines between cast members"
+    },
+    {
+     "key": "intel_pickup",
+     "label": "Intel pickup",
+     "desc": "an object that reveals markers or an objective when picked up"
+    },
+    {
+     "key": "objective",
+     "label": "Objective",
+     "desc": "a briefing objective with done and fail conditions"
+    },
+    {
+     "key": "reinforcements",
+     "label": "Reinforcements",
+     "desc": "pre-placed groups held until a release condition, then sent along a route"
+    }
+   ],
+   "answer": "hostage",
+   "card": "Doc 31 first-party modules (wave 1): Objective, End state, Reinforcements, Fire support, Air transport, Respawn point, Spawn zone / ambient population, Patrol area, Convoy, Random choice, Interaction, Intel pickup, Hostage, Garrison, Time and weather director, Effect, Tracking marker, Save point, Conversation, Spectator / death sequence. Pick the most specific module whose parameters cover the request.",
+   "rationale": "Hostage has captors, a rescue condition, the join on rescue and an extraction point.",
+   "sources": [
+    "docs/research/31-no-code-ladder-modules-rules-and-scripting.md §4.6 row 13"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PC01",
+   "category": "cutscene",
+   "request": "Intro: open wide on the valley at dawn with a place-and-date card, show the radar site we must destroy, then our squad halted on the road, and finish over the player's shoulder, looking the way he must go first.",
+   "options": [
+    {
+     "key": "ca01",
+     "label": "CA01 Establish the AO and reveal the objective",
+     "desc": "where, when, who, what; ends behind the player facing his first bearing"
+    },
+    {
+     "key": "ca02",
+     "label": "CA02 Introduce a character",
+     "desc": "name, role and one trait of one person"
+    },
+    {
+     "key": "ca06",
+     "label": "CA06 Reveal the threat",
+     "desc": "an observer, a zoomed insert of the threat, his reaction"
+    },
+    {
+     "key": "ca08",
+     "label": "CA08 Aftermath",
+     "desc": "the result and the survivors after a fight, then a fade"
+    },
+    {
+     "key": "ca11",
+     "label": "CA11 Flyover and map orientation",
+     "desc": "a map insert zooming to objective markers, optional flyover"
+    }
+   ],
+   "answer": "ca01",
+   "card": "Doc 39 cutscene archetypes: CA01 opens a mission (vista, objective, friendlies, hand-off to the player); CA06 is a short in-mission reveal seen through an observer; CA08 shows the result right after a fight; CA09 bridges a time jump with black and a title card; CA12 honours the fallen at a site; CA11 orients on the map.",
+   "rationale": "Vista, objective, friendlies and a hand-off behind the player is CA01's idiom.",
+   "sources": [
+    "docs/research/39-cutscene-director.md §3"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PC02",
+   "category": "cutscene",
+   "request": "Mid-mission, the scout lying on the ridge spots enemy tanks in the valley: show the scout from behind, then the tanks through a long lens, then his face. Under 15 seconds.",
+   "options": [
+    {
+     "key": "ca05",
+     "label": "CA05 Approach and contact",
+     "desc": "build tension on the approach; hand control back at contact"
+    },
+    {
+     "key": "ca06",
+     "label": "CA06 Reveal the threat",
+     "desc": "an observer, a zoomed insert of the threat, his reaction"
+    },
+    {
+     "key": "ca10",
+     "label": "CA10 Radio montage",
+     "desc": "on-map and off-map radio lines over speakers, listeners or a map"
+    },
+    {
+     "key": "ca01",
+     "label": "CA01 Establish the AO and reveal the objective",
+     "desc": "where, when, who, what; ends behind the player facing his first bearing"
+    },
+    {
+     "key": "ca08",
+     "label": "CA08 Aftermath",
+     "desc": "the result and the survivors after a fight, then a fade"
+    }
+   ],
+   "answer": "ca06",
+   "card": "Doc 39 cutscene archetypes: CA01 opens a mission (vista, objective, friendlies, hand-off to the player); CA06 is a short in-mission reveal seen through an observer; CA08 shows the result right after a fight; CA09 bridges a time jump with black and a title card; CA12 honours the fallen at a site; CA11 orients on the map.",
+   "rationale": "Over-the-shoulder of an observer, a Tele insert of the threat and a reaction is CA06.",
+   "sources": [
+    "docs/research/39-cutscene-director.md §3"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PC03",
+   "category": "cutscene",
+   "request": "Right after the ambush is won: a few seconds on the burning convoy and the men still standing, then fade to black and end the mission.",
+   "options": [
+    {
+     "key": "ca08",
+     "label": "CA08 Aftermath",
+     "desc": "the result and the survivors after a fight, then a fade"
+    },
+    {
+     "key": "ca07",
+     "label": "CA07 Extraction",
+     "desc": "a pickup vehicle arrives, the group boards, lift-off"
+    },
+    {
+     "key": "ca09",
+     "label": "CA09 Chapter transition",
+     "desc": "black, a title card, a time change, fade in on the next scene"
+    },
+    {
+     "key": "ca04",
+     "label": "CA04 Departure or insertion",
+     "desc": "a truck, helicopter or boat leg that carries the group"
+    },
+    {
+     "key": "ca12",
+     "label": "CA12 Memorial",
+     "desc": "a static wide of a site, survivors in line, a dedication, fade"
+    }
+   ],
+   "answer": "ca08",
+   "card": "Doc 39 cutscene archetypes: CA01 opens a mission (vista, objective, friendlies, hand-off to the player); CA06 is a short in-mission reveal seen through an observer; CA08 shows the result right after a fight; CA09 bridges a time jump with black and a title card; CA12 honours the fallen at a site; CA11 orients on the map.",
+   "rationale": "The result and survivors right after a fight, then fade = CA08 Aftermath; CA12 is a slower memorial with a dedication, not the moment after the fight.",
+   "sources": [
+    "docs/research/39-cutscene-director.md §3"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PC04",
+   "category": "cutscene",
+   "request": "Between two parts of the mission: the screen goes dark, a caption tells the player that two days have passed, and the story picks up again on that morning.",
+   "options": [
+    {
+     "key": "ca09",
+     "label": "CA09 Chapter transition",
+     "desc": "black, a title card, a time change, fade in on the next scene"
+    },
+    {
+     "key": "ca01",
+     "label": "CA01 Establish the AO and reveal the objective",
+     "desc": "where, when, who, what; ends behind the player facing his first bearing"
+    },
+    {
+     "key": "ca11",
+     "label": "CA11 Flyover and map orientation",
+     "desc": "a map insert zooming to objective markers, optional flyover"
+    },
+    {
+     "key": "ca12",
+     "label": "CA12 Memorial",
+     "desc": "a static wide of a site, survivors in line, a dedication, fade"
+    },
+    {
+     "key": "ca03",
+     "label": "CA03 Briefing at HQ",
+     "desc": "an orders group: a speaker and listeners at a headquarters"
+    }
+   ],
+   "answer": "ca09",
+   "card": "Doc 39 cutscene archetypes: CA01 opens a mission (vista, objective, friendlies, hand-off to the player); CA06 is a short in-mission reveal seen through an observer; CA08 shows the result right after a fight; CA09 bridges a time jump with black and a title card; CA12 honours the fallen at a site; CA11 orients on the map.",
+   "rationale": "Black, a card and a time change under black = CA09 Chapter transition.",
+   "sources": [
+    "docs/research/39-cutscene-director.md §3"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PA01",
+   "category": "mood",
+   "request": "Brief: the squad hits the depot in the small hours. It should be pitch black; the town's lights are out and the only light comes from the guards' campfires.",
+   "options": [
+    {
+     "key": "am07",
+     "label": "AM07 Dark night raid",
+     "desc": "deep night after the afterglow; town lamps off or auto; lit sentry fires"
+    },
+    {
+     "key": "am06",
+     "label": "AM06 Storm at night",
+     "desc": "heavy overcast at night, lightning, rain and thunder"
+    },
+    {
+     "key": "am08",
+     "label": "AM08 Flare-lit night assault",
+     "desc": "night attack lit by scripted flare beats"
+    },
+    {
+     "key": "am01",
+     "label": "AM01 Dawn fog patrol",
+     "desc": "first light; fog in the low ground that lifts over about 30 minutes"
+    },
+    {
+     "key": "am10",
+     "label": "AM10 Winter quiet",
+     "desc": "a December-February date: low sun, short day, sparse sound"
+    }
+   ],
+   "answer": "am07",
+   "card": "Doc 41 mood presets: AM01 dawn with lifting fog; AM02 golden evening; AM03 hot noon; AM04 grey occupation; AM05 storm building; AM06 storm at night; AM07 deep dark night raid with blackout and sentry fires; AM08 flare-lit night assault; AM09 burned village aftermath (smoke, wrecks, crows, no birdsong); AM10 winter; AM11 front line; AM12 clear long-range day.",
+   "rationale": "Deep dark night, town lamps off and lit guard fires = AM07; no storm or flares were asked for.",
+   "sources": [
+    "docs/research/41-atmosphere-sound-and-music.md §3.2"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PA02",
+   "category": "mood",
+   "request": "Brief: the squad moves out just as the sun comes up; mist lies in the valleys and burns off within the first half hour.",
+   "options": [
+    {
+     "key": "am01",
+     "label": "AM01 Dawn fog patrol",
+     "desc": "first light; fog in the low ground that lifts over about 30 minutes"
+    },
+    {
+     "key": "am02",
+     "label": "AM02 Golden evening",
+     "desc": "low evening sun setting behind the objective; light overcast"
+    },
+    {
+     "key": "am04",
+     "label": "AM04 Grey occupation",
+     "desc": "flat overcast light; lamps off in the occupied town; sparse crows"
+    },
+    {
+     "key": "am12",
+     "label": "AM12 Clear long-range day",
+     "desc": "no fog, long view distance, a vista start"
+    },
+    {
+     "key": "am05",
+     "label": "AM05 Storm rolling in",
+     "desc": "overcast building from light to heavy; rain possible later"
+    }
+   ],
+   "answer": "am01",
+   "card": "Doc 41 mood presets: AM01 dawn with lifting fog; AM02 golden evening; AM03 hot noon; AM04 grey occupation; AM05 storm building; AM06 storm at night; AM07 deep dark night raid with blackout and sentry fires; AM08 flare-lit night assault; AM09 burned village aftermath (smoke, wrecks, crows, no birdsong); AM10 winter; AM11 front line; AM12 clear long-range day.",
+   "rationale": "Sunrise with low fog that lifts in about 30 minutes = AM01.",
+   "sources": [
+    "docs/research/41-atmosphere-sound-and-music.md §3.2"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PA03",
+   "category": "mood",
+   "request": "Brief: late afternoon, the squad walks into a village torched the day before. Smoke still rises from the ruins, burnt-out trucks line the street, and the only sounds are a howling dog and the crows.",
+   "options": [
+    {
+     "key": "am09",
+     "label": "AM09 Burning village aftermath",
+     "desc": "fires, smoke columns, wrecks; crows and a mournful dog; no birdsong"
+    },
+    {
+     "key": "am04",
+     "label": "AM04 Grey occupation",
+     "desc": "flat overcast light; lamps off in the occupied town; sparse crows"
+    },
+    {
+     "key": "am11",
+     "label": "AM11 Front line",
+     "desc": "distant battle sounds and radio chatter within earshot"
+    },
+    {
+     "key": "am03",
+     "label": "AM03 Still hot noon",
+     "desc": "midday in summer, clear sky, only field crickets until contact"
+    },
+    {
+     "key": "am06",
+     "label": "AM06 Storm at night",
+     "desc": "heavy overcast at night, lightning, rain and thunder"
+    }
+   ],
+   "answer": "am09",
+   "card": "Doc 41 mood presets: AM01 dawn with lifting fog; AM02 golden evening; AM03 hot noon; AM04 grey occupation; AM05 storm building; AM06 storm at night; AM07 deep dark night raid with blackout and sentry fires; AM08 flare-lit night assault; AM09 burned village aftermath (smoke, wrecks, crows, no birdsong); AM10 winter; AM11 front line; AM12 clear long-range day.",
+   "rationale": "Smoke, burnt-out wrecks, crows and a howling dog in late afternoon = AM09.",
+   "sources": [
+    "docs/research/41-atmosphere-sound-and-music.md §3.2"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PR01",
+   "category": "routing",
+   "request": "Put a fair number of East infantry in and around Lomovo.",
+   "options": [
+    {
+     "key": "populate_town",
+     "label": "populate-town",
+     "desc": "fill a town or area with units from a composition"
+    },
+    {
+     "key": "write_briefing",
+     "label": "write-briefing",
+     "desc": "write the briefing text slots for this mission's objectives"
+    },
+    {
+     "key": "campaign_from_brief",
+     "label": "campaign-from-brief",
+     "desc": "build a whole campaign from a description"
+    },
+    {
+     "key": "explain_finding",
+     "label": "explain-finding",
+     "desc": "explain a lint or validation finding and how to fix it"
+    },
+    {
+     "key": "cutscene_director",
+     "label": "cutscene-director",
+     "desc": "build an intro, outro or in-mission cutscene"
+    },
+    {
+     "key": "atmosphere_director",
+     "label": "atmosphere-director",
+     "desc": "set time of day, weather, light and ambience"
+    }
+   ],
+   "answer": "populate_town",
+   "card": "Workflow routing: each palette workflow does one product job. The co-pilot only runs mission and campaign workflows; a request outside the editor's purpose (files, shell, web, general coding) gets 'none of these fit'. Explaining a lint code is explain-finding even when the finding is about weather or cutscenes.",
+   "rationale": "Filling a named town with units is populate-town.",
+   "sources": [
+    "docs/research/38-harness-workflows.md §8.2"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PR02",
+   "category": "routing",
+   "request": "The mission has three objectives now; write the situation and plan text the player reads before the mission starts.",
+   "options": [
+    {
+     "key": "populate_town",
+     "label": "populate-town",
+     "desc": "fill a town or area with units from a composition"
+    },
+    {
+     "key": "write_briefing",
+     "label": "write-briefing",
+     "desc": "write the briefing text slots for this mission's objectives"
+    },
+    {
+     "key": "campaign_from_brief",
+     "label": "campaign-from-brief",
+     "desc": "build a whole campaign from a description"
+    },
+    {
+     "key": "explain_finding",
+     "label": "explain-finding",
+     "desc": "explain a lint or validation finding and how to fix it"
+    },
+    {
+     "key": "cutscene_director",
+     "label": "cutscene-director",
+     "desc": "build an intro, outro or in-mission cutscene"
+    },
+    {
+     "key": "atmosphere_director",
+     "label": "atmosphere-director",
+     "desc": "set time of day, weather, light and ambience"
+    }
+   ],
+   "answer": "write_briefing",
+   "card": "Workflow routing: each palette workflow does one product job. The co-pilot only runs mission and campaign workflows; a request outside the editor's purpose (files, shell, web, general coding) gets 'none of these fit'. Explaining a lint code is explain-finding even when the finding is about weather or cutscenes.",
+   "rationale": "Situation and plan text for objectives is the briefing.",
+   "sources": [
+    "docs/research/38-harness-workflows.md §8.3"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PR03",
+   "category": "routing",
+   "request": "I want a five-mission campaign about a partisan uprising on the island, played as Resistance.",
+   "options": [
+    {
+     "key": "populate_town",
+     "label": "populate-town",
+     "desc": "fill a town or area with units from a composition"
+    },
+    {
+     "key": "write_briefing",
+     "label": "write-briefing",
+     "desc": "write the briefing text slots for this mission's objectives"
+    },
+    {
+     "key": "campaign_from_brief",
+     "label": "campaign-from-brief",
+     "desc": "build a whole campaign from a description"
+    },
+    {
+     "key": "explain_finding",
+     "label": "explain-finding",
+     "desc": "explain a lint or validation finding and how to fix it"
+    },
+    {
+     "key": "cutscene_director",
+     "label": "cutscene-director",
+     "desc": "build an intro, outro or in-mission cutscene"
+    },
+    {
+     "key": "atmosphere_director",
+     "label": "atmosphere-director",
+     "desc": "set time of day, weather, light and ambience"
+    }
+   ],
+   "answer": "campaign_from_brief",
+   "card": "Workflow routing: each palette workflow does one product job. The co-pilot only runs mission and campaign workflows; a request outside the editor's purpose (files, shell, web, general coding) gets 'none of these fit'. Explaining a lint code is explain-finding even when the finding is about weather or cutscenes.",
+   "rationale": "A whole multi-mission campaign from a description is campaign-from-brief.",
+   "sources": [
+    "docs/research/38-harness-workflows.md §8.1"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PR04",
+   "category": "routing",
+   "request": "What does the warning AL02 on my rain trigger mean, and how do I fix it?",
+   "options": [
+    {
+     "key": "populate_town",
+     "label": "populate-town",
+     "desc": "fill a town or area with units from a composition"
+    },
+    {
+     "key": "write_briefing",
+     "label": "write-briefing",
+     "desc": "write the briefing text slots for this mission's objectives"
+    },
+    {
+     "key": "campaign_from_brief",
+     "label": "campaign-from-brief",
+     "desc": "build a whole campaign from a description"
+    },
+    {
+     "key": "explain_finding",
+     "label": "explain-finding",
+     "desc": "explain a lint or validation finding and how to fix it"
+    },
+    {
+     "key": "cutscene_director",
+     "label": "cutscene-director",
+     "desc": "build an intro, outro or in-mission cutscene"
+    },
+    {
+     "key": "atmosphere_director",
+     "label": "atmosphere-director",
+     "desc": "set time of day, weather, light and ambience"
+    }
+   ],
+   "answer": "explain_finding",
+   "card": "Workflow routing: each palette workflow does one product job. The co-pilot only runs mission and campaign workflows; a request outside the editor's purpose (files, shell, web, general coding) gets 'none of these fit'. Explaining a lint code is explain-finding even when the finding is about weather or cutscenes.",
+   "rationale": "The user asks what a lint code means; the weather topic is a distractor toward atmosphere-director.",
+   "sources": [
+    "docs/research/41-atmosphere-sound-and-music.md §6.2",
+    "docs/research/21-agent-doctrine.md §4"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PR05",
+   "category": "routing",
+   "request": "Write me a Python script that renames all the files in my Downloads folder.",
+   "options": [
+    {
+     "key": "populate_town",
+     "label": "populate-town",
+     "desc": "fill a town or area with units from a composition"
+    },
+    {
+     "key": "write_briefing",
+     "label": "write-briefing",
+     "desc": "write the briefing text slots for this mission's objectives"
+    },
+    {
+     "key": "campaign_from_brief",
+     "label": "campaign-from-brief",
+     "desc": "build a whole campaign from a description"
+    },
+    {
+     "key": "explain_finding",
+     "label": "explain-finding",
+     "desc": "explain a lint or validation finding and how to fix it"
+    },
+    {
+     "key": "cutscene_director",
+     "label": "cutscene-director",
+     "desc": "build an intro, outro or in-mission cutscene"
+    },
+    {
+     "key": "atmosphere_director",
+     "label": "atmosphere-director",
+     "desc": "set time of day, weather, light and ambience"
+    }
+   ],
+   "answer": "none_fit",
+   "card": "Workflow routing: each palette workflow does one product job. The co-pilot only runs mission and campaign workflows; a request outside the editor's purpose (files, shell, web, general coding) gets 'none of these fit'. Explaining a lint code is explain-finding even when the finding is about weather or cutscenes.",
+   "rationale": "Outside the product's purpose (the agent is product-scoped: no general file or coding work), so the escape is the only correct choice.",
+   "sources": [
+    "AGENTS.md (the AI agent is product-scoped)",
+    "docs/research/21-agent-doctrine.md §3.2"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PK01",
+   "category": "arc",
+   "request": "Campaign outline, act 1, node 3, after two successful fights: the squad's convoy is ambushed, they lose their vehicles and must go on on foot. Which beat tag fits this node?",
+   "options": [
+    {
+     "key": "call_to_arms",
+     "label": "Call to arms",
+     "desc": "the reason to fight begins"
+    },
+    {
+     "key": "insertion",
+     "label": "Insertion",
+     "desc": "the force enters the area of operations"
+    },
+    {
+     "key": "first_blood",
+     "label": "First blood",
+     "desc": "the first real fight"
+    },
+    {
+     "key": "setback",
+     "label": "Setback",
+     "desc": "a loss that makes things harder"
+    },
+    {
+     "key": "turning_point",
+     "label": "Turning point",
+     "desc": "the momentum swings to our side"
+    },
+    {
+     "key": "final_assault",
+     "label": "Final assault",
+     "desc": "the decisive attack"
+    },
+    {
+     "key": "homecoming",
+     "label": "Homecoming/Award",
+     "desc": "return and recognition"
+    }
+   ],
+   "answer": "setback",
+   "card": "Doc 26 campaign vocabulary: beat tags Call to arms, Insertion, First blood, Setback, Captured/Cut off, Rescue, Betrayal revealed, Turning point, Final assault, Homecoming/Award. Intensity per node: Relax (cutscenes, hubs, recon or scavenge missions), Build, Peak, Finale; the curve should be a sawtooth. Arc shapes: rags to riches (rise), tragedy (fall), man in a hole (fall-rise), Icarus (rise-fall), Cinderella (rise-fall-rise), Oedipus (fall-rise-fall).",
+   "rationale": "Losing the vehicles after earlier successes is a Setback; it is not the first fight.",
+   "sources": [
+    "docs/research/26-campaign-content-structures-and-fun.md §3.2"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PK02",
+   "category": "arc",
+   "request": "Campaign path: missions 4 and 5 are both Peak. Mission 6 is a recon and scavenge mission meant to give the player a breather before the next big battle. Which intensity tag should mission 6 get?",
+   "options": [
+    {
+     "key": "relax",
+     "label": "Relax",
+     "desc": "a quiet stretch between set pieces; a valley in the curve"
+    },
+    {
+     "key": "build",
+     "label": "Build",
+     "desc": "rising tension toward a peak"
+    },
+    {
+     "key": "peak",
+     "label": "Peak",
+     "desc": "a set-piece battle"
+    },
+    {
+     "key": "finale",
+     "label": "Finale",
+     "desc": "the campaign's closing set piece"
+    }
+   ],
+   "answer": "relax",
+   "card": "Doc 26 campaign vocabulary: beat tags Call to arms, Insertion, First blood, Setback, Captured/Cut off, Rescue, Betrayal revealed, Turning point, Final assault, Homecoming/Award. Intensity per node: Relax (cutscenes, hubs, recon or scavenge missions), Build, Peak, Finale; the curve should be a sawtooth. Arc shapes: rags to riches (rise), tragedy (fall), man in a hole (fall-rise), Icarus (rise-fall), Cinderella (rise-fall-rise), Oedipus (fall-rise-fall).",
+   "rationale": "A recon or scavenge breather after two peaks is a Relax node (and avoids CF01).",
+   "sources": [
+    "docs/research/26-campaign-content-structures-and-fun.md §5.3"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  },
+  {
+   "id": "PK03",
+   "category": "arc",
+   "request": "Campaign pitch: it opens with the invasion and a crushing defeat; the survivors regroup in the forests and slowly fight back until they liberate the island. Which arc shape fits?",
+   "options": [
+    {
+     "key": "rags_to_riches",
+     "label": "Rags to riches",
+     "desc": "a steady rise"
+    },
+    {
+     "key": "tragedy",
+     "label": "Tragedy",
+     "desc": "a steady fall"
+    },
+    {
+     "key": "man_in_hole",
+     "label": "Man in a hole",
+     "desc": "fall, then rise"
+    },
+    {
+     "key": "icarus",
+     "label": "Icarus",
+     "desc": "rise, then fall"
+    },
+    {
+     "key": "cinderella",
+     "label": "Cinderella",
+     "desc": "rise, fall, rise"
+    },
+    {
+     "key": "oedipus",
+     "label": "Oedipus",
+     "desc": "fall, rise, fall"
+    }
+   ],
+   "answer": "man_in_hole",
+   "card": "Doc 26 campaign vocabulary: beat tags Call to arms, Insertion, First blood, Setback, Captured/Cut off, Rescue, Betrayal revealed, Turning point, Final assault, Homecoming/Award. Intensity per node: Relax (cutscenes, hubs, recon or scavenge missions), Build, Peak, Finale; the curve should be a sawtooth. Arc shapes: rags to riches (rise), tragedy (fall), man in a hole (fall-rise), Icarus (rise-fall), Cinderella (rise-fall-rise), Oedipus (fall-rise-fall).",
+   "rationale": "Starts with a fall (defeat), ends with a rise (liberation): man in a hole.",
+   "sources": [
+    "docs/research/26-campaign-content-structures-and-fun.md §3.2"
+   ],
+   "escape": {
+    "key": "none_fit",
+    "label": "None of these fit",
+    "desc": "no listed option fits the request"
+   }
+  }
+ ]
+}

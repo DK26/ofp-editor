@@ -1,0 +1,368 @@
+{
+ "suite": "text",
+ "version": 1,
+ "as_of": "2026-09-27",
+ "notes": "Short flavour-text slots. Code checks: word count, digits, banned era words, and names: a capitalised token that is not sentence-initial (and any all-caps token, or a sentence-initial token used as an address before a comma) must be in allowed_names or the suite allowlist. Quality is graded later.",
+ "banned_words": [
+  "drone",
+  "drones",
+  "uav",
+  "gps",
+  "smartphone",
+  "cellphone",
+  "cell phone",
+  "mobile phone",
+  "internet",
+  "email",
+  "e-mail",
+  "laptop",
+  "text message",
+  "texting",
+  "wifi",
+  "wi-fi",
+  "online",
+  "selfie",
+  "social media",
+  "satnav",
+  "bluetooth",
+  "ied",
+  "ieds"
+ ],
+ "name_allowlist": [
+  "I",
+  "HQ",
+  "OK",
+  "Over",
+  "Out",
+  "OVER",
+  "OUT",
+  "Roger",
+  "Wilco",
+  "Sir",
+  "Affirmative",
+  "Negative",
+  "Copy",
+  "Understood",
+  "Yes",
+  "No",
+  "Now",
+  "Then",
+  "However",
+  "Well",
+  "Right",
+  "Alright",
+  "Listen",
+  "Move",
+  "Hold",
+  "Comrade",
+  "MG"
+ ],
+ "items": [
+  {
+   "id": "X01",
+   "slot": "radio message body (off-map HQ to the player's squad)",
+   "context": "HQ callsign Kestrel warns squad callsign Viper Two that enemy armour is moving toward the bridge.",
+   "constraints": {
+    "max_words": 16,
+    "min_words": 1,
+    "allowed_names": [
+     "Kestrel",
+     "Viper",
+     "Two"
+    ],
+    "names_check": true,
+    "no_digits": true,
+    "era": "1985, Cold War; no modern words",
+    "tone": "terse, urgent"
+   },
+   "schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 160
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "additionalProperties": false
+   },
+   "card": "Radio style card: code frames every radio line: it adds the callsigns, THIS IS, the squelch and OVER or OUT. Write only the message body in a few plain words, with no callsigns or prowords of your own. No grid numbers: code inserts them."
+  },
+  {
+   "id": "X02",
+   "slot": "mission title",
+   "context": "A night raid by West commandos on a radar site; the squad destroys it and slips away.",
+   "constraints": {
+    "max_words": 4,
+    "min_words": 1,
+    "allowed_names": [],
+    "names_check": false,
+    "no_digits": true,
+    "era": "1985, Cold War; no modern words",
+    "tone": "understated, military"
+   },
+   "schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "additionalProperties": false
+   },
+   "card": null
+  },
+  {
+   "id": "X03",
+   "slot": "briefing one-liner (situation)",
+   "context": "East forces took the Dravec valley yesterday; the player's West platoon holds the ridge above Lomovo.",
+   "constraints": {
+    "max_words": 25,
+    "min_words": 1,
+    "allowed_names": [
+     "Dravec",
+     "Lomovo",
+     "East",
+     "West"
+    ],
+    "names_check": true,
+    "no_digits": true,
+    "era": "1985, Cold War; no modern words",
+    "tone": "plain, factual"
+   },
+   "schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 250
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "additionalProperties": false
+   },
+   "card": null
+  },
+  {
+   "id": "X04",
+   "slot": "debriefing line (win)",
+   "context": "The player's squad destroyed the radar at Dravec and everyone came back.",
+   "constraints": {
+    "max_words": 20,
+    "min_words": 1,
+    "allowed_names": [
+     "Dravec"
+    ],
+    "names_check": true,
+    "no_digits": true,
+    "era": "1985, Cold War; no modern words",
+    "tone": "restrained pride"
+   },
+   "schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 200
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "additionalProperties": false
+   },
+   "card": null
+  },
+  {
+   "id": "X05",
+   "slot": "debriefing line (loss)",
+   "context": "The convoy the player escorted was destroyed near Pevna.",
+   "constraints": {
+    "max_words": 20,
+    "min_words": 1,
+    "allowed_names": [
+     "Pevna"
+    ],
+    "names_check": true,
+    "no_digits": true,
+    "era": "1985, Cold War; no modern words",
+    "tone": "sombre; do not blame the player"
+   },
+   "schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 200
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "additionalProperties": false
+   },
+   "card": null
+  },
+  {
+   "id": "X06",
+   "slot": "radio acknowledgement body (squad leader to HQ)",
+   "context": "Squad leader Viper Two acknowledges new orders from HQ callsign Kestrel.",
+   "constraints": {
+    "max_words": 8,
+    "min_words": 1,
+    "allowed_names": [
+     "Kestrel",
+     "Viper",
+     "Two"
+    ],
+    "names_check": true,
+    "no_digits": true,
+    "era": "1985, Cold War; no modern words",
+    "tone": "calm"
+   },
+   "schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 80
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "additionalProperties": false
+   },
+   "card": "Radio style card: code frames every radio line: it adds the callsigns, THIS IS, the squelch and OVER or OUT. Write only the message body in a few plain words, with no callsigns or prowords of your own. No grid numbers: code inserts them."
+  },
+  {
+   "id": "X07",
+   "slot": "story-bible trait line for a roster character",
+   "context": "Corporal Brandt is the squad's machine gunner.",
+   "constraints": {
+    "max_words": 12,
+    "min_words": 1,
+    "allowed_names": [
+     "Brandt",
+     "Corporal"
+    ],
+    "names_check": true,
+    "no_digits": true,
+    "era": "1985, Cold War; no modern words",
+    "tone": "specific, human"
+   },
+   "schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 120
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "additionalProperties": false
+   },
+   "card": null
+  },
+  {
+   "id": "X08",
+   "slot": "radio message body (East company HQ to a platoon), in English",
+   "context": "East company HQ callsign Granit orders platoon callsign Sokol to hold the Pevna bridge.",
+   "constraints": {
+    "max_words": 14,
+    "min_words": 1,
+    "allowed_names": [
+     "Granit",
+     "Sokol",
+     "Pevna"
+    ],
+    "names_check": true,
+    "no_digits": true,
+    "era": "1985 Soviet motor-rifle troops; no modern words",
+    "tone": "clipped, formal"
+   },
+   "schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 140
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "additionalProperties": false
+   },
+   "card": "Radio style card: code frames every radio line: it adds the callsigns, THIS IS, the squelch and OVER or OUT. Write only the message body in a few plain words, with no callsigns or prowords of your own. No grid numbers: code inserts them."
+  },
+  {
+   "id": "X09",
+   "slot": "objective line (rephrase)",
+   "context": "Objective: destroy the radar at Dravec.",
+   "constraints": {
+    "max_words": 10,
+    "min_words": 1,
+    "allowed_names": [
+     "Dravec"
+    ],
+    "names_check": true,
+    "no_digits": true,
+    "era": "1985, Cold War; no modern words",
+    "tone": "imperative"
+   },
+   "schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 100
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "additionalProperties": false
+   },
+   "card": null
+  },
+  {
+   "id": "X10",
+   "slot": "chapter card text",
+   "context": "The story jumps ahead two days to a new morning.",
+   "constraints": {
+    "max_words": 6,
+    "min_words": 1,
+    "allowed_names": [],
+    "names_check": false,
+    "no_digits": true,
+    "era": "1985, Cold War; no modern words",
+    "tone": "quiet"
+   },
+   "schema": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "maxLength": 60
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "additionalProperties": false
+   },
+   "card": null
+  }
+ ]
+}

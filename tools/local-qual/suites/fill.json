@@ -1,0 +1,1616 @@
+{
+ "suite": "fill",
+ "version": 1,
+ "as_of": "2026-09-27",
+ "notes": "IntentFill-style extraction (doc 21 §4.1) and mission-concept cards. The task, size and time enums are spike-local vocabularies (doc 21 names the fields but not their values; see README), and the concept archetype list is a simplified spike-local subset of doc 26 §9.3's archetypes. 'span_any_of' compares after lower-casing, trimming punctuation and collapsing spaces. 'banned_words' uses the suite-level banned_words list.",
+ "banned_words": [
+  "drone",
+  "drones",
+  "uav",
+  "gps",
+  "smartphone",
+  "cellphone",
+  "cell phone",
+  "mobile phone",
+  "internet",
+  "email",
+  "e-mail",
+  "laptop",
+  "text message",
+  "texting",
+  "wifi",
+  "wi-fi",
+  "online",
+  "selfie",
+  "social media",
+  "satnav",
+  "bluetooth",
+  "ied",
+  "ieds"
+ ],
+ "items": [
+  {
+   "id": "F01",
+   "kind": "intent",
+   "request": "Fill the town of Lomovo with East infantry, make it dense.",
+   "instructions": "Fill these fields from the request only. Do not guess.\n- task: populate-area (put units in a town or area), add-patrol, garrison-building (units inside a building), add-reinforcements, fire-support (artillery, mortar or air strike on call), write-briefing, make-cutscene (intro, outro or in-mission scene), set-atmosphere (time, weather, mood), campaign-from-brief (a whole campaign), explain-finding (explain a warning or lint code), other.\n- place: copy the place words exactly as written in the request; \"\" if the request names no place.\n- side: west (NATO, US), east (Soviet, Warsaw Pact), resistance (partisans, guerrillas), civilian; unspecified if the request does not say.\n- size: small (a handful, a fireteam, sparse), medium (about one squad, moderate), large (several squads or more, dense, heavy); unspecified if the request does not say.\n- time_of_day: dawn, day, dusk, night; unspecified if the request does not say.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "task": {
+      "type": "string",
+      "enum": [
+       "populate-area",
+       "add-patrol",
+       "garrison-building",
+       "add-reinforcements",
+       "fire-support",
+       "write-briefing",
+       "make-cutscene",
+       "set-atmosphere",
+       "campaign-from-brief",
+       "explain-finding",
+       "other"
+      ]
+     },
+     "place": {
+      "type": "string",
+      "maxLength": 48
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "resistance",
+       "civilian",
+       "unspecified"
+      ]
+     },
+     "size": {
+      "type": "string",
+      "enum": [
+       "small",
+       "medium",
+       "large",
+       "unspecified"
+      ]
+     },
+     "time_of_day": {
+      "type": "string",
+      "enum": [
+       "dawn",
+       "day",
+       "dusk",
+       "night",
+       "unspecified"
+      ]
+     }
+    },
+    "required": [
+     "task",
+     "place",
+     "side",
+     "size",
+     "time_of_day"
+    ],
+    "additionalProperties": false
+   },
+   "expected": {
+    "task": {
+     "any_of": [
+      "populate-area"
+     ]
+    },
+    "place": {
+     "span_any_of": [
+      "Lomovo",
+      "the town of Lomovo",
+      "town of Lomovo"
+     ]
+    },
+    "side": {
+     "any_of": [
+      "east"
+     ]
+    },
+    "size": {
+     "any_of": [
+      "large"
+     ]
+    },
+    "time_of_day": {
+     "any_of": [
+      "unspecified"
+     ]
+    }
+   },
+   "validators": [
+    {
+     "field": "task",
+     "check": "enum"
+    },
+    {
+     "field": "side",
+     "check": "enum"
+    },
+    {
+     "field": "size",
+     "check": "enum"
+    },
+    {
+     "field": "time_of_day",
+     "check": "enum"
+    },
+    {
+     "field": "place",
+     "check": "quote_in_request",
+     "allow_empty": true
+    },
+    {
+     "field": "place",
+     "check": "max_chars",
+     "value": 48
+    }
+   ],
+   "card": null,
+   "note": "Plain populate request; 'dense' maps to large."
+  },
+  {
+   "id": "F02",
+   "kind": "intent",
+   "request": "At night, a small West patrol should walk around the Dravec crossroads.",
+   "instructions": "Fill these fields from the request only. Do not guess.\n- task: populate-area (put units in a town or area), add-patrol, garrison-building (units inside a building), add-reinforcements, fire-support (artillery, mortar or air strike on call), write-briefing, make-cutscene (intro, outro or in-mission scene), set-atmosphere (time, weather, mood), campaign-from-brief (a whole campaign), explain-finding (explain a warning or lint code), other.\n- place: copy the place words exactly as written in the request; \"\" if the request names no place.\n- side: west (NATO, US), east (Soviet, Warsaw Pact), resistance (partisans, guerrillas), civilian; unspecified if the request does not say.\n- size: small (a handful, a fireteam, sparse), medium (about one squad, moderate), large (several squads or more, dense, heavy); unspecified if the request does not say.\n- time_of_day: dawn, day, dusk, night; unspecified if the request does not say.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "task": {
+      "type": "string",
+      "enum": [
+       "populate-area",
+       "add-patrol",
+       "garrison-building",
+       "add-reinforcements",
+       "fire-support",
+       "write-briefing",
+       "make-cutscene",
+       "set-atmosphere",
+       "campaign-from-brief",
+       "explain-finding",
+       "other"
+      ]
+     },
+     "place": {
+      "type": "string",
+      "maxLength": 48
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "resistance",
+       "civilian",
+       "unspecified"
+      ]
+     },
+     "size": {
+      "type": "string",
+      "enum": [
+       "small",
+       "medium",
+       "large",
+       "unspecified"
+      ]
+     },
+     "time_of_day": {
+      "type": "string",
+      "enum": [
+       "dawn",
+       "day",
+       "dusk",
+       "night",
+       "unspecified"
+      ]
+     }
+    },
+    "required": [
+     "task",
+     "place",
+     "side",
+     "size",
+     "time_of_day"
+    ],
+    "additionalProperties": false
+   },
+   "expected": {
+    "task": {
+     "any_of": [
+      "add-patrol"
+     ]
+    },
+    "place": {
+     "span_any_of": [
+      "Dravec crossroads",
+      "the Dravec crossroads",
+      "Dravec"
+     ]
+    },
+    "side": {
+     "any_of": [
+      "west"
+     ]
+    },
+    "size": {
+     "any_of": [
+      "small"
+     ]
+    },
+    "time_of_day": {
+     "any_of": [
+      "night"
+     ]
+    }
+   },
+   "validators": [
+    {
+     "field": "task",
+     "check": "enum"
+    },
+    {
+     "field": "side",
+     "check": "enum"
+    },
+    {
+     "field": "size",
+     "check": "enum"
+    },
+    {
+     "field": "time_of_day",
+     "check": "enum"
+    },
+    {
+     "field": "place",
+     "check": "quote_in_request",
+     "allow_empty": true
+    },
+    {
+     "field": "place",
+     "check": "max_chars",
+     "value": 48
+    }
+   ],
+   "card": null,
+   "note": "All five fields stated."
+  },
+  {
+   "id": "F03",
+   "kind": "intent",
+   "request": "I need a briefing for this mission, something terse.",
+   "instructions": "Fill these fields from the request only. Do not guess.\n- task: populate-area (put units in a town or area), add-patrol, garrison-building (units inside a building), add-reinforcements, fire-support (artillery, mortar or air strike on call), write-briefing, make-cutscene (intro, outro or in-mission scene), set-atmosphere (time, weather, mood), campaign-from-brief (a whole campaign), explain-finding (explain a warning or lint code), other.\n- place: copy the place words exactly as written in the request; \"\" if the request names no place.\n- side: west (NATO, US), east (Soviet, Warsaw Pact), resistance (partisans, guerrillas), civilian; unspecified if the request does not say.\n- size: small (a handful, a fireteam, sparse), medium (about one squad, moderate), large (several squads or more, dense, heavy); unspecified if the request does not say.\n- time_of_day: dawn, day, dusk, night; unspecified if the request does not say.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "task": {
+      "type": "string",
+      "enum": [
+       "populate-area",
+       "add-patrol",
+       "garrison-building",
+       "add-reinforcements",
+       "fire-support",
+       "write-briefing",
+       "make-cutscene",
+       "set-atmosphere",
+       "campaign-from-brief",
+       "explain-finding",
+       "other"
+      ]
+     },
+     "place": {
+      "type": "string",
+      "maxLength": 48
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "resistance",
+       "civilian",
+       "unspecified"
+      ]
+     },
+     "size": {
+      "type": "string",
+      "enum": [
+       "small",
+       "medium",
+       "large",
+       "unspecified"
+      ]
+     },
+     "time_of_day": {
+      "type": "string",
+      "enum": [
+       "dawn",
+       "day",
+       "dusk",
+       "night",
+       "unspecified"
+      ]
+     }
+    },
+    "required": [
+     "task",
+     "place",
+     "side",
+     "size",
+     "time_of_day"
+    ],
+    "additionalProperties": false
+   },
+   "expected": {
+    "task": {
+     "any_of": [
+      "write-briefing"
+     ]
+    },
+    "place": {
+     "span_any_of": [
+      ""
+     ]
+    },
+    "side": {
+     "any_of": [
+      "unspecified"
+     ]
+    },
+    "size": {
+     "any_of": [
+      "unspecified"
+     ]
+    },
+    "time_of_day": {
+     "any_of": [
+      "unspecified"
+     ]
+    }
+   },
+   "validators": [
+    {
+     "field": "task",
+     "check": "enum"
+    },
+    {
+     "field": "side",
+     "check": "enum"
+    },
+    {
+     "field": "size",
+     "check": "enum"
+    },
+    {
+     "field": "time_of_day",
+     "check": "enum"
+    },
+    {
+     "field": "place",
+     "check": "quote_in_request",
+     "allow_empty": true
+    },
+    {
+     "field": "place",
+     "check": "max_chars",
+     "value": 48
+    }
+   ],
+   "card": null,
+   "note": "No place, side, size or time: every optional field must stay empty or unspecified."
+  },
+  {
+   "id": "F04",
+   "kind": "intent",
+   "request": "Make the intro a dawn shot over Saint Arel harbour that shows our boats.",
+   "instructions": "Fill these fields from the request only. Do not guess.\n- task: populate-area (put units in a town or area), add-patrol, garrison-building (units inside a building), add-reinforcements, fire-support (artillery, mortar or air strike on call), write-briefing, make-cutscene (intro, outro or in-mission scene), set-atmosphere (time, weather, mood), campaign-from-brief (a whole campaign), explain-finding (explain a warning or lint code), other.\n- place: copy the place words exactly as written in the request; \"\" if the request names no place.\n- side: west (NATO, US), east (Soviet, Warsaw Pact), resistance (partisans, guerrillas), civilian; unspecified if the request does not say.\n- size: small (a handful, a fireteam, sparse), medium (about one squad, moderate), large (several squads or more, dense, heavy); unspecified if the request does not say.\n- time_of_day: dawn, day, dusk, night; unspecified if the request does not say.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "task": {
+      "type": "string",
+      "enum": [
+       "populate-area",
+       "add-patrol",
+       "garrison-building",
+       "add-reinforcements",
+       "fire-support",
+       "write-briefing",
+       "make-cutscene",
+       "set-atmosphere",
+       "campaign-from-brief",
+       "explain-finding",
+       "other"
+      ]
+     },
+     "place": {
+      "type": "string",
+      "maxLength": 48
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "resistance",
+       "civilian",
+       "unspecified"
+      ]
+     },
+     "size": {
+      "type": "string",
+      "enum": [
+       "small",
+       "medium",
+       "large",
+       "unspecified"
+      ]
+     },
+     "time_of_day": {
+      "type": "string",
+      "enum": [
+       "dawn",
+       "day",
+       "dusk",
+       "night",
+       "unspecified"
+      ]
+     }
+    },
+    "required": [
+     "task",
+     "place",
+     "side",
+     "size",
+     "time_of_day"
+    ],
+    "additionalProperties": false
+   },
+   "expected": {
+    "task": {
+     "any_of": [
+      "make-cutscene"
+     ]
+    },
+    "place": {
+     "span_any_of": [
+      "Saint Arel harbour",
+      "Saint Arel"
+     ]
+    },
+    "side": {
+     "any_of": [
+      "unspecified"
+     ]
+    },
+    "size": {
+     "any_of": [
+      "unspecified"
+     ]
+    },
+    "time_of_day": {
+     "any_of": [
+      "dawn"
+     ]
+    }
+   },
+   "validators": [
+    {
+     "field": "task",
+     "check": "enum"
+    },
+    {
+     "field": "side",
+     "check": "enum"
+    },
+    {
+     "field": "size",
+     "check": "enum"
+    },
+    {
+     "field": "time_of_day",
+     "check": "enum"
+    },
+    {
+     "field": "place",
+     "check": "quote_in_request",
+     "allow_empty": true
+    },
+    {
+     "field": "place",
+     "check": "max_chars",
+     "value": 48
+    }
+   ],
+   "card": null,
+   "note": "'our boats' does not name a side."
+  },
+  {
+   "id": "F05",
+   "kind": "intent",
+   "request": "Garrison the church in Pevna with a resistance squad.",
+   "instructions": "Fill these fields from the request only. Do not guess.\n- task: populate-area (put units in a town or area), add-patrol, garrison-building (units inside a building), add-reinforcements, fire-support (artillery, mortar or air strike on call), write-briefing, make-cutscene (intro, outro or in-mission scene), set-atmosphere (time, weather, mood), campaign-from-brief (a whole campaign), explain-finding (explain a warning or lint code), other.\n- place: copy the place words exactly as written in the request; \"\" if the request names no place.\n- side: west (NATO, US), east (Soviet, Warsaw Pact), resistance (partisans, guerrillas), civilian; unspecified if the request does not say.\n- size: small (a handful, a fireteam, sparse), medium (about one squad, moderate), large (several squads or more, dense, heavy); unspecified if the request does not say.\n- time_of_day: dawn, day, dusk, night; unspecified if the request does not say.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "task": {
+      "type": "string",
+      "enum": [
+       "populate-area",
+       "add-patrol",
+       "garrison-building",
+       "add-reinforcements",
+       "fire-support",
+       "write-briefing",
+       "make-cutscene",
+       "set-atmosphere",
+       "campaign-from-brief",
+       "explain-finding",
+       "other"
+      ]
+     },
+     "place": {
+      "type": "string",
+      "maxLength": 48
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "resistance",
+       "civilian",
+       "unspecified"
+      ]
+     },
+     "size": {
+      "type": "string",
+      "enum": [
+       "small",
+       "medium",
+       "large",
+       "unspecified"
+      ]
+     },
+     "time_of_day": {
+      "type": "string",
+      "enum": [
+       "dawn",
+       "day",
+       "dusk",
+       "night",
+       "unspecified"
+      ]
+     }
+    },
+    "required": [
+     "task",
+     "place",
+     "side",
+     "size",
+     "time_of_day"
+    ],
+    "additionalProperties": false
+   },
+   "expected": {
+    "task": {
+     "any_of": [
+      "garrison-building"
+     ]
+    },
+    "place": {
+     "span_any_of": [
+      "the church in Pevna",
+      "church in Pevna",
+      "Pevna"
+     ]
+    },
+    "side": {
+     "any_of": [
+      "resistance"
+     ]
+    },
+    "size": {
+     "any_of": [
+      "medium"
+     ]
+    },
+    "time_of_day": {
+     "any_of": [
+      "unspecified"
+     ]
+    }
+   },
+   "validators": [
+    {
+     "field": "task",
+     "check": "enum"
+    },
+    {
+     "field": "side",
+     "check": "enum"
+    },
+    {
+     "field": "size",
+     "check": "enum"
+    },
+    {
+     "field": "time_of_day",
+     "check": "enum"
+    },
+    {
+     "field": "place",
+     "check": "quote_in_request",
+     "allow_empty": true
+    },
+    {
+     "field": "place",
+     "check": "max_chars",
+     "value": 48
+    }
+   ],
+   "card": null,
+   "note": "'squad' maps to medium."
+  },
+  {
+   "id": "F06",
+   "kind": "intent",
+   "request": "Why does the campaign graph show CF01 on my third mission?",
+   "instructions": "Fill these fields from the request only. Do not guess.\n- task: populate-area (put units in a town or area), add-patrol, garrison-building (units inside a building), add-reinforcements, fire-support (artillery, mortar or air strike on call), write-briefing, make-cutscene (intro, outro or in-mission scene), set-atmosphere (time, weather, mood), campaign-from-brief (a whole campaign), explain-finding (explain a warning or lint code), other.\n- place: copy the place words exactly as written in the request; \"\" if the request names no place.\n- side: west (NATO, US), east (Soviet, Warsaw Pact), resistance (partisans, guerrillas), civilian; unspecified if the request does not say.\n- size: small (a handful, a fireteam, sparse), medium (about one squad, moderate), large (several squads or more, dense, heavy); unspecified if the request does not say.\n- time_of_day: dawn, day, dusk, night; unspecified if the request does not say.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "task": {
+      "type": "string",
+      "enum": [
+       "populate-area",
+       "add-patrol",
+       "garrison-building",
+       "add-reinforcements",
+       "fire-support",
+       "write-briefing",
+       "make-cutscene",
+       "set-atmosphere",
+       "campaign-from-brief",
+       "explain-finding",
+       "other"
+      ]
+     },
+     "place": {
+      "type": "string",
+      "maxLength": 48
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "resistance",
+       "civilian",
+       "unspecified"
+      ]
+     },
+     "size": {
+      "type": "string",
+      "enum": [
+       "small",
+       "medium",
+       "large",
+       "unspecified"
+      ]
+     },
+     "time_of_day": {
+      "type": "string",
+      "enum": [
+       "dawn",
+       "day",
+       "dusk",
+       "night",
+       "unspecified"
+      ]
+     }
+    },
+    "required": [
+     "task",
+     "place",
+     "side",
+     "size",
+     "time_of_day"
+    ],
+    "additionalProperties": false
+   },
+   "expected": {
+    "task": {
+     "any_of": [
+      "explain-finding"
+     ]
+    },
+    "place": {
+     "span_any_of": [
+      ""
+     ]
+    },
+    "side": {
+     "any_of": [
+      "unspecified"
+     ]
+    },
+    "size": {
+     "any_of": [
+      "unspecified"
+     ]
+    },
+    "time_of_day": {
+     "any_of": [
+      "unspecified"
+     ]
+    }
+   },
+   "validators": [
+    {
+     "field": "task",
+     "check": "enum"
+    },
+    {
+     "field": "side",
+     "check": "enum"
+    },
+    {
+     "field": "size",
+     "check": "enum"
+    },
+    {
+     "field": "time_of_day",
+     "check": "enum"
+    },
+    {
+     "field": "place",
+     "check": "quote_in_request",
+     "allow_empty": true
+    },
+    {
+     "field": "place",
+     "check": "max_chars",
+     "value": 48
+    }
+   ],
+   "card": null,
+   "note": "Trap: 'campaign graph' and 'third mission' are not places; 'campaign' is not campaign-from-brief."
+  },
+  {
+   "id": "F07",
+   "kind": "intent",
+   "request": "A four-mission campaign where Soviet paratroopers seize the island at dusk.",
+   "instructions": "Fill these fields from the request only. Do not guess.\n- task: populate-area (put units in a town or area), add-patrol, garrison-building (units inside a building), add-reinforcements, fire-support (artillery, mortar or air strike on call), write-briefing, make-cutscene (intro, outro or in-mission scene), set-atmosphere (time, weather, mood), campaign-from-brief (a whole campaign), explain-finding (explain a warning or lint code), other.\n- place: copy the place words exactly as written in the request; \"\" if the request names no place.\n- side: west (NATO, US), east (Soviet, Warsaw Pact), resistance (partisans, guerrillas), civilian; unspecified if the request does not say.\n- size: small (a handful, a fireteam, sparse), medium (about one squad, moderate), large (several squads or more, dense, heavy); unspecified if the request does not say.\n- time_of_day: dawn, day, dusk, night; unspecified if the request does not say.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "task": {
+      "type": "string",
+      "enum": [
+       "populate-area",
+       "add-patrol",
+       "garrison-building",
+       "add-reinforcements",
+       "fire-support",
+       "write-briefing",
+       "make-cutscene",
+       "set-atmosphere",
+       "campaign-from-brief",
+       "explain-finding",
+       "other"
+      ]
+     },
+     "place": {
+      "type": "string",
+      "maxLength": 48
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "resistance",
+       "civilian",
+       "unspecified"
+      ]
+     },
+     "size": {
+      "type": "string",
+      "enum": [
+       "small",
+       "medium",
+       "large",
+       "unspecified"
+      ]
+     },
+     "time_of_day": {
+      "type": "string",
+      "enum": [
+       "dawn",
+       "day",
+       "dusk",
+       "night",
+       "unspecified"
+      ]
+     }
+    },
+    "required": [
+     "task",
+     "place",
+     "side",
+     "size",
+     "time_of_day"
+    ],
+    "additionalProperties": false
+   },
+   "expected": {
+    "task": {
+     "any_of": [
+      "campaign-from-brief"
+     ]
+    },
+    "place": {
+     "span_any_of": [
+      "",
+      "the island",
+      "island"
+     ]
+    },
+    "side": {
+     "any_of": [
+      "east"
+     ]
+    },
+    "size": {
+     "any_of": [
+      "unspecified"
+     ]
+    },
+    "time_of_day": {
+     "any_of": [
+      "dusk"
+     ]
+    }
+   },
+   "validators": [
+    {
+     "field": "task",
+     "check": "enum"
+    },
+    {
+     "field": "side",
+     "check": "enum"
+    },
+    {
+     "field": "size",
+     "check": "enum"
+    },
+    {
+     "field": "time_of_day",
+     "check": "enum"
+    },
+    {
+     "field": "place",
+     "check": "quote_in_request",
+     "allow_empty": true
+    },
+    {
+     "field": "place",
+     "check": "max_chars",
+     "value": 48
+    }
+   ],
+   "card": null,
+   "note": "Soviet maps to east; 'the island' names no specific place, so empty is also accepted (and 'island', which the quote check also accepts)."
+  },
+  {
+   "id": "F08",
+   "kind": "intent",
+   "request": "Let the player call artillery on the bridge north of Karvo, three uses.",
+   "instructions": "Fill these fields from the request only. Do not guess.\n- task: populate-area (put units in a town or area), add-patrol, garrison-building (units inside a building), add-reinforcements, fire-support (artillery, mortar or air strike on call), write-briefing, make-cutscene (intro, outro or in-mission scene), set-atmosphere (time, weather, mood), campaign-from-brief (a whole campaign), explain-finding (explain a warning or lint code), other.\n- place: copy the place words exactly as written in the request; \"\" if the request names no place.\n- side: west (NATO, US), east (Soviet, Warsaw Pact), resistance (partisans, guerrillas), civilian; unspecified if the request does not say.\n- size: small (a handful, a fireteam, sparse), medium (about one squad, moderate), large (several squads or more, dense, heavy); unspecified if the request does not say.\n- time_of_day: dawn, day, dusk, night; unspecified if the request does not say.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "task": {
+      "type": "string",
+      "enum": [
+       "populate-area",
+       "add-patrol",
+       "garrison-building",
+       "add-reinforcements",
+       "fire-support",
+       "write-briefing",
+       "make-cutscene",
+       "set-atmosphere",
+       "campaign-from-brief",
+       "explain-finding",
+       "other"
+      ]
+     },
+     "place": {
+      "type": "string",
+      "maxLength": 48
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "resistance",
+       "civilian",
+       "unspecified"
+      ]
+     },
+     "size": {
+      "type": "string",
+      "enum": [
+       "small",
+       "medium",
+       "large",
+       "unspecified"
+      ]
+     },
+     "time_of_day": {
+      "type": "string",
+      "enum": [
+       "dawn",
+       "day",
+       "dusk",
+       "night",
+       "unspecified"
+      ]
+     }
+    },
+    "required": [
+     "task",
+     "place",
+     "side",
+     "size",
+     "time_of_day"
+    ],
+    "additionalProperties": false
+   },
+   "expected": {
+    "task": {
+     "any_of": [
+      "fire-support"
+     ]
+    },
+    "place": {
+     "span_any_of": [
+      "the bridge north of Karvo",
+      "bridge north of Karvo",
+      "north of Karvo",
+      "Karvo"
+     ]
+    },
+    "side": {
+     "any_of": [
+      "unspecified"
+     ]
+    },
+    "size": {
+     "any_of": [
+      "unspecified"
+     ]
+    },
+    "time_of_day": {
+     "any_of": [
+      "unspecified"
+     ]
+    }
+   },
+   "validators": [
+    {
+     "field": "task",
+     "check": "enum"
+    },
+    {
+     "field": "side",
+     "check": "enum"
+    },
+    {
+     "field": "size",
+     "check": "enum"
+    },
+    {
+     "field": "time_of_day",
+     "check": "enum"
+    },
+    {
+     "field": "place",
+     "check": "quote_in_request",
+     "allow_empty": true
+    },
+    {
+     "field": "place",
+     "check": "max_chars",
+     "value": 48
+    }
+   ],
+   "card": null,
+   "note": "Trap: 'three uses' is not a size; no side is stated."
+  },
+  {
+   "id": "F09",
+   "kind": "concept",
+   "request": "Concept: at night, West commandos raid the radar site on Hill 214 near Dravec, destroy the radar and slip away before dawn.",
+   "instructions": "Fill a mission concept card from the request. Use only facts from the request.\n- title: a mission title of at most 4 words, no digits.\n- side: the player's side: west, east or resistance.\n- archetype: raid (strike a site and leave), ambush, defend (hold a place), recon (watch and report without contact), rescue (free or recover people), convoy-escort, assault (take and keep an area).\n- time_of_day: dawn, day, dusk, night.\n- target: copy, exactly as written in the request, the words naming what the objective is about.\n- pitch: one sentence of at most 25 words that sells the mission.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 32
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "resistance"
+      ]
+     },
+     "archetype": {
+      "type": "string",
+      "enum": [
+       "raid",
+       "ambush",
+       "defend",
+       "recon",
+       "rescue",
+       "convoy-escort",
+       "assault"
+      ]
+     },
+     "time_of_day": {
+      "type": "string",
+      "enum": [
+       "dawn",
+       "day",
+       "dusk",
+       "night"
+      ]
+     },
+     "target": {
+      "type": "string",
+      "maxLength": 60
+     },
+     "pitch": {
+      "type": "string",
+      "maxLength": 180
+     }
+    },
+    "required": [
+     "title",
+     "side",
+     "archetype",
+     "time_of_day",
+     "target",
+     "pitch"
+    ],
+    "additionalProperties": false
+   },
+   "expected": {
+    "side": {
+     "any_of": [
+      "west"
+     ]
+    },
+    "archetype": {
+     "any_of": [
+      "raid"
+     ]
+    },
+    "time_of_day": {
+     "any_of": [
+      "night"
+     ]
+    },
+    "target": {
+     "span_any_of": [
+      "the radar site on Hill 214",
+      "radar site on Hill 214",
+      "the radar site",
+      "radar site",
+      "the radar",
+      "radar",
+      "the radar site on Hill 214 near Dravec",
+      "radar site on Hill 214 near Dravec"
+     ]
+    }
+   },
+   "validators": [
+    {
+     "field": "side",
+     "check": "enum"
+    },
+    {
+     "field": "archetype",
+     "check": "enum"
+    },
+    {
+     "field": "time_of_day",
+     "check": "enum"
+    },
+    {
+     "field": "title",
+     "check": "non_empty"
+    },
+    {
+     "field": "title",
+     "check": "max_words",
+     "value": 4
+    },
+    {
+     "field": "title",
+     "check": "no_digits"
+    },
+    {
+     "field": "title",
+     "check": "banned_words"
+    },
+    {
+     "field": "target",
+     "check": "quote_in_request",
+     "allow_empty": false
+    },
+    {
+     "field": "pitch",
+     "check": "non_empty"
+    },
+    {
+     "field": "pitch",
+     "check": "max_words",
+     "value": 25
+    },
+    {
+     "field": "pitch",
+     "check": "banned_words"
+    },
+    {
+     "field": "pitch",
+     "check": "names_from_request"
+    }
+   ],
+   "card": null,
+   "note": "Trap: 'before dawn' is the deadline; the time of day is night."
+  },
+  {
+   "id": "F10",
+   "kind": "concept",
+   "request": "Concept: an East motor-rifle platoon must hold the Pevna bridge against a West armoured push until reinforcements arrive in the afternoon.",
+   "instructions": "Fill a mission concept card from the request. Use only facts from the request.\n- title: a mission title of at most 4 words, no digits.\n- side: the player's side: west, east or resistance.\n- archetype: raid (strike a site and leave), ambush, defend (hold a place), recon (watch and report without contact), rescue (free or recover people), convoy-escort, assault (take and keep an area).\n- time_of_day: dawn, day, dusk, night.\n- target: copy, exactly as written in the request, the words naming what the objective is about.\n- pitch: one sentence of at most 25 words that sells the mission.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 32
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "resistance"
+      ]
+     },
+     "archetype": {
+      "type": "string",
+      "enum": [
+       "raid",
+       "ambush",
+       "defend",
+       "recon",
+       "rescue",
+       "convoy-escort",
+       "assault"
+      ]
+     },
+     "time_of_day": {
+      "type": "string",
+      "enum": [
+       "dawn",
+       "day",
+       "dusk",
+       "night"
+      ]
+     },
+     "target": {
+      "type": "string",
+      "maxLength": 60
+     },
+     "pitch": {
+      "type": "string",
+      "maxLength": 180
+     }
+    },
+    "required": [
+     "title",
+     "side",
+     "archetype",
+     "time_of_day",
+     "target",
+     "pitch"
+    ],
+    "additionalProperties": false
+   },
+   "expected": {
+    "side": {
+     "any_of": [
+      "east"
+     ]
+    },
+    "archetype": {
+     "any_of": [
+      "defend"
+     ]
+    },
+    "time_of_day": {
+     "any_of": [
+      "day"
+     ]
+    },
+    "target": {
+     "span_any_of": [
+      "the Pevna bridge",
+      "Pevna bridge"
+     ]
+    }
+   },
+   "validators": [
+    {
+     "field": "side",
+     "check": "enum"
+    },
+    {
+     "field": "archetype",
+     "check": "enum"
+    },
+    {
+     "field": "time_of_day",
+     "check": "enum"
+    },
+    {
+     "field": "title",
+     "check": "non_empty"
+    },
+    {
+     "field": "title",
+     "check": "max_words",
+     "value": 4
+    },
+    {
+     "field": "title",
+     "check": "no_digits"
+    },
+    {
+     "field": "title",
+     "check": "banned_words"
+    },
+    {
+     "field": "target",
+     "check": "quote_in_request",
+     "allow_empty": false
+    },
+    {
+     "field": "pitch",
+     "check": "non_empty"
+    },
+    {
+     "field": "pitch",
+     "check": "max_words",
+     "value": 25
+    },
+    {
+     "field": "pitch",
+     "check": "banned_words"
+    },
+    {
+     "field": "pitch",
+     "check": "names_from_request"
+    }
+   ],
+   "card": null,
+   "note": "Player side is East; West is the enemy. 'afternoon' maps to day."
+  },
+  {
+   "id": "F11",
+   "kind": "concept",
+   "request": "Concept: a downed West pilot is held at the farm outside Lomovo; a resistance team must free him at dusk.",
+   "instructions": "Fill a mission concept card from the request. Use only facts from the request.\n- title: a mission title of at most 4 words, no digits.\n- side: the player's side: west, east or resistance.\n- archetype: raid (strike a site and leave), ambush, defend (hold a place), recon (watch and report without contact), rescue (free or recover people), convoy-escort, assault (take and keep an area).\n- time_of_day: dawn, day, dusk, night.\n- target: copy, exactly as written in the request, the words naming what the objective is about.\n- pitch: one sentence of at most 25 words that sells the mission.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 32
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "resistance"
+      ]
+     },
+     "archetype": {
+      "type": "string",
+      "enum": [
+       "raid",
+       "ambush",
+       "defend",
+       "recon",
+       "rescue",
+       "convoy-escort",
+       "assault"
+      ]
+     },
+     "time_of_day": {
+      "type": "string",
+      "enum": [
+       "dawn",
+       "day",
+       "dusk",
+       "night"
+      ]
+     },
+     "target": {
+      "type": "string",
+      "maxLength": 60
+     },
+     "pitch": {
+      "type": "string",
+      "maxLength": 180
+     }
+    },
+    "required": [
+     "title",
+     "side",
+     "archetype",
+     "time_of_day",
+     "target",
+     "pitch"
+    ],
+    "additionalProperties": false
+   },
+   "expected": {
+    "side": {
+     "any_of": [
+      "resistance"
+     ]
+    },
+    "archetype": {
+     "any_of": [
+      "rescue"
+     ]
+    },
+    "time_of_day": {
+     "any_of": [
+      "dusk"
+     ]
+    },
+    "target": {
+     "span_any_of": [
+      "a downed West pilot",
+      "downed West pilot",
+      "West pilot",
+      "pilot",
+      "the farm outside Lomovo",
+      "farm outside Lomovo",
+      "the farm",
+      "a downed West pilot is held at the farm outside Lomovo"
+     ]
+    }
+   },
+   "validators": [
+    {
+     "field": "side",
+     "check": "enum"
+    },
+    {
+     "field": "archetype",
+     "check": "enum"
+    },
+    {
+     "field": "time_of_day",
+     "check": "enum"
+    },
+    {
+     "field": "title",
+     "check": "non_empty"
+    },
+    {
+     "field": "title",
+     "check": "max_words",
+     "value": 4
+    },
+    {
+     "field": "title",
+     "check": "no_digits"
+    },
+    {
+     "field": "title",
+     "check": "banned_words"
+    },
+    {
+     "field": "target",
+     "check": "quote_in_request",
+     "allow_empty": false
+    },
+    {
+     "field": "pitch",
+     "check": "non_empty"
+    },
+    {
+     "field": "pitch",
+     "check": "max_words",
+     "value": 25
+    },
+    {
+     "field": "pitch",
+     "check": "banned_words"
+    },
+    {
+     "field": "pitch",
+     "check": "names_from_request"
+    }
+   ],
+   "card": null,
+   "note": "Trap: the pilot is West but the player's side is resistance."
+  },
+  {
+   "id": "F12",
+   "kind": "concept",
+   "request": "Concept: West scouts must watch the coast road near Saint Arel at dawn and report enemy traffic without being seen.",
+   "instructions": "Fill a mission concept card from the request. Use only facts from the request.\n- title: a mission title of at most 4 words, no digits.\n- side: the player's side: west, east or resistance.\n- archetype: raid (strike a site and leave), ambush, defend (hold a place), recon (watch and report without contact), rescue (free or recover people), convoy-escort, assault (take and keep an area).\n- time_of_day: dawn, day, dusk, night.\n- target: copy, exactly as written in the request, the words naming what the objective is about.\n- pitch: one sentence of at most 25 words that sells the mission.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 32
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "resistance"
+      ]
+     },
+     "archetype": {
+      "type": "string",
+      "enum": [
+       "raid",
+       "ambush",
+       "defend",
+       "recon",
+       "rescue",
+       "convoy-escort",
+       "assault"
+      ]
+     },
+     "time_of_day": {
+      "type": "string",
+      "enum": [
+       "dawn",
+       "day",
+       "dusk",
+       "night"
+      ]
+     },
+     "target": {
+      "type": "string",
+      "maxLength": 60
+     },
+     "pitch": {
+      "type": "string",
+      "maxLength": 180
+     }
+    },
+    "required": [
+     "title",
+     "side",
+     "archetype",
+     "time_of_day",
+     "target",
+     "pitch"
+    ],
+    "additionalProperties": false
+   },
+   "expected": {
+    "side": {
+     "any_of": [
+      "west"
+     ]
+    },
+    "archetype": {
+     "any_of": [
+      "recon"
+     ]
+    },
+    "time_of_day": {
+     "any_of": [
+      "dawn"
+     ]
+    },
+    "target": {
+     "span_any_of": [
+      "the coast road near Saint Arel",
+      "coast road near Saint Arel",
+      "the coast road",
+      "coast road",
+      "enemy traffic"
+     ]
+    }
+   },
+   "validators": [
+    {
+     "field": "side",
+     "check": "enum"
+    },
+    {
+     "field": "archetype",
+     "check": "enum"
+    },
+    {
+     "field": "time_of_day",
+     "check": "enum"
+    },
+    {
+     "field": "title",
+     "check": "non_empty"
+    },
+    {
+     "field": "title",
+     "check": "max_words",
+     "value": 4
+    },
+    {
+     "field": "title",
+     "check": "no_digits"
+    },
+    {
+     "field": "title",
+     "check": "banned_words"
+    },
+    {
+     "field": "target",
+     "check": "quote_in_request",
+     "allow_empty": false
+    },
+    {
+     "field": "pitch",
+     "check": "non_empty"
+    },
+    {
+     "field": "pitch",
+     "check": "max_words",
+     "value": 25
+    },
+    {
+     "field": "pitch",
+     "check": "banned_words"
+    },
+    {
+     "field": "pitch",
+     "check": "names_from_request"
+    }
+   ],
+   "card": null,
+   "note": "Watch and report without contact = recon."
+  }
+ ]
+}

@@ -1,0 +1,749 @@
+model,suite,condition,metric,value,n,notes
+qwen3.5:4b-q4_K_M,pick,none,calls,90,90,30 items x k=3; 0 HTTP or timeout errors
+qwen3.5:4b-q4_K_M,pick,none,parse_rate,1.0,90,answers that parsed
+qwen3.5:4b-q4_K_M,pick,none,accuracy,0.9,90,exact option key
+qwen3.5:4b-q4_K_M,pick,none,accuracy_wilson95_low,0.8208,90,treats calls as independent; samples of one item are correlated
+qwen3.5:4b-q4_K_M,pick,none,accuracy_wilson95_high,0.9465,90,treats calls as independent; samples of one item are correlated
+qwen3.5:4b-q4_K_M,pick,none,pass_k,0.8333,30,pass^3: all 3 samples of a menu correct
+qwen3.5:4b-q4_K_M,pick,none,items_failing_pass_k,5,30,PT02 PT03 PW02 PW04 PW05
+qwen3.5:4b-q4_K_M,pick,none,majority_accuracy,0.9,30,majority vote over 3 samples; ties (0) count as wrong
+qwen3.5:4b-q4_K_M,pick,none,random_valid_baseline,0.1909,90,mean of 1 / number of real options
+qwen3.5:4b-q4_K_M,pick,none,first_option_baseline,0.1556,90,score of always answering A
+qwen3.5:4b-q4_K_M,pick,none,escape_item_accuracy,1.0,3,off-scope request PR05; only correct answer is X
+qwen3.5:4b-q4_K_M,pick,none,false_escape_calls,0,87,X chosen on a menu that had a fitting option
+qwen3.5:4b-q4_K_M,pick,none,accuracy_when_correct_is_A,0.8571,14,position bias check
+qwen3.5:4b-q4_K_M,pick,none,accuracy_when_correct_is_B_to_G,0.9041,73,position bias check
+qwen3.5:4b-q4_K_M,pick,none,chose_A_when_A_wrong,3,76,count; primacy bias check
+qwen3.5:4b-q4_K_M,pick,none,accuracy_category_arc,1.0,9,
+qwen3.5:4b-q4_K_M,pick,none,accuracy_category_cutscene,1.0,12,
+qwen3.5:4b-q4_K_M,pick,none,accuracy_category_module,1.0,15,
+qwen3.5:4b-q4_K_M,pick,none,accuracy_category_mood,1.0,9,
+qwen3.5:4b-q4_K_M,pick,none,accuracy_category_routing,1.0,15,
+qwen3.5:4b-q4_K_M,pick,none,accuracy_category_trigger,0.8667,15,
+qwen3.5:4b-q4_K_M,pick,none,accuracy_category_waypoint,0.5333,15,
+qwen3.5:4b-q4_K_M,pick,none,latency_p50_ms,650.1,90,"wall clock per call, model already loaded"
+qwen3.5:4b-q4_K_M,pick,none,latency_p90_ms,724.2,90,
+qwen3.5:4b-q4_K_M,pick,none,tokens_per_s,39.28,90,eval_count / eval_duration
+qwen3.5:4b-q4_K_M,pick,none,mean_prompt_tokens,225.2,90,
+qwen3.5:4b-q4_K_M,pick,none,mean_output_tokens,7,90,
+qwen3.5:4b-q4_K_M,pick,none,outputs_cut_at_token_cap,0,90,done_reason length
+qwen3.5:4b-q4_K_M,pick,cards,calls,90,90,30 items x k=3; 0 HTTP or timeout errors
+qwen3.5:4b-q4_K_M,pick,cards,parse_rate,1.0,90,answers that parsed
+qwen3.5:4b-q4_K_M,pick,cards,accuracy,0.9333,90,exact option key
+qwen3.5:4b-q4_K_M,pick,cards,accuracy_wilson95_low,0.8621,90,treats calls as independent; samples of one item are correlated
+qwen3.5:4b-q4_K_M,pick,cards,accuracy_wilson95_high,0.9691,90,treats calls as independent; samples of one item are correlated
+qwen3.5:4b-q4_K_M,pick,cards,pass_k,0.8667,30,pass^3: all 3 samples of a menu correct
+qwen3.5:4b-q4_K_M,pick,cards,items_failing_pass_k,4,30,PM03 PW02 PW04 PW05
+qwen3.5:4b-q4_K_M,pick,cards,majority_accuracy,0.9667,30,majority vote over 3 samples; ties (0) count as wrong
+qwen3.5:4b-q4_K_M,pick,cards,random_valid_baseline,0.1909,90,mean of 1 / number of real options
+qwen3.5:4b-q4_K_M,pick,cards,first_option_baseline,0.1556,90,score of always answering A
+qwen3.5:4b-q4_K_M,pick,cards,escape_item_accuracy,1.0,3,off-scope request PR05; only correct answer is X
+qwen3.5:4b-q4_K_M,pick,cards,false_escape_calls,0,87,X chosen on a menu that had a fitting option
+qwen3.5:4b-q4_K_M,pick,cards,accuracy_when_correct_is_A,0.9286,14,position bias check
+qwen3.5:4b-q4_K_M,pick,cards,accuracy_when_correct_is_B_to_G,0.9315,73,position bias check
+qwen3.5:4b-q4_K_M,pick,cards,chose_A_when_A_wrong,1,76,count; primacy bias check
+qwen3.5:4b-q4_K_M,pick,cards,accuracy_category_arc,1.0,9,
+qwen3.5:4b-q4_K_M,pick,cards,accuracy_category_cutscene,1.0,12,
+qwen3.5:4b-q4_K_M,pick,cards,accuracy_category_module,0.9333,15,
+qwen3.5:4b-q4_K_M,pick,cards,accuracy_category_mood,1.0,9,
+qwen3.5:4b-q4_K_M,pick,cards,accuracy_category_routing,1.0,15,
+qwen3.5:4b-q4_K_M,pick,cards,accuracy_category_trigger,1.0,15,
+qwen3.5:4b-q4_K_M,pick,cards,accuracy_category_waypoint,0.6667,15,
+qwen3.5:4b-q4_K_M,pick,cards,latency_p50_ms,754.7,90,"wall clock per call, model already loaded"
+qwen3.5:4b-q4_K_M,pick,cards,latency_p90_ms,813.2,90,
+qwen3.5:4b-q4_K_M,pick,cards,tokens_per_s,41.62,90,eval_count / eval_duration
+qwen3.5:4b-q4_K_M,pick,cards,mean_prompt_tokens,317.1,90,
+qwen3.5:4b-q4_K_M,pick,cards,mean_output_tokens,7,90,
+qwen3.5:4b-q4_K_M,pick,cards,outputs_cut_at_token_cap,0,90,done_reason length
+qwen3.5:4b-q4_K_M,fill,none,calls,36,36,12 items x k=3; 0 HTTP or timeout errors
+qwen3.5:4b-q4_K_M,fill,none,parse_rate,1.0,36,answers that parsed
+qwen3.5:4b-q4_K_M,fill,none,schema_valid_rate,1.0,36,grammar-constrained decoding against the item schema
+qwen3.5:4b-q4_K_M,fill,none,field_accuracy,0.8333,168,micro over 56 expected fields x k
+qwen3.5:4b-q4_K_M,fill,none,field_accuracy_archetype,1.0,12,calls whose item has this field
+qwen3.5:4b-q4_K_M,fill,none,field_accuracy_place,0.9583,24,calls whose item has this field
+qwen3.5:4b-q4_K_M,fill,none,field_accuracy_side,0.9444,36,calls whose item has this field
+qwen3.5:4b-q4_K_M,fill,none,field_accuracy_size,0.5417,24,calls whose item has this field
+qwen3.5:4b-q4_K_M,fill,none,field_accuracy_target,0.5833,12,calls whose item has this field
+qwen3.5:4b-q4_K_M,fill,none,field_accuracy_task,0.7083,24,calls whose item has this field
+qwen3.5:4b-q4_K_M,fill,none,field_accuracy_time_of_day,0.9444,36,calls whose item has this field
+qwen3.5:4b-q4_K_M,fill,none,all_fields_correct_rate,0.4722,36,per call
+qwen3.5:4b-q4_K_M,fill,none,all_fields_pass_k,0.25,12,pass^3: all fields right in all 3 samples
+qwen3.5:4b-q4_K_M,fill,none,quote_check_pass_rate,0.8611,36,quoted span occurs in the request
+qwen3.5:4b-q4_K_M,fill,none,validators_all_pass_rate,0.75,36,"quote, length, digits, era words, names"
+qwen3.5:4b-q4_K_M,fill,none,validators_pass_k,0.6667,12,pass^3: all validators pass in all 3 samples
+qwen3.5:4b-q4_K_M,fill,none,field_pass_k_archetype,1.0,4,pass^3 per field over the items that have it
+qwen3.5:4b-q4_K_M,fill,none,field_pass_k_place,0.875,8,pass^3 per field over the items that have it
+qwen3.5:4b-q4_K_M,fill,none,field_pass_k_side,0.8333,12,pass^3 per field over the items that have it
+qwen3.5:4b-q4_K_M,fill,none,field_pass_k_size,0.375,8,pass^3 per field over the items that have it
+qwen3.5:4b-q4_K_M,fill,none,field_pass_k_target,0.25,4,pass^3 per field over the items that have it
+qwen3.5:4b-q4_K_M,fill,none,field_pass_k_task,0.5,8,pass^3 per field over the items that have it
+qwen3.5:4b-q4_K_M,fill,none,field_pass_k_time_of_day,0.8333,12,pass^3 per field over the items that have it
+qwen3.5:4b-q4_K_M,fill,none,latency_p50_ms,1541.2,36,"wall clock per call, model already loaded"
+qwen3.5:4b-q4_K_M,fill,none,latency_p90_ms,2732.2,36,
+qwen3.5:4b-q4_K_M,fill,none,tokens_per_s,36.86,36,eval_count / eval_duration
+qwen3.5:4b-q4_K_M,fill,none,mean_prompt_tokens,433.2,36,
+qwen3.5:4b-q4_K_M,fill,none,mean_output_tokens,49.6,36,
+qwen3.5:4b-q4_K_M,fill,none,outputs_cut_at_token_cap,0,36,done_reason length
+qwen3.5:4b-q4_K_M,explain,cards,calls,20,20,10 items x k=2; 0 HTTP or timeout errors
+qwen3.5:4b-q4_K_M,explain,cards,parse_rate,1.0,20,answers that parsed
+qwen3.5:4b-q4_K_M,explain,cards,schema_valid_rate,1.0,20,grammar-constrained decoding against the item schema
+qwen3.5:4b-q4_K_M,explain,cards,sentence_cap_pass_rate,1.0,20,two sentences at most
+qwen3.5:4b-q4_K_M,explain,cards,forbidden_pattern_rate,0.0,20,invented-command patterns
+qwen3.5:4b-q4_K_M,explain,cards,grade_pass,20,20,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,explain,cards,grade_partial,0,20,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,explain,cards,grade_fail,0,20,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,explain,cards,grade_hallucination,0,20,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,explain,cards,grade_pass_rate,1.0,20,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,explain,cards,grade_pass_rate_wilson95_low,0.8389,20,
+qwen3.5:4b-q4_K_M,explain,cards,grade_pass_rate_wilson95_high,1.0,20,
+qwen3.5:4b-q4_K_M,explain,cards,grade_score_half_partial,1.0,20,"(pass + 0.5 x partial) / n, as in doc 30"
+qwen3.5:4b-q4_K_M,explain,cards,grade_pass_k,1.0,10,pass^2: graded pass in both samples
+qwen3.5:4b-q4_K_M,explain,cards,grade_any_pass_items,10,10,items with a graded pass in at least one of 2 samples
+qwen3.5:4b-q4_K_M,explain,cards,latency_p50_ms,2445.9,20,"wall clock per call, model already loaded"
+qwen3.5:4b-q4_K_M,explain,cards,latency_p90_ms,2914.0,20,
+qwen3.5:4b-q4_K_M,explain,cards,tokens_per_s,37.62,20,eval_count / eval_duration
+qwen3.5:4b-q4_K_M,explain,cards,mean_prompt_tokens,311.4,20,
+qwen3.5:4b-q4_K_M,explain,cards,mean_output_tokens,78.0,20,
+qwen3.5:4b-q4_K_M,explain,cards,outputs_cut_at_token_cap,0,20,done_reason length
+qwen3.5:4b-q4_K_M,text,none,calls,20,20,10 items x k=2; 0 HTTP or timeout errors
+qwen3.5:4b-q4_K_M,text,none,parse_rate,1.0,20,answers that parsed
+qwen3.5:4b-q4_K_M,text,none,constraint_pass_rate,0.9,20,all code checks pass
+qwen3.5:4b-q4_K_M,text,none,check_banned_words,1.0,20,calls where the check applies
+qwen3.5:4b-q4_K_M,text,none,check_max_words,0.95,20,calls where the check applies
+qwen3.5:4b-q4_K_M,text,none,check_min_words,1.0,20,calls where the check applies
+qwen3.5:4b-q4_K_M,text,none,check_names_subset,0.9375,16,calls where the check applies
+qwen3.5:4b-q4_K_M,text,none,check_no_digits,1.0,20,calls where the check applies
+qwen3.5:4b-q4_K_M,text,none,constraint_pass_k,0.8,10,pass^2: code checks pass in both samples
+qwen3.5:4b-q4_K_M,text,none,mean_words,8,20,
+qwen3.5:4b-q4_K_M,text,none,grade_pass,7,20,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,text,none,grade_partial,11,20,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,text,none,grade_fail,2,20,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,text,none,grade_hallucination,0,20,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,text,none,grade_pass_rate,0.35,20,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,text,none,grade_pass_rate_wilson95_low,0.1812,20,
+qwen3.5:4b-q4_K_M,text,none,grade_pass_rate_wilson95_high,0.5671,20,
+qwen3.5:4b-q4_K_M,text,none,grade_score_half_partial,0.625,20,"(pass + 0.5 x partial) / n, as in doc 30"
+qwen3.5:4b-q4_K_M,text,none,grade_pass_k,0.2,10,pass^2: graded pass in both samples
+qwen3.5:4b-q4_K_M,text,none,grade_any_pass_items,5,10,items with a graded pass in at least one of 2 samples
+qwen3.5:4b-q4_K_M,text,none,latency_p50_ms,672.8,20,"wall clock per call, model already loaded"
+qwen3.5:4b-q4_K_M,text,none,latency_p90_ms,997.3,20,
+qwen3.5:4b-q4_K_M,text,none,tokens_per_s,38.89,20,eval_count / eval_duration
+qwen3.5:4b-q4_K_M,text,none,mean_prompt_tokens,169.6,20,
+qwen3.5:4b-q4_K_M,text,none,mean_output_tokens,17.9,20,
+qwen3.5:4b-q4_K_M,text,none,outputs_cut_at_token_cap,0,20,done_reason length
+qwen3.5:4b-q4_K_M,knowledge,none,calls,24,24,12 items x k=2; 0 HTTP or timeout errors
+qwen3.5:4b-q4_K_M,knowledge,none,parse_rate,1.0,24,answers that parsed
+qwen3.5:4b-q4_K_M,knowledge,none,mean_answer_chars,571.8,24,
+qwen3.5:4b-q4_K_M,knowledge,none,grade_pass,0,24,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,knowledge,none,grade_partial,0,24,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,knowledge,none,grade_fail,24,24,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,knowledge,none,grade_hallucination,24,24,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,knowledge,none,grade_pass_rate,0.0,24,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,knowledge,none,grade_pass_rate_wilson95_low,0.0,24,
+qwen3.5:4b-q4_K_M,knowledge,none,grade_pass_rate_wilson95_high,0.138,24,
+qwen3.5:4b-q4_K_M,knowledge,none,grade_score_half_partial,0.0,24,"(pass + 0.5 x partial) / n, as in doc 30"
+qwen3.5:4b-q4_K_M,knowledge,none,grade_pass_k,0.0,12,pass^2: graded pass in both samples
+qwen3.5:4b-q4_K_M,knowledge,none,grade_any_pass_items,0,12,items with a graded pass in at least one of 2 samples
+qwen3.5:4b-q4_K_M,knowledge,none,latency_p50_ms,3425.1,24,"wall clock per call, model already loaded"
+qwen3.5:4b-q4_K_M,knowledge,none,latency_p90_ms,10873.1,24,
+qwen3.5:4b-q4_K_M,knowledge,none,tokens_per_s,36.9,24,eval_count / eval_duration
+qwen3.5:4b-q4_K_M,knowledge,none,mean_prompt_tokens,91.6,24,
+qwen3.5:4b-q4_K_M,knowledge,none,mean_output_tokens,154.6,24,
+qwen3.5:4b-q4_K_M,knowledge,none,outputs_cut_at_token_cap,0,24,done_reason length
+qwen3.5:4b-q4_K_M,knowledge,cards,calls,24,24,12 items x k=2; 0 HTTP or timeout errors
+qwen3.5:4b-q4_K_M,knowledge,cards,parse_rate,1.0,24,answers that parsed
+qwen3.5:4b-q4_K_M,knowledge,cards,mean_answer_chars,332.0,24,
+qwen3.5:4b-q4_K_M,knowledge,cards,grade_pass,6,24,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,knowledge,cards,grade_partial,9,24,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,knowledge,cards,grade_fail,9,24,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,knowledge,cards,grade_hallucination,6,24,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,knowledge,cards,grade_pass_rate,0.25,24,"LLM grader, one pass, separate grader run per model"
+qwen3.5:4b-q4_K_M,knowledge,cards,grade_pass_rate_wilson95_low,0.12,24,
+qwen3.5:4b-q4_K_M,knowledge,cards,grade_pass_rate_wilson95_high,0.449,24,
+qwen3.5:4b-q4_K_M,knowledge,cards,grade_score_half_partial,0.4375,24,"(pass + 0.5 x partial) / n, as in doc 30"
+qwen3.5:4b-q4_K_M,knowledge,cards,grade_pass_k,0.25,12,pass^2: graded pass in both samples
+qwen3.5:4b-q4_K_M,knowledge,cards,grade_any_pass_items,3,12,items with a graded pass in at least one of 2 samples
+qwen3.5:4b-q4_K_M,knowledge,cards,latency_p50_ms,2641.2,24,"wall clock per call, model already loaded"
+qwen3.5:4b-q4_K_M,knowledge,cards,latency_p90_ms,5226.2,24,
+qwen3.5:4b-q4_K_M,knowledge,cards,tokens_per_s,35.89,24,eval_count / eval_duration
+qwen3.5:4b-q4_K_M,knowledge,cards,mean_prompt_tokens,226.7,24,
+qwen3.5:4b-q4_K_M,knowledge,cards,mean_output_tokens,93.6,24,
+qwen3.5:4b-q4_K_M,knowledge,cards,outputs_cut_at_token_cap,0,24,done_reason length
+ibm/granite4.1:3b-q4_K_M,pick,none,calls,90,90,30 items x k=3; 0 HTTP or timeout errors
+ibm/granite4.1:3b-q4_K_M,pick,none,parse_rate,1.0,90,answers that parsed
+ibm/granite4.1:3b-q4_K_M,pick,none,accuracy,0.9111,90,exact option key
+ibm/granite4.1:3b-q4_K_M,pick,none,accuracy_wilson95_low,0.8343,90,treats calls as independent; samples of one item are correlated
+ibm/granite4.1:3b-q4_K_M,pick,none,accuracy_wilson95_high,0.9543,90,treats calls as independent; samples of one item are correlated
+ibm/granite4.1:3b-q4_K_M,pick,none,pass_k,0.8333,30,pass^3: all 3 samples of a menu correct
+ibm/granite4.1:3b-q4_K_M,pick,none,items_failing_pass_k,5,30,PK02 PK03 PT03 PT04 PW04
+ibm/granite4.1:3b-q4_K_M,pick,none,majority_accuracy,0.9333,30,majority vote over 3 samples; ties (1) count as wrong
+ibm/granite4.1:3b-q4_K_M,pick,none,random_valid_baseline,0.1909,90,mean of 1 / number of real options
+ibm/granite4.1:3b-q4_K_M,pick,none,first_option_baseline,0.1556,90,score of always answering A
+ibm/granite4.1:3b-q4_K_M,pick,none,escape_item_accuracy,1.0,3,off-scope request PR05; only correct answer is X
+ibm/granite4.1:3b-q4_K_M,pick,none,false_escape_calls,0,87,X chosen on a menu that had a fitting option
+ibm/granite4.1:3b-q4_K_M,pick,none,accuracy_when_correct_is_A,0.7857,14,position bias check
+ibm/granite4.1:3b-q4_K_M,pick,none,accuracy_when_correct_is_B_to_G,0.9315,73,position bias check
+ibm/granite4.1:3b-q4_K_M,pick,none,chose_A_when_A_wrong,1,76,count; primacy bias check
+ibm/granite4.1:3b-q4_K_M,pick,none,accuracy_category_arc,0.6667,9,
+ibm/granite4.1:3b-q4_K_M,pick,none,accuracy_category_cutscene,1.0,12,
+ibm/granite4.1:3b-q4_K_M,pick,none,accuracy_category_module,1.0,15,
+ibm/granite4.1:3b-q4_K_M,pick,none,accuracy_category_mood,1.0,9,
+ibm/granite4.1:3b-q4_K_M,pick,none,accuracy_category_routing,1.0,15,
+ibm/granite4.1:3b-q4_K_M,pick,none,accuracy_category_trigger,0.8667,15,
+ibm/granite4.1:3b-q4_K_M,pick,none,accuracy_category_waypoint,0.8,15,
+ibm/granite4.1:3b-q4_K_M,pick,none,latency_p50_ms,310.4,90,"wall clock per call, model already loaded"
+ibm/granite4.1:3b-q4_K_M,pick,none,latency_p90_ms,344.3,90,
+ibm/granite4.1:3b-q4_K_M,pick,none,tokens_per_s,56.35,90,eval_count / eval_duration
+ibm/granite4.1:3b-q4_K_M,pick,none,mean_prompt_tokens,216.7,90,
+ibm/granite4.1:3b-q4_K_M,pick,none,mean_output_tokens,7,90,
+ibm/granite4.1:3b-q4_K_M,pick,none,outputs_cut_at_token_cap,0,90,done_reason length
+ibm/granite4.1:3b-q4_K_M,pick,cards,calls,90,90,30 items x k=3; 0 HTTP or timeout errors
+ibm/granite4.1:3b-q4_K_M,pick,cards,parse_rate,1.0,90,answers that parsed
+ibm/granite4.1:3b-q4_K_M,pick,cards,accuracy,0.8889,90,exact option key
+ibm/granite4.1:3b-q4_K_M,pick,cards,accuracy_wilson95_low,0.8074,90,treats calls as independent; samples of one item are correlated
+ibm/granite4.1:3b-q4_K_M,pick,cards,accuracy_wilson95_high,0.9385,90,treats calls as independent; samples of one item are correlated
+ibm/granite4.1:3b-q4_K_M,pick,cards,pass_k,0.8667,30,pass^3: all 3 samples of a menu correct
+ibm/granite4.1:3b-q4_K_M,pick,cards,items_failing_pass_k,4,30,PK03 PT02 PT04 PW04
+ibm/granite4.1:3b-q4_K_M,pick,cards,majority_accuracy,0.9,30,majority vote over 3 samples; ties (0) count as wrong
+ibm/granite4.1:3b-q4_K_M,pick,cards,random_valid_baseline,0.1909,90,mean of 1 / number of real options
+ibm/granite4.1:3b-q4_K_M,pick,cards,first_option_baseline,0.1556,90,score of always answering A
+ibm/granite4.1:3b-q4_K_M,pick,cards,escape_item_accuracy,1.0,3,off-scope request PR05; only correct answer is X
+ibm/granite4.1:3b-q4_K_M,pick,cards,false_escape_calls,0,87,X chosen on a menu that had a fitting option
+ibm/granite4.1:3b-q4_K_M,pick,cards,accuracy_when_correct_is_A,0.8571,14,position bias check
+ibm/granite4.1:3b-q4_K_M,pick,cards,accuracy_when_correct_is_B_to_G,0.8904,73,position bias check
+ibm/granite4.1:3b-q4_K_M,pick,cards,chose_A_when_A_wrong,1,76,count; primacy bias check
+ibm/granite4.1:3b-q4_K_M,pick,cards,accuracy_category_arc,0.6667,9,
+ibm/granite4.1:3b-q4_K_M,pick,cards,accuracy_category_cutscene,1.0,12,
+ibm/granite4.1:3b-q4_K_M,pick,cards,accuracy_category_module,1.0,15,
+ibm/granite4.1:3b-q4_K_M,pick,cards,accuracy_category_mood,1.0,9,
+ibm/granite4.1:3b-q4_K_M,pick,cards,accuracy_category_routing,1.0,15,
+ibm/granite4.1:3b-q4_K_M,pick,cards,accuracy_category_trigger,0.7333,15,
+ibm/granite4.1:3b-q4_K_M,pick,cards,accuracy_category_waypoint,0.8,15,
+ibm/granite4.1:3b-q4_K_M,pick,cards,latency_p50_ms,330.2,90,"wall clock per call, model already loaded"
+ibm/granite4.1:3b-q4_K_M,pick,cards,latency_p90_ms,427.6,90,
+ibm/granite4.1:3b-q4_K_M,pick,cards,tokens_per_s,54.82,90,eval_count / eval_duration
+ibm/granite4.1:3b-q4_K_M,pick,cards,mean_prompt_tokens,304.2,90,
+ibm/granite4.1:3b-q4_K_M,pick,cards,mean_output_tokens,7,90,
+ibm/granite4.1:3b-q4_K_M,pick,cards,outputs_cut_at_token_cap,0,90,done_reason length
+ibm/granite4.1:3b-q4_K_M,fill,none,calls,36,36,12 items x k=3; 0 HTTP or timeout errors
+ibm/granite4.1:3b-q4_K_M,fill,none,parse_rate,1.0,36,answers that parsed
+ibm/granite4.1:3b-q4_K_M,fill,none,schema_valid_rate,1.0,36,grammar-constrained decoding against the item schema
+ibm/granite4.1:3b-q4_K_M,fill,none,field_accuracy,0.7917,168,micro over 56 expected fields x k
+ibm/granite4.1:3b-q4_K_M,fill,none,field_accuracy_archetype,1.0,12,calls whose item has this field
+ibm/granite4.1:3b-q4_K_M,fill,none,field_accuracy_place,0.75,24,calls whose item has this field
+ibm/granite4.1:3b-q4_K_M,fill,none,field_accuracy_side,0.8056,36,calls whose item has this field
+ibm/granite4.1:3b-q4_K_M,fill,none,field_accuracy_size,0.5833,24,calls whose item has this field
+ibm/granite4.1:3b-q4_K_M,fill,none,field_accuracy_target,0.75,12,calls whose item has this field
+ibm/granite4.1:3b-q4_K_M,fill,none,field_accuracy_task,0.6667,24,calls whose item has this field
+ibm/granite4.1:3b-q4_K_M,fill,none,field_accuracy_time_of_day,0.9722,36,calls whose item has this field
+ibm/granite4.1:3b-q4_K_M,fill,none,all_fields_correct_rate,0.3889,36,per call
+ibm/granite4.1:3b-q4_K_M,fill,none,all_fields_pass_k,0.3333,12,pass^3: all fields right in all 3 samples
+ibm/granite4.1:3b-q4_K_M,fill,none,quote_check_pass_rate,0.9167,36,quoted span occurs in the request
+ibm/granite4.1:3b-q4_K_M,fill,none,validators_all_pass_rate,0.8056,36,"quote, length, digits, era words, names"
+ibm/granite4.1:3b-q4_K_M,fill,none,validators_pass_k,0.75,12,pass^3: all validators pass in all 3 samples
+ibm/granite4.1:3b-q4_K_M,fill,none,field_pass_k_archetype,1.0,4,pass^3 per field over the items that have it
+ibm/granite4.1:3b-q4_K_M,fill,none,field_pass_k_place,0.75,8,pass^3 per field over the items that have it
+ibm/granite4.1:3b-q4_K_M,fill,none,field_pass_k_side,0.6667,12,pass^3 per field over the items that have it
+ibm/granite4.1:3b-q4_K_M,fill,none,field_pass_k_size,0.375,8,pass^3 per field over the items that have it
+ibm/granite4.1:3b-q4_K_M,fill,none,field_pass_k_target,0.75,4,pass^3 per field over the items that have it
+ibm/granite4.1:3b-q4_K_M,fill,none,field_pass_k_task,0.5,8,pass^3 per field over the items that have it
+ibm/granite4.1:3b-q4_K_M,fill,none,field_pass_k_time_of_day,0.9167,12,pass^3 per field over the items that have it
+ibm/granite4.1:3b-q4_K_M,fill,none,latency_p50_ms,1029.8,36,"wall clock per call, model already loaded"
+ibm/granite4.1:3b-q4_K_M,fill,none,latency_p90_ms,1821.9,36,
+ibm/granite4.1:3b-q4_K_M,fill,none,tokens_per_s,49.2,36,eval_count / eval_duration
+ibm/granite4.1:3b-q4_K_M,fill,none,mean_prompt_tokens,418.2,36,
+ibm/granite4.1:3b-q4_K_M,fill,none,mean_output_tokens,44.3,36,
+ibm/granite4.1:3b-q4_K_M,fill,none,outputs_cut_at_token_cap,0,36,done_reason length
+ibm/granite4.1:3b-q4_K_M,explain,cards,calls,20,20,10 items x k=2; 0 HTTP or timeout errors
+ibm/granite4.1:3b-q4_K_M,explain,cards,parse_rate,1.0,20,answers that parsed
+ibm/granite4.1:3b-q4_K_M,explain,cards,schema_valid_rate,1.0,20,grammar-constrained decoding against the item schema
+ibm/granite4.1:3b-q4_K_M,explain,cards,sentence_cap_pass_rate,0.9,20,two sentences at most
+ibm/granite4.1:3b-q4_K_M,explain,cards,forbidden_pattern_rate,0.0,20,invented-command patterns
+ibm/granite4.1:3b-q4_K_M,explain,cards,grade_pass,18,20,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,explain,cards,grade_partial,2,20,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,explain,cards,grade_fail,0,20,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,explain,cards,grade_hallucination,0,20,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,explain,cards,grade_pass_rate,0.9,20,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,explain,cards,grade_pass_rate_wilson95_low,0.699,20,
+ibm/granite4.1:3b-q4_K_M,explain,cards,grade_pass_rate_wilson95_high,0.9721,20,
+ibm/granite4.1:3b-q4_K_M,explain,cards,grade_score_half_partial,0.95,20,"(pass + 0.5 x partial) / n, as in doc 30"
+ibm/granite4.1:3b-q4_K_M,explain,cards,grade_pass_k,0.8,10,pass^2: graded pass in both samples
+ibm/granite4.1:3b-q4_K_M,explain,cards,grade_any_pass_items,10,10,items with a graded pass in at least one of 2 samples
+ibm/granite4.1:3b-q4_K_M,explain,cards,latency_p50_ms,1736.9,20,"wall clock per call, model already loaded"
+ibm/granite4.1:3b-q4_K_M,explain,cards,latency_p90_ms,2127.3,20,
+ibm/granite4.1:3b-q4_K_M,explain,cards,tokens_per_s,49.42,20,eval_count / eval_duration
+ibm/granite4.1:3b-q4_K_M,explain,cards,mean_prompt_tokens,292.9,20,
+ibm/granite4.1:3b-q4_K_M,explain,cards,mean_output_tokens,80.5,20,
+ibm/granite4.1:3b-q4_K_M,explain,cards,outputs_cut_at_token_cap,0,20,done_reason length
+ibm/granite4.1:3b-q4_K_M,text,none,calls,20,20,10 items x k=2; 0 HTTP or timeout errors
+ibm/granite4.1:3b-q4_K_M,text,none,parse_rate,1.0,20,answers that parsed
+ibm/granite4.1:3b-q4_K_M,text,none,constraint_pass_rate,1.0,20,all code checks pass
+ibm/granite4.1:3b-q4_K_M,text,none,check_banned_words,1.0,20,calls where the check applies
+ibm/granite4.1:3b-q4_K_M,text,none,check_max_words,1.0,20,calls where the check applies
+ibm/granite4.1:3b-q4_K_M,text,none,check_min_words,1.0,20,calls where the check applies
+ibm/granite4.1:3b-q4_K_M,text,none,check_names_subset,1.0,16,calls where the check applies
+ibm/granite4.1:3b-q4_K_M,text,none,check_no_digits,1.0,20,calls where the check applies
+ibm/granite4.1:3b-q4_K_M,text,none,constraint_pass_k,1.0,10,pass^2: code checks pass in both samples
+ibm/granite4.1:3b-q4_K_M,text,none,mean_words,6.4,20,
+ibm/granite4.1:3b-q4_K_M,text,none,grade_pass,6,20,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,text,none,grade_partial,14,20,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,text,none,grade_fail,0,20,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,text,none,grade_hallucination,0,20,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,text,none,grade_pass_rate,0.3,20,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,text,none,grade_pass_rate_wilson95_low,0.1455,20,
+ibm/granite4.1:3b-q4_K_M,text,none,grade_pass_rate_wilson95_high,0.519,20,
+ibm/granite4.1:3b-q4_K_M,text,none,grade_score_half_partial,0.65,20,"(pass + 0.5 x partial) / n, as in doc 30"
+ibm/granite4.1:3b-q4_K_M,text,none,grade_pass_k,0.2,10,pass^2: graded pass in both samples
+ibm/granite4.1:3b-q4_K_M,text,none,grade_any_pass_items,4,10,items with a graded pass in at least one of 2 samples
+ibm/granite4.1:3b-q4_K_M,text,none,latency_p50_ms,407.9,20,"wall clock per call, model already loaded"
+ibm/granite4.1:3b-q4_K_M,text,none,latency_p90_ms,554.0,20,
+ibm/granite4.1:3b-q4_K_M,text,none,tokens_per_s,53.15,20,eval_count / eval_duration
+ibm/granite4.1:3b-q4_K_M,text,none,mean_prompt_tokens,155.7,20,
+ibm/granite4.1:3b-q4_K_M,text,none,mean_output_tokens,15.9,20,
+ibm/granite4.1:3b-q4_K_M,text,none,outputs_cut_at_token_cap,0,20,done_reason length
+ibm/granite4.1:3b-q4_K_M,knowledge,none,calls,24,24,12 items x k=2; 0 HTTP or timeout errors
+ibm/granite4.1:3b-q4_K_M,knowledge,none,parse_rate,1.0,24,answers that parsed
+ibm/granite4.1:3b-q4_K_M,knowledge,none,mean_answer_chars,323.8,24,
+ibm/granite4.1:3b-q4_K_M,knowledge,none,grade_pass,0,24,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,knowledge,none,grade_partial,0,24,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,knowledge,none,grade_fail,24,24,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,knowledge,none,grade_hallucination,20,24,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,knowledge,none,grade_pass_rate,0.0,24,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,knowledge,none,grade_pass_rate_wilson95_low,0.0,24,
+ibm/granite4.1:3b-q4_K_M,knowledge,none,grade_pass_rate_wilson95_high,0.138,24,
+ibm/granite4.1:3b-q4_K_M,knowledge,none,grade_score_half_partial,0.0,24,"(pass + 0.5 x partial) / n, as in doc 30"
+ibm/granite4.1:3b-q4_K_M,knowledge,none,grade_pass_k,0.0,12,pass^2: graded pass in both samples
+ibm/granite4.1:3b-q4_K_M,knowledge,none,grade_any_pass_items,0,12,items with a graded pass in at least one of 2 samples
+ibm/granite4.1:3b-q4_K_M,knowledge,none,latency_p50_ms,1418.2,24,"wall clock per call, model already loaded"
+ibm/granite4.1:3b-q4_K_M,knowledge,none,latency_p90_ms,2418.2,24,
+ibm/granite4.1:3b-q4_K_M,knowledge,none,tokens_per_s,51.1,24,eval_count / eval_duration
+ibm/granite4.1:3b-q4_K_M,knowledge,none,mean_prompt_tokens,86.8,24,
+ibm/granite4.1:3b-q4_K_M,knowledge,none,mean_output_tokens,81.1,24,
+ibm/granite4.1:3b-q4_K_M,knowledge,none,outputs_cut_at_token_cap,0,24,done_reason length
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,calls,24,24,12 items x k=2; 0 HTTP or timeout errors
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,parse_rate,1.0,24,answers that parsed
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,mean_answer_chars,293.5,24,
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,grade_pass,8,24,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,grade_partial,6,24,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,grade_fail,10,24,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,grade_hallucination,6,24,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,grade_pass_rate,0.3333,24,"LLM grader, one pass, separate grader run per model"
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,grade_pass_rate_wilson95_low,0.1797,24,
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,grade_pass_rate_wilson95_high,0.5329,24,
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,grade_score_half_partial,0.4583,24,"(pass + 0.5 x partial) / n, as in doc 30"
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,grade_pass_k,0.25,12,pass^2: graded pass in both samples
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,grade_any_pass_items,5,12,items with a graded pass in at least one of 2 samples
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,latency_p50_ms,1635.0,24,"wall clock per call, model already loaded"
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,latency_p90_ms,3128.7,24,
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,tokens_per_s,50.34,24,eval_count / eval_duration
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,mean_prompt_tokens,217,24,
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,mean_output_tokens,76.8,24,
+ibm/granite4.1:3b-q4_K_M,knowledge,cards,outputs_cut_at_token_cap,0,24,done_reason length
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,calls,90,90,30 items x k=3; 0 HTTP or timeout errors
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,parse_rate,1.0,90,answers that parsed
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,accuracy,0.8333,90,exact option key
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,accuracy_wilson95_low,0.7431,90,treats calls as independent; samples of one item are correlated
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,accuracy_wilson95_high,0.8963,90,treats calls as independent; samples of one item are correlated
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,pass_k,0.6667,30,pass^3: all 3 samples of a menu correct
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,items_failing_pass_k,10,30,PC03 PM05 PR03 PR04 PT02 PT03 PT04 PW02 PW04 PW05
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,majority_accuracy,0.8667,30,majority vote over 3 samples; ties (2) count as wrong
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,random_valid_baseline,0.1909,90,mean of 1 / number of real options
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,first_option_baseline,0.1556,90,score of always answering A
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,escape_item_accuracy,1.0,3,off-scope request PR05; only correct answer is X
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,false_escape_calls,1,87,X chosen on a menu that had a fitting option
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,accuracy_when_correct_is_A,0.7143,14,position bias check
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,accuracy_when_correct_is_B_to_G,0.8493,73,position bias check
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,chose_A_when_A_wrong,5,76,count; primacy bias check
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,accuracy_category_arc,1.0,9,
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,accuracy_category_cutscene,0.9167,12,
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,accuracy_category_module,0.9333,15,
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,accuracy_category_mood,1.0,9,
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,accuracy_category_routing,0.8,15,
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,accuracy_category_trigger,0.6667,15,
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,accuracy_category_waypoint,0.6667,15,
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,latency_p50_ms,322.9,90,"wall clock per call, model already loaded"
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,latency_p90_ms,385.0,90,
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,tokens_per_s,60.83,90,eval_count / eval_duration
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,mean_prompt_tokens,216.5,90,
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,mean_output_tokens,7.5,90,
+ministral-3:3b-instruct-2512-q4_k_M,pick,none,outputs_cut_at_token_cap,0,90,done_reason length
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,calls,90,90,30 items x k=3; 0 HTTP or timeout errors
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,parse_rate,1.0,90,answers that parsed
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,accuracy,0.9111,90,exact option key
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,accuracy_wilson95_low,0.8343,90,treats calls as independent; samples of one item are correlated
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,accuracy_wilson95_high,0.9543,90,treats calls as independent; samples of one item are correlated
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,pass_k,0.8,30,pass^3: all 3 samples of a menu correct
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,items_failing_pass_k,6,30,PC01 PM05 PR03 PT03 PW02 PW04
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,majority_accuracy,0.9667,30,majority vote over 3 samples; ties (0) count as wrong
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,random_valid_baseline,0.1909,90,mean of 1 / number of real options
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,first_option_baseline,0.1556,90,score of always answering A
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,escape_item_accuracy,1.0,3,off-scope request PR05; only correct answer is X
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,false_escape_calls,0,87,X chosen on a menu that had a fitting option
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,accuracy_when_correct_is_A,0.7857,14,position bias check
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,accuracy_when_correct_is_B_to_G,0.9315,73,position bias check
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,chose_A_when_A_wrong,2,76,count; primacy bias check
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,accuracy_category_arc,1.0,9,
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,accuracy_category_cutscene,0.9167,12,
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,accuracy_category_module,0.9333,15,
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,accuracy_category_mood,1.0,9,
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,accuracy_category_routing,0.9333,15,
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,accuracy_category_trigger,0.9333,15,
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,accuracy_category_waypoint,0.7333,15,
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,latency_p50_ms,351.4,90,"wall clock per call, model already loaded"
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,latency_p90_ms,468.0,90,
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,tokens_per_s,60.0,90,eval_count / eval_duration
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,mean_prompt_tokens,313.3,90,
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,mean_output_tokens,7.7,90,
+ministral-3:3b-instruct-2512-q4_k_M,pick,cards,outputs_cut_at_token_cap,0,90,done_reason length
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,calls,36,36,12 items x k=3; 0 HTTP or timeout errors
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,parse_rate,1.0,36,answers that parsed
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,schema_valid_rate,1.0,36,grammar-constrained decoding against the item schema
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_accuracy,0.8393,168,micro over 56 expected fields x k
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_accuracy_archetype,1.0,12,calls whose item has this field
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_accuracy_place,0.9167,24,calls whose item has this field
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_accuracy_side,0.9722,36,calls whose item has this field
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_accuracy_size,0.875,24,calls whose item has this field
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_accuracy_target,0.0,12,calls whose item has this field
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_accuracy_task,0.6667,24,calls whose item has this field
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_accuracy_time_of_day,0.9722,36,calls whose item has this field
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,all_fields_correct_rate,0.4167,36,per call
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,all_fields_pass_k,0.3333,12,pass^3: all fields right in all 3 samples
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,quote_check_pass_rate,0.6944,36,quoted span occurs in the request
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,validators_all_pass_rate,0.6389,36,"quote, length, digits, era words, names"
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,validators_pass_k,0.5833,12,pass^3: all validators pass in all 3 samples
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_pass_k_archetype,1.0,4,pass^3 per field over the items that have it
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_pass_k_place,0.75,8,pass^3 per field over the items that have it
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_pass_k_side,0.9167,12,pass^3 per field over the items that have it
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_pass_k_size,0.875,8,pass^3 per field over the items that have it
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_pass_k_target,0.0,4,pass^3 per field over the items that have it
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_pass_k_task,0.625,8,pass^3 per field over the items that have it
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,field_pass_k_time_of_day,0.9167,12,pass^3 per field over the items that have it
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,latency_p50_ms,1362.8,36,"wall clock per call, model already loaded"
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,latency_p90_ms,2133.7,36,
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,tokens_per_s,52.15,36,eval_count / eval_duration
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,mean_prompt_tokens,438.7,36,
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,mean_output_tokens,61.1,36,
+ministral-3:3b-instruct-2512-q4_k_M,fill,none,outputs_cut_at_token_cap,0,36,done_reason length
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,calls,20,20,10 items x k=2; 0 HTTP or timeout errors
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,parse_rate,1.0,20,answers that parsed
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,schema_valid_rate,1.0,20,grammar-constrained decoding against the item schema
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,sentence_cap_pass_rate,1.0,20,two sentences at most
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,forbidden_pattern_rate,0.0,20,invented-command patterns
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,grade_pass,16,20,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,grade_partial,4,20,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,grade_fail,0,20,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,grade_hallucination,0,20,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,grade_pass_rate,0.8,20,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,grade_pass_rate_wilson95_low,0.584,20,
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,grade_pass_rate_wilson95_high,0.9193,20,
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,grade_score_half_partial,0.9,20,"(pass + 0.5 x partial) / n, as in doc 30"
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,grade_pass_k,0.6,10,pass^2: graded pass in both samples
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,grade_any_pass_items,10,10,items with a graded pass in at least one of 2 samples
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,latency_p50_ms,2037.9,20,"wall clock per call, model already loaded"
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,latency_p90_ms,2659.9,20,
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,tokens_per_s,53.23,20,eval_count / eval_duration
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,mean_prompt_tokens,308.8,20,
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,mean_output_tokens,100.8,20,
+ministral-3:3b-instruct-2512-q4_k_M,explain,cards,outputs_cut_at_token_cap,0,20,done_reason length
+ministral-3:3b-instruct-2512-q4_k_M,text,none,calls,20,20,10 items x k=2; 0 HTTP or timeout errors
+ministral-3:3b-instruct-2512-q4_k_M,text,none,parse_rate,1.0,20,answers that parsed
+ministral-3:3b-instruct-2512-q4_k_M,text,none,constraint_pass_rate,0.5,20,all code checks pass
+ministral-3:3b-instruct-2512-q4_k_M,text,none,check_banned_words,1.0,20,calls where the check applies
+ministral-3:3b-instruct-2512-q4_k_M,text,none,check_max_words,0.6,20,calls where the check applies
+ministral-3:3b-instruct-2512-q4_k_M,text,none,check_min_words,1.0,20,calls where the check applies
+ministral-3:3b-instruct-2512-q4_k_M,text,none,check_names_subset,0.6875,16,calls where the check applies
+ministral-3:3b-instruct-2512-q4_k_M,text,none,check_no_digits,0.9,20,calls where the check applies
+ministral-3:3b-instruct-2512-q4_k_M,text,none,constraint_pass_k,0.3,10,pass^2: code checks pass in both samples
+ministral-3:3b-instruct-2512-q4_k_M,text,none,mean_words,13.35,20,
+ministral-3:3b-instruct-2512-q4_k_M,text,none,grade_pass,3,20,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,text,none,grade_partial,10,20,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,text,none,grade_fail,7,20,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,text,none,grade_hallucination,0,20,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,text,none,grade_pass_rate,0.15,20,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,text,none,grade_pass_rate_wilson95_low,0.0524,20,
+ministral-3:3b-instruct-2512-q4_k_M,text,none,grade_pass_rate_wilson95_high,0.3604,20,
+ministral-3:3b-instruct-2512-q4_k_M,text,none,grade_score_half_partial,0.4,20,"(pass + 0.5 x partial) / n, as in doc 30"
+ministral-3:3b-instruct-2512-q4_k_M,text,none,grade_pass_k,0.0,10,pass^2: graded pass in both samples
+ministral-3:3b-instruct-2512-q4_k_M,text,none,grade_any_pass_items,3,10,items with a graded pass in at least one of 2 samples
+ministral-3:3b-instruct-2512-q4_k_M,text,none,latency_p50_ms,648.1,20,"wall clock per call, model already loaded"
+ministral-3:3b-instruct-2512-q4_k_M,text,none,latency_p90_ms,837.1,20,
+ministral-3:3b-instruct-2512-q4_k_M,text,none,tokens_per_s,51.75,20,eval_count / eval_duration
+ministral-3:3b-instruct-2512-q4_k_M,text,none,mean_prompt_tokens,157.9,20,
+ministral-3:3b-instruct-2512-q4_k_M,text,none,mean_output_tokens,26.9,20,
+ministral-3:3b-instruct-2512-q4_k_M,text,none,outputs_cut_at_token_cap,0,20,done_reason length
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,calls,24,24,12 items x k=2; 0 HTTP or timeout errors
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,parse_rate,1.0,24,answers that parsed
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,mean_answer_chars,424.8,24,
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,grade_pass,0,24,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,grade_partial,1,24,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,grade_fail,23,24,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,grade_hallucination,24,24,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,grade_pass_rate,0.0,24,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,grade_pass_rate_wilson95_low,0.0,24,
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,grade_pass_rate_wilson95_high,0.138,24,
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,grade_score_half_partial,0.0208,24,"(pass + 0.5 x partial) / n, as in doc 30"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,grade_pass_k,0.0,12,pass^2: graded pass in both samples
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,grade_any_pass_items,0,12,items with a graded pass in at least one of 2 samples
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,latency_p50_ms,1584.6,24,"wall clock per call, model already loaded"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,latency_p90_ms,6076.2,24,
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,tokens_per_s,54.42,24,eval_count / eval_duration
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,mean_prompt_tokens,81,24,
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,mean_output_tokens,128.8,24,
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,none,outputs_cut_at_token_cap,1,24,done_reason length
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,calls,24,24,12 items x k=2; 0 HTTP or timeout errors
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,parse_rate,1.0,24,answers that parsed
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,mean_answer_chars,267.9,24,
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,grade_pass,5,24,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,grade_partial,12,24,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,grade_fail,7,24,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,grade_hallucination,7,24,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,grade_pass_rate,0.2083,24,"LLM grader, one pass, separate grader run per model"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,grade_pass_rate_wilson95_low,0.0924,24,
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,grade_pass_rate_wilson95_high,0.4047,24,
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,grade_score_half_partial,0.4583,24,"(pass + 0.5 x partial) / n, as in doc 30"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,grade_pass_k,0.0833,12,pass^2: graded pass in both samples
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,grade_any_pass_items,4,12,items with a graded pass in at least one of 2 samples
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,latency_p50_ms,1445.2,24,"wall clock per call, model already loaded"
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,latency_p90_ms,2952.1,24,
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,tokens_per_s,54.23,24,eval_count / eval_duration
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,mean_prompt_tokens,219.9,24,
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,mean_output_tokens,83.6,24,
+ministral-3:3b-instruct-2512-q4_k_M,knowledge,cards,outputs_cut_at_token_cap,0,24,done_reason length
+gemma4:e4b-it-qat,pick,none,calls,90,90,30 items x k=3; 0 HTTP or timeout errors
+gemma4:e4b-it-qat,pick,none,parse_rate,1.0,90,answers that parsed
+gemma4:e4b-it-qat,pick,none,accuracy,0.9556,90,exact option key
+gemma4:e4b-it-qat,pick,none,accuracy_wilson95_low,0.8912,90,treats calls as independent; samples of one item are correlated
+gemma4:e4b-it-qat,pick,none,accuracy_wilson95_high,0.9826,90,treats calls as independent; samples of one item are correlated
+gemma4:e4b-it-qat,pick,none,pass_k,0.9333,30,pass^3: all 3 samples of a menu correct
+gemma4:e4b-it-qat,pick,none,items_failing_pass_k,2,30,PR04 PW04
+gemma4:e4b-it-qat,pick,none,majority_accuracy,0.9667,30,majority vote over 3 samples; ties (0) count as wrong
+gemma4:e4b-it-qat,pick,none,random_valid_baseline,0.1909,90,mean of 1 / number of real options
+gemma4:e4b-it-qat,pick,none,first_option_baseline,0.1556,90,score of always answering A
+gemma4:e4b-it-qat,pick,none,escape_item_accuracy,1.0,3,off-scope request PR05; only correct answer is X
+gemma4:e4b-it-qat,pick,none,false_escape_calls,1,87,X chosen on a menu that had a fitting option
+gemma4:e4b-it-qat,pick,none,accuracy_when_correct_is_A,0.9286,14,position bias check
+gemma4:e4b-it-qat,pick,none,accuracy_when_correct_is_B_to_G,0.9589,73,position bias check
+gemma4:e4b-it-qat,pick,none,chose_A_when_A_wrong,0,76,count; primacy bias check
+gemma4:e4b-it-qat,pick,none,accuracy_category_arc,1.0,9,
+gemma4:e4b-it-qat,pick,none,accuracy_category_cutscene,1.0,12,
+gemma4:e4b-it-qat,pick,none,accuracy_category_module,1.0,15,
+gemma4:e4b-it-qat,pick,none,accuracy_category_mood,1.0,9,
+gemma4:e4b-it-qat,pick,none,accuracy_category_routing,0.9333,15,
+gemma4:e4b-it-qat,pick,none,accuracy_category_trigger,1.0,15,
+gemma4:e4b-it-qat,pick,none,accuracy_category_waypoint,0.8,15,
+gemma4:e4b-it-qat,pick,none,latency_p50_ms,509.6,90,"wall clock per call, model already loaded"
+gemma4:e4b-it-qat,pick,none,latency_p90_ms,536.0,90,
+gemma4:e4b-it-qat,pick,none,tokens_per_s,45.48,90,eval_count / eval_duration
+gemma4:e4b-it-qat,pick,none,mean_prompt_tokens,221.2,90,
+gemma4:e4b-it-qat,pick,none,mean_output_tokens,7,90,
+gemma4:e4b-it-qat,pick,none,outputs_cut_at_token_cap,0,90,done_reason length
+gemma4:e4b-it-qat,pick,cards,calls,90,90,30 items x k=3; 0 HTTP or timeout errors
+gemma4:e4b-it-qat,pick,cards,parse_rate,1.0,90,answers that parsed
+gemma4:e4b-it-qat,pick,cards,accuracy,0.9556,90,exact option key
+gemma4:e4b-it-qat,pick,cards,accuracy_wilson95_low,0.8912,90,treats calls as independent; samples of one item are correlated
+gemma4:e4b-it-qat,pick,cards,accuracy_wilson95_high,0.9826,90,treats calls as independent; samples of one item are correlated
+gemma4:e4b-it-qat,pick,cards,pass_k,0.9333,30,pass^3: all 3 samples of a menu correct
+gemma4:e4b-it-qat,pick,cards,items_failing_pass_k,2,30,PM05 PW04
+gemma4:e4b-it-qat,pick,cards,majority_accuracy,0.9667,30,majority vote over 3 samples; ties (0) count as wrong
+gemma4:e4b-it-qat,pick,cards,random_valid_baseline,0.1909,90,mean of 1 / number of real options
+gemma4:e4b-it-qat,pick,cards,first_option_baseline,0.1556,90,score of always answering A
+gemma4:e4b-it-qat,pick,cards,escape_item_accuracy,1.0,3,off-scope request PR05; only correct answer is X
+gemma4:e4b-it-qat,pick,cards,false_escape_calls,0,87,X chosen on a menu that had a fitting option
+gemma4:e4b-it-qat,pick,cards,accuracy_when_correct_is_A,0.8571,14,position bias check
+gemma4:e4b-it-qat,pick,cards,accuracy_when_correct_is_B_to_G,0.9726,73,position bias check
+gemma4:e4b-it-qat,pick,cards,chose_A_when_A_wrong,0,76,count; primacy bias check
+gemma4:e4b-it-qat,pick,cards,accuracy_category_arc,1.0,9,
+gemma4:e4b-it-qat,pick,cards,accuracy_category_cutscene,1.0,12,
+gemma4:e4b-it-qat,pick,cards,accuracy_category_module,0.9333,15,
+gemma4:e4b-it-qat,pick,cards,accuracy_category_mood,1.0,9,
+gemma4:e4b-it-qat,pick,cards,accuracy_category_routing,1.0,15,
+gemma4:e4b-it-qat,pick,cards,accuracy_category_trigger,1.0,15,
+gemma4:e4b-it-qat,pick,cards,accuracy_category_waypoint,0.8,15,
+gemma4:e4b-it-qat,pick,cards,latency_p50_ms,627.7,90,"wall clock per call, model already loaded"
+gemma4:e4b-it-qat,pick,cards,latency_p90_ms,702.7,90,
+gemma4:e4b-it-qat,pick,cards,tokens_per_s,45.41,90,eval_count / eval_duration
+gemma4:e4b-it-qat,pick,cards,mean_prompt_tokens,312.8,90,
+gemma4:e4b-it-qat,pick,cards,mean_output_tokens,7.1,90,
+gemma4:e4b-it-qat,pick,cards,outputs_cut_at_token_cap,0,90,done_reason length
+gemma4:e4b-it-qat,fill,none,calls,36,36,12 items x k=3; 0 HTTP or timeout errors
+gemma4:e4b-it-qat,fill,none,parse_rate,1.0,36,answers that parsed
+gemma4:e4b-it-qat,fill,none,schema_valid_rate,1.0,36,grammar-constrained decoding against the item schema
+gemma4:e4b-it-qat,fill,none,field_accuracy,0.9226,168,micro over 56 expected fields x k
+gemma4:e4b-it-qat,fill,none,field_accuracy_archetype,1.0,12,calls whose item has this field
+gemma4:e4b-it-qat,fill,none,field_accuracy_place,0.875,24,calls whose item has this field
+gemma4:e4b-it-qat,fill,none,field_accuracy_side,1.0,36,calls whose item has this field
+gemma4:e4b-it-qat,fill,none,field_accuracy_size,0.6667,24,calls whose item has this field
+gemma4:e4b-it-qat,fill,none,field_accuracy_target,0.8333,12,calls whose item has this field
+gemma4:e4b-it-qat,fill,none,field_accuracy_task,1.0,24,calls whose item has this field
+gemma4:e4b-it-qat,fill,none,field_accuracy_time_of_day,1.0,36,calls whose item has this field
+gemma4:e4b-it-qat,fill,none,all_fields_correct_rate,0.6389,36,per call
+gemma4:e4b-it-qat,fill,none,all_fields_pass_k,0.5833,12,pass^3: all fields right in all 3 samples
+gemma4:e4b-it-qat,fill,none,quote_check_pass_rate,1.0,36,quoted span occurs in the request
+gemma4:e4b-it-qat,fill,none,validators_all_pass_rate,0.9722,36,"quote, length, digits, era words, names"
+gemma4:e4b-it-qat,fill,none,validators_pass_k,0.9167,12,pass^3: all validators pass in all 3 samples
+gemma4:e4b-it-qat,fill,none,field_pass_k_archetype,1.0,4,pass^3 per field over the items that have it
+gemma4:e4b-it-qat,fill,none,field_pass_k_place,0.875,8,pass^3 per field over the items that have it
+gemma4:e4b-it-qat,fill,none,field_pass_k_side,1.0,12,pass^3 per field over the items that have it
+gemma4:e4b-it-qat,fill,none,field_pass_k_size,0.625,8,pass^3 per field over the items that have it
+gemma4:e4b-it-qat,fill,none,field_pass_k_target,0.75,4,pass^3 per field over the items that have it
+gemma4:e4b-it-qat,fill,none,field_pass_k_task,1.0,8,pass^3 per field over the items that have it
+gemma4:e4b-it-qat,fill,none,field_pass_k_time_of_day,1.0,12,pass^3 per field over the items that have it
+gemma4:e4b-it-qat,fill,none,latency_p50_ms,1470.3,36,"wall clock per call, model already loaded"
+gemma4:e4b-it-qat,fill,none,latency_p90_ms,2179.0,36,
+gemma4:e4b-it-qat,fill,none,tokens_per_s,40.49,36,eval_count / eval_duration
+gemma4:e4b-it-qat,fill,none,mean_prompt_tokens,435.7,36,
+gemma4:e4b-it-qat,fill,none,mean_output_tokens,44.3,36,
+gemma4:e4b-it-qat,fill,none,outputs_cut_at_token_cap,0,36,done_reason length
+gemma4:e4b-it-qat,explain,cards,calls,20,20,10 items x k=2; 0 HTTP or timeout errors
+gemma4:e4b-it-qat,explain,cards,parse_rate,1.0,20,answers that parsed
+gemma4:e4b-it-qat,explain,cards,schema_valid_rate,1.0,20,grammar-constrained decoding against the item schema
+gemma4:e4b-it-qat,explain,cards,sentence_cap_pass_rate,1.0,20,two sentences at most
+gemma4:e4b-it-qat,explain,cards,forbidden_pattern_rate,0.0,20,invented-command patterns
+gemma4:e4b-it-qat,explain,cards,grade_pass,13,20,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,explain,cards,grade_partial,7,20,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,explain,cards,grade_fail,0,20,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,explain,cards,grade_hallucination,2,20,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,explain,cards,grade_pass_rate,0.65,20,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,explain,cards,grade_pass_rate_wilson95_low,0.4329,20,
+gemma4:e4b-it-qat,explain,cards,grade_pass_rate_wilson95_high,0.8188,20,
+gemma4:e4b-it-qat,explain,cards,grade_score_half_partial,0.825,20,"(pass + 0.5 x partial) / n, as in doc 30"
+gemma4:e4b-it-qat,explain,cards,grade_pass_k,0.5,10,pass^2: graded pass in both samples
+gemma4:e4b-it-qat,explain,cards,grade_any_pass_items,8,10,items with a graded pass in at least one of 2 samples
+gemma4:e4b-it-qat,explain,cards,latency_p50_ms,2309.8,20,"wall clock per call, model already loaded"
+gemma4:e4b-it-qat,explain,cards,latency_p90_ms,2614.8,20,
+gemma4:e4b-it-qat,explain,cards,tokens_per_s,40.02,20,eval_count / eval_duration
+gemma4:e4b-it-qat,explain,cards,mean_prompt_tokens,306.6,20,
+gemma4:e4b-it-qat,explain,cards,mean_output_tokens,78.2,20,
+gemma4:e4b-it-qat,explain,cards,outputs_cut_at_token_cap,0,20,done_reason length
+gemma4:e4b-it-qat,text,none,calls,20,20,10 items x k=2; 0 HTTP or timeout errors
+gemma4:e4b-it-qat,text,none,parse_rate,1.0,20,answers that parsed
+gemma4:e4b-it-qat,text,none,constraint_pass_rate,1.0,20,all code checks pass
+gemma4:e4b-it-qat,text,none,check_banned_words,1.0,20,calls where the check applies
+gemma4:e4b-it-qat,text,none,check_max_words,1.0,20,calls where the check applies
+gemma4:e4b-it-qat,text,none,check_min_words,1.0,20,calls where the check applies
+gemma4:e4b-it-qat,text,none,check_names_subset,1.0,16,calls where the check applies
+gemma4:e4b-it-qat,text,none,check_no_digits,1.0,20,calls where the check applies
+gemma4:e4b-it-qat,text,none,constraint_pass_k,1.0,10,pass^2: code checks pass in both samples
+gemma4:e4b-it-qat,text,none,mean_words,8.6,20,
+gemma4:e4b-it-qat,text,none,grade_pass,5,20,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,text,none,grade_partial,15,20,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,text,none,grade_fail,0,20,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,text,none,grade_hallucination,0,20,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,text,none,grade_pass_rate,0.25,20,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,text,none,grade_pass_rate_wilson95_low,0.1119,20,
+gemma4:e4b-it-qat,text,none,grade_pass_rate_wilson95_high,0.4687,20,
+gemma4:e4b-it-qat,text,none,grade_score_half_partial,0.625,20,"(pass + 0.5 x partial) / n, as in doc 30"
+gemma4:e4b-it-qat,text,none,grade_pass_k,0.2,10,pass^2: graded pass in both samples
+gemma4:e4b-it-qat,text,none,grade_any_pass_items,3,10,items with a graded pass in at least one of 2 samples
+gemma4:e4b-it-qat,text,none,latency_p50_ms,651.2,20,"wall clock per call, model already loaded"
+gemma4:e4b-it-qat,text,none,latency_p90_ms,782.6,20,
+gemma4:e4b-it-qat,text,none,tokens_per_s,42.34,20,eval_count / eval_duration
+gemma4:e4b-it-qat,text,none,mean_prompt_tokens,165.2,20,
+gemma4:e4b-it-qat,text,none,mean_output_tokens,17.1,20,
+gemma4:e4b-it-qat,text,none,outputs_cut_at_token_cap,0,20,done_reason length
+gemma4:e4b-it-qat,knowledge,none,calls,24,24,12 items x k=2; 0 HTTP or timeout errors
+gemma4:e4b-it-qat,knowledge,none,parse_rate,1.0,24,answers that parsed
+gemma4:e4b-it-qat,knowledge,none,mean_answer_chars,285,24,
+gemma4:e4b-it-qat,knowledge,none,grade_pass,0,24,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,knowledge,none,grade_partial,0,24,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,knowledge,none,grade_fail,24,24,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,knowledge,none,grade_hallucination,22,24,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,knowledge,none,grade_pass_rate,0.0,24,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,knowledge,none,grade_pass_rate_wilson95_low,0.0,24,
+gemma4:e4b-it-qat,knowledge,none,grade_pass_rate_wilson95_high,0.138,24,
+gemma4:e4b-it-qat,knowledge,none,grade_score_half_partial,0.0,24,"(pass + 0.5 x partial) / n, as in doc 30"
+gemma4:e4b-it-qat,knowledge,none,grade_pass_k,0.0,12,pass^2: graded pass in both samples
+gemma4:e4b-it-qat,knowledge,none,grade_any_pass_items,0,12,items with a graded pass in at least one of 2 samples
+gemma4:e4b-it-qat,knowledge,none,latency_p50_ms,1805.8,24,"wall clock per call, model already loaded"
+gemma4:e4b-it-qat,knowledge,none,latency_p90_ms,3822.3,24,
+gemma4:e4b-it-qat,knowledge,none,tokens_per_s,40.82,24,eval_count / eval_duration
+gemma4:e4b-it-qat,knowledge,none,mean_prompt_tokens,90.2,24,
+gemma4:e4b-it-qat,knowledge,none,mean_output_tokens,77.7,24,
+gemma4:e4b-it-qat,knowledge,none,outputs_cut_at_token_cap,0,24,done_reason length
+gemma4:e4b-it-qat,knowledge,cards,calls,24,24,12 items x k=2; 0 HTTP or timeout errors
+gemma4:e4b-it-qat,knowledge,cards,parse_rate,1.0,24,answers that parsed
+gemma4:e4b-it-qat,knowledge,cards,mean_answer_chars,248.3,24,
+gemma4:e4b-it-qat,knowledge,cards,grade_pass,6,24,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,knowledge,cards,grade_partial,8,24,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,knowledge,cards,grade_fail,10,24,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,knowledge,cards,grade_hallucination,10,24,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,knowledge,cards,grade_pass_rate,0.25,24,"LLM grader, one pass, separate grader run per model"
+gemma4:e4b-it-qat,knowledge,cards,grade_pass_rate_wilson95_low,0.12,24,
+gemma4:e4b-it-qat,knowledge,cards,grade_pass_rate_wilson95_high,0.449,24,
+gemma4:e4b-it-qat,knowledge,cards,grade_score_half_partial,0.4167,24,"(pass + 0.5 x partial) / n, as in doc 30"
+gemma4:e4b-it-qat,knowledge,cards,grade_pass_k,0.25,12,pass^2: graded pass in both samples
+gemma4:e4b-it-qat,knowledge,cards,grade_any_pass_items,3,12,items with a graded pass in at least one of 2 samples
+gemma4:e4b-it-qat,knowledge,cards,latency_p50_ms,1633.2,24,"wall clock per call, model already loaded"
+gemma4:e4b-it-qat,knowledge,cards,latency_p90_ms,3331.4,24,
+gemma4:e4b-it-qat,knowledge,cards,tokens_per_s,40.6,24,eval_count / eval_duration
+gemma4:e4b-it-qat,knowledge,cards,mean_prompt_tokens,226,24,
+gemma4:e4b-it-qat,knowledge,cards,mean_output_tokens,74.1,24,
+gemma4:e4b-it-qat,knowledge,cards,outputs_cut_at_token_cap,0,24,done_reason length
+qwen3.5:4b-q4_K_M,run,all,load_wall_s_warm,5.91,1,files in OS cache; empty /api/generate with num_ctx 8192
+qwen3.5:4b-q4_K_M,run,all,jobs_wall_s,429.61,7,"sum of the 7 suite/condition jobs, 304 calls"
+qwen3.5:4b-q4_K_M,run,all,total_wall_s,435.52,1,load + jobs
+qwen3.5:4b-q4_K_M,run,all,ollama_ps_size_gb,3.3,1,'ollama ps' SIZE; 100% GPU; CONTEXT 8192
+qwen3.5:4b-q4_K_M,run,all,gpu_mem_used_mib_min,6734,2,nvidia-smi total used after load and after the last job; 8192 MiB card
+qwen3.5:4b-q4_K_M,run,all,gpu_mem_used_mib_max,6747,2,nvidia-smi total used after load and after the last job; 8192 MiB card
+qwen3.5:4b-q4_K_M,run,all,gpu_mem_increase_mib_approx_max,4047,2,minus an approximate 2700 MiB desktop baseline
+qwen3.5:4b-q4_K_M,run,all,gpu_headroom_mib_min,1445,2,8192 MiB minus the highest total used
+qwen3.5:4b-q4_K_M,run,all,disk_size_gb,3.4,1,'ollama list' SIZE
+qwen3.5:4b-q4_K_M,run,all,parameters_b,4.7,1,"Q4_K_M; ollama show: qwen35, vision+tools+thinking"
+ibm/granite4.1:3b-q4_K_M,run,all,load_wall_s_warm,7.76,1,files in OS cache; empty /api/generate with num_ctx 8192
+ibm/granite4.1:3b-q4_K_M,run,all,jobs_wall_s,226.37,7,"sum of the 7 suite/condition jobs, 304 calls"
+ibm/granite4.1:3b-q4_K_M,run,all,total_wall_s,234.13,1,load + jobs
+ibm/granite4.1:3b-q4_K_M,run,all,ollama_ps_size_gb,2.9,1,'ollama ps' SIZE; 100% GPU; CONTEXT 8192
+ibm/granite4.1:3b-q4_K_M,run,all,gpu_mem_used_mib_min,5586,2,nvidia-smi total used after load and after the last job; 8192 MiB card
+ibm/granite4.1:3b-q4_K_M,run,all,gpu_mem_used_mib_max,5598,2,nvidia-smi total used after load and after the last job; 8192 MiB card
+ibm/granite4.1:3b-q4_K_M,run,all,gpu_mem_increase_mib_approx_max,2898,2,minus an approximate 2700 MiB desktop baseline
+ibm/granite4.1:3b-q4_K_M,run,all,gpu_headroom_mib_min,2594,2,8192 MiB minus the highest total used
+ibm/granite4.1:3b-q4_K_M,run,all,disk_size_gb,2.1,1,'ollama list' SIZE
+ibm/granite4.1:3b-q4_K_M,run,all,parameters_b,3.4,1,"Q4_K_M; ollama show: granite, tools"
+ministral-3:3b-instruct-2512-q4_k_M,run,all,load_wall_s_warm,18.1,1,files in OS cache; empty /api/generate with num_ctx 8192
+ministral-3:3b-instruct-2512-q4_k_M,run,all,jobs_wall_s,270.25,7,"sum of the 7 suite/condition jobs, 304 calls"
+ministral-3:3b-instruct-2512-q4_k_M,run,all,total_wall_s,288.35,1,load + jobs
+ministral-3:3b-instruct-2512-q4_k_M,run,all,ollama_ps_size_gb,3.2,1,'ollama ps' SIZE; 100% GPU; CONTEXT 8192
+ministral-3:3b-instruct-2512-q4_k_M,run,all,gpu_mem_used_mib_min,6677,2,nvidia-smi total used after load and after the last job; 8192 MiB card
+ministral-3:3b-instruct-2512-q4_k_M,run,all,gpu_mem_used_mib_max,6692,2,nvidia-smi total used after load and after the last job; 8192 MiB card
+ministral-3:3b-instruct-2512-q4_k_M,run,all,gpu_mem_increase_mib_approx_max,3992,2,minus an approximate 2700 MiB desktop baseline
+ministral-3:3b-instruct-2512-q4_k_M,run,all,gpu_headroom_mib_min,1500,2,8192 MiB minus the highest total used
+ministral-3:3b-instruct-2512-q4_k_M,run,all,disk_size_gb,3.0,1,'ollama list' SIZE
+ministral-3:3b-instruct-2512-q4_k_M,run,all,parameters_b,3.8,1,"Q4_K_M; ollama show: mistral3, vision+tools"
+gemma4:e4b-it-qat,run,all,load_wall_s_warm,13.17,1,files in OS cache; empty /api/generate with num_ctx 8192
+gemma4:e4b-it-qat,run,all,jobs_wall_s,315.96,7,"sum of the 7 suite/condition jobs, 304 calls"
+gemma4:e4b-it-qat,run,all,total_wall_s,329.13,1,load + jobs
+gemma4:e4b-it-qat,run,all,ollama_ps_size_gb,3.1,1,'ollama ps' SIZE; 100% GPU; CONTEXT 8192
+gemma4:e4b-it-qat,run,all,gpu_mem_used_mib_min,6934,2,nvidia-smi total used after load and after the last job; 8192 MiB card
+gemma4:e4b-it-qat,run,all,gpu_mem_used_mib_max,7052,2,nvidia-smi total used after load and after the last job; 8192 MiB card
+gemma4:e4b-it-qat,run,all,gpu_mem_increase_mib_approx_max,4352,2,minus an approximate 2700 MiB desktop baseline
+gemma4:e4b-it-qat,run,all,gpu_headroom_mib_min,1140,2,8192 MiB minus the highest total used
+gemma4:e4b-it-qat,run,all,disk_size_gb,6.1,1,'ollama list' SIZE
+gemma4:e4b-it-qat,run,all,parameters_b,7.5,1,"Q4_0 (QAT); ollama show: gemma4, vision+audio+tools+thinking"
+(machine),run,all,gpu_mem_used_mib_no_model_approx,2700,1,"GTX 1070 8 GB, driver 582.66; desktop and other processes; nvidia-smi logged 2701-2704 MiB after each ollama stop"
+(control),fill,none,random_valid_field_accuracy,0.158,56,uniform pick from each enum; span fields count as wrong
+(control),fill,none,unspecified_default_field_accuracy,0.393,56,"'unspecified' where the enum has it, else the first value; empty span where accepted"
+doc30-weak-cloud-proxy,knowledge,none,grade_pass,1,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,none,grade_partial,3,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,none,grade_fail,20,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,none,grade_hallucination,10,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,none,grade_score_half_partial,0.1042,24,doc 30 section 3.3
+doc30-weak-cloud-proxy,knowledge,primer,grade_pass,4,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,primer,grade_partial,9,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,primer,grade_fail,11,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,primer,grade_hallucination,5,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,primer,grade_score_half_partial,0.3542,24,doc 30 section 3.3
+doc30-weak-cloud-proxy,knowledge,cards,grade_pass,16,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,cards,grade_partial,6,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,cards,grade_fail,2,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,cards,grade_hallucination,2,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,cards,grade_score_half_partial,0.7917,24,doc 30 section 3.3
+doc30-weak-cloud-proxy,knowledge,primer+cards,grade_pass,16,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,primer+cards,grade_partial,4,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,primer+cards,grade_fail,4,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,primer+cards,grade_hallucination,1,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-weak-cloud-proxy,knowledge,primer+cards,grade_score_half_partial,0.75,24,doc 30 section 3.3
+doc30-frontier-cloud,knowledge,none,grade_pass,17,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-frontier-cloud,knowledge,none,grade_partial,5,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-frontier-cloud,knowledge,none,grade_fail,2,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-frontier-cloud,knowledge,none,grade_hallucination,2,24,"doc 30 section 3.3; same tasks and cards, different model runs, grader and sampler"
+doc30-frontier-cloud,knowledge,none,grade_score_half_partial,0.8125,24,doc 30 section 3.3

@@ -1,0 +1,467 @@
+{
+ "suite": "explain",
+ "version": 1,
+ "as_of": "2026-09-27",
+ "notes": "The model explains a finding and its fix in at most two sentences ({explanation, fix}). Graded later by LLM graders against the rubric (required_facts, forbidden_claims); score.py only reports schema validity, the sentence cap and forbidden_patterns hits as automatic flags. forbidden_patterns match only command names that cannot appear in a correct answer; a word a correct answer may use in plain English or in a negation (terminate, isNil) is left to forbidden_claims. Codes marked 'spike-local label' have no id in the docs yet.",
+ "items": [
+  {
+   "id": "E01",
+   "code": "C13",
+   "code_status": "doc code",
+   "severity": "error",
+   "message": "Designer-authored End #1 trigger 'trg_win' in a campaign-managed mission.",
+   "context": "Mission m03_bridge is managed by the campaign: outcome 'bridge_blown' uses the END1 socket and 'retreat' uses END2; the compiler places one END trigger per outcome that reads an outcome flag. Designer trigger trg_win: Type End #1, Activation None, Condition: !alive bridgeTruck.",
+   "card": "C13 (error): in a campaign-managed mission the compiler owns the END/LOOSE triggers, one per outcome socket, and a mission ends by setting the outcome flag its trigger reads. The engine ends with ending n only when EVERY End #n trigger is active at the same moment, so an extra designer End #1 trigger turns 'bridge blown' into 'bridge blown AND truck destroyed' and breaks routing. Fix: delete trg_win and attach its condition to an outcome action (set outcome 'bridge_blown') instead.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "explanation": {
+      "type": "string",
+      "maxLength": 320
+     },
+     "fix": {
+      "type": "string",
+      "maxLength": 240
+     }
+    },
+    "required": [
+     "explanation",
+     "fix"
+    ],
+    "additionalProperties": false
+   },
+   "rubric": {
+    "required_facts": [
+     "All End #1 triggers must be active together (AND), so the extra trigger changes when the managed ending fires",
+     "Fix: remove the designer END trigger and set the campaign outcome (outcome flag) from its condition"
+    ],
+    "forbidden_claims": [
+     "an endMission/failMission script command",
+     "BIS_fnc_endMission",
+     "forceEnd selects an ending",
+     "same-number End triggers act as OR"
+    ],
+    "forbidden_patterns": [
+     "\\bendMission\\b",
+     "\\bfailMission\\b",
+     "BIS_fnc_"
+    ],
+    "max_sentences": 2
+   },
+   "sources": [
+    "docs/research/19-campaign-designer-ux-and-state-model.md lint C13",
+    "skills/standing-orders/references/trigger-end-types.md"
+   ]
+  },
+  {
+   "id": "E02",
+   "code": "DR13",
+   "code_status": "doc code",
+   "severity": "error",
+   "message": "Title-layer BLACK OUT before an END in sequence 'seq_outro_win'.",
+   "context": "Sequence seq_outro_win runs near the end of the Mission section: line 12 is titleText [\"\", \"BLACK OUT\", 2]; line 13 sets win_done = true; an End #1 trigger has Condition win_done.",
+   "card": "DR13: fades and cards near an ending belong on the cut layer. A title-layer effect that is still alive (titleText, trigger Effects titles, say subtitles and chat lines share that layer) blocks the mission end, and a title-layer BLACK OUT holds indefinitely, so the End #1 trigger never ends the mission; cut-layer effects (cutText, cutRsc) do not block it. Fix: use cutText [\"\", \"BLACK OUT\", 2] for the fade.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "explanation": {
+      "type": "string",
+      "maxLength": 320
+     },
+     "fix": {
+      "type": "string",
+      "maxLength": 240
+     }
+    },
+    "required": [
+     "explanation",
+     "fix"
+    ],
+    "additionalProperties": false
+   },
+   "rubric": {
+    "required_facts": [
+     "A title-layer effect that is still showing blocks the mission end (a title-layer BLACK OUT never clears, so the mission never ends)",
+     "Fix: use cutText (the cut layer) instead of titleText for the fade"
+    ],
+    "forbidden_claims": [
+     "titleText and cutText behave the same",
+     "an invented fade command or BIS function"
+    ],
+    "forbidden_patterns": [
+     "BIS_fnc_",
+     "\\bfadeScreen\\b"
+    ],
+    "max_sentences": 2
+   },
+   "sources": [
+    "docs/research/39-cutscene-director.md DR13",
+    "docs/research/31-no-code-ladder-modules-rules-and-scripting.md §5.3",
+    "docs/research/31-no-code-ladder-modules-rules-and-scripting.md §6.1 Overlays"
+   ]
+  },
+  {
+   "id": "E03",
+   "code": "AU08",
+   "code_status": "doc code",
+   "severity": "error",
+   "message": "Unsupported audio format: sound\\radio_intro.mp3 cannot be played by the engine.",
+   "context": "CfgSounds class radio_intro points to sound\\radio_intro.mp3 (stereo, 44.1 kHz). Target profile: CWR 3.05.",
+   "card": "AU08: the engine loads only .ogg (Vorbis), .wav (RIFF PCM) and WSS, chosen by the file extension; MP3, Opus and FLAC are read as WSS and fail. Files never have more than two channels. Fix: transcode to Vorbis .ogg (the import pipeline does this) and point the class at the new file. Mono is better for positional use.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "explanation": {
+      "type": "string",
+      "maxLength": 320
+     },
+     "fix": {
+      "type": "string",
+      "maxLength": 240
+     }
+    },
+    "required": [
+     "explanation",
+     "fix"
+    ],
+    "additionalProperties": false
+   },
+   "rubric": {
+    "required_facts": [
+     "MP3 is not a format the engine plays (only OGG Vorbis, PCM WAV or WSS)",
+     "Fix: convert the file to .ogg (or PCM .wav) and update the class's file path"
+    ],
+    "forbidden_claims": [
+     "renaming the extension makes MP3 play",
+     "an addon or plugin makes MP3 play"
+    ],
+    "forbidden_patterns": [],
+    "max_sentences": 2
+   },
+   "sources": [
+    "docs/research/41-atmosphere-sound-and-music.md §5.6, AU08"
+   ]
+  },
+  {
+   "id": "E04",
+   "code": "AL02",
+   "code_status": "doc code",
+   "severity": "warn",
+   "message": "setRain while overcast is below about 0.673 (trigger trg_rain).",
+   "context": "Intel: overcast 0.3 at start, forecast 0.3. Trigger trg_rain fires at 20 minutes with On Activation: 60 setRain 0.3.",
+   "card": "AL02: the engine forces rain to 0 while overcast is below about 0.673, so this setRain has no visible effect; above that, rain can reach at most 1.5 x overcast - 1 (never more than 0.5). Only one gradual weather change runs at a time. Fix: ramp overcast up first (for example 600 setOvercast 0.9, which allows rain up to 0.35), wait for the ramp to finish, then setRain.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "explanation": {
+      "type": "string",
+      "maxLength": 320
+     },
+     "fix": {
+      "type": "string",
+      "maxLength": 240
+     }
+    },
+    "required": [
+     "explanation",
+     "fix"
+    ],
+    "additionalProperties": false
+   },
+   "rubric": {
+    "required_facts": [
+     "Rain stays at 0 while overcast is below about 0.67, so the setRain does nothing",
+     "Fix: raise overcast first (for example with setOvercast), then set rain"
+    ],
+    "forbidden_claims": [
+     "an invented weather command",
+     "setRain overrides the overcast rule"
+    ],
+    "forbidden_patterns": [
+     "\\bsetWeather\\b",
+     "\\bsetRainIntensity\\b",
+     "BIS_fnc_"
+    ],
+    "max_sentences": 2
+   },
+   "sources": [
+    "docs/research/41-atmosphere-sound-and-music.md §2.1 (Rain and thunder), §3.4, AL02",
+    "docs/research/31-no-code-ladder-modules-rules-and-scripting.md §4.6 row 15"
+   ]
+  },
+  {
+   "id": "E05",
+   "code": "trigger-cannot-fire",
+   "code_status": "spike-local label",
+   "severity": "warn",
+   "message": "Trigger 'trg_village' can never fire: Activation None with Condition 'this'.",
+   "context": "trg_village: Activation None, Present, Once, Condition: this, Type End #1, placed over the village of Pevna.",
+   "card": "Standing Orders, trigger activation: a new trigger starts with Activation None. With None no area test runs, so `this` is false and the default Condition `this` never fires. Fix: set Activation to the side whose presence matters (for 'village cleared': East, Not present), or write a custom Condition that does not rely on `this`.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "explanation": {
+      "type": "string",
+      "maxLength": 320
+     },
+     "fix": {
+      "type": "string",
+      "maxLength": 240
+     }
+    },
+    "required": [
+     "explanation",
+     "fix"
+    ],
+    "additionalProperties": false
+   },
+   "rubric": {
+    "required_facts": [
+     "With Activation None no area test runs, so `this` stays false and the trigger never fires",
+     "Fix: choose an activation side and presence, or write a custom condition"
+    ],
+    "forbidden_claims": [
+     "thisTrigger",
+     "syncing the trigger fixes it",
+     "a triggerActivated command"
+    ],
+    "forbidden_patterns": [
+     "\\bthisTrigger\\b",
+     "\\btriggerActivated\\b"
+    ],
+    "max_sentences": 2
+   },
+   "sources": [
+    "skills/standing-orders/references/trigger-activation.md"
+   ]
+  },
+  {
+   "id": "E06",
+   "code": "global-read-before-init",
+   "code_status": "spike-local label",
+   "severity": "warn",
+   "message": "Trigger 'trg_alarm_react' reads global 'alarm', which nothing assigns before the first read.",
+   "context": "trg_alarm_react: Activation None, Condition: alarm, On Activation: [] exec \"ofpe\\qrf.sqs\". Trigger trg_spotted (West, Detected by East) sets alarm = true. init.sqs does not mention alarm.",
+   "card": "Lint global-read-before-init: an unset global reads as nil. A trigger condition must be a Boolean, and a nil condition silently counts as false, so it works only by luck and any other read (for example !alarm) is nil too. isNil is not in this engine. Fix: initialise it in init.sqs: alarm = false.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "explanation": {
+      "type": "string",
+      "maxLength": 320
+     },
+     "fix": {
+      "type": "string",
+      "maxLength": 240
+     }
+    },
+    "required": [
+     "explanation",
+     "fix"
+    ],
+    "additionalProperties": false
+   },
+   "rubric": {
+    "required_facts": [
+     "Until assigned, alarm is undefined (nil); a nil condition evaluates as false",
+     "Fix: initialise alarm = false in init.sqs"
+    ],
+    "forbidden_claims": [
+     "isNil",
+     "setVariable/getVariable/missionNamespace",
+     "publicVariable is required in single player"
+    ],
+    "forbidden_patterns": [
+     "\\bsetVariable\\b",
+     "\\bgetVariable\\b",
+     "missionNamespace"
+    ],
+    "max_sentences": 2
+   },
+   "sources": [
+    "docs/research/30-domain-knowledge-and-guidance.md task T04 card",
+    "docs/research/20-upstream-test-inventory.md (an undefined global is nil; a nil Bool reads as false)"
+   ]
+  },
+  {
+   "id": "E07",
+   "code": "detected-by-missing-side",
+   "code_status": "spike-local label",
+   "severity": "warn",
+   "message": "Trigger 'trg_alarm' uses Detected by East, but the mission file has no East group.",
+   "context": "Every East unit is created by script 2 minutes after start. trg_alarm: West, Detected by East, Once, over the depot. Target profile: CWR 3.05, single player.",
+   "card": "Standing Orders, Detected by: the detecting side must exist. In single player a side's AI centre is created only if the mission file has at least one group of that side; without it the trigger stops before its Condition and never fires. Fix: place one East unit in the editor (even at 0% probability of presence), or on CWR/CE run createCenter east at start.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "explanation": {
+      "type": "string",
+      "maxLength": 320
+     },
+     "fix": {
+      "type": "string",
+      "maxLength": 240
+     }
+    },
+    "required": [
+     "explanation",
+     "fix"
+    ],
+    "additionalProperties": false
+   },
+   "rubric": {
+    "required_facts": [
+     "East has no AI centre because no East group is in the mission file, so the trigger never fires",
+     "Fix: place one East unit (0% presence is fine), or createCenter east on CWR/CE"
+    ],
+    "forbidden_claims": [
+     "Detected by fires on true positions",
+     "an invented command to register a side"
+    ],
+    "forbidden_patterns": [
+     "\\bthisTrigger\\b",
+     "BIS_fnc_",
+     "\\bcreateSide\\b"
+    ],
+    "max_sentences": 2
+   },
+   "sources": [
+    "skills/standing-orders/references/detected-by.md"
+   ]
+  },
+  {
+   "id": "E08",
+   "code": "MC06",
+   "code_status": "doc code",
+   "severity": "warn",
+   "message": "Group 'Alpha Black' has 15 crew seats; the cap is 12.",
+   "context": "East group Alpha Black: 5 x BMP, each with driver, gunner and commander seats.",
+   "card": "Group cap: 12 crew seats per group, compiled into the engine. Each unit adds one per driver, gunner and commander seat its type has; a soldier counts 1. Five three-seat vehicles make 15. The original editor refuses the group with an error and hides Preview until it is fixed. Fix: split the vehicles into two groups (for example 3 + 2).",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "explanation": {
+      "type": "string",
+      "maxLength": 320
+     },
+     "fix": {
+      "type": "string",
+      "maxLength": 240
+     }
+    },
+    "required": [
+     "explanation",
+     "fix"
+    ],
+    "additionalProperties": false
+   },
+   "rubric": {
+    "required_facts": [
+     "The cap counts crew seats: 5 vehicles x 3 seats = 15, above 12",
+     "Fix: split into two groups (or use fewer vehicles)"
+    ],
+    "forbidden_claims": [
+     "the limit counts units rather than seats",
+     "a config or addon change raises the cap for this mission",
+     "a limit other than 12"
+    ],
+    "forbidden_patterns": [],
+    "max_sentences": 2
+   },
+   "sources": [
+    "docs/research/28-what-makes-it-fun.md MC06",
+    "docs/research/30-domain-knowledge-and-guidance.md task T11",
+    "docs/research/04-mission-data-model-and-formats.md IsConsistent"
+   ]
+  },
+  {
+   "id": "E09",
+   "code": "CF01",
+   "code_status": "doc code",
+   "severity": "warn",
+   "message": "Three consecutive Peak nodes on path A: m04 River Crossing, m05 Hill 214, m06 The Depot.",
+   "context": "Campaign path A intensities: m01 Build, m02 Peak, m03 Relax, m04 Peak, m05 Peak, m06 Peak, m07 Relax, m08 Finale.",
+   "card": "CF01 (warn): three or more consecutive Peak or Finale nodes on a path cause fatigue; the intensity curve should be a sawtooth that rises within an act, dips, then peaks higher. Relax nodes are cutscenes, hubs, recon or scavenge missions. Fix: turn m05 into a Relax or Build node (for example a recon or resupply mission), or insert a breather between m04 and m06.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "explanation": {
+      "type": "string",
+      "maxLength": 320
+     },
+     "fix": {
+      "type": "string",
+      "maxLength": 240
+     }
+    },
+    "required": [
+     "explanation",
+     "fix"
+    ],
+    "additionalProperties": false
+   },
+   "rubric": {
+    "required_facts": [
+     "Three peaks in a row give no valley, which tires the player",
+     "Fix: make a middle node Relax or Build, or insert a breather mission"
+    ],
+    "forbidden_claims": [
+     "the engine refuses to run the campaign",
+     "the warning blocks export"
+    ],
+    "forbidden_patterns": [],
+    "max_sentences": 2
+   },
+   "sources": [
+    "docs/research/26-campaign-content-structures-and-fun.md §5.3, CF01"
+   ]
+  },
+  {
+   "id": "E10",
+   "code": "sqs-exitwith",
+   "code_status": "spike-local label",
+   "severity": "warn",
+   "message": "exitWith in an .sqs script does not end the script (ofpe\\patrol.sqs, line 7).",
+   "context": "ofpe\\patrol.sqs line 7: if (!alive leader1) exitWith {hint \"done\"}. Lines 8-20 keep moving the group. Target: CWR 3.05.",
+   "card": "In an .sqs script, if (...) exitWith {...} leaves only the current statement; the script continues on the next line. To end an SQS script use the conditional line ? <condition> : exit (for example ? !alive leader1 : exit). The ? line is split at the first ':'.",
+   "schema": {
+    "type": "object",
+    "properties": {
+     "explanation": {
+      "type": "string",
+      "maxLength": 320
+     },
+     "fix": {
+      "type": "string",
+      "maxLength": 240
+     }
+    },
+    "required": [
+     "explanation",
+     "fix"
+    ],
+    "additionalProperties": false
+   },
+   "rubric": {
+    "required_facts": [
+     "exitWith only leaves the current statement; the script goes on with line 8",
+     "Fix: use the SQS line ? !alive leader1 : exit"
+    ],
+    "forbidden_claims": [
+     "terminate/breakOut/scriptDone",
+     "sleep or waitUntil"
+    ],
+    "forbidden_patterns": [
+     "\\bbreakOut\\b",
+     "\\bscriptDone\\b",
+     "\\bsleep\\b",
+     "\\bwaitUntil\\b"
+    ],
+    "max_sentences": 2
+   },
+   "sources": [
+    "docs/research/30-domain-knowledge-and-guidance.md task T02 card"
+   ]
+  }
+ ]
+}
