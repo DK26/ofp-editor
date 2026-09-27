@@ -4,8 +4,9 @@
 > *Operation Flashpoint* mission editor with Preview, a campaign designer and an opt-in, product-scoped AI co-pilot.
 > Written 2026-09-26. **Question:** which SQF/SQS commands and harness verbs reach beyond the running mission, and what
 > may our linter, our AI co-pilot and our Preview harness allow? Companion data:
-> [`data/script-command-risk.csv`](data/script-command-risk.csv) (110 rows, full citations). Fact-checked and corrected
-> 2026-09-27; see [Verification notes](#verification-notes-2026-09-27).
+> [`data/script-command-risk.csv`](data/script-command-risk.csv) (111 rows, full citations). Fact-checked and corrected
+> 2026-09-27; see [Verification notes](#verification-notes-2026-09-27). The consolidation pass the same day added doc
+> 35's 1.99 evidence (§3.9) and finding F10.
 
 **Epistemic legend.** **[V]** checked against the cited file by static reading (nothing was built or run, so "[V]"
 never means "observed at runtime"). **[I]** our inference or recommendation. **[U]** unknown or unverified.
@@ -50,7 +51,11 @@ unless a CE citation is given: every audited file was compared between the two t
   2026-09-27).** A receiver runs `<name> _this` when no global function has that name, so any unary command is
   callable. A mission's `description.ext` `CfgRemoteExec` with `mode = 2` lets every client do this on the server and
   on other clients, for example `saveMission` on the server.
-- **Process exit from a script [V].** In CWR, `endGame` quits the game. CE renamed it `triEndGame` and gated it.
+- **Process exit from a script [V].** In CWR, `endGame` quits the game. CE renamed it `triEndGame` and gated it, and
+  the 1.99 executable does not contain the name (doc 35 §8.2), so the command is CWR-only.
+- **Mission files are code sinks too [V code; I impact] (F10, added by the consolidation pass).** A non-literal numeric
+  value in `mission.sqm`, `description.ext` or another config is evaluated as a script expression at load (doc 35
+  §5.8), so the linter must check those fields as code.
 - **The harness is "local code execution for whoever reaches the port" [V].** It binds loopback, has no
   authentication, serves one client at a time, has no line-length cap and skips non-JSON lines, so a JSON line inside
   an HTTP request body would be processed [I]. Besides `eval`/`exec` it offers `screenshot{path}` (any path),
@@ -96,6 +101,8 @@ file parsers (covered by fuzzing requirements in AGENTS.md); the legacy 1.99 exe
    line.
 4. Reused doc 04 (script entry points), doc 08 (flags, harness), doc 14 (dialects) and doc 18 (campaign persistence).
    The BI community wiki returned HTTP 403 to every fetch, so 1.99 availability is inferred, not verified (§3.9).
+   Consolidation pass 2026-09-27: doc 35 §8 has since supplied content observations and a 1.99 executable string scan
+   for many of these commands (§3.9).
 
 | Site | Lines matching the registration pattern (CWR / CE) | Registered into | Gate |
 | --- | --- | --- | --- |
@@ -110,8 +117,8 @@ file parsers (covered by fuzzing requirements in AGENTS.md); the legacy 1.99 exe
 
 Not script commands, but reachable from scripts: the debug-console registry (`CWR:engine/Poseidon/Dev/Debug/DebugCheats.cpp#L735-L780`,
 reached through `triConsoleRun`) and the harness command registry (§4). Not script commands, but mission content that
-changes what scripts can reach: `description.ext` `CfgRemoteExec` (F9) and `#include` in any config the engine
-preprocesses (F3).
+changes what scripts can reach: `description.ext` `CfgRemoteExec` (F9), `#include` in any config the engine
+preprocesses (F3), and non-literal numeric values in configs and `mission.sqm`, which are evaluated at load (F10).
 
 Re-check 2026-09-27 [V]: a search of both trees for `GameNular`/`GameFunction`/`GameOperator`,
 `GGameState.New*` and `->New*` found no registration site outside the rows above (tests excluded); the only
@@ -205,7 +212,11 @@ read. Whether `IsServer()` is true in single-player Preview is **[U]**, probably
 **F5. `endGame` quits the process in CWR [V].** It sets `GApp->m_closeRequest`
 (`CWR:…GameStateExtWorld.cpp#L787-L803`, registered at `CWR:…GameStateExt.cpp#L886`). CE renamed the handler
 `triEndGame` and moved its registration into the gated module (`CE:…GameStateExtTestAudio.cpp#L2996`). Under
-`--test-mission`, `forceEnd` and any mission end also quit (doc 08 §2.4).
+`--test-mission`, `forceEnd` and any mission end also quit (doc 08 §2.4). Consolidation pass 2026-09-27: the name is
+absent from the 1.99 executable (doc 35 §8.2 [V strings; I availability]), so of our targets only CWR has it. Doc 35
+§5.9 and §8.4 add a name hazard: shipped missions use a global variable named `EndGame`, and the evaluator reads a set
+variable before a nular command of the same name, so on CWR a read before the variable is set would run this command
+[V code; I runtime; doc 35 open question 11].
 
 **F6. Log lines are mission-controlled [V].** `logInfo` writes arbitrary text at INFO level (`CWR:…GameStateExtWorld.cpp#L769-L773`);
 `textLog`/`debugLog` log in simulate mode (`#L749-L767`). Doc 08 maps Preview results partly by parsing the log
@@ -236,6 +247,17 @@ the mission's own `description.ext` has `class CfgRemoteExec` with `mode = 1` (n
 `#L384-L395`). A downloaded MP mission with `mode = 2` therefore lets any joined player run, for example,
 `saveMission` on the server (F4) or `triHttpGet` on every client (F1). The default (no class) is safe. Linter,
 agent and CSV rules: §5.2 L10, §5.3, CSV rows `remoteExec`, `remoteExecCall`, `description.ext CfgRemoteExec`.
+
+**F10. Non-literal numeric values in config and SQM files run as script expressions at load [V code; I impact]
+(added by the consolidation pass, 2026-09-27, from doc 35 §5.8).** When the config parser meets a numeric value that is
+not a literal, it evaluates it as a script expression while the file loads
+(`CWR:engine/Poseidon/IO/ParamFile/ParamFile.cpp#L815-L860`, `CWR:engine/Poseidon/IO/ParamFile/ParamFileEval.cpp#L107-L113`,
+as cited by doc 35; not re-read in this pass). The template wizard depends on this: its positions, facings and trigger
+sizes are arithmetic over `WIZVAR_*` anchors, and on finish it reloads `mission.sqm` so they evaluate, then saves the
+mission (doc 35 §5.8; that the saved values are literals is our inference [I]). Any
+text `mission.sqm` or `description.ext` can use the same path, so a downloaded mission can hold code in fields that
+look like data, outside every code sink that F7 lists [I]. Which commands can run there is untested (doc 35 open
+question 5) [U]. Linter, agent and CSV rules: §5.2 scope and L12, §5.3, CSV row `non-literal numeric in config or SQM`.
 
 ### 3.2 File reads
 
@@ -335,6 +357,21 @@ per command, configurable by `HARNESS_CMD_TIMEOUT_SEC` (`CWR:engine/Poseidon/Dev
   (`diag_*` removed from this list on 2026-09-27: not registered in any current target). `publicExec`,
   `loadConfig`/`saveConfig` and `VBS_*` are **[U]**. The CSV marks each row `likely`, `absent` or `unknown`. A runtime check on the legacy
   executable would settle it (§7).
+- **1.99, upgraded by the consolidation pass (2026-09-27) from doc 35 §8 [V content; V strings; I availability].**
+  20 of the 30 CSV rows marked "1.99: likely" are observed in legacy official content: `exec`, `call`, `saveVar`,
+  `saveStatus`, `loadStatus`, `deleteStatus`, `saveIdentity`, `loadIdentity`, `saveGame`, `fillWeaponsFromPool`,
+  `addWeaponPool`, `addMagazinePool`, `putWeaponPool`, `pickWeaponPool`, `publicVariable`, `forceEnd`,
+  `disableUserInput`, `addAction`, `addEventHandler` and `setFlagTexture` (doc 35 tier T1). `cheatsEnabled` and
+  `debugLog`, marked "unknown", are observed too. `loadFile` is used only by CWE content and its name is in the 1.99
+  executable (tier T2), which supersedes the "1.82" search summary above for the question "does 1.99 have it".
+  `endGame` is absent from the 1.99 executable (F5). The CSV rows now say so, per
+  [`data/cwa199-observed-commands.csv`](data/cwa199-observed-commands.csv). The other nine `likely` rows
+  (`preprocessFile`, `deleteIdentity`, `clearWeaponPool`, `clearMagazinePool`, `createDialog`, `buttonSetAction`,
+  `onMapSingleClick`, `setObjectTexture`, `while`) are not observed in content and stay `likely`. Not yet folded into
+  the CSV: doc 35 §8.2's string scan also lists `preprocessFile`, `createDialog`, `buttonSetAction`, `onMapSingleClick`,
+  `while` and `setObjectTexture` as present, and `for`, `publicExec`, `publicVariableArray`, `publicVariableString`,
+  `onPlayerConnected`, `isJIP`, `netId`, the `setWaypoint*` family, `remoteExec` and `VBS_*` as absent; a present
+  string does not prove registration. Those rows wait for the `exe_199_string` data column that doc 35 rc90 proposes.
 
 ## 4. Harness protocol risks
 
@@ -414,8 +451,9 @@ generators, e.g. the campaign compiler, may emit it), `deny`; **harness** `allow
 ### 5.2 (a) Linting community missions
 
 Scope: every code string the mission ships: `.sqs`/`.sqf` files, `mission.sqm` init, condition, activation and
-waypoint statement fields, `description.ext` dialog and control code, and any string literal that reaches a code sink
-(F7). Rules [I]:
+waypoint statement fields, `description.ext` dialog and control code, any string literal that reaches a code sink
+(F7), and every non-literal numeric value in `mission.sqm`, `description.ext` and other shipped configs (F10, added by
+the consolidation pass). Rules [I]:
 
 | Rule | Trigger | Severity |
 | --- | --- | --- |
@@ -430,6 +468,7 @@ waypoint statement fields, `description.ext` dialog and control code, and any st
 | L9 | Campaign persistence (`saveVar`, `saveStatus`, …), MP commands (`remoteExec` → Requires CWR) | info, feeds the Requires badge |
 | L10 | `description.ext` `CfgRemoteExec`: `mode >= 2`, or a listed `Functions`/`Commands` name that is an engine command whose own policy is `deny` (F9) → deny; any other `mode = 1` → warn | deny / warn |
 | L11 | `#include` in `description.ext` or any shipped config whose name breaks L2 (F3) | deny |
+| L12 (consolidation pass) | Non-literal numeric value in `mission.sqm`, `description.ext` or another shipped config (F10): its expression is checked as code under L1–L8, and any finding there keeps its own severity; arithmetic over `WIZVAR_*` anchors using only `pure` commands, in a template, is info | warn |
 
 **Preview gate.** A mission with any `deny` finding, or with an L4 finding combined with any `fs-read` or
 `net-internet` command, is not one-click Previewable. The user can override per mission with an explicit
@@ -452,7 +491,9 @@ The policy is enforced by the host; the model is never trusted to follow it (AGE
    cannot see into). Reconciled with the CSV on 2026-09-27: the CSV already said `allow` for `publicVariable*` and for
    project `exec`, while this list said `approve`. `template-only` for campaign
    persistence: only the campaign compiler emits `saveVar`/`saveStatus`/pool commands (docs 18/19); likewise only an
-   MP generator may emit `CfgRemoteExec`, and only `mode = 1` listing mission-defined functions (F9). `deny` for
+   MP generator may emit `CfgRemoteExec`, and only `mode = 1` listing mission-defined functions (F9); and our writers
+   emit numeric fields as literals, with only a template generator emitting anchor arithmetic of `pure` commands
+   (F10, added by the consolidation pass). `deny` for
    everything tagged `fs-write` (other than via templates), `net-internet`, `process`, `debug`, `test-only`,
    `compiled-out`, `dynamic-code` with a computed string, and any command outside the target profile or, for
    editor-generated glue, outside the conservative subset.
@@ -496,7 +537,9 @@ target" (error) rather than as a higher version. `remoteExec*`, `saveMission` an
 to Remastered/CWR (`diag_*` removed from this list on 2026-09-27: compiled out, so "not a valid target" like `DBG_*`).
 CE-only verbs raise it to CE [I]. Editor-generated glue uses only commands that are
 `always`-gated, in the conservative subset, and carry no `fs-*`, `net-internet`, `process`, `debug` or `test-only`
-cap.
+cap. Consolidation pass 2026-09-27: doc 35 §8.3 proposes evidence tiers for the `Cwa199` profile (T1 observed in
+official content, T2 used by community content and present in the 1.99 executable, T3 present only, T4 absent), and
+the CSV's dialect column now carries T1, T2 and T4 evidence where §3.9 applied it.
 
 ## 6. Recommended CWR-CE hardening patches
 
@@ -532,6 +575,8 @@ did the `endGame` part of this work (F5), so BI could adopt it too [I].
    practical [U]? P6 makes this moot.
 7. Is `IsServer()` true in single-player Preview (F4) [U]?
 8. Which of the §3.9 commands exist in CWA 1.99? Needs a probe on the legacy executable or wiki access [U].
+   Partly answered by the consolidation pass (2026-09-27): doc 35 §8 settles existence for the observed commands and
+   gives string-scan evidence for others (§3.9); semantics and the remaining rows still need a probe.
 9. Will CE accept P2 given that Trident test missions call `tri*` verbs directly? Needs maintainer input [U].
 10. Timing and channel for the private report (Disclosure note) [U].
 11. Which `description.ext` dialog attributes hold executable code in this engine, so the linter extracts all code
@@ -542,6 +587,9 @@ did the `endGame` part of this work (F5), so BI could adopt it too [I].
     registered there without flags [U]? Same probe as question 1, run on a server.
 14. (Added 2026-09-27.) Does a real MP session honour a mission's `CfgRemoteExec` `mode = 2` for a plain client
     naming an engine command (F9)? Probe on our own loopback server with a harmless command such as `hint` [U].
+15. (Added by the consolidation pass, 2026-09-27.) Which commands run inside a non-literal numeric field of
+    `mission.sqm` or `description.ext` on 1.99 and on CWR (F10)? Same as doc 35 open question 5; probe with harmless
+    commands only [U].
 
 ## 8. Sources
 
@@ -598,6 +646,9 @@ Source snapshots (static reading, 2026-09-26): `BohemiaInteractive/CWR@ffc61838b
   `CWR:engine/Poseidon/Game/Commands/GameStateExtTestGetters.cpp#L443-L459`; `CWR:apps/cwr/Server/ServerApplication.cpp#L434-L445`;
   `CWR:engine/Poseidon/Dev/Harness/HarnessBuiltins.cpp#L266-L326`, `#L917-L963`; `CWR:vcpkg.json#L7`;
   `CE:engine/Poseidon/UI/ModDownloadSupport.hpp#L40-L66`; `DK:lsp/crates/poseidon-catalog/data/commands.json#L1693-L1853`.
+- Added by the consolidation pass (2026-09-27): doc 35 §5.8, §5.9, §8.1–§8.4 and §10, and
+  [`data/cwa199-observed-commands.csv`](data/cwa199-observed-commands.csv); `CWR:engine/Poseidon/IO/ParamFile/ParamFile.cpp#L815-L860`
+  and `CWR:engine/Poseidon/IO/ParamFile/ParamFileEval.cpp#L107-L113` as cited by doc 35 (not re-read in this pass).
 - Owner fork catalog: `DK:lsp/crates/poseidon-catalog/src/lib.rs#L1-L33`; `DK:lsp/crates/poseidon-catalog/tests/completeness.rs#L1-L87`;
   `DK:lsp/crates/poseidon-catalog/data/commands.json#L1693`.
 - Project docs: doc 04 §8 (script entry points), doc 08 §2.4–§2.5, §4.2–§4.4, §6 (Preview, harness), doc 14 §2
@@ -674,5 +725,27 @@ but the user may not expect; the §5.2 Preview gate and its "full rights" warnin
 **Still unverified.** Runtime linkage of the unconditional modules into the shipped client and server; libcurl's
 enabled protocols; WinINet cookie behaviour; UNC and drive-relative path handling on Windows; persistence of
 `triBindAction`/`triSetVolume`/`triSetLanguage`; whether every mission config parse uses the preprocessing path; the
-1.99 availability of the §3.9 commands. Most have a harmless probe in §7; the Windows path cases belong in the F3
-probe (question 3).
+1.99 availability of the §3.9 commands (partly settled since; see the consolidation pass below). Most have a harmless
+probe in §7; the Windows path cases belong in the F3 probe (question 3).
+
+### Consolidation pass (2026-09-27)
+
+Applied doc 35 §10's correction for this doc; evidence checked in doc 35 §5.8, §5.9, §8.1–§8.3, its verification
+notes ("20 of the 30 names doc 24 marks '1.99: likely' are observed") and, row by row, in
+`data/cwa199-observed-commands.csv`. Nothing was re-read in the engine source.
+
+- **Dialect column upgraded.** CSV rows for the 20 observed `likely` commands, `cheatsEnabled` and `debugLog` now say
+  "observed in official content per doc 35"; `loadFile` says "used only by CWE content; name in the 1.99 exe (T2)";
+  `endGame` adds "absent from the 1.99 exe". Doc 35 names "the status and pool families" loosely: `deleteIdentity`,
+  `clearWeaponPool` and `clearMagazinePool` are not observed, so they stay `likely`. Text: §3.9 (new bullet), F5,
+  TL;DR, header note, §2 step 4, §5.5, open question 8 and "Still unverified" above.
+- **New risk entry F10** (non-literal numerics in config and SQM files evaluated at load, [V code; I impact]): §3.1
+  F10, TL;DR, §2, §5.2 scope and new rule L12, §5.3 item 2, open question 15, §8, and a new CSV row (110 → 111).
+- **Also noted, from the same doc 35 sections:** the `EndGame` global-variable name hazard in F5.
+- **Not applied (flagged in §3.9):** doc 35 §8.2's string-scan results for rows the correction did not name
+  (`for`, `publicExec`, `publicVariableArray`/`String`, `onPlayerConnected`, the `setWaypoint*` family, `VBS_*`
+  absent; `preprocessFile`, `createDialog`, `buttonSetAction`, `onMapSingleClick`, `while`, `setObjectTexture`
+  present). They wait for the `exe_199_string` column (doc 35 rc90).
+- No "Field Manual", "Boot camp" or "Academy" reference, and no link to doc 33 or `skills/field-manual`, exists in this
+  doc or its CSV, so the feature rename needed no edit here. The working copy's CRLF line endings were normalised to
+  LF, matching the index.

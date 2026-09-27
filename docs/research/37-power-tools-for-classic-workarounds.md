@@ -54,7 +54,7 @@ There is a fourth, quieter channel: **rules the editor never told you**. The eng
 | --- | --- | --- |
 | G1 | **Intent over code** | The user states what should be true ("starts in truck1's cargo", "on the church roof, prone, holding"), not the command that makes it true |
 | G2 | **Same vanilla output per profile** | Each affordance lowers, native first, to exactly what an expert would type for `Cwa199`, `Cwr` or `Ce`. No addon, no runtime framework; the sidecar can be deleted (doc 31 N2, N3) |
-| G3 | **Glass box** | Every attribute row shows its generated text, a "why" card, the Field Manual entry and, for AI-made values, the workflow step and model (AGENTS.md). The text is editable, and editing it follows doc 31 §8.3 region states |
+| G3 | **Glass box** | Every attribute row shows its generated text, a "why" card, the Standing Orders entry and, for AI-made values, the workflow step and model (AGENTS.md). The text is editable, and editing it follows doc 31 §8.3 region states |
 | G4 | **Lossless** | Import followed by save is byte-identical (doc 04 §12.3). Hand edits, unknown keys, legacy aliases and raw number lexemes are kept. No edit rewrites a field the user did not touch; "Normalize as engine" is an explicit command |
 | G5 | **Lift is offered, never forced** | Recognisers propose; "replace" only when re-emission reproduces the normalised original; otherwise "wrap" or leave as code (doc 31 §8.2) |
 | G6 | **Honest about the engine** | Engine truth is shown inline; unavailable features are greyed out with a reason per profile, answered through doc 33 §4.4 ("why is this greyed out?"); `Cwa199` generators use T1 commands until a probe promotes a T2/T3 command (doc 35 §8.3) |
@@ -157,7 +157,8 @@ A panel that lists **every** key of the selected entities, as the file and the e
 ```rust
 // ── Inspector model (proposal-only) ────────────────────────────────────
 pub enum Exposure {
-    Dialog { advanced_only: bool },            // a stock dialog field; some are hidden in Easy mode
+    Dialog { advanced_only: bool },            // a stock dialog field; true for the fields the Easy-mode
+                                               // `…Simple` dialogs omit (doc 35 §10, Doc 03 item [V])
     Gesture(StockGesture),                     // Groups-mode drag, double-click binding, Sync mode
     Computed,                                  // e.g. `leader`, recomputed by the stock editor
     Hidden,                                    // no stock UI at all (`year`, `randomSeed`, `addOns[]`)
@@ -179,7 +180,7 @@ pub struct InspectorRow { pub key: FieldKey, pub state: ValueState, pub exposure
 
 ### 4.1 Contract
 
-An attribute is a typed value on an existing entity with: applicability (entity kinds), availability per profile, a lowering, a recogniser for lift (§8), engine notes and a link to its Field Manual entry (doc 33). Placing, changing or removing one is a single undoable command.
+An attribute is a typed value on an existing entity with: applicability (entity kinds), availability per profile, a lowering, a recogniser for lift (§8), engine notes and a link to its Standing Orders entry (doc 33). Placing, changing or removing one is a single undoable command.
 
 - **Lowering order (G2).** (1) A native field the stock dialog already has (Special CARGO or FLY, waypoint-1 posture fields, `lock`, `markers[]`, `idStatic`/`housePos`, `health`). (2) A key the stock dialog hides (`year`, `leader`). (3) A generated init prefix: doc 31 §3 records its span and hash in the sidecar, and hand-written text after it stays user code. (4) A lossless `description.ext`, briefing or stringtable patch. (5) A compiler-owned `init.sqs` block or script file (doc 31 §4.5).
 - **Fixed prefix order,** so output is deterministic: identity → loadout → cargo → state (captive, protection) → AI (stance, switches, hold, courage, posture, altitude) → seat → position → pose → destroyed. Destruction goes last so everything else applies before the object dies [I]. Two pairs are refused by construction because the order cannot rescue them: Protected with Starts destroyed (while `allowDammage false` is set, `setDammage` cannot raise damage on `Cwr`/`Ce`, `P:AI/VehicleAICombat.cpp#L365-L370` [V]), and Seat with Height on one soldier (`setPos`/`setPosASL` dismount him, §10 (d)). Cargo and Captive before Destroyed matter too: both commands do nothing on a destroyed object (`P:Game/Commands/GameStateExtObj.cpp#L297-L374`, `#L631-L641`) [V].
@@ -297,7 +298,7 @@ Every tool runs as a dry run first: it builds a `ChangeSet` of typed editor comm
 
 ## 6. Map-object actions
 
-Island objects (houses, bridges, lamps, trees) carry ids from the island file. The stock editor reveals them only through Show IDs, which is hidden and forced off in Easy mode, and only when zoomed in (Field Manual `show-ids-and-object-ids`) [V].
+Island objects (houses, bridges, lamps, trees) carry ids from the island file. The stock editor reveals them only through Show IDs, which is hidden and forced off in Easy mode, and only when zoomed in (Standing Orders `show-ids-and-object-ids`) [V].
 
 - **Click, don't type.** Clicking an island object opens a card: id, class and model, building positions (if known), whether the mission already references it, and actions. Ids appear on hover at any zoom and in every mode, and a search box jumps to an id.
 - **Actions.**
@@ -368,7 +369,7 @@ Wilco maps a request to an intent and fills a typed form; code computes every me
 2. *Entity* (Pick): code lists candidates: the selection, then units whose loadout holds a sniper-class weapon in the catalog. With one candidate the step is skipped.
 3. *Building* (Pick): code lists island objects in view whose class or model name matches the catalog category for churches, plus "click on the map". With none, Wilco asks the user to click [I: category data comes from the catalog, not the model].
 4. *Spot* (Pick): roof top from the model's bounding box [I], a known building position, or "click". Code computes the absolute height and the badge. If the model's walkable (roadway) data puts the top face at the pick, the soldier already starts there with no code (§3.2), and code offers that first [V code path].
-5. *Companions* (checkboxes code proposes from the Field Manual): Special NONE (required, not optional, for a formation member), Hold, Stance Down.
+5. *Companions* (checkboxes code proposes from Standing Orders): Special NONE (required, not optional, for a formation member), Hold, Stance Down.
 6. `attr.propose(entities, attributes)` → diff card → one undo group in Wilco's lane. On Remastered or CE, "Show me in game" (doc 33 §4.7) verifies the height; capture-back can adjust it (doc 34 ed18).
 
 **Typed tools (product-scoped).** `attr.list(entity)`, `attr.describe(kind)`, `attr.propose(entities, attribute)`, `inspector.explain(key)` (engine notes and the doc 33 entry), `tool.preview(kind, params)` for the §5 tools, `lift.review(candidate)`, `mapobject.find(query)` over catalog categories. Each returns editor-command proposals shown as a diff; none touches files directly, and none runs code (AGENTS.md).
@@ -382,7 +383,7 @@ Wilco maps a request to an intent and fills a typed form; code computes every me
 | Ladder, rung-1 contract, prefix span and hash, region states, eject, recogniser policy | Doc 31 §1, §3, §8 | The full attribute catalogue (§4), the inspector (§3), recognisers for init idioms (§8) |
 | Modules: respawn, reinforcements, fire support, garrisons, objectives, weather, conversations | Doc 31 §4 | Pointers only (WA35, WA38, WA41, WA44) |
 | Cinematics and poses in cutscenes | Doc 32 | Pose attribute for start states only |
-| Concept pages, "why greyed out", myths | Doc 33 and `skills/field-manual/` (`init-line`, `special-placement`, `show-ids-and-object-ids`, `condition-of-presence`, `groups-and-leaders`, `sides-and-friendliness`, `empty-vehicles`) | Every attribute and engine note links to one entry; new entries needed: height, loadout, cargo, locks, callsigns, and one on attributes themselves (what the generated prefix is, why an init line gained one, lift and presets) |
+| Concept pages, "why greyed out", myths | Doc 33 and `skills/standing-orders/` (`init-line`, `special-placement`, `show-ids-and-object-ids`, `condition-of-presence`, `groups-and-leaders`, `sides-and-friendliness`, `empty-vehicles`) | Every attribute and engine note links to one entry; new entries needed: height, loadout, cargo, locks, callsigns, and one on attributes themselves (what the generated prefix is, why an init line gained one, lift and presets) |
 | Named zones, phases, routes; retarget workbench; re-association after vanilla re-saves; difficulty chip; capture-back; undo lanes | Doc 34 ed01, ed05, ed06, ed08, ed15, ed16, ed18, ed22 | Island-move transforms and object-id re-resolution (§5, §6), reusing ed15's dry-run and fidelity-report machinery under its own name |
 | Dependency derivation and write rule | Doc 27 §2.4, §4.5 | Dependency doctor UX (§5) |
 | Lossless CST, patches, writer profiles | Doc 04 §2, §12 | Protected hand edits (§3.2, §8) |
@@ -436,14 +437,14 @@ Wilco maps a request to an intent and fills a typed form; code computes every me
 
 ## Open questions
 
-1. **Map-object host.** Should destroyed-at-start objects lower to a compiler-owned Game Logic's init line (runs like other init lines) or to the generated `init.sqs` block, given that `init.sqs` timing in MP was not traced (Field Manual `init-line`) [U]?
+1. **Map-object host.** Should destroyed-at-start objects lower to a compiler-owned Game Logic's init line (runs like other init lines) or to the generated `init.sqs` block, given that `init.sqs` timing in MP was not traced (Standing Orders `init-line`) [U]?
 2. **View distance.** On `Cwr`/`Ce`, write only the Intel key (clamped to the user's range, dropped by a vanilla re-save), or also an `init.sqs` line that survives that re-save?
 3. **Building positions.** Extend `ofp-p3d` to read model path data, or rely on capture-back from a running game? Which is legally and technically cheaper (doc 07)?
 4. **Remap tables.** Ship community equivalence tables as T0 packs? Their licences and accuracy are unknown.
 5. **Unlisted classes.** Allow placing classes the stock lists hide (scope below 2) with a warning, or only through raw mode?
 6. **Raw mode for Wilco.** Never, or a strong-model-only "propose raw patch" behind the same validation (doc 21 §3.3)?
 7. **Posture setters.** Answered for `Cwr`/`Ce` [V]: all four accept a unit or a group and act on the unit's group (§4.3 Start posture). Open only for 1.99, where the same group-wide behaviour is expected but unprobed [U]; the catalog records it before the leader-prefix lowering is final for `Cwa199`.
-8. **Easy mode.** Which fields each Easy (Simple) dialog omits needs game data [U]; the inspector's `advanced_only` flag depends on it.
+8. **Easy mode.** *Answered by doc 35 §10 (Doc 03 item) [V]; kept for traceability.* The Easy-mode (`…Simple`) dialogs drop exactly the expert and code fields and add none: Unit 9 (rank, special, info age, placement, presence, presence condition, name, lock, init), Marker 5, Trigger 11, Effects 9, Waypoint 11, Intel 2. The inspector's `advanced_only` flag (§3.3) is set from that list. Doc 35 names only the Unit fields and gives counts for the other five dialogs, so their field names still have to be written down from the same resource reading before the flag table is final.
 9. **Explicit crew.** Is naming placed crew `<vehicle>d/c/g` safe on 1.99, where the automatic-name convention is unverified?
 10. **Fingerprint ranking.** Community missions are where hand edits live, but the S sample is 9 missions. A larger, licence-clean community sample is needed before ranking fingerprint handling.
 11. **Linked presets.** §4.4 copies preset values and updates only on request. Should a mission-local kit optionally stay linked, so one edit re-equips thirty riflemen, given that a link is exactly the invisible coupling §1.1 criticises? If linked, the link must be drawn on the Attributes overlay and listed in "where used".
@@ -468,7 +469,7 @@ BohemiaInteractive/CWR@ffc61838b7, and ofpisnotdead-com/CWR-CE@b67bf3bd62 where 
 
 ### Repo docs and skills
 
-`docs/research/03-original-editor-code-map.md` (§3, §4.1–§4.13); `04-mission-data-model-and-formats.md` (§2–§5, §12); `07-file-formats-and-rust-crates.md` (§7, WRP and P3D); `09-community-wishlist.md` (P2–P10, S13, CO2); `23-script-tooling-lsp-and-linter.md` (§4–§6); `24-script-command-risk-audit.md`; `27-addons-and-mods.md` (§2.4, §4.5); `31-no-code-ladder-modules-rules-and-scripting.md` (§1–§4, §8–§10); `32-cinematics-and-camera.md`; `33-field-manual-and-live-tutorials.md`; `34-iron-curtain-second-pass.md` (ed01–ed22, §2.4, le18); `35-lessons-from-real-content-and-later-armas.md` (§4, §5, §8); `docs/research/data/corpus-script-idioms.csv`, `cwa199-observed-commands.csv`; `skills/field-manual/references/init-line.md`, `special-placement.md`, `show-ids-and-object-ids.md`, `condition-of-presence.md`; `skills/mission-primer/references/idioms.md` (I11–I15, naming only).
+`docs/research/03-original-editor-code-map.md` (§3, §4.1–§4.13); `04-mission-data-model-and-formats.md` (§2–§5, §12); `07-file-formats-and-rust-crates.md` (§7, WRP and P3D); `09-community-wishlist.md` (P2–P10, S13, CO2); `23-script-tooling-lsp-and-linter.md` (§4–§6); `24-script-command-risk-audit.md`; `27-addons-and-mods.md` (§2.4, §4.5); `31-no-code-ladder-modules-rules-and-scripting.md` (§1–§4, §8–§10); `32-cinematics-and-camera.md`; `33-standing-orders-and-drill.md`; `34-iron-curtain-second-pass.md` (ed01–ed22, §2.4, le18); `35-lessons-from-real-content-and-later-armas.md` (§4, §5, §8); `docs/research/data/corpus-script-idioms.csv`, `cwa199-observed-commands.csv`; `skills/standing-orders/references/init-line.md`, `special-placement.md`, `show-ids-and-object-ids.md`, `condition-of-presence.md`; `skills/mission-primer/references/idioms.md` (I11–I15, naming only).
 
 ### Community and external
 
@@ -495,7 +496,7 @@ Product and UX review, 2026-09-27. It asked of every affordance: is it easier th
 - *Hidden side effects.* Height forced Special NONE and Starts in named vehicles, with no stated way to see or undo either. §4.1 now makes companion edits visible in the preview and why card, and reversible only when untouched. Adding an attribute over code that already does the same thing offers the lift instead of a duplicate statement (PAT16).
 - *Safety of existing missions.* The lift list is a non-modal badge, never a dialog on open. A raw-mode draft applied after map edits shows a three-way diff instead of overwriting them (§7). Class-remap edits inside hand-written text are grouped per file and can be excluded (§5). Height stores the roof or building pick, not a stale absolute number (§4.2 `OnRoof`, §4.3). A lost sidecar costs only provenance, because every prefix lifts back at High confidence (§4.4, PAT16).
 - *Honest controls.* Relation sliders implied graded hostility whose runtime meaning is [U] (PP11). The stock four choices stay the default, with exact values one click away and labelled (§4.3).
-- *No duplicated concepts.* "Island retarget" collided with doc 34 ed15's "Retarget…", which changes the target profile; it is now "Island move" and reuses the ed15 machinery (TL;DR, WA13, §5, §6, §10, PT3, PAT6). "Rename with references" is now stated to be doc 31 §7.3's rename, not a second one. Inspector engine notes are doc 33 registry facts (`Vec<ConceptId>`), greyed-out reasons route through doc 33 §4.4, and §10 asks the Field Manual for an entry on attributes themselves.
+- *No duplicated concepts.* "Island retarget" collided with doc 34 ed15's "Retarget…", which changes the target profile; it is now "Island move" and reuses the ed15 machinery (TL;DR, WA13, §5, §6, §10, PT3, PAT6). "Rename with references" is now stated to be doc 31 §7.3's rename, not a second one. Inspector engine notes are doc 33 registry facts (`Vec<ConceptId>`), greyed-out reasons route through doc 33 §4.4, and §10 asks Standing Orders for an entry on attributes themselves.
 - *Cross-doc gaps recorded, not edited.* §10 (f): doc 31 §8.2 rates init idioms "medium", while §8 here rates exact forms High. §10 (g): the same attribute has different names in doc 31 §3, the mission-primer idioms page and this doc.
 
 **Residual concerns.** The inspector's "every key" remains an expert surface even when filtered, and whether Easy mode users ever need it is untested. The count of about 25 attributes may itself become a long "+ Add" list; ranking by the F corpus frequencies is the proposed default [I]. PAT15's time targets wait on moderated sessions. §4.4's drop chip keeps the stock drag-to-move and Groups-mode link drag intact (doc 03 §4.3); a modifier key was rejected because Shift rotates and doc 33 §4.2 gives Alt+click to "What is this?". Whether the chip is noticed without being a nuisance needs the same sessions [U].
@@ -525,3 +526,10 @@ Adversarial engine review, 2026-09-27. Every compile-to claim was re-read agains
 - The roadway-ceiling behaviour of `setPos`, the "soldiers start on the top walkable face" rule and the stale in-memory auto list are read from code paths, not observed; which island models have roof roadways, and whether a soldier stays above a non-walkable roof, are [U] until PP2. The Height compiler needs model roadway data (doc 07 `ofp-p3d` does not read it yet) to correct `h` near sea level.
 - Every 1.99 statement rests on the string scan and shipped-content tiers; the CWR source is the Remastered engine, so behaviour such as the `setPos` dismount, the 0.6 threshold and the group-wide posture setters is [U] on 1.99 even where the command is T1.
 - The doc 04 §12.3 rule 4 correction (gap (a)) and the doc 27 pruning nuance (gap (h)) are still only candidates; neither sibling doc was edited here.
+
+### Consolidation pass (2026-09-27)
+
+- *Rename (owner decision).* The concept manual is now **Standing Orders** (was "Field Manual") in G3, §4.1, §6, §9 step 5, the §10 table, open question 1 and the product review notes; the skill path is now `skills/standing-orders/` (§10 table, Sources), and doc 33's link is now `33-standing-orders-and-drill.md` (Sources). Every earlier mention meant our own manual, none meant Arma 3's Field Manual, so no prior-art mention remained to keep. The doc never mentioned the tutorials, so no "Drill" change was needed. The folder and file renames themselves happen in a later step.
+- *Open question 8 answered (from doc 35 §10, Doc 03 item [V]).* The Easy-mode (`…Simple`) dialogs drop Unit 9, Marker 5, Trigger 11, Effects 9, Waypoint 11 and Intel 2 fields and add none. Open question 8 is marked answered and kept for traceability, and the `Exposure::Dialog { advanced_only }` comment in §3.3 now points at that list. Nothing else in the doc depended on the old [U].
+- *Renames done (2026-09-27; supersedes "happen in a later step" in the rename note above).* The skill folder was moved with `git mv` to `skills/standing-orders/` and doc 33 to `docs/research/33-standing-orders-and-drill.md`, so the §10 table and Sources paths now resolve.
+- *§10 candidates carried (verification step, 2026-09-27; supersedes "still only candidates" in the review note above).* Each sibling correction now sits in its target doc with a dated note: (a) doc 04 §12.3, (b) doc 03 §3.7, (c) and (f) doc 31 §3 and §8.2, (h) doc 27 §2.4 and §4.5, (i) doc 35 rc28. (g) is filed as DG003 (open) in `docs/design-gap-requests/`. (d) and (e) concern this doc's own design ((d): the Height and Seat attributes and probe PP12; (e): §1 and WA23) and needed no sibling edit. The list itself is unchanged.

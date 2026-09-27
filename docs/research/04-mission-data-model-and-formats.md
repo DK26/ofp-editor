@@ -228,7 +228,7 @@ Keys are listed in write order. "min v" is the minimum file version at which the
 | `class Groups` | list of Group | 1 | empty → omitted | §3.3 |
 | `class Vehicles` | list of Unit | 1 | empty | Empty (crewless) objects, same shape as a Unit with `side="EMPTY"` [I]. |
 | `class Markers` | list of Marker | 1 | empty | §3.7 |
-| `class Sensors` | list of Sensor | 1 | empty | Triggers not attached to a group. |
+| `class Sensors` | list of Sensor | 1 | empty | All triggers in practice, including group-activated ones (`GROUP`, `LEADER`, `MEMBER`), which bind through `idVehicle`. No file in doc 35's 398-file corpus uses the group-level list (§3.3) (corrected 2026-09-27, doc 35 §10) [V]. |
 
 ### 3.2 `class Intel`
 Source: `ArcadeTemplate.cpp#L1474-L1539`.
@@ -251,8 +251,12 @@ Actual `Serialize` order (the table groups some keys): `briefingName`, `briefing
 
 ### 3.3 Group and Unit
 - **Group** (`#L1460-L1467`) contains `side` (enum, **required**), then `class Vehicles` (its
-  units), `class Waypoints` and `class Sensors` (triggers grouped with the group; these use
-  activation `GROUP`, `LEADER` or `MEMBER`).
+  units), `class Waypoints` and `class Sensors` (a group-level trigger list).
+  - **Correction (2026-09-27, from doc 35 §10).** This note first said group-level `Sensors` hold
+    the triggers that use activation `GROUP`, `LEADER` or `MEMBER`. The serializer supports the
+    group-level list, but none of the 398 files in doc 35's local corpus uses it. All 163
+    group-activated official triggers are section-level `Sensors` (§3.1) bound through
+    `idVehicle` (§3.5). **Our writer emits the section-level form; our reader accepts both** [V].
 - **Unit** (`ArcadeUnitInfo::Serialize`, `#L354-L410`). Its first-pass defaults come from
   `Init()` (`#L257-L284`).
 
@@ -260,7 +264,7 @@ Actual `Serialize` order (the table groups some keys): `briefingName`, `briefing
 |---|---|---|---|---|
 | `presence` | float | 1 | 1.0 | Probability of presence. |
 | `presenceCondition` | string (expression) | 1 | `"true"` | |
-| `position[]` | float[3] | 1 | **required** | Order is `{x, y, z}` with **y = height** and z = north. The editor writes the terrain/road surface height (`RoadSurfaceYAboveWater`, `#L286-L290`). |
+| `position[]` | float[3] | 1 | **required** | Order is `{x, y, z}` with **y = height** and z = north. The editor writes the terrain/road surface height (`RoadSurfaceYAboveWater`, `#L286-L290`). **The game ignores y at mission start** (added 2026-09-27 from doc 37 §3.2): units, empty vehicles and triggers, and also sound sources and mines, are re-snapped to the surface (`CWR:engine/Poseidon/AI/AICenterImpl.cpp#L985`, `#L1098-L1104`, `#L1248-L1249`, `#L887`, `#L931`) [V]. Soldiers and triggers land on the highest walkable (roadway) face of any object at that x/z, such as a bridge deck or walkable roof, else on the terrain; vehicles and static objects land on the terrain (`CWR:engine/Poseidon/World/Terrain/Landscape.cpp#L1655-L1773`) [V code path; which island models have roof roadways is U]. A deliberate start height needs doc 37's Height attribute (§4.3), and doc 37's lint PL01 flags an edited y without one. |
 | `placement` | float | 1 | 0 | Random placement radius in metres. |
 | `azimut` | float | 1 | 0 | Heading in degrees (BI spelling "azimut"). |
 | `special` | enum | 1 | `FORM` | |
@@ -307,7 +311,7 @@ Source: `ArcadeSensorInfo::Serialize`, `#L510-L562`; `Init` at `#L446-L473`.
 
 | Key | Type | Min v | Default | Notes |
 |---|---|---|---|---|
-| `position[]` | float[3] | 1 | **required** | |
+| `position[]` | float[3] | 1 | **required** | y is ignored at start; the trigger is re-snapped to the surface (§3.3 `position[]`) [V]. |
 | `a`, `b` | float | 1 | 50, 50 | Axis half-sizes. |
 | `angle` | float | 1 | 0 | |
 | `rectangular` | bool | 7 | 0 | |
@@ -319,7 +323,7 @@ Source: `ArcadeSensorInfo::Serialize`, `#L510-L562`; `Init` at `#L446-L473`.
 | `type` | enum | 1 | `NONE` | |
 | `object` | string | 1 | `"EmptyDetector"` | |
 | `age` | enum | 1 | **required** | Always written, e.g. `"UNKNOWN"`. |
-| `idStatic`, `idVehicle` | int | 1 | −1 | |
+| `idStatic`, `idVehicle` | int | 1 | −1 | `idVehicle` is how official group-activated triggers (`GROUP`, `LEADER`, `MEMBER`) are bound (§3.3) [V]. |
 | `text` | string | 3 | `""` | Trigger text. |
 | `name` | string | 7 | `""` | Trigger variable name. |
 | `expCond` | string | 1 | `"this"` | |
@@ -752,7 +756,10 @@ only ever reads and writes known paths.
 3. **Keep defaults explicit.** Setting a key back to its default keeps it written, so the diff
    stays small. A separate command, "Normalize as engine", omits defaults.
 4. **List edits.** Deleting or inserting an item renames the following `ItemK` classes and
-   updates `items=` (the engine requires contiguous `Item0..N-1`).
+   updates `items=`, because **we keep lists contiguous** (`Item0..N-1`). This is our writer rule,
+   not an engine requirement. The engine loads a gap as a default element and silently ignores
+   items past `items=` (§2.3, `ParamArchive.hpp#L406-L411`) [V]. (Corrected 2026-09-27 from doc
+   37 §10 (a); the rule first said "the engine requires contiguous `Item0..N-1`".)
 5. **No renumbering on save.** New units get `max(id)+1` and new syncs `max+1`. Renumbering
    happens only on explicit normalize, which reuses the `Compact` and `CheckSynchro` semantics.
 6. **Number formatting.** An unchanged value re-emits its raw lexeme. A changed float is emitted
@@ -803,6 +810,7 @@ no CI dependency on a local install.
   - `crlf.sqm` / `lf.sqm` / `spaces_indent.sqm`;
   - `dup_keys.sqm`;
   - `items_mismatch.sqm` (missing and extra `ItemK`);
+  - `group_sensors.sqm` (a group-level `Sensors` list, which the reader must accept, §3.3);
   - `long_init_2048.sqm`;
   - `cp1250_bytes.sqm` (non-ASCII bytes as `\x..` literals in the test source).
 - **Generated fixtures:** an `SqmBuilder` test helper emits engine-canonical text. With
@@ -840,9 +848,12 @@ no CI dependency on a local install.
 5. What is the encoding policy for missions that mix UTF-8 (CWR-saved) and legacy bytes? Should
    we offer "target: 1.96/1.99 (ANSI)" vs "target: CWR (UTF-8)" at save time? This is a product
    decision.
-6. How exactly does the game use `position[1]` (the height) at spawn: recomputed from terrain or
+6. ~~How exactly does the game use `position[1]` (the height) at spawn: recomputed from terrain or
    honoured? This decides whether the standalone editor needs island heightmaps before its first
-   save [U].
+   save [U].~~ Answered in the consolidation pass (2026-09-27) from doc 37 §3.2: y is ignored and
+   the entity is re-snapped to the surface at start (§3.3 `position[]`) [V]. A wrong y moves
+   nothing, so a correct first save needs no heightmap. Heightmaps (and model roadway data) matter
+   only for writing an engine-like y and for doc 37's Height attribute [I].
 7. Should we emit the MP lobby parameters and other description.ext keys through a typed editor,
    or keep description.ext as a CST-only document with snippets?
 
@@ -860,6 +871,12 @@ no CI dependency on a local install.
   - unrelated to mission serialization: `OptionsUI.cpp`, `DisplayUI.cpp`, `NetworkServerMission.cpp`, `UIControlsExt.cpp`.
 - Added during verification: `BohemiaInteractive/CWR@ffc61838b7:README.md` (licensing), `engine/Poseidon/UI/Locale/MissionLanguageDetector.cpp`, `apps/cwr/GameBase/GameBase.cpp`, `engine/Poseidon/Foundation/Common/PlatformPaths_{win,posix}.cpp`, `engine/Poseidon/IO/PackFiles.hpp`, `engine/Poseidon/UI/DisplayUIMultiplayerWizard.cpp`, `engine/Poseidon/Foundation/Framework/DebugLog.hpp`.
 - `iron-curtain-engine/iron-curtain@7b7fac7fa5:AGENTS.md#L255-L260`, `#L335-L341`, `#L399-L408`, `#L583-L604`, `#L676`
+- Added in the consolidation pass (2026-09-27), as cited by doc 37's engine review:
+  `BohemiaInteractive/CWR@ffc61838b7:engine/Poseidon/AI/AICenterImpl.cpp`, `…/World/Terrain/Landscape.cpp`.
+
+**Repo docs** (consolidation pass): `docs/research/35-lessons-from-real-content-and-later-armas.md`
+§10 (corpus finding on group-level `Sensors`); `docs/research/37-power-tools-for-classic-workarounds.md`
+§3.2, §4.3, §10 (a) and §11 (lint PL01).
 
 **External:**
 - Real OFP-era mission sample (format evidence only; not to be copied into the repository):
@@ -902,3 +919,29 @@ URL.
 
 **Not independently verifiable here:** OFP 1.96 / CWA 1.99 behaviour (all [I] rows in §11),
 BIKI content (HTTP 403), and the sample file's byte-level whitespace and provenance.
+
+### Consolidation pass (2026-09-27)
+
+Corrections carried in from later docs. The evidence was checked in each source doc: doc 35 §10
+and its verification notes, the `trig_group_attached` rows (0 in every group) of
+`docs/research/data/corpus-structure-stats.csv`, and doc 37 §3.2, §10 (a) and its engine review.
+The engine lines were not re-read in this pass.
+
+- *Group-level `Sensors` (doc 35 §10, "Doc 04 §3.3") [V].* §3.3 no longer says group-level
+  `Sensors` hold the `GROUP`/`LEADER`/`MEMBER` triggers; the old claim is kept in the correction
+  bullet there. §3.1's `class Sensors` row ("triggers not attached to a group") and §3.5's
+  `idVehicle` row now say that official group-activated triggers are section-level and bound
+  through `idVehicle`. The writer emits the section-level form, the reader accepts both, and §13
+  gains a `group_sensors.sqm` fixture.
+- *§12.3 rule 4 (doc 37 §10 (a)) [V].* "The engine requires contiguous `Item0..N-1`" is now "we
+  keep lists contiguous", a writer rule. §2.3 already showed that gaps and extra items load
+  silently.
+- *`position[1]` is ignored at start (doc 37 §3.2, confirmed by doc 37's engine review) [V].* §3.3's
+  `position[]` row now says y is re-snapped to the surface and points to doc 37's Height attribute
+  (§4.3) and lint PL01. §3.5's trigger `position[]` row points to it. Open question 6 is marked
+  answered and kept for traceability. The roadway-face detail stays [V code path], and which island
+  models have roof roadways stays [U], as in doc 37.
+- *Rename check.* The doc never mentioned the concept manual, the live tutorials, doc 33 or
+  `skills/field-manual`, so no Standing Orders or Drill change was needed.
+- TL;DR and recommendations did not depend on the corrected facts, so they are unchanged. Sources
+  lists the two engine files and the two repo docs used.

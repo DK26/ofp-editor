@@ -27,13 +27,15 @@ and plugs it into the typed campaign model, CXL, lints, simulator and compiler o
   engine (7 end codes per mission; campaign variables; routers, doc 19 §7). "Time cave" is rejected as too costly. Branch and
   bottleneck, sorting hat, hub/loop-and-grow, open map and floating modules all compile cheaply, because state-tracked variants
   (presence conditions, briefing `OBJ_` variants) add variety without new missions [I]. Resistance itself had 20 missions,
-  of which one run plays 18, with two branch points: a moral choice and a success/failure split that changes the next mission's
-  difficulty [V].
+  of which one run plays 18, with three in-campaign branch points (a moral choice, a second chance after it, and an intel
+  mission whose success or failure sets the next mission's difficulty) plus a finale split; betrayal ends the campaign only on
+  a second betrayal [V] (doc 35 §3.1).
 - **Persistent state is fun only when it is visible and consequential.** Named squadmates who can die, reputation with locals,
   scarce weapon pools (engine-native) and vehicle pools (saveVar-built; the engine has none), intel carried forward and delayed
   consequences are delivered as **persistence modules**. Each module declares its variables, effects and briefing/dialogue
-  hooks, plus lints that forbid invisible state [I]. Failures route forward to a different or harder but playable mission (CWC: a
-  failed Montignac assault → "Strange Meeting", rejoining at "Rescue"; Resistance: failing "Information" → "Occupation (1)") [V].
+  hooks, plus lints that forbid invisible state [I]. Failures route forward to a different or harder but playable mission
+  (Resistance: failing "Information" → "Occupation (1)"; CWC: the Montignac assault ends in a scripted defeat and branches on the
+  player's exit route from the town, both legs rejoining at "Rescue", doc 35 §3.1) [V].
 - **Pacing is a first-class, checkable property.** Use a sawtooth intensity curve across the campaign [V]. At mission level use
   Left 4 Dead's build-up / sustain / fade / relax cycle, which "adjusts pacing, not difficulty" [V]. Show a per-path intensity
   strip (the PaceMaker idea [V]) and lint for fatigue ("three peak missions in a row") [I].
@@ -57,7 +59,7 @@ and plugs it into the typed campaign model, CXL, lints, simulator and compiler o
 | Triggers, waypoints, sockets, `saveVar` glue | Archetype generator + campaign compiler (doc 19 §7) | None | Edits via the normal editor |
 | Variables, guards, effects | Emitted by persistence modules and patterns | May propose one CXL guard, which is parsed and typed (doc 19 §5) | Edits the transition table |
 | Text | Skeleton lines, keys, facts, numbers, grids, callsigns | Fills slots of ≤ N characters, with a tone enum and a fact scope | Accepts, edits or rejects each line (Ghostwriter pattern, doc 15 §3.1) |
-| Verification | Lints C01–C21 (doc 19) + CF01–CF12 (§10), simulator, Path Explorer | Optional narration of a simulated run (doc 21 §D9) | Plays Preview |
+| Verification | Lints C01–C21 (doc 19) + CF01–CF12 (§10), simulator, Path Explorer | Optional narration of a simulated run (doc 21 §11.6) | Plays Preview |
 
 Rule of thumb [I]: **if a wrong answer would break the engine or the fiction's facts, code owns it; if a wrong answer is only
 less charming, the model may own it, and the user sees it before it is committed.**
@@ -83,7 +85,7 @@ less charming, the model may own it, and the user sees it before it is committed
   (Wikipedia, "Five paragraph order"). FM 101-5 carried this format through the 1980s [V-search].
 
 **Use [I].** The doctrine enums (`ReconKind`, `AmbushKind`, `TacticalTask`) become *typed tags* on archetypes. The model can only
-choose among them, never invent a task. Their definitions double as teaching text for the academy (doc 21 §D7) and as
+choose among them, never invent a task. Their definitions double as teaching text for Drill (doc 21 §11.4) and as
 briefing-template vocabulary (§7).
 
 ### 2.2 What every archetype must specify [I]
@@ -208,8 +210,9 @@ Sam Kabo Ashwell, "Standard Patterns in Choice-Based Games" (2015-01-26); quotes
 ### 4.3 Budget arithmetic [V/I]
 
 - **Precedent.** Resistance has 20 authored missions; "due to branching paths you will only ever play 18 in one campaign". It
-  has two branch points plus bad endings [V]. That is a ~1.1 authored/played ratio, and its replay value came from state
-  (pool, squad), not from branch count [I].
+  has three in-campaign branch points (a moral choice, a second chance, the intel mission's success/failure) plus a finale
+  split, and a second betrayal ends the campaign [V] (doc 35 §3.1, which supersedes the earlier "two branch points"). That is
+  a ~1.1 authored/played ratio, and its replay value came from state (pool, squad), not from branch count [I].
 - **Recommendation [I].** Target authored/played ≤ 1.5 by default, and at most 2–3 distinct successors per mission outside
   finales (engine limit 7, doc 18 §4). Each extra successor costs a mission. Each extra *debrief narrative* costs a socket
   (≤ 7, doc 19 F10), and finer variation goes to `OBJ_` lines. Show the counter "missions authored / missions per playthrough /
@@ -251,9 +254,10 @@ hooks, and its own lints. Patterns recommend modules; the user toggles them.
 - **No invisible state.** Every persistent variable must be *read* by at least one player-visible element (briefing line,
   presence, force size, dialogue) on every path where it could have changed (lint CF04). This goes beyond C07 (unused
   variables).
-- **Failure forward.** Alive failures route to a harder or different mission, not to "game over". CWC: a failed assault on
-  Montignac leads to "Strange Meeting" instead of "After Montignac", and both rejoin at "Rescue" [V]. Resistance:
-  failing "Information" leads to the harder "Occupation (1)", with a T-72 and a T-80 to face [V].
+- **Failure forward.** Alive failures route to a harder or different mission, not to "game over". Resistance: failing
+  "Information" leads to the harder "Occupation (1)", with a T-72 and a T-80 to face [V]. CWC shows the scripted variant:
+  "Montignac Must Fall" ends in a reversal whatever the player does, and the successor ("After Montignac" or "Strange
+  Meeting") depends on how the player leaves the town, not on success; both rejoin at "Rescue" [V] (doc 35 §3.1, §3.5, §10).
 - **Death spirals are bugs.** The simulator runs a pessimistic policy (always the worst outcome). If a path reaches a node
   whose knobs are infeasible (for example "requires ≥ 1 AT team" but the roster only has riflemen), it flags CF07.
 - **Choices must differ.** If two options of a Choice node produce identical successor *and* identical state, the choice is fake
@@ -279,8 +283,8 @@ hooks, and its own lints. Patterns recommend modules; the user toggles them.
 
 | Campaign | Structure and persistence | Memorable devices | Lessons for templates [I] |
 | --- | --- | --- | --- |
-| **Cold War Crisis (1985)** | Four protagonists across roles: Armstrong (infantry), Hammer (tank commander), Nichols (helicopter then A-10 pilot), Gastovski (special forces, sabotage) (Wikipedia) [V]. Mostly linear (one walkthrough lists 41 missions). Branch after "Montignac Must Fall": seizing the town → "After Montignac" (a scripted, unwinnable withdrawal), a failed assault → "Strange Meeting"; both lead to "Rescue" [V] | A big combined-arms offensive that can fail; capture, then rescue by the FIA; the invasion-to-counter-invasion arc [V] | **Role rotation** (P7) gives variety cheaply; a **set-piece defeat as the pivot**; failure-forward instead of game over |
-| **Resistance** | 20 missions, 18 per run. "Crossroad": turning the rebel in leads to "Contact", fighting leads to "No Turning Back" (Wikipedia lists three options: betray, negotiate, fight). "Information": success spares you a T-72 and T-80 in "Occupation (2)", failure leads to "Occupation (1)". Bad endings [V]. Weapon pool, squad of up to 11, captured equipment [V] | Guerrilla scarcity; scavenging; attachment to medics; a moral choice early | **Sorting hat with remerge** (P3); **success/failure → difficulty variant** (cheap, readable); pools as the core loop |
+| **Cold War Crisis (1985)** | Four protagonists across roles: Armstrong (infantry), Hammer (tank commander), Nichols (helicopter then A-10 pilot), Gastovski (special forces, sabotage) (Wikipedia) [V]. Mostly linear (one walkthrough lists 41 missions). Branch after "Montignac Must Fall": the assault ends in a scripted reversal whatever the player does, and the exit route out of the town picks the successor (END1 → a lone-escape mission, other codes → a different one: "After Montignac" and "Strange Meeting"); both lead to "Rescue" [V] (doc 35 §3.1, §10) | A big combined-arms offensive that turns into a scripted defeat; capture, then rescue by the FIA; the invasion-to-counter-invasion arc [V] | **Role rotation** (P7) gives variety cheaply; a **set-piece defeat as the pivot**; branch on *how* the player survives it (a physical choice such as the exit route, doc 35 §3.5) instead of on win/lose or game over |
+| **Resistance** | 20 missions, 18 per run. "Crossroad": turning the rebel in leads to "Contact", fighting leads to "No Turning Back" (Wikipedia lists three options: betray, negotiate, fight). "Information": success spares you a T-72 and T-80 in "Occupation (2)", failure leads to "Occupation (1)". Three in-campaign branch points in all: the moral choice, a second chance after it (helping rejoins the main line; a second betrayal ends the campaign in an execution cutscene) and the intel split, plus a finale split [V] (doc 35 §3.1). Weapon pool, squad of up to 11, captured equipment [V] | Guerrilla scarcity; scavenging; attachment to medics; a moral choice early | **Sorting hat with remerge** (P3); **success/failure → difficulty variant** (cheap, readable); pools as the core loop |
 | **Red Hammer** | Soviet perspective on "the same conflict"; Lukin goes from loyal soldier to deserter who "joins the resistance" and finally arrests Guba's loyalists (Wikipedia) [V] | Playing the other side; a moral turn | **Perspective flip** as a pattern parameter; arc "fall–rise" |
 | **Community (OFPEC sample)** | Of the 10 OFP campaigns on the depot's first page, none advertises branching or persistence. *Grunt ONE*: 16 linked missions, "multiple ways" to reach objectives, no traditional branching. *Too Young To Die*: 8 long missions with "surprising twists mid-game" [V]. OFPWiz *Dynamic Campaign*: full carry-over of weapons, vehicles and men [V] | Cutscenes (*SharkEye II*: "around 30 mins"), long set-piece missions, twists; voice acting (unverified) | Branching RPG-state campaigns were **rare** in the OFP community [I from a small sample, U overall]. That is the product's differentiator. Twists and set pieces matter more than branch count |
 | **Arma 3 Combat Patrol (BI)** | Scenario generated "in every village based on a map's key points"; a chain of randomly selected objectives; enemy reinforcements triggered by alarm (Buchta, 2016-12-20) [V] | Replayable, location-agnostic missions | Precedent for **terrain-indexed archetype placement** and alarm → QRF as a failure mode |
@@ -295,7 +299,7 @@ The engine's `briefing.html` sections are `Main` (notes), `Plan`, `OBJ_<n>` (obj
 
 | SMEAC paragraph | OFP section | Code-owned content | Model flavour slot |
 | --- | --- | --- | --- |
-| Situation | `Main` (1st paragraph) | Enemy/friendly facts from the mission (unit roles, counts as words, places) | ≤ 90 words, tone enum (doc 21 §D8) |
+| Situation | `Main` (1st paragraph) | Enemy/friendly facts from the mission (unit roles, counts as words, places) | ≤ 90 words, tone enum (doc 21 §5.2) |
 | Mission | `Plan` (1st line) | Who/what/where/when/why from archetype + motivation | None (template sentence) |
 | Execution | `Plan` (numbered phases) | One line per phase with `marker:` links | ≤ 25 words per phase (optional colour) |
 | Tasks | `OBJ_n` | Objective lines from the archetype | Optional ≤ 12-word rephrase |
@@ -334,7 +338,7 @@ fill only the `{colour}` slot (≤ 8 words) and choose among ≤ 3 variants.
 | Request extract | `{hq}, {me}, requesting extraction at {lz}. Over.` | radio item + trigger |
 | Banter | `{speaker}: {colour}` (≤ 12 words; persona sheet) | `groupChat`/`titleText` |
 
-- **Gates** (doc 21 §D8): speakers ⊆ roster (alive on this path, C18); entities ⊆ mission dossier; digits only from code;
+- **Gates** (doc 21 §5.2): speakers ⊆ roster (alive on this path, C18); entities ⊆ mission dossier; digits only from code;
   an era "forbid" list (GPS, drone, mobile phone, …); `sideChat`/`titleText` length caps; no `:` or `"` inside SQS-bound text
   (doc 19 F6).
 - **Voice consistency.** A character sheet has traits, flaw, desire, fear and speech style (doc 17 §9). The model sees the
@@ -366,7 +370,7 @@ framing of Yannakakis, Liapis & Alexopoulos (FDG 2014) [V-search].
 ### 8.2 The "director's desk" flow [I]
 
 1. **No blank canvas.** The first screen is a pre-filled intent card: side, island, era, length, tone and persistence modules,
-   with the "inferred" chips of doc 21 §D2. A random "prompt of the day" is available.
+   with the inferred ("assumption") chips of doc 21 §4.2. A random "prompt of the day" is available.
 2. **Mutant shopping on outlines.** Code instantiates **3 skeletons** from different patterns or seeds. The model writes a
    ≤ 40-word pitch for each. The user picks one, or asks for "more like #2" (same pattern, new seed).
 3. **Surprise-me dice with pins.** Any field (pattern, arc, an act's twist, a node's archetype, a location) can be re-rolled by
@@ -378,9 +382,9 @@ framing of Yannakakis, Liapis & Alexopoulos (FDG 2014) [V-search].
 6. **Chorus line of playthroughs.** The simulator runs 50 seeded journeys under persona policies (cautious, reckless,
    completionist, random) and shows endings reached, survivors per character, pool at the finale and the intensity strip per
    path. That is instant, simulated feedback on a large artifact [V pattern, I application]. Persona narration by the model is
-   optional flavour (doc 21 §D9).
+   optional flavour (doc 21 §11.6).
 7. **Entertaining evaluations that never gate.** An era "staff officer" persona comments ("Command notes: three night raids
-   running; the men are tired"). Comments are derived from lint data and are never acceptance criteria (doc 21 §D3, §D5).
+   running; the men are tired"). Comments are derived from lint data and are never acceptance criteria (doc 21 §5.1, §11.7).
 8. **Playable slice first.** Mission 1 is generated fully and is Preview-ready while the other nodes are still skeletons, so the
    user plays within minutes. Other missions are built on demand or in the background, and each is shown as it completes.
 9. **Modifying the meaningful.** Per-node handles speak in fiction terms ("harder", "quieter", "more armour", "night",
@@ -516,6 +520,13 @@ effects), *Captured gear only* (loadouts stripped, scavenge; never `clearWeaponP
 how to suspend pool gear selection for one mission while `weaponPool` is campaign-wide is **[U]**, doc 18 §2). "Night assault on the town" = archetype 8 + Night. That is exactly the
 kind of refinement the user asks for ("make mission 4 a night assault").
 
+**Candidates from the official single missions (doc 35 §4, rc81; added 2026-09-27) [I].** The shipped singles use archetypes
+this catalog lacks: vehicle theft, courier race, air taxi and medevac, forward observer, timetabled marksman, air strike with
+return to base, base AA defence, and coastal defence under bombardment. They also suggest three modifiers: *the other side*
+(two official singles put the player on the Soviet side), *Deadline* and *First sortie in a new seat*. None has a row yet;
+each needs the §2.2 fields (terrain needs, force roles, phases, objectives, outcomes, failure modes, knobs, variation)
+before it joins the 16.
+
 ### 9.4 Initial catalog: 8 campaign structure patterns [I]
 
 | # | Pattern (Ashwell family) | Parameters (defaults) | Skeleton sketch | Modules | Missions authored / played; endings | Engine cost |
@@ -535,14 +546,14 @@ deliberately absent (§4.1).
 
 ### 9.5 Plugging into the campaign designer (doc 19) and the harness
 
-**The workflow is a typed state machine owned by code** (AGENTS.md invariant; doc 21 §D4 atoms). Each state stores its artifact
+**The workflow is a typed state machine owned by code** (AGENTS.md invariant; doc 21 §6 workflow steps). Each state stores its artifact
 in the harness, not in the model's context. The model sees one menu or one slot at a time. **Proposal-only, to reconcile:**
 doc 25 §4 already defines the flow (`CampaignFlow`, stages S0–S9, which build missions before writing text and cap menus at 7).
 `ContentStage` below is this doc's content-side view; it should become doc 25's stage payloads, not a second state machine.
 
 ```rust
 pub enum ContentStage {
-    Intent(IntentDraft),            // S1  side, islands, era, length, tone, modules (chips; doc 21 §D2)
+    Intent(IntentDraft),            // S1  side, islands, era, length, tone, modules (chips; doc 21 §4.2)
     Outline(Vec<SkeletonOption>),   // S2  code builds 3 skeletons; model pitches/ranks; user picks
     Arc(ArcDraft),                  // S3  ArcShape + per-act twist from ≤5 legal cards
     Cast(CastDraft),                // S4  roster from Roster module: names (era lists), roles, persona sheets
@@ -576,7 +587,7 @@ pub enum ContentStage {
   substitute (e.g. "aircraft crippled → forced landing" raised while the player lives).
   "Rewrite the sergeant's lines" regenerates S8 slots whose speaker is the sergeant. Every one of these is a single undoable
   transaction [I].
-- **Effort levels** (doc 21 §D5) change the number of outline candidates (1/3/5), whether pitches are model-written or
+- **Effort levels** (doc 21 §7.1) change the number of outline candidates (1/3/5), whether pitches are model-written or
   templated, and the repair budget. They never change the validators.
 
 ## 10. Content and fun lints (proposed; complement doc 19 C01–C21) [I]
@@ -621,7 +632,8 @@ pub enum ContentStage {
 **Repository docs:** doc 04 §6 (briefing sections); doc 14 (model tiers); doc 15 §3.1, §8.1, §8.4, §9 (Ghostwriter pattern,
 BriefingRoom, text targets, evaluation); doc 17 §6, §7.2, §9 (scene templates, class overlay, character sheets); doc 18 §4–§6,
 §10 (engine campaign facts, community precedents); doc 19 (typed model, CXL, lints C01–C21, simulator, compiler, AI actions);
-doc 21 §D2–§D9 (intent fill, idea cards, workflow atoms, effort, wizard, dialogue gates, play-tester); doc 22 (plugin tiers);
+doc 21 §4, §5.1–§5.2, §6, §7.1, §11.3–§11.7 (intent fill and chips, idea cards, dialogue gates, workflow steps, effort,
+wizard, Drill, play-tester, persona); doc 22 (plugin tiers);
 doc 25 §4–§5 (workflow state machine, step shapes).
 
 **Web (accessed 2026-09-26; fetched unless marked "search"):**
@@ -685,10 +697,40 @@ Adversarial review, 2026-09-27 (PDFs text-extracted locally). TL;DR, §1–§10,
   of oatmeal"); Booth's quotes and timings; FM 7-8, FM 3-90, ACP 125 wording; Short, Gervás, Reagan, Wen et al., PaceMaker,
   Elimination, Combat Patrol; CWC's protagonists; Red Hammer; Resistance's 20/18 missions, branches and advice; OFPEC sample.
 - **Corrected.** CWC: failing "Montignac Must Fall" leads to "Strange Meeting", not "Rescue"; both legs rejoin at "Rescue"
-  (TL;DR, §5.2, §6). Doc 18 §10 repeats the old claim and needs the same fix. The HQ callsign override uses `STR_CFG_PAPABEAR`/
-  `STR_CFG_FIREFLYBASE`, not same-name keys. Tightened WILCO, the Booth and Ashwell quotes, and the "tedious chain" claim ([I]).
+  (TL;DR, §5.2, §6). Doc 18 §10 repeats the old claim and needs the same fix. (The rejoin at "Rescue" stands; the
+  success/failure condition is superseded by doc 35 §3.1, §10, see the consolidation pass below.) The HQ callsign override
+  uses `STR_CFG_PAPABEAR`/`STR_CFG_FIREFLYBASE`, not same-name keys. Tightened WILCO, the Booth and Ashwell quotes, and the "tedious chain" claim ([I]).
 - **Product fit.** Roster/vehicle pool: the engine has neither (saveVar, `saveIdentity`/`saveStatus`, presence slots); variation
   picks run in-engine; outcomes via the finisher (C13); book rows; radio leader rule; no player-death branch; no pool clearing;
   CF04 spares Preserve imports; non-doctrine tasks marked; §9.5 defers to doc 25 §4.
-- **Residual.** Doc 21 (`21-agent-doctrine.md`) is not in the tree, so its §D2–§D9 citations are unchecked. The Crawford,
+- **Residual.** Doc 21 (`21-agent-doctrine.md`) is not in the tree, so its §D2–§D9 citations are unchecked (superseded: doc 21
+  now exists and the citations were checked; see the consolidation pass below). The Crawford,
   Ingold, Chen, FM 101-5 and XCOM claims remain [V-search]. Menu caps (5 here, 7 in doc 25) are unresolved (Open question 6).
+
+### Consolidation pass (2026-09-27)
+
+- **Resistance branch count (doc 35 §3.1, §10).** The earlier "two branch points plus bad endings" (confirmed above) is
+  superseded: Resistance has three in-campaign branch points (a moral choice, a second chance, the intel success/failure) plus a
+  finale split, and betrayal ends the campaign only on a second betrayal. Updated in the TL;DR, §4.3 and the §6 table; the
+  ~1.1 authored/played ratio and the P3 precedent are unchanged. The Montignac branch condition is handled in its own bullet
+  below; the rc81 archetype candidates (doc 35 §10) are left to a separate correction and were not changed here.
+- **Montignac branch condition (doc 35 §10 "Doc 26"; evidence in §3.1, §3.5).** The success → "After Montignac" / failure →
+  "Strange Meeting" reading (the "Corrected" bullet above, from a walkthrough and a forum thread) is superseded: the mission ends
+  in a scripted reversal and the branch keys on how the player leaves the town (END1 → a lone-escape mission, other codes → a
+  different mission); both legs rejoin at "Rescue". Updated in the TL;DR (Resistance now leads the failure-forward example),
+  §5.2 "Failure forward" and the §6 CWC row, whose "offensive that can fail" and "failure-forward" lesson now read as a scripted
+  defeat and a branch on how the player survives it. Doc 35 does not name the two successors, so which name belongs to which
+  route is left unstated. Doc 18 §10 got the same fix. §3.2's "Montignac defeat" arc reading is unaffected.
+- **Doc 21 citations (doc 21 header, "Labels used by sibling docs").** Doc 21 now exists and maps D1–D14 to its sections. Each
+  §D citation was checked and converted to a section number: §D2 → §4.2 (the "assumption" chips), §D4 → §6, §D5 → §7.1,
+  §D7 → §11.4 (Drill), §D8 → §5.2 and §D9 → §11.6 (play-tester narration). The §8.2 item 7 citation "§D3, §D5" is now §5.1,
+  §11.7: §5.1 (a slot cannot mark anything valid) matches D3, but D5 maps to §7 (effort), which does not cover "never acceptance
+  criteria", so it was re-pointed to Wilco's persona in §11.7, which quotes this doc's "Command notes" line. The Sources line
+  now lists the § numbers. The residual above is superseded.
+- **Rename (owner decision).** §2.1 "teaching text for the academy" now reads "for Drill" (the live tutorials, doc 21 §11.4).
+  This doc had no "Field Manual", "boot camp", doc 33 or `skills/field-manual` references to update.
+- **rc81 candidates (verification step; supersedes "left to a separate correction" in the first bullet).** Doc 35 §10 asks this
+  doc to add rc81's candidates to §9.3. §9.3 now lists them in a paragraph after the modifiers: eight archetypes and three
+  modifiers, taken word for word from rc81, with the Soviet-side reading of "the other side" from doc 35 §4's seat and side counts.
+  They are marked [I] candidates without rows; the 16 rows, the heading and every earlier finding are unchanged. The menu-cap
+  question (open question 6) is filed as DG006 (open).

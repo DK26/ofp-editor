@@ -32,8 +32,10 @@ variable at mission end.
 - **UX (§6):** an OFP-styled **Flow view** plus a **Theatre view** (nodes on the island map); per-node **transition tables**; a Variables panel with
   "set in / read in" cross-references; a **7-socket budget meter**; a campaign-book-styled **what-if Playthrough**; an exhaustive **Path Explorer**;
   coverage heat; lints; Simple → Advanced tiers.
-- **Compiler (§7):** allocates sockets per node over distinct (debrief narrative, successor) pairs (failures get `lost`) and inserts routers only above 7.
-  Finer debrief variation goes into `OBJ_` lines, which the debriefing's objectives pane also evaluates **[V CWR]**.
+- **Compiler (§7):** allocates sockets per node over distinct (debrief narrative, successor) pairs and inserts routers only above 7. The
+  socket/finisher design is BI's own ending idiom (doc 35 §3.3) **[V]**. Routing defaults follow BI's campaigns (§7.2): `lost` retries the mission,
+  story-moving failures take END sockets with their own debriefs, cutscene nodes map every code forward, and a chapter's last mission uses the
+  chapter fallback **[I]**. Finer debrief variation goes into `OBJ_` lines, which the debriefing's objectives pane also evaluates **[V CWR]**.
   Routers on one island share one folder and dispatch on a `cmp_route` token. The finisher runs select rule → effects → commit → **publish `cmpEnd`
   last**, because `exec`'d SQS runs at most **100 lines per step** **[V]**.
 - **Vanilla expressibility (§7.4):** yes for arbitrary guards over campaign and mission state, merges, loops, hubs, side missions, failure branches
@@ -236,7 +238,7 @@ pub struct PoolSchema {
 pub struct Node { id: NodeId, name: Ident, act: Option<ActId>, kind: NodeKind, layout: CanvasPos, notes: String }
 pub enum NodeKind {
     Mission(MissionNode),     // playable
-    Cutscene(CutsceneNode),   // no groups; single `lost` exit (doc 18 §5)
+    Cutscene(CutsceneNode),   // no groups, so it always ends `lost` (doc 18 §5); every code is mapped forward (§7.2)
     Decision(DecisionNode),   // automatic; compiles to a router
     Choice(ChoiceNode),       // player chooses; compiles to a tiny choice mission
     Hub(HubNode),             // repeatable base camp with spokes and return edges
@@ -254,7 +256,8 @@ pub struct MissionNode {
 pub enum Lives { Unlimited, Retries(NonZeroU8), NoRetry }
 pub struct OutcomeDecl { id: OutcomeId, node: NodeId, name: Ident, polarity: Polarity,
                          debrief: Option<LocalizedHtml>, payload: Vec<PayloadField> }
-pub enum Polarity { Success, Partial, Failure }   // Failure prefers the `lost` socket (OutroLoose, Debriefing:Loser)
+pub enum Polarity { Success, Partial, Failure }   // presentation only; sockets follow the edge (§7.2): a Failure
+                                                  // that retries uses `lost`, a story-moving Failure takes an END socket
 pub struct PayloadField { name: Ident, ty: ValueType, source: PayloadSource }
 pub enum PayloadSource { MissionVar(VarId), Probe(ProbeExpr) } // probe = typed raw engine expr, not simulatable
 
@@ -388,7 +391,7 @@ outside it (C14).
 | Node | Canvas glyph (OFP marker idiom) | Meaning | Lowering (§7) |
 | --- | --- | --- | --- |
 | Mission | Objective flag with a socket meter "4/7" | Playable mission with named outcomes | Managed mission + sockets |
-| Cutscene | Film strip | Linear story beat; varies content by state via `initintro.sqs` | Group-less mission; exits via `lost` |
+| Cutscene | Film strip | Linear story beat; varies content by state via `initintro.sqs` | Group-less mission; exits via `lost`, with every code mapped to the successor (§7.2) |
 | Decision | Diamond | Automatic branch on state; may `roll` | Router (shared folder) |
 | Choice | Radio set | The player picks among options with availability guards; supports unchosen effects | Tiny choice mission: radio `ALPHA..JULIET` (F11) or actions |
 | Hub | Base/camp flag | Repeatable base camp: spokes (operation cards with On Success / On Failure / If Skipped / Time Window), return edges, a turn counter, optional roster selection | Hub mission + routers |
@@ -474,7 +477,7 @@ island-bound, so this reads as native **[I]**. The Playthrough uses the campaign
 
 | Tier | Visible features |
 | --- | --- |
-| Classic | Missions, Won/Lost outcomes, automatic edges: OFP-equivalent |
+| Classic | Missions, Won/Lost outcomes (Lost retries the mission by default, §7.2), automatic edges: OFP-equivalent |
 | Branching | Named outcomes, flags, the condition builder, Choice nodes, Endings |
 | RPG | Roster, pools, payloads, relationships, text variants |
 | Strategic | Hubs, operation cards, countdowns/doom clocks, turn counters, `roll` |
@@ -500,8 +503,20 @@ be reconstructed if the sidecar is lost.
 
 ### 7.2 Socket allocation and routers
 
-- **Socket key.** For each managed Mission node, a socket key = (debrief variant, successor). Failure-polarity keys prefer `lost` (OutroLoose +
-  `Debriefing:Loser`); others use `end1..6`.
+- **Socket key.** For each managed Mission node, a socket key = (debrief variant, successor). A retry key (a Failure edge back to its own node)
+  takes `lost`; every other key, including a Failure that moves the story, takes one of `end1..6` with its own debrief section. *Superseded in
+  the 2026-09-27 consolidation pass:* the earlier default "Failure-polarity keys prefer `lost` (OutroLoose + `Debriefing:Loser`)" did not match
+  the shipped campaigns; see the routing defaults below.
+- **Routing defaults** (doc 35 §3.1 and its rc77; the socket/finisher shape itself is BI's ending idiom, doc 35 §3.3 **[V]**). In every official
+  campaign `lost` means "retry this mission" (the one exception is 1985's closing coda, whose `lost` ends the campaign), failures that move the
+  story use END codes, and no shipped briefing defines `Debriefing:Loser` **[V, doc 35]**. The compiler therefore defaults to **[I]**:
+  1. **Retry on LOOSE.** A Mission node's Failure outcome gets a default self-loop edge through `lost`; a self-loop adds no book row (doc 18 §4).
+  2. **Story-moving failures on END sockets**, each with its own `Debriefing:End<n>` section.
+  3. **`lost`-forward** (OutroLoose plus a `Debriefing:Loser` section) stays available as an explicit per-outcome option, never the default.
+  4. **Cutscene nodes** map `lost` and `end1..6` all to the successor, as every official cutscene node does.
+  5. **Chapter-bound acts:** a chapter's last mission leaves its forward mission-level keys empty (still written out as `""`, doc 18 §2) and
+     relies on the chapter-level keys, so the next chapter's cutscene plays before its `firstMission`; its `lost` still names the mission
+     itself when it retries. An edge into a non-first node of another chapter still needs a router (C11).
 - **Direct routing.** With ≤ 7 keys, the finisher's selected rule maps straight to its key's socket (Pattern A, doc 18 §8.1).
 - **Router routing.** Otherwise the mission ends with one socket per **debrief narrative** (at most 7). Beyond 7, the compiler moves the finer
   variation into hidden `OBJ_` debrief lines that the finisher reveals (F10); if that is not possible it is a compile error asking the designer
@@ -514,7 +529,8 @@ be reconstructed if the sidecar is lost.
   (doc 18 gotcha 5) **[I]**.
 - **Router build:** one player group, no `briefing.html`, `debriefing = 0`, empty Intro/Outros, `noAward = 1`, `lives = -1`, a BLACK FADED cut,
   `forceEnd` in the sockets, same island as the predecessor, and a neutral stringtable book name such as "…" (doc 18 §8.2). Fan-out above 7 after a
-  router uses a tree of router classes (7^depth leaves). **Cutscene nodes** always exit `lost`, so a state-dependent successor goes through a router.
+  router uses a tree of router classes (7^depth leaves). **Cutscene nodes** always exit `lost` (every code is mapped to the same successor, see the
+  routing defaults above), so a state-dependent successor goes through a router.
 - **Choice/Hub:** radio triggers (≤ 10) or actions set `_choice` and the finisher routes it. The player must be the group leader, or the radio
   items are not listed (F11). Generated code hides unavailable options: `setRadioMsg "NULL"` in CWR **[V]**, or action removal. The hiding
   mechanism is **[U]** on 1.99. Hub roster selection uses actions on squad units ("Take along" / "Leave
@@ -546,11 +562,13 @@ saveVar "cmp_rep"
 saveVar "cmp_o_m03"
 ; ... one saveVar per declared persistent variable ...
 ; 4) publish LAST: an exec'd script runs at most 100 lines per step (F8), so sockets must never see a half-finished state
-; rules 4 and 5 are Failure-polarity and use the `lost` socket (0)
+; rules 4 and 5 are Failure-polarity: rule 4 moves the story on its own END socket (own debrief);
+; rule 5 is the retry and uses the `lost` socket (0), which description.ext maps back to m03
 _e = 0
 ? _r == 1 : _e = 1
 ? _r == 2 : _e = 2
 ? _r == 3 : _e = 3
+? _r == 4 : _e = 4
 cmpEnd = _e
 ```
 
@@ -576,7 +594,7 @@ cmpEnd = _e
 | More than 7 successors; shared decision logic; any-to-any edges | **Yes** | Router trees; single chapter | No-world routing (E1) |
 | Merges, loops, repeatable missions | **Yes** | A self-loop adds no book row (doc 18 §4) | — |
 | Optional side missions, hub-and-spoke base camp, operation cards, turn counter, doom clock | **Yes** (coarse UI) | Hub mission + counters decremented at commit | — |
-| Failure branches instead of game over | **Partial**: only while the player is alive | LOOSE sockets; "captured" and "squad wiped" patterns | Routing player death: engine change; **not proposed** |
+| Failure branches instead of game over | **Partial**: only while the player is alive | END sockets with their own debriefs (LOOSE retries by default, §7.2); "captured" and "squad wiped" patterns | Routing player death: engine change; **not proposed** |
 | Persistent squad (identity, wounds, rank, xp) | **Yes** | Flat vars + identity/status blobs + presence conditions | `objects.sav` reset on a new game (E6) |
 | Weapon pool / vehicle pool / items | **Yes** | Native pool / saveVar rows | — |
 | State-aware briefings | **Partial** | Hidden `OBJ_` variants, intro variants, hints | — |
@@ -680,7 +698,8 @@ cmpEnd = _e
   L2012-L2039, L2842, L3105-L3124); `modding/enhanced-campaign-plan.md` (L59-L103, L323-L405, L1830-L1850)
 
 **Repository docs:** `docs/research/18-campaign-system-in-engine.md` (engine truth); `docs/research/04-mission-data-model-and-formats.md` §3, §12;
-`docs/research/05-visual-fidelity-and-ui-resources.md` TL;DR.
+`docs/research/05-visual-fidelity-and-ui-resources.md` TL;DR; `docs/research/35-lessons-from-real-content-and-later-armas.md` §3.1, §3.3, §9
+(rc77), §10 (routing defaults).
 
 **Web (accessed 2026-09-26; "fetched" unless marked "search"):**
 
@@ -724,3 +743,14 @@ their quotes match. BIKI command pages returned 403, so 1.99 command presence st
   7. The radio menu requires the player to be group leader, and in CWR `null` text hides an item.
   8. The finisher now uses `getDammage` (listed in F14) instead of `damage`; both are registered in CWR.
 - **Caveat:** all engine facts come from CWR, the remastered engine, and are not from 1.99 binaries. Open question 1 remains the gate.
+
+### Consolidation pass (2026-09-27)
+
+- **Routing defaults revised (doc 35 §10 "Doc 19" and rc77).** Evidence checked in doc 35 §3.1 (every official playable node except 1985's
+  closing coda maps `lost` to itself; every cutscene node maps all codes forward; a chapter's last mission relies on the chapter fallback;
+  story-moving failures use END codes), §3.3 (BI's socket idiom) and §4 / its verification notes (no shipped briefing defines
+  `Debriefing:Loser`). Edited: the TL;DR compiler bullet; the `Polarity` and `Cutscene` comments in §4.2; the Cutscene row in §6.1; the Classic
+  tier in §6.8; the §7.2 socket-key bullet (old default kept as a superseded note) plus a new routing-defaults bullet; the §7.3 finisher example
+  (rule 4 now takes END4, rule 5 retries on `lost`); the failure-branch row in §7.4; Sources. The new defaults are a proposal **[I]**; the
+  underlying corpus facts are **[V]** in doc 35.
+- **Renames checked:** this doc has no references to the concept manual, the live tutorials or doc 33, so nothing was renamed.

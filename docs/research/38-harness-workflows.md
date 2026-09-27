@@ -10,7 +10,7 @@ inference; **every schema, type, name, number and UX in §2–§10 is [I] unless
 **Citation aliases.** `CX:` = `openai/codex@e72da2b538:` (committed 2026-09-26), as in doc 22. `CC:` = `https://code.claude.com/docs/en/`.
 **Relation to sibling docs.** Doc 21 §6 defines the workflow shape (`WorkflowDef`, `StepKind`, `OnFail`, `Control`) and its rules; doc 25
 the campaign stages S0–S9, step shapes, decision records, staleness and merge; doc 22 T0 packs (`workflows/*.toml`), plugin tool steps and
-trust; doc 30 §4 the knowledge stack; doc 33 the Field Manual; `prompts/design-sensibility/` the lenses. This doc turns them into **one
+trust; doc 30 §4 the knowledge stack; doc 33 Standing Orders; `prompts/design-sensibility/` the lenses. This doc turns them into **one
 definition format, one runtime and one UX**, and proposes answers to doc 21 open question 7 and doc 25 open questions 7 and 10.
 **Hygiene.** All text is our own. Nothing is copied from Claude Code's prompts, documentation or scripts; Codex is cited by pinned path.
 
@@ -203,7 +203,7 @@ the prefix shared across candidates (§4.5). Untrusted segments stay quoted data
 ### 3.5 Skills, knowledge and lenses
 
 - **Skills are knowledge, never procedures.** A step names what enters its capsule, e.g. `knowledge = { primer = ["3"], cards =
-  ["trigger.condition-context"], skills = ["field-manual:placement-radius"] }`; code injects it, as doc 30 §4.6 specifies. Pack skills
+  ["trigger.condition-context"], skills = ["standing-orders:placement-radius"] }`; code injects it, as doc 30 §4.6 specifies. Pack skills
   (`<pack>:<skill>#<section>`; built-in skills use `<skill>:<entry>` as above, and built-in skill names are reserved as pack ids so
   the two forms cannot collide [I]) execute nothing and grant nothing (doc 22 §2.1); a skill may declare `metadata: { editor.decisions:
   "radio.line briefing.slot" }` to limit which decision kinds may cite it.
@@ -592,7 +592,7 @@ id = "composition"
 kind = "pick"
 model = { role = "router", decision = "populate.composition" }
 menu = { provider = "compositions.compatible", side = "inputs.side", sites = "step.sites" }
-capsule = { lens = "encounter-and-pacing", knowledge = { skills = ["field-manual:probability-of-presence"] } }
+capsule = { lens = "encounter-and-pacing", knowledge = { skills = ["standing-orders:probability-of-presence"] } }
 sample = { candidates = "effort", select = "vote" }
 verify = ["V-schema", "V-catalog"]
 on_fail = { keep-default = "compositions.best-scored" }
@@ -738,7 +738,7 @@ Evidence per phase is the listed tests plus doc 21 §12 reporting; nothing is "d
 
 **This repository:** `AGENTS.md`; `docs/research/` 02, 10 (§2.6–§2.13, §5, §6), 11 (§3.4, §3.6, §7.1), 12 §3.4, 17 (§10, §15), 19 (§5,
 §7.1), 21 (§1–§10, §12), 22 (§1.2, §2.1, §3, §4.1–§4.3, §6, §7), 23 §14, 25 (§3–§11, open questions 7 and 10), 30 §4, 33 (§3.3, §5.5–§5.6,
-§6.5), 34 (ed22, le18, mo22); `skills/mission-primer`, `skills/field-manual`; `prompts/design-sensibility/README.md`.
+§6.5), 34 (ed22, le18, mo22); `skills/mission-primer`, `skills/standing-orders`; `prompts/design-sensibility/README.md`.
 
 **Claude Code** (public docs; concepts only): `CC:workflows.md` (re-read 2026-09-27), `CC:skills.md`, `CC:sub-agents.md`,
 `CC:agent-teams.md`, `CC:hooks.md`, `CC:hooks-guide.md`, `CC:model-config.md`, `CC:permission-modes.md`, `CC:plugins/overview.md`,
@@ -804,3 +804,21 @@ clone and the live Claude Code docs.
 - **Invariants and hygiene.** Every step kind reaches only registered editor functions, typed tools or granted plugin tools; no
   shell, HTTP, MCP-tool, prompt or agent hook exists; Wilco has no tool that writes a definition (§2 item 1 now says so). Claude Code
   is used only for concepts cited by public URL; no prompt or doc text was copied. The doc names no private or unpublished project.
+
+### Consolidation pass (2026-09-27)
+
+- **Rename (owner decision).** The concept manual formerly called "Field Manual" is now **Standing Orders**: the header's doc 33
+  pointer, the built-in skill ids in §3.5 (`standing-orders:placement-radius`) and §8.2 `populate-town`
+  (`standing-orders:probability-of-presence`), and the Sources entry `skills/standing-orders` now use the new name. Both entries
+  exist in the skill's reference table under the same ids; only the skill prefix changed. The folder and doc 33 file renames happen in
+  a later step; until then the files still sit at `skills/field-manual` and `docs/research/33-field-manual-and-live-tutorials.md`.
+  "drill-in" in §1.1 and §5.3 is a UI term (open a run's details), not the Drill tutorials, and is unchanged. No TL;DR or
+  recommendation depended on the old name.
+- **Moves done (2026-09-27; supersedes "a later step" above).** The skill folder is now `skills/standing-orders/` and doc 33 is now
+  `docs/research/33-standing-orders-and-drill.md` (both moved with `git mv`), so the Sources path `skills/standing-orders` and the `standing-orders:` skill ids resolve.
+- **Filing pointers (verification step).** The W0 row's design-gap requests and most open questions are now filed in
+  `docs/design-gap-requests/` (checked against its index), all open: OQ1 → DG007, OQ2 and OQ10 → DG017, OQ3 → DG010, OQ4 → DG011,
+  OQ5 → DG012, OQ6 → DG008, OQ9 → DG018, OQ12 → DG013, OQ13 → DG014; the whole-run budget semantics of §3.4 (with OQ7 in its
+  context) → DG016; the Pick schema of §3.3 and §4.7 → DG015. Not filed: OQ8 (external deciders in v1), OQ11 (a [U] fact about
+  `rmcp`, not a design gap) and W0's "definitions replacing doc 25's `Stage` enum", which the folder index lists as noticed but not
+  filed. No text above changed.

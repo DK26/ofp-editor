@@ -531,11 +531,12 @@ dependency is out of proportion for an editor.
 
 ### 5.1 Where the tokens will go [I]
 
-These are estimates. Measure them locally on real game data, which must never be committed.
+These are estimates, except the catalog row, which doc 35 measured (see below). Measure the rest locally
+on real game data, which must never be committed; only derived counts go into the repo.
 
 | Source | Why it is large | Dumping it verbatim would… |
 |---|---|---|
-| Config catalogs (`CfgVehicles`, `CfgWeapons`, …) | Hundreds to thousands of classes with inheritance **[U: count unmeasured]** | burn the whole budget on names the model will never use |
+| Config catalogs (`CfgVehicles`, `CfgWeapons`, …) | Hundreds of classes with inheritance: `CfgVehicles` 502 (263 public, editor-listed), `CfgWeapons` 155 (80 public weapons, 92 public magazines), core config plus official addons, the same in Remastered 3.05 (doc 35 §2, `data/catalog-sizes.csv`) | even as one `class \| display name` line per public class, cost about 2.5k tokens: 1.7k for vehicles plus 0.76k for weapons and magazines, 60% of the 4,096-token embedded tier. Named places add at most 0.23k per island, for about 2.7k (66%) with the largest island's places **[I: estimate at 3.5 bytes/token]**. Small against cloud context windows, but it would crowd out everything else in the embedded tier, and full class bodies cost far more |
 | Mission (`mission.sqm`) | Groups → units → waypoints, triggers, markers; tree-shaped class text | repeat near-identical unit blocks many times |
 | WRP object lists | Potentially tens of thousands of placed objects (trees, buildings) **[U]** | be useless without spatial aggregation |
 | SQF scripts, game logs | Long; errors are sparse | hide the one error line |
@@ -624,7 +625,10 @@ dynamic   = available - fixed  →  split: history (TokenWindowMemory) | live to
   bundling tokenizers; headroom bundles `tiktoken-rs` and HF `tokenizers` to do the same job
   (`headroom-core/Cargo.toml#L16-L20`).
 - The embedded tier (4096 tokens) needs its own profile: very small `T_result`, 5–10 active tools per
-  workflow, and a digest-only history.
+  workflow, and a digest-only history. The full public catalog list alone would take about 60–66% of that
+  window (§5.1), so the embedded tier reaches catalogs only through `catalog.search` or a workflow-filtered
+  slice (for example one side's units), never as a static list **[I]**. On cloud tiers the one-line list
+  is small enough to sit in the cacheable game digest (§5.5) if that proves useful **[I]**.
 
 ### 5.7 Rule 6: effort routing and measurement [I, pattern V]
 
@@ -686,7 +690,7 @@ impl rig_agent::AgentHook for BudgetHook {
 | Code written against `main` names does not compile on published 0.42.0 | Target one released version; see §1.0 |
 | Heuristic token estimates are wrong for some model | Per-model calibration EMA; generous safety margin; provider errors on overflow trigger an automatic retry with a smaller budget |
 | Reducers hide the one thing the model needed | Additive must-keep set, `expand_ref`, and the task-level evaluation in §5.7 |
-| Embedded 4096-token tier is too small for real edits | Limit embedded to narrow workflows; route larger tasks to BYO cloud/local models |
+| Embedded 4096-token tier is too small for real edits (the public catalog list alone is about 60% of it, §5.1) | Limit embedded to narrow workflows with query-only catalog access (§5.6); route larger tasks to BYO cloud/local models |
 
 ## Open questions
 
@@ -695,9 +699,12 @@ impl rig_agent::AgentHook for BudgetHook {
    `output_config` when `output_schema` is set.
 2. **[U]** Is using ChatGPT/Copilot *subscription* auth from a third-party desktop app allowed by those
    services' terms? Until answered, those rig providers stay hidden.
-3. **[U]** Real sizes of CWA config catalogs, typical `mission.sqm` files and WRP object counts. These
-   must be measured locally on owned game data and never committed. They set `T_result` and the reducer
-   defaults.
+3. **[Partly resolved]** Real sizes of CWA config catalogs, typical `mission.sqm` files and WRP object
+   counts. These must be measured locally on owned game data and never committed. They set `T_result`
+   and the reducer defaults. The catalog part is answered: doc 35 measured the class counts and a
+   one-line-per-public-class list at about 2.5k tokens (2.7k with the largest island's places), with the
+   derived counts in `data/catalog-sizes.csv` (§5.1). Still **[U]** here: typical `mission.sqm` sizes in
+   tokens and WRP object counts.
 4. **[U]** When will the next rig release publish `rig-reqwest`/`rig-rmcp` and the renamed hooks
    (names reserved on crates.io 2026-09-21)? When will rig move to rmcp 3.x, and will it reach a stability
    promise (1.0 or an LTS branch)? Nothing in the pinned repo commits to any of these.
@@ -765,3 +772,18 @@ the Kompress model card, the TypeSafe API page, and Anthropic's effort and SDK p
   (9) The "0.41 → next" section is the 0.42.0 guide plus later `main` additions.
 - **Added:** the rig typed `output_config` vs raw `output_config.effort` collision risk (inferred from code,
   not tested). The community Anthropic crate names were not checked and are marked (unverified).
+
+### Consolidation pass (2026-09-27)
+
+- **Corrected (from doc 35 §10, "Doc 12 §5.1"; data in `data/catalog-sizes.csv`):** the §5.1 catalog row
+  was "[U: count unmeasured]". It now gives the measured counts (`CfgVehicles` 502 with 263 public,
+  `CfgWeapons` 155 with 80 public weapons and 92 public magazines) and the token cost of a one-line list:
+  1,705 + 762 ≈ 2.5k tokens (60% of 4,096), plus at most 227 for one island's places ≈ 2.7k (66%),
+  estimated at 3.5 bytes/token [I]. Checked the arithmetic against the CSV rows
+  `prompt.tokens_est.*`. The row's "would burn the whole budget" wording was replaced, since the list is
+  small for cloud tiers and large only for the embedded tier.
+- **Updated to match:** the §5.1 lead-in (the catalog row is measured, the rest remain estimates), the §5.6
+  embedded-tier bullet (catalogs only by query in that tier), the §6 embedded-tier risk row, and open
+  question 3 (now partly resolved; `mission.sqm` token sizes and WRP object counts stay [U]).
+- **Renames:** this doc has no mentions of the concept manual, the live tutorials, or links to doc 33 or
+  `skills/field-manual`, so no rename edits were needed.

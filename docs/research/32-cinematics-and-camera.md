@@ -17,7 +17,7 @@ camera registrations and handlers, `CameraHold.cpp`, `QStream.cpp` `export_clip`
 the `DisplayUIMenus.cpp` cutscene, end-gate and `StartAutoTest` code, `UIMapExtDisplay.cpp#L560-L611`, `WorldImpl.cpp#L492-L561`.
 **Companions.** Docs 03 §4.7–§4.8 (trigger and Effects dialogs), 04 (sections, `description.ext` classes), 08 (Preview, harness),
 18/19 (campaign Cutscene nodes; no campaign vars in chapter cutscenes, outros, awards), 21 (agent doctrine), 22 §2.1 (T0 packs;
-minijinja with fuel), 23 (language service, catalog), 24 (risk caps), 25 (weak-model harness), 28 (fun), 33 (Field Manual C1).
+minijinja with fuel), 23 (language service, catalog), 24 (risk caps), 25 (weak-model harness), 28 (fun), 33 (Standing Orders C1).
 Doc 31 (the no-code ladder) fixes rung 4's engine facts and compile contract in its §6; this doc refines rung 4 only.
 **Hygiene.** No community script is copied. Patterns are described in our own words; quotes are short and attributed.
 
@@ -272,7 +272,9 @@ strings as −1, and firing such a trigger probably crashes [I] (`Game/Commands/
 `cameraEffect` name dereferenced after a suppressed warning (probable crash [I], `UI/OptionsUI.cpp#L492-L496, #L588-L625`); effect
 setters storing −1; the capture tool writing `camSetTarget '<debugName>'`, which no overload accepts (single quotes are not string
 delimiters); the manual camera's lock loop examining only the first collision result (`CameraHold.cpp#L426-L439`). Each becomes a
-lint (§3.7) and a candidate upstream CE issue, filed through `docs/design-gap-requests/` [I].
+lint (§3.7) and a candidate upstream CE issue, filed through `docs/design-gap-requests/` [I]. (Consolidation pass, 2026-09-27:
+DG034, open, proposes recording these in the engine-requests register under `docs/upstream/` instead, as `AGENTS.md` requires for
+engine gaps.)
 
 ## 3. The cinematics timeline
 
@@ -660,7 +662,10 @@ notes (§3.7).
 
 **Still open.** *Drift from doc 31 §6:* its epilogue terminates through `player` (here: through the camera object), its prologue
 always locks input in-mission (here: off by default), and its Map track claims `mapAnimAdd` works in intros [V] where this doc gates
-map shots on a probe [U]; reconcile doc 31 or file a design-gap request. AT6's "`say` with radio styling" is undefined. 1.99-only
+map shots on a probe [U]; reconcile doc 31 or file a design-gap request. (Closed 2026-09-27, consolidation pass: doc 31 §6.3 now
+terminates through the camera object and makes the input lock optional, off by default (doc 31 product review, "Cinematics"),
+which left only the Map track; doc 31 §6.2 now marks map shots [U] and defers to §2.6, §5.1 and open question 7 here. No drift
+remains; the map-shot probe itself stays open.) AT6's "`say` with radio styling" is undefined. 1.99-only
 authors get no framing preview beyond the silhouette sketch. In-mission skip (open question 6) and MP sequences are the largest gaps
 against community use. The doc is now ~640 lines; §2 could point to doc 31 §6.1 for the facts both docs repeat.
 
@@ -709,6 +714,21 @@ strings, `express.cpp#L222-L257`); `forceEnd` only setting a flag; the rain thre
 - The AutoTest abort still makes any harness snippet error fatal.
 - Length: these corrections push the doc to about 750 lines, well over the ~550 target. §2 is the place to trim, by pointing to
   doc 31 §6.1 for the facts both docs repeat.
+
+### Consolidation pass (2026-09-27)
+
+- RN-09 (owner rename decision): the companions line now reads "33 (Standing Orders C1)" instead of "33 (Field Manual C1)". C1 is
+  still doc 33's cutscenes chapter; only the feature name changed. No other mention of the concept manual or the tutorials (old
+  names "Field Manual", "Boot camp", "Academy") and no link to doc 33's file or `skills/field-manual` appears in this doc, so
+  nothing else was renamed. The "33 §5.9" source citation cites the doc number and needs no change.
+- Drift from doc 31 §6 (2026-09-27; doc 31 Verification notes, "Open" items 2 and 3 and product review "Cinematics"; this
+  doc's product review "Still open"): the drift note is marked closed with a pointer. Doc 31 had already adopted this doc's
+  epilogue (terminate through the camera object) and optional input lock; its Map track [V] claim is now downgraded to [U]
+  in doc 31 §6.2, matching §2.6, §5.1 and open question 7 here. Doc 31's other open item about this doc's stale "doc 31 is
+  not written yet" header is resolved (the companions line cites doc 31 §6). No engine claim in this doc changed.
+- Filing pointer (verification step, 2026-09-27): §2.9's routing of the seven engine defects "through
+  `docs/design-gap-requests/`" now carries a parenthetical pointing to DG034 (open), which proposes the engine-requests register
+  under `docs/upstream/` instead. The defect list and its lints are unchanged; `docs/upstream/` does not exist yet.
 
 ## Sources
 

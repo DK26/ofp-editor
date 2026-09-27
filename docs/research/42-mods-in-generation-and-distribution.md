@@ -615,3 +615,14 @@ Re-read against AGENTS.md and docs 02, 17, 22, 24, 25, 27, 34, 35 and 37. Spot-c
   - Whether the editor may offer a user-clicked "Launch the game to install" that reuses Preview's launcher. It would run vanilla and without `--private`, so the MODS screen can reach PB. This is an owner decision [I].
   - How the directory stays fresh between releases without a live connector. One option is updating the directory pack through the registry, but that would put third-party metadata into our registry (MG8).
   - The stock PBO-stem lists per executable that §4.1 needs [U].
+
+### Consolidation pass (2026-09-27)
+
+- **Filing pointers (verification step).** `docs/design-gap-requests/` now exists, so the §8.3 row for that folder and the
+  housekeeping note above are done: the T2 feed request with registry traffic (§3.4, §5.1, open question 3) is DG028; outreach to
+  the PB and GS maintainers (open questions 1–2) is DG029; the "Still open after this pass" items on launching the game to install
+  and on directory freshness, plus open questions 8 (CC-BY-SA-4.0) and 9 (registry operator), are DG030. All are open owner
+  decisions, so this doc's text is unchanged. The PBO-stem lists stay [U] and are not a design gap.
+- **Still missing.** `docs/README.md` (the §8.3 index row) does not exist yet, so this doc has no index row; creating it belongs
+  to the consolidation pass's docs-index step.
+- **Rename check.** This doc has no mention of the concept manual, the live tutorials, doc 33's file or the skill folder.

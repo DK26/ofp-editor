@@ -39,8 +39,9 @@ D13 → §6.5; D14 → §1.4 and §12.4; `Proposal<T>` → `Admitted<T>` (cited 
 - **All text carries a trust label.** Mission, addon and plugin text is quoted data, never instructions; hidden characters are shown;
   outbound traffic goes only to the configured provider and enabled plugins (§9).
 - **Knowledge comes from local, dated packs** built from the user's install; when the answer is not there, the agent says so (§10).
-- **Delight uses the same rules:** readiness coach, troubleshooting playbooks, teaching wizards, an academy with live checks, the Path
-  Explorer with witness paths, a play-tester that only picks legal moves, and an era signals-officer persona (§11).
+- **Delight uses the same rules:** readiness coach, troubleshooting playbooks, teaching wizards, Drill with live checks, the Path
+  Explorer with witness paths, a play-tester that only picks legal moves, and Wilco, the AI co-pilot, whose default persona is an era
+  signals officer (§11).
 - **Every quality statement needs an instrument:** synthetic fixtures scored by typed diffs and lints, against no-model, random-valid and
   always-ask controls, with stress cases, repeated all-pass trials and per-step reporting (§12).
 
@@ -451,11 +452,12 @@ The wizard and the chat front door produce the same typed order (`MissionOrder`,
 Answers already stated in a chat request appear on one summary card as editable chips; an illegal answer is refused with the legal ones
 listed; the model never invents an answer.
 
-### 11.4 Academy (`Optional`)
+### 11.4 Drill (`Optional`)
 
 Ordered topics — placing units → groups and waypoints → triggers → sync → markers → briefing → scripts → campaigns — each with live,
 validator-computed checks ("a group with ≥ 3 waypoints ending in CYCLE") that double as achievements. In-topic questions are answered
-from that topic's reference entries (§10.2).
+from that topic's reference entries (§10.2). Drill is **one system** with doc 33 §5's live tutorials: these ordered topics and
+validator-computed checks are its curriculum (doc 33 §5, open question 4).
 
 ### 11.5 Campaign Path Explorer (`Forbidden`)
 
@@ -473,11 +475,12 @@ picks are refused even when well-formed; late or stale replies fall back to the 
 cautious player never meets Dimitri, yet the Act 2 briefing mentions him"), measured against uniform-random and scripted policies; doc 26
 §8.2's chorus line of 50 simulated journeys needs no model.
 
-### 11.7 The persona: an era signals officer (`Optional`)
+### 11.7 Wilco's persona: an era signals officer (`Optional`)
 
-A 1985 staff signals officer narrates code-built facts, asks for missing information in character ("Insufficient intel — which
-town?") and comments on lint data ("Command notes: three night raids running; the men are tired", doc 26 §8.2 item 7). Persona,
-verbosity and bluntness are settings. Status, findings and numbers are rendered by code outside the persona voice, so the persona can
+The agent's product name is **Wilco**, the optional AI co-pilot (README). Its default persona setting is a 1985 staff signals officer
+who narrates code-built facts, asks for missing information in character ("Insufficient intel — which town?") and comments on lint
+data ("Command notes: three night raids running; the men are tired", doc 26 §8.2 item 7). Persona, verbosity and bluntness are
+settings. Status, findings and numbers are rendered by code outside the persona voice, so the persona can
 never alter a fact, soften an error or pursue a goal of its own. With AI off, a small set of template lines keeps the voice.
 
 ## 12. Evaluation discipline
@@ -595,6 +598,17 @@ al., [2309.03882](https://arxiv.org/abs/2309.03882); Paramanayakam et al., [2411
 [2510.22954](https://arxiv.org/abs/2510.22954); [2510.25820](https://arxiv.org/abs/2510.25820) (via doc 15 §9); Hanley & Lippman-Hand,
 "If Nothing Goes Wrong, Is Everything All Right?", JAMA 249:1743–1745 (1983), <https://pubmed.ncbi.nlm.nih.gov/6827763/>.
 
-**Verification notes.** The five web sources were re-read on 2026-09-27 and quotes come from the live pages; paper findings are quoted
-as verified in doc 25. No number in §3–§13 is our own measurement: budgets, caps and menu sizes are placeholders for §12. Trial counts
-in §12.3 are arithmetic: ⌈ln 0.05 / ln 0.8⌉ = 14, ⌈ln 0.05 / ln 0.9⌉ = 29, ⌈ln 0.05 / ln 0.95⌉ = 59.
+## Verification notes
+
+The five web sources were re-read on 2026-09-27 and quotes come from the live pages; paper findings are quoted as verified in doc 25.
+No number in §3–§13 is our own measurement: budgets, caps and menu sizes are placeholders for §12. Trial counts in §12.3 are
+arithmetic: ⌈ln 0.05 / ln 0.8⌉ = 14, ⌈ln 0.05 / ln 0.9⌉ = 29, ⌈ln 0.05 / ln 0.95⌉ = 59.
+
+### Consolidation pass (2026-09-27)
+
+- **Rename (owner decision; doc 33 §5, open question 4).** §11.4 "Academy" is now **Drill**, the editor's live tutorials, and is one
+  system with doc 33 §5 (ordered topics and validator-computed checks as its curriculum); TL;DR updated. The D7 label (§11.3–§11.4) is
+  unchanged. This doc had no "Field Manual", "boot camp" or doc 33 / `skills/field-manual` links to update.
+- **Persona name (owner decision; README "Wilco, an optional AI co-pilot"; docs 34–42).** §11.7 and the TL;DR now name the agent
+  **Wilco**; the era signals-officer voice stays as its default persona setting, and every persona rule in §11.7 is unchanged.
+- This "Verification notes" text was a paragraph under Sources; it is now its own section, with the text unchanged.

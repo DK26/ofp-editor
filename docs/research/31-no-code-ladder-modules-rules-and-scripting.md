@@ -23,9 +23,10 @@ cited in full, the bare file name means that path; every full path is listed und
 briefing, hooks), doc 08 (Preview, harness), doc 09 (community wishlist), doc 17 §6 (templates and compositions), docs 18/19
 (campaign engine, CXL condition language, compiler), doc 21 (agent doctrine, step shapes), doc 22 (plugin tiers, T0 packs,
 minijinja), doc 23 (catalog, checker, check modes), doc 24 (script risk policy), doc 25 (weak-model harness), doc 26
-(campaign content), doc 27 (addons), doc 28 (fun), doc 30 (knowledge stack), doc 32 (cinematics), doc 33 (field manual).
-Doc 32 is the detailed rung-4 design (tracks, hosts, compile pipeline, watchdog, preview, shot templates). §6 below only
-summarises the engine limits and the contract the ladder relies on; where the two differ, doc 32 governs.
+(campaign content), doc 27 (addons), doc 28 (fun), doc 30 (knowledge stack), doc 32 (cinematics), doc 33 (Standing
+Orders and Drill). Doc 32 is the detailed rung-4 design (tracks, hosts, compile pipeline, watchdog, preview, shot
+templates). §6 below only summarises the engine limits and the contract the ladder relies on; where the two differ, doc
+32 governs.
 
 ## TL;DR
 
@@ -44,9 +45,10 @@ summarises the engine limits and the contract the ladder relies on; where the tw
   two-element `addAction`, one engine camera-script slot used by the respawn and death hooks, the hook files themselves,
   the global namespace, and a server guard that also works in single player (`isServer` is false in SP) [V facts] (§4.5).
 - **Profile-aware lowering.** `Cwa199` output emulates dynamic creation with pre-placed pools. `createGroup`,
-  `createMarker`, `createTrigger`, `addWaypoint`, `createShell`, `soundLength`, `remoteExec`, `setDate` and `setVector*` appear
-  only in `Cwr`/`Ce` output, and every module shows the resulting min-version badge [V registered in 3.05/CE; absence on
-  1.99 rests on BI wiki tags (doc 23 §4) and is unverified on a 1.99 install; I policy].
+  `createMarker`, `deleteMarker`, `setMarkerText`, `setMarkerShape`, `createTrigger`, `addWaypoint`, `createShell`,
+  `soundLength`, `remoteExec`, `setDate` and `setVector*` appear only in `Cwr`/`Ce` output, and every module shows the
+  resulting min-version badge [V registered in 3.05/CE; V absent from the 1.99 executables by the doc 35 §8.2 name scan,
+  which agrees with the BI wiki tags (doc 23 §4) but does not read the registration table; I policy].
 - **Twenty first-party modules** cover the evidence-ranked patterns: objectives, end states, reinforcements, fire support,
   air transport, respawn, spawn zones and ambient population, patrols, convoys, randomiser, interactions, intel, hostages,
   garrisons, time and weather, effects, tracking markers, save points, conversations and spectator/death sequences. Each is
@@ -120,7 +122,7 @@ infrastructure · T mission template · X out of scope. "W2" marks a second-wave
 | 5 | End states and debriefing | every mission | M | END1–6/LOSE, `Debriefing:EndN`; campaign-managed missions use doc 19 sockets |
 | 6 | Respawn | Respawning Tutorial 2,265; Respawn With Weapons 1,391 | A, M | SIDE is not implemented and falls back to GROUP [V]; prefix-matched markers |
 | 7 | Loadouts, crates, gear pool | Ammo Crate Contents 1,339; Weapons Buy Menu 1,220 | A | Init lines from the catalog; `class Weapons/Magazines` |
-| 8 | MP locality, server-only logic | Triggers, Scripts & addAction in MP 4,376 (third most-downloaded OFP tutorial) | K | Declared locality; guard with a compiler-owned logic (§4.5) |
+| 8 | MP locality, server-only logic | Triggers, Scripts & addAction in MP 4,376 (third most-downloaded OFP tutorial) | K | Locality computed from the actions (§5.1); guard with a compiler-owned logic (§4.5) |
 | 9 | Artillery and indirect fire | 8 scripts, 10,597 combined; snYpir support pack 1,720 | M | Shared click dispatcher; `createShell` on `Cwr`/`Ce` only [V]; vanilla shell spawn [I, probe] |
 | 10 | Air strikes, CAS | Airstrike 1,954; Carpet Bomb 1,254 | M | Same "Fire support" family and call UI |
 | 11 | Helicopter insertion and extraction | AI chopper transport 2,129 ("notoriously difficult … reliably"); 5 scripts 6,580 | M | LOAD / TR UNLOAD / GETOUT waypoints plus sync first |
@@ -180,7 +182,7 @@ ships as T0 data (doc 22 §2.1). Presets cover the "I just want a sleepy sentry"
 | Entity | Attributes beyond the stock dialogs (doc 03 §4) | Lowering | Notes |
 | --- | --- | --- | --- |
 | Mission | Respawn mode and delay; lobby parameters; score thresholds; HUD items; loading texts; gear pool; cast; audio library; title resources | `description.ext` keys through the lossless patcher (doc 04 §12) | Respawn picker lists SIDE as "same as GROUP" and writes `GROUP` [V `P:World/Entities/Infantry/SoldierOldMove.cpp#L1118-L1120`]: SIDE also logs an ERROR-level line on every player death (`Fail()` is `LOG_ERROR` in release builds, `P:Foundation/Framework/DebugLog.hpp#L58`, `#L67`), which is fatal under `--strict`; no entry means BIRD in MP, and an out-of-range value means NONE [V `P:Network/NetworkServerMission.cpp#L341-L359`] |
-| Unit | Loadout (catalog picker, magazine compatibility checked); behaviour preset (posture, alertness, fleeing, hold fire); pose; character (cast entry); captive | Generated prefix of the init field; `class CfgIdentities` | Magazines before weapons; moves listed from the unit's `Moves >> States` [V `P:World/Entities/Infantry/SoldierOldMove.cpp#L364-L411`] |
+| Unit | Loadout (catalog picker, magazine compatibility checked); behaviour preset (posture, alertness, fleeing, hold fire); pose; character (cast entry); captive | Generated prefix of the init field; `class CfgIdentities` | Magazines are emitted before weapons as the safe default for 1.99 [U, doc 37 probe PP3]; on `Cwr`/`Ce` the order is irrelevant, because each call reloads [V doc 37 §4, `P:Game/Commands/GameStateExtObj.cpp#L1212-L1259`]; moves listed from the unit's `Moves >> States` [V `P:World/Entities/Infantry/SoldierOldMove.cpp#L364-L411`] |
 | Vehicle, crate | Cargo contents, refill period, lock | Init prefix; a tiny refill script | `clearWeaponCargo`/`addWeaponCargo`/`addMagazineCargo` [V `GSE#L1023`, `#L1332-L1333`] |
 | Map object (by id) | Destroyed at start, objective target | `object <id>` references (`GSE#L1142`) [V] | Picked by clicking, never typed |
 | Marker | Follows a unit; revealed when a rule fires | Tracking loop or a pool (§4.6 row 17) | Hiding technique on `Cwa199` [U, probe] |
@@ -394,8 +396,10 @@ reintroducing their hacks.
 ### 5.1 Shape
 
 A rule is a sentence: **WHEN** *event* **IF** *condition groups* **THEN** *actions*, with a mode (Once, Repeat, While true
-with an "on end" branch, At start) and a declared locality. Every slot is a clickable typed picker, as in the Warcraft III
-and StarCraft II editors and the community Better Triggers tool [V prior art]. Conditions use explicit **ALL of / ANY of**
+with an "on end" branch, At start) and a locality that code computes from the actions (N6): spawning and other world
+changes run on the server, presentation (titles, music, camera, hints) runs on every machine. A manual override sits
+under Advanced and is linted against the computed value [I]. Every slot is a clickable typed picker, as in the Warcraft
+III and StarCraft II editors and the community Better Triggers tool [V prior art]. Conditions use explicit **ALL of / ANY of**
 containers, because flat condition lists with an OR flag bind in surprising ways (the Creation Kit evaluates `A AND B OR C
 AND D` as `A AND (B OR C) AND D`) [V search summary].
 
@@ -406,7 +410,8 @@ new atoms [I].
 
 ```rust
 pub struct Rule { id: RuleId, when: EventSpec, guard: Option<CondAst>, then: Vec<ActionSpec>,
-                  mode: RuleMode, locality: Locality, owner: Option<ModuleInstanceId> }
+                  mode: RuleMode, locality_override: Option<Locality>, // None = computed from `then` (N6)
+                  owner: Option<ModuleInstanceId> }
 pub enum RuleMode { Once, Repeat, WhileTrue { on_end: Vec<ActionSpec> }, AtStart }
 ```
 
@@ -461,8 +466,9 @@ models fill instead of composing from scratch (§9).
    silently at runtime [V `EVAL:express.cpp#L2773-L2782`]; text literals never contain `:` where they reach an SQS `?`
    line (doc 19 F6).
 7. **Profiles.** Runtime triggers (`createTrigger`, `setTriggerStatements`) are `Cwr`/`Ce` additions [V registered at
-   `GSE#L1191`, `#L1405`; 1.99 absence per wiki tags, doc 23 §4, unverified on an install]; rules are static, so
-   `Cwa199` pre-places every trigger and loses nothing.
+   `GSE#L1191`, `#L1405`; 1.99 absence per wiki tags, doc 23 §4; `createTrigger` is also absent from the 1.99
+   executables by the doc 35 §8.2 name scan, whose published selection does not list `setTriggerStatements`]; rules
+   are static, so `Cwa199` pre-places every trigger and loses nothing.
 
 ### 5.4 Debugging and visualisation
 
@@ -518,11 +524,13 @@ Tracks: **Shots** (camera keys drawn on the 2D map: position absolute or relativ
 FOV, duration, cut or move, easing), **Titles** (cut track by default; text track above it), **Music**, **Dialogue**
 (screenplay lines from the Conversation module), **Actors** (moves from the unit's `Moves >> States`, orders, and
 "freeze" as zero velocity plus captive, restored afterwards, the Flashpoint Cutscene Maker pattern [V FCM manual]),
-**World** (time, weather, effects) and **Map** (`mapAnimAdd`, which works in intros because the intro display creates
-the main map [V `DisplayUIMenus.cpp#L1294-L1308`]; outros skip that step, so the map in an outro is (unverified), §6.1
-Sections). A cutscene targets a section (Intro, an Outro, or in-mission,
-started by a rule). This is a summary: doc 32 §3.2 splits titles into separate cut-layer and title-layer tracks, adds a
-Sound track, and treats the map pan as a template gated on a probe rather than a track.
+**World** (time, weather, effects) and **Map** (`mapAnimAdd`/`mapAnimCommit`: the commands are registered and the intro
+display creates the main map [V `DisplayUIMenus.cpp#L1294-L1308`], but a camera effect forces the player's map closed
+every frame [V doc 32 §2.6; 3.05 `P:World/World.cpp#L524-L527`], so a map shot probably needs `forceMap true` [I], and
+whether `mapAnim*` renders mid-intro is [U, probe; doc 32 open question 7]. Outros skip creating the map, so the map in
+an outro is (unverified), §6.1 Sections. Corrected 2026-09-27: this line used to say the map "works in intros" [V]).
+A cutscene targets a section (Intro, an Outro, or in-mission, started by a rule). This is a summary: doc 32 §3.2 splits titles into separate cut-layer and title-layer tracks, adds a
+Sound track, and treats the map pan as a template gated on that probe rather than a track.
 
 ### 6.3 Compile contract (every cutscene)
 
@@ -565,7 +573,7 @@ Sound track, and treats the map pan as a template gated on a probe rather than a
   `accTime`, which has no lower clamp [V static `CameraHold.cpp#L333`; `P:World/World.hpp#L587`]. **1.99:** no live
   preview; export, play, capture.
 - **Presets** with a few knobs, compiled to plain SQS: establishing orbit with a title, flyover along a road, two-shot
-  dialogue, briefing-map pan, ending fade.
+  dialogue, briefing-map pan (only after the map-shot probe passes, §6.2), ending fade.
 
 ## 7. Rung 5: the script editor and language service
 
@@ -627,7 +635,8 @@ function registry read is `CfgRemoteExec` at `P:Network/NetworkServerMission.cpp
   (`BohemiaInteractive/CWR@ffc61838b7:apps/cwr/Game/GameApplication.cpp#L1703-L1718`, same line in CE); harness `eval`
   runs `EvaluateMultiple`, whose `ShowError` calls `DisplayErrorMessage`, which requests close with exit code 2 under
   `AutoTest` (`EVAL:express.cpp#L2768`, `#L2988-L3011`; `ExpressExt.cpp#L146-L165`)]. Doc 08 §4.4 lists the console and
-  watch without this caveat. Record it in `docs/design-gap-requests/`; resolve with a non-aborting launch, which must be
+  watch without this caveat. Record it in `docs/design-gap-requests/` (filed 2026-09-27 as DG001,
+  `DG-preview-non-aborting-launch.md`, open); resolve with a non-aborting launch, which must be
   **both** non-`AutoTest` and `--no-strict` (doc 08 P3 `--preview-mission`, or a harness launch without `--test-mission`
   whose playability is [U]).
 
@@ -638,7 +647,7 @@ function registry read is `CfgRemoteExec` at `P:Network/NetworkServerMission.cpp
 | Static checking, lints, rename, map links, snippets | yes | yes | yes |
 | One-click Preview, `jsonl` logs, exit codes | no: export and launch (doc 08 §5.3) | yes | yes |
 | Console, watch, logpoints, rule fire log, live shot preview | no | yes (harness) | yes |
-| `init.sqf`, `logInfo`, `soundLength` | no [I] / [U] / [U] | yes | yes |
+| `init.sqf`, `logInfo`, `soundLength` | no [I] / [U] / [V absent by the doc 35 §8.2 name scan] | yes | yes |
 | Debug export with `hint` tracepoints; "paste the error text" mapper | yes | yes | yes |
 
 Every unavailable item is greyed out with its reason, never hidden [I].
@@ -659,7 +668,7 @@ risk lint and Preview gate. Nothing executes and nothing is rewritten; import fo
 | Engine camera captures (`;=== h:mm:ss` blocks and the fixed `camSet*` shape) | high: the shape is emitted by the engine | Timeline shots |
 | END/LOSE triggers plus `Debriefing:EndN` sections; `OBJ_n` anchors plus `objStatus` calls | high | End state and Objective modules |
 | `respawn_*` markers plus the `respawn` key | high | Respawn attributes and points |
-| Init idioms: loadouts, cargo fills, `setPos` height lifts | medium | Loadout and cargo attributes |
+| Init idioms: loadouts, cargo fills, `setPos` height lifts and the rest of doc 37 §8's per-idiom table | per idiom (doc 37 §8): high for the exact, contiguous, literal form under the rule below; medium otherwise | Loadout, cargo, height and the other doc 37 §4 intent attributes |
 | Radio trigger → map click → shell loop | low | Fire support |
 | Community packs, by file-set and normalised-token fingerprints, header metadata and OFPEC tag prefixes (2–8 letters plus `_`) [V OFPEC tags page] | varies | Pack-specific module |
 
@@ -743,7 +752,8 @@ on a Game Logic in SP; marker hiding for pools; in-mission cutscene skip; `setDi
 camera; title speed 0 and negative; `camDestroy` without terminate; `onPlayerRespawn.sqs` and `soundLength` on 1.99; a
 mission-local `onPlayerKilled.sqs` with and without a root `scripts\onPlayerKilled.sqs` (the root-only existence gate,
 §4.5); `setFog` cancelling a pending `setOvercast` (statically confirmed, §4.6 row 15; the probe confirms the visible
-effect); an Effects-field title alive when an END trigger fires (expected: the ending waits); the map in an outro; exact
+effect); an Effects-field title alive when an END trigger fires (expected: the ending waits); map shots in an intro
+(`forceMap` and `mapAnim*` under a camera effect, §6.2; doc 32 open question 7); the map in an outro; exact
 live preview under `setAccTime 0`. The upstream tests
 closest to this area (`camcreate_any_type`, the `demo_end_*` family, `demo_outro_titles_load`, `test_sqs_runner`,
 `test_sqs_integration`) already have rows in `docs/porting/upstream-test-map.csv` [V].
@@ -823,6 +833,8 @@ Added by the engine review (2026-09-27): `engine/Poseidon/UI/DisplayUI.cpp#L121-
 `engine/Evaluator/express.cpp#L93-L129`, `#L1187`, `#L2702-L2793`; `apps/cwr/Game/GameApplication.cpp#L1703-L1718`
 (same in CE). Further absences by grep: `CfgFunctions`, `endMission`, `enableAI`, `sleep`, `spawn`, `execVM`,
 `waitUntil`, `isNil`, `compile` as registered script commands.
+Added by the consolidation pass (2026-09-27), taken from doc 32 §2.6 and not re-read here:
+`engine/Poseidon/World/World.cpp#L524-L527`, `#L1565` (3.05; the map closed under a camera effect, `forceMap`).
 
 **Community (fetched or re-scraped 2026-09-27):** OFPEC Editors Depot lists and about 180 details pages
 (<https://www.ofpec.com/editors-depot/index.php?action=list&game=OFP&cat=sc>, `cat=tu`, `cat=to|re|fu`); OFPEC forum topics
@@ -841,7 +853,7 @@ Timeline docs; MakeCode JavaScript blocks and Blockly connection checks; Weintro
 (<https://cog.readthedocs.io/en/latest/running.html>).
 
 **Repository docs:** 02 §6.2; 03 §4.4-§4.8; 04 §5, §6, §8, §12; 08 TL;DR, §4.2, §4.4, §4.5, §5.3; 09 §4, §6, §8; 17 §6;
-19 §5, §6.5, §7; 21 §2, §3, §9, §10; 22 §2.1; 23 §4, §13; 24 §5; 25 E9; 26 §5.2; 30 TL;DR, §3; 32 §1.1, §3.2, §3.5, §5.3;
+19 §5, §6.5, §7; 21 §2, §3, §9, §10; 22 §2.1; 23 §4, §13; 24 §5; 25 E9; 26 §5.2; 30 TL;DR, §3; 32 §1.1, §2.6, §3.2, §3.5, §5.1, §5.3, open question 7;
 33 header; `docs/porting/upstream-test-map.csv`.
 
 ## Verification notes
@@ -932,25 +944,62 @@ to GROUP; prefix-matched respawn markers with a random pick; the hook-to-mode ta
     L852-L1464; `SoldierOldMove.cpp` is identical in CE (the old "CE lines" note was misleading); `count units` is the
     unary `count` at `express.cpp#L1187`; CE lines for `World.cpp`, `GameStateExtTestAudio.cpp`, `OptionsUI.cpp`.
 15. *Profiles (TL;DR, §5.3 step 7).* 1.99 absence of the Elite/ArmA-era commands rests on wiki tags (doc 23 §4), not on
-    a 1.99 install; marked so.
+    a 1.99 install; marked so. (Superseded in part by the consolidation pass below: the doc 35 §8.2 executable name scan
+    now backs the TL;DR list.)
 16. *AT9.* A literal mission-relative `loadFile` is `approve`, not `deny`, under doc 24; the test now uses a `..` path,
     and open question 13 asks for a pack policy on `approve` commands.
 
 **Still unverified (need a probe, an install scan or a fetch):** everything about the 1.99 executable (command set,
-`init.sqf`, `onPlayerRespawn.sqs`, `soundLength`, `logInfo`, `publicVariable` value types, `"NULL"` radio hiding);
-whether stock installs ship root `scripts\onPlayer*.sqs`; `local <logic>` at runtime (AT8); the map in outros;
+now partly answered by the doc 35 §8.2 name scan, which shows names only, not registration or semantics; `init.sqf`,
+`onPlayerRespawn.sqs`, `soundLength`, `logInfo`, `publicVariable` value types, `"NULL"` radio hiding);
+whether stock installs ship root `scripts\onPlayer*.sqs`; `local <logic>` at runtime (AT8); map shots in intros (added
+by the consolidation pass); the map in outros;
 vanilla round spawning; marker hiding; `setDir`/`setVector*` on a never-targeted camera; the shipping default of
 `--strict`; OFPEC download counts and the community quotes (not re-fetched by this review).
 
 **Open:** (1) §6 largely repeats doc 32 §2–§4. With these notes the file is about 830 lines, well over the ~650 target,
 so once doc 32 is accepted, cut §6 to the engine limits and the contract the other rungs rely on. (2) Stale cross-references outside this
-file: the doc 32 header says doc 31 "is not written yet", and doc 33 says docs 30–32 do not exist. (3) The map track: §6.2
-cites `mapAnimAdd` in intros as [V], while doc 32 §5.1 gates map pans on a probe [U]. The engine review should reconcile
-them. (4) Custom dialogs (3,992 combined downloads) stay script-only until L4; consider module-generated menus or a
-constrained designer in L3. (5) "Try it" is the strongest fun lever, and it is blocked on the unrecorded `--test-mission`
+file: the doc 32 header says doc 31 "is not written yet", and doc 33 says docs 30–32 do not exist (resolved 2026-09-27:
+both headers are fixed; see Consolidation pass). (3) The map track: §6.2 cites `mapAnimAdd` in intros as [V], while
+doc 32 §5.1 gates map pans on a probe [U]. The engine review should reconcile them (reconciled 2026-09-27 in favour of
+doc 32: §6.2 now marks map shots [U]; see Consolidation pass). (4) Custom dialogs (3,992 combined downloads) stay
+script-only until L4; consider module-generated menus or a constrained designer in L3. (5) "Try it" is the strongest fun lever, and it is blocked on the unrecorded `--test-mission`
 abort gap (§7.4); record the gap now. (6) Drop-in defaults can wire silently to the wrong thing (the "nearest group" may
 be the player's), so defaults stay visible chips; test the risk in the AT1 study. (7) File names built from labels
 change when a label changes. Either the rename follows every reference, or names freeze at first export; decide which.
 (8) Rule locality (§5.1) is user-declared, but N6 says code owns locality. Compute it from the actions (spawns on the
-server, presentation everywhere) and move the override under Advanced. (9) No UX claim here has user evidence yet. The
-five-field cap, drop-in defaults, the split view and the pattern ranking (open question 11) all wait on the AT1 study.
+server, presentation everywhere) and move the override under Advanced (applied in the consolidation pass, §5.1).
+(9) No UX claim here has user evidence yet. The five-field cap, drop-in defaults, the split view and the pattern ranking
+(open question 11) all wait on the AT1 study.
+
+### Consolidation pass (2026-09-27)
+
+Cross-doc corrections applied from later research; nothing verified was removed.
+
+- *Naming (2026-09-27).* Header companions: doc 33 is now "Standing Orders and Drill" (owner rename of the concept
+  manual and the live tutorials). No other reference to the old names, or to doc 33's or the skill's old paths, was in
+  this file.
+- *1.99 command absence (2026-09-27; doc 35 §8.2, §10).* The TL;DR list now rests on the 1.99 executable name scan as
+  well as the wiki tags, and adds `deleteMarker`, `setMarkerText` and `setMarkerShape` (all absent in the scan). §5.3
+  step 7 cites the scan for `createTrigger`; §7.5 marks `soundLength` absent on 1.99 by the scan. The scan finds names,
+  not registrations, and runs only on the owner's install (doc 35 §8.2 caveats); engine-review item 15 carries a pointer.
+- *Magazine order (2026-09-27; doc 37 §4 Loadout row, §10 (c)).* §3 no longer states "magazines before weapons" as a
+  requirement: the order is irrelevant on `Cwr`/`Ce` [V] and is kept only as the safe default for 1.99 [U, probe PP3].
+- *Init-idiom confidence (2026-09-27; doc 37 §8, §10 (f)).* §8.2's single "medium" rating for init idioms now points to
+  doc 37 §8's per-idiom table: high for exact, contiguous, literal forms under the same replace rule, medium otherwise.
+- *Rule locality (2026-09-27; Open item 8 above).* §5.1 now computes a rule's locality from its actions (N6), with the
+  manual override under Advanced; the `Rule` sketch carries `locality_override: Option<Locality>`, and §2 row 8 says
+  "computed" instead of "declared".
+- *Map track (2026-09-27; Open item 3 above; doc 32 §2.6, §5.1, open question 7, product review "Still open").* §6.2 had
+  "`mapAnimAdd` works in intros" as [V], but the cited lines only show that the intro display creates the main map. Doc
+  32's engine-reviewed §2.6 adds that a camera effect forces the player's map closed every frame, so a map shot probably
+  needs `forceMap true` [I] and its rendering is [U]. §6.2 now says so and defers to doc 32; the §6.4 briefing-map pan
+  preset waits on the probe; the probe suite and "Still unverified" list gain map shots in intros. Sources gain the
+  `World.cpp` lines.
+- *Stale headers (2026-09-27; Open item 2 above).* Resolved outside this file: the doc 32 header now cites doc 31 as an
+  existing doc (its §6), and doc 33's "docs 30–32 do not exist" notes were removed (doc 33 Verification notes,
+  "Changed in this doc"). Doc 32's drift note about this doc's §6 epilogue and input lock is closed in doc 32.
+- *Filing pointers (verification step, 2026-09-27).* §7.4's "Record it in `docs/design-gap-requests/`" now names DG001
+  (open). Other requests built from this doc, all open, are listed in that folder's index: DG004 (open question 9, §4.1),
+  DG007 (open question 8), DG008 (open question 10), DG009 (Open item 1) and DG034 (§10's upstream candidates overlap doc
+  32 §2.9). No finding changed.

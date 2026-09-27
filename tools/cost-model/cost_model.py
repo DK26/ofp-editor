@@ -13,6 +13,15 @@ docs/research/data/cost-model.csv is derived from that output.
 
 Token sizes use the repo convention of 3.5 bytes per token
 (docs/research/data/catalog-sizes.csv rows 91-103), not tokenizer counts.
+
+## Verification notes
+
+### Consolidation pass (2026-09-27)
+- RN-16 (owner rename: the concept manual is now Standing Orders): the
+  reference-block constant FM_REF is renamed SO_REF and its source comment
+  now points at skills/standing-orders/references/*.md. The value (1,150) is
+  unchanged, so docs/research/data/cost-model.csv figures are unchanged; only
+  the key name inside the git-ignored cost_model.json "blocks" map changes.
 """
 import copy
 import json
@@ -152,7 +161,7 @@ SHAPE = {"pick": 200, "fill_enum": 250, "extract": 300, "fill_text": 250, "compo
 EXEMPLAR = {"pick": 120, "fill_enum": 150, "extract": 200, "fill_text": 180, "compose": 350, "explain": 200}  # [I]
 N_EX_STANDARD = 2  # doc 25 §5.2: exemplars at Standard = 2
 CARD = 200        # card <= 150 words (doc 30) [I]
-FM_REF = 1150     # skills/field-manual/references/*.md ~3.2-5.5 KB -> ~1,150 [V repo sizes, I tokens]
+SO_REF = 1150     # skills/standing-orders/references/*.md ~3.2-5.5 KB -> ~1,150 [V repo sizes, I tokens]
 PRIMER_SECTIONS = 1000  # part of mission-primer SKILL.md (8,164 B -> ~2,330 whole) [I]
 PRIMER_WHOLE = 2330
 EXPLAINER_SYS = 400
@@ -259,7 +268,7 @@ WORKFLOWS["session-30min"] = dict(session=True, groups=[
     g("IntentFill per request", "intent", "extract", "router", 12, "one",
       S_of("extract", lens=False), 50, TASK, 120, EX_of("extract"), clusters=12),
     g("explain/teach answers", "explainer", "explain", "explainer", 4, "one",
-      EXPL_S, 60 + 600, FM_REF, 250, EXEMPLAR["explain"], clusters=7),
+      EXPL_S, 60 + 600, SO_REF, 250, EXEMPLAR["explain"], clusters=7),
     g("edit Picks", "editpick", "pick", "router", 5, "pick", S_of("pick"), 50 + 600, TASK + MENU, 45,
       EX_of("pick"), clusters=5),
     g("edit parameter Fills", "editfill", "fill_enum", "router", 2, "one",
@@ -757,7 +766,7 @@ def main():
         legend="[V] verified live/primary; [I] inferred or our arithmetic; [U] unknown placeholder",
         prices={k: dict(v, as_of=AS_OF) for k, v in PRICES.items()},
         knobs=KNOBS,
-        blocks=dict(CORE=CORE, LENS=LENS, SHAPE=SHAPE, EXEMPLAR=EXEMPLAR, CARD=CARD, FM_REF=FM_REF,
+        blocks=dict(CORE=CORE, LENS=LENS, SHAPE=SHAPE, EXEMPLAR=EXEMPLAR, CARD=CARD, SO_REF=SO_REF,
                     PRIMER_SECTIONS=PRIMER_SECTIONS, MENU=MENU, SLOT_SPEC=SLOT_SPEC, FINDING=FINDING,
                     REPAIR_RATE=REPAIR_RATE, THINK_MED=THINK_MED, LEVEL_MULT=LEVEL_MULT,
                     DOC_MISSION=DOC_MISSION, DOC_MISSION_P90=DOC_MISSION_P90, SYS_A=SYS_A),

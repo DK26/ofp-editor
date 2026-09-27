@@ -43,26 +43,29 @@ seen only in a search-engine summary because the page itself refused the fetch.
   (rather than addon PBOs) therefore leaves **no trace in `addOns[]`**. Our tracker must record mod-level requirements
   that `addOns[]` cannot express.
 - **Ecosystem [V].** Big mods are still actively installed and updated: FDFMOD 1.35, CSLA, FFUR/SLX, ECP variants,
-  WGL 5, Liberation (LIBMOD), OFrP, BAS, island packs. Game Schedule entries range from **155 KB to 3 GB**; the
-  biggest packs are 0.7–3 GB. Players install them through four channels: CWR's built-in MODS manager
+  WGL 5, Liberation (LIBMOD), OFrP, BAS, island packs. Game Schedule's 123 records range from **11 KB to 19.16 GB**
+  (about 58 GB in all; doc 42 §3.1). Players install them through four channels: CWR's built-in MODS manager
   (papa-bear.cz), Fwatch/OFP Game Schedule (legacy 1.96/1.99 only), hand-made `-mod=` shortcuts, and mission packs
-  shipped *inside* mod folders.
+  shipped *inside* mod folders. Some mods are **launcher platforms** (CWE) that no `-mod=` line reproduces (§4.2).
 - **Recommendation: model a "mod set" as a first-class, fingerprinted object** (ordered, named, tied to a target
   profile). Mirror the engine's mount and merge rules exactly in a pure `ofp-vfs` + `ofp-config` pipeline, with owner
   and access tracking and ported upstream tests. Give every catalog class **provenance** (layer, PBO, `CfgPatches`,
   "introduced by" / "modified by").
 - **Recommendation: derive dependencies; never hand-edit them.** Write `addOnsAuto[]` with exact engine parity. Write
   `addOns[]` as the engine set ∪ the extended set (script literals, `description.ext` weapons, markers, effects) ∪
-  user pins. Extended entries go only into `addOns[]` so that a re-save in the in-game editor cannot prune them.
-  Export a manifest, and fold mod needs into the "Requires:" badge.
+  user pins. Extended entries go only into `addOns[]`, which a re-save in a fresh in-game editor display never
+  prunes. The stock editor can still drop an extra that matches a name it auto-listed at its previous save, even for
+  another mission (§2.4), so our next open re-derives it. Export a manifest, and fold mod needs into the "Requires:"
+  badge.
 - **Preview uses the mission's resolved mod set** (`--mod "<abs>;<abs>"` on CWR/CE, `-mod=` names on 1.99). It also
   offers a **clean-room Preview** with only the required mods, and a **vanilla Preview**, so authors can prove their
   dependency list.
 - **AI and campaigns [I].** The campaign-from-brief flow picks a mod set in step S0. Every class menu is computed from
   that set's catalog, so the model can never name an unloaded class. Knowledge overlays for mods ship as T0 content
   packs of our own text. A campaign has exactly one mod set (the game remounts only in the main menu).
-- **Treat every PBO as hostile [I].** Enforce parse caps, confine `#include`, never execute config expressions or
-  scripts, isolate failures per addon, and keep derived caches local only. We never redistribute addon content.
+- **Treat every PBO as hostile [I].** Enforce parse caps, confine `#include` to banks mounted in the same set, never
+  execute config expressions or scripts, isolate failures per addon, and keep derived caches local only. We never
+  redistribute addon content, and never download or install mods (open question 6).
 
 ## 1. Terms
 
@@ -74,6 +77,7 @@ seen only in a search-engine summary because the page itself refused the fetch.
 | **Mod (folder)** | A directory mounted as a content root (`AddOns`, `Dta`, `Bin`, `Campaigns`, `Missions`, …); `@` is optional. |
 | **Replacement mod** | Changes existing classes or data (FFUR, ECP, WGL); missions made with it usually still run without it. |
 | **Total conversion** | Adds its own world (FDFMOD, CSLA, Liberation). It may replace the base `bin\config` outright. |
+| **Launcher platform** | A mod that runs only through its own launcher (CWE: replaced main config, generated headers, folder renames). Doc 42 §2.8 `shape = "platform"`. |
 | **Mod set** | *Ours:* an ordered, named list of mods for one target profile. It is the unit of loading, caching and Preview. |
 | **Editor plugin** | *Ours (doc 22):* a T0/T1/T2 extension of the editor. It never enters the game's VFS or `addOns[]`. |
 
@@ -175,9 +179,19 @@ seen only in a search-engine summary because the page itself refused the fetch.
 - **Save** [V: `P:AI/ArcadeTemplate.cpp#L321-L352`, `#L1862-L1872`, `#L1910-L1941`]. For every unit and empty
   vehicle, `vehicle` is matched against `CfgPatches >> * >> units[]` (the *first* patch listing it) **and** the class
   owner. The result becomes `addOnsAuto[]`. Entries of the old auto list that are no longer found are deleted from
-  `addOns[]`, and the new auto entries are added. Manual `addOns[]` entries are never pruned. Owner-less classes (base
-  config, or a replacing `bin\config`) add nothing through the owner path; only a patch's `units[]` claim can name one.
-- **Load** [V: `#L1875-L1906`, `#L1946-L1955`]. `addOns[]` is activated; any name absent from `CfgPatches` fails the
+  `addOns[]`, and the new auto entries are added. Owner-less classes (base config, or a replacing `bin\config`) add
+  nothing through the owner path; only a patch's `units[]` claim can name one. Both paths matter in practice: in
+  vanilla, 40 of 71 public addon vehicles are missing from their own `units[]` and are named only through ownership,
+  while CWE's `CWE_Standard` claims 168 vanilla classes in `units[]`, so every mission saved under CWE requires it
+  (a live D3 case, §4.5) [V: doc 35 §6.1, §10].
+  - **Pruning (corrected 2026-09-27; this line earlier said manual entries are never pruned).** The "old auto list"
+    is the editor's *in-memory* list from its previous save. `ArcadeTemplate::Clear()` does not reset it and loading
+    does not read `addOnsAuto[]` into it [V: `P:AI/ArcadeTemplateFind.cpp#L184-L203`,
+    `P:AI/ArcadeTemplate.cpp#L1910-L1932`, `P:UI/Map/UIMapExtDisplay.cpp#L99-L133`; CE identical; doc 37 §10 (h)].
+    A fresh editor display prunes nothing, but
+    a manual entry can be pruned when it matches a name auto-listed at that previous save, including one made for
+    another mission in the same editor display [V code; practical effect I].
+- **Load** [V: `P:AI/ArcadeTemplate.cpp#L1875-L1906`, `#L1946-L1955`]. `addOns[]` is activated; any name absent from `CfgPatches` fails the
   section with `LSNoAddOn`. CE sorts and dedupes the message and blocks such missions in the SP list, together with
   a missing-world check [V: `CE:AI/ArcadeTemplate.cpp#L1892-L1971`, `CE:UI/OptionsUIImpl.cpp#L186-L218`]. An MP client
   disconnects with the missing list [V: `P:Network/NetworkClientOnMessage.cpp#L884-L908`].
@@ -259,10 +273,11 @@ fixtures in `R:tests/fixtures/mods*/` are GPL and reusable (doc 20 §5).
 | OFrP, BAS, island packs, MFCTI | mixed | `@OFrP_Mod` 1.05, 217 MB, bundles Kegetys' editor addon, which replaced Mikero's "due to OFrP incompatibility" [V]; `@BAS` 213 MB, 148 MP missions; `@80+Islands1.3` 625 MB [V: Game Schedule]; MFCTI "is also available from the MODS storage" [V: Steam 3.05 notes]. |
 | `@editorupdate` | editor addon | "Editor Update addon and 88 missions that use it", 31 MB [V: Game Schedule]: missions that *depend* on an editor addon are a real, shipped pattern (doc 09 P4/P5). |
 
-- **Scale [V/I].** The Game Schedule home page lists about 128 mod names; its `mod=all` API returns 77 records whose
-  sizes run from 155 KB (`@cti_extras_1.2(light)`) to 3 GB (`@FANB_MOD`), with conversions such as `@ECP (REDUX)`
-  (1.4 GB) and `@ffsx85` (925 MB) [V]. Records carry `req_version` "1.96". A play set is typically one base mod plus a
-  few add-on packs [I].
+- **Scale [V/I].** The Game Schedule home page listed about 128 mod names at first count (not re-checked). Its
+  `mod=all` API returns **123 records (120 names)** whose sizes run from **11 KB to 19.16 GB**, about 58 GB in all;
+  115 carry `req_version` "1.96" [V 2026-09-27: doc 42 §3.1; corrected from "77 records, 155 KB–3 GB"]. Large packs
+  include `@FANB_MOD` (3 GB), `@ECP (REDUX)` (1.4 GB) and `@ffsx85` (925 MB) [V]. The game's own MODS storage (PB)
+  holds 13 mods, 71 KB to 1.09 GB each (doc 42 §3.1). A play set is typically one base mod plus a few add-on packs [I].
 - **Install and launch today [V].**
   - Remastered: the built-in MODS manager (papa-bear.cz storage).
   - Legacy 1.96/1.99: Fwatch's Mod Manager restarts the game "with a -mod parameter". It is "Not compatible with the
@@ -299,11 +314,19 @@ fixtures in `R:tests/fixtures/mods*/` are GPL and reusable (doc 20 §5).
 - **Install probe (doc 05 §7.2, doc 08 §2.8).** Finds Remastered, legacy 1.99, CE builds and manual folders, and
   records `ExeKind`, version and roots.
 - **Mod scan roots:** the game dir, `<UserContent>/Mods`, `<UserContent>/Workshop`, and user-added folders.
+- **Game-folder addons [I].** Third-party PBOs dropped straight into the game's own addon folders are not a mod
+  folder: they load with every launch, so "Vanilla" would silently include them. The scan compares the base roots'
+  PBO stems with the stock list for the detected executable (names only) and shows extras as "Game-folder addons"
+  with their own provenance chip; Vanilla-labelled AI menus leave them out unless the user opts in (doc 42 §4.1).
 - **Mod identity:** `ModId` (engine normalization), folder name, `mod.json` fields and `__gs_id` when present. It
   also carries a content fingerprint (§4.7).
 - **Mod sets** are named presets: an ordered list plus a target profile. "Vanilla" always exists. Importers read an
   existing `-mod=` line or a server's mod list. A mod set is valid for a target only if every mod resolves and
   `LooksLikeMod` holds.
+- **Mod-set kind [V/I].** A *mod line* set is reproduced by `--mod`/`-mod=` alone. A **launcher platform** set (CWE,
+  doc 35 §6.1) depends on launcher state: generated headers, launcher-selected PBOs, a declared stringtable. It
+  records that `launcher_state`, which joins the fingerprint (§4.7) and the manifest (`shape = "platform"`, doc 42
+  §2.8); lint D12 marks its provenance unverified (doc 42 §6.4). Plotroom never runs the launcher (doc 42 §6.2).
 
 ```rust
 /// CfgPatches name (doc 04 `AddonName`): raw bytes, ASCII-case-insensitive Eq/Hash like the engine's stricmp.
@@ -316,7 +339,9 @@ pub struct ModSetId(u64);
 pub struct Fingerprint([u8; 32]);
 
 pub struct ModRef { id: ModId, folder: OsString, root: ModRoot, meta: Option<ModJson>, gs_id: Option<String> }
-pub struct ModSet { id: ModSetId, name: String, target: TargetProfile /* doc 19 */, mods: Vec<ModRef> /* -mod order */ }
+pub struct ModSet { id: ModSetId, name: String, target: TargetProfile /* doc 19 */, mods: Vec<ModRef> /* -mod order */,
+                    kind: ModSetKind }
+pub enum ModSetKind { ModLine, LauncherPlatform { launcher_state: Vec<LauncherInput> /* doc 42 §2.8 */ } }
 pub enum ModRoot { GameDir, UserMods, Workshop, Custom(PathBuf) }
 ```
 
@@ -348,6 +373,10 @@ pub struct AddonUnit { pbo: PboIdx, owner: AddonName /* first CfgPatches entry *
 - **Provenance per class:** `introduced_by` (base config layer or addon), `owner` (engine semantics), `modified_by`
   (every later addon or mod that patched it, with the fields it changed), and `patch_units_claim` (patches listing it
   in `units[]`).
+- **`owner_from_stub` [V].** Set when the owner comes from an empty stub declaration in a helper addon that merged
+  before the real definition: CWE's grenade pack declares an empty `Jeep`, so the engine stamps owner `bd_flashbang`
+  on it, and exactly the CWE mission sections with Jeeps list that addon. Lint **D10** warns that every mission using
+  the class will require that addon and shows the chain (doc 42 §2.1, §6.4).
 - **UI.**
   - Mod filter chips and a "Mod" column in pickers, with search prefixes `mod:` / `class:` (doc 09 S8).
   - A coloured mod badge on map icons and entity rows. Mod folders rarely carry art, so the badge is a generated
@@ -359,7 +388,8 @@ pub struct AddonUnit { pbo: PboIdx, owner: AddonName /* first CfgPatches entry *
 ```rust
 pub enum ClassSource { BaseConfig { layer: LayerIdx }, Addon { unit: AddonIdx } }
 pub struct ClassProvenance { introduced_by: ClassSource, owner: Option<AddonName>,
-                             modified_by: SmallVec<[(AddonIdx, FieldMask); 2]>, patch_units_claim: SmallVec<[AddonName; 1]> }
+                             modified_by: SmallVec<[(AddonIdx, FieldMask); 2]>, patch_units_claim: SmallVec<[AddonName; 1]>,
+                             owner_from_stub: bool /* lint D10 */ }
 ```
 
 ### 4.5 Per-mission dependency tracking
@@ -382,11 +412,14 @@ closure over `requiredAddons` for the *mod* list only. The engine does not need 
 | Array | Contents | Why |
 | --- | --- | --- |
 | `addOnsAuto[]` | exactly what `ScanRequiredAddons` would compute over this catalog | a later re-save in the in-game editor sees no change |
-| `addOns[]` | `addOnsAuto` ∪ extended (weapons, magazines, script-created vehicles, markers, effects) ∪ user pins | extended entries prevent "addon missing" at runtime; the engine never prunes non-auto entries |
+| `addOns[]` | `addOnsAuto` ∪ extended (weapons, magazines, script-created vehicles, markers, effects) ∪ user pins | extended entries prevent "addon missing" at runtime; the engine prunes only names in its in-memory auto list from its previous save (§2.4) |
 
 Our editor prunes its own extended entries using the reason chains stored in the project sidecar, which is never
 part of the mission. Missions keep byte-stable ordering and the original spelling of names already present
-(doc 04 CST).
+(doc 04 CST). The write rule stands after the §2.4 pruning correction: a re-save in a fresh stock editor display
+prunes nothing we wrote, but a stock user who saved another mission in the same display first can lose extras that
+mission auto-listed. The next open re-derives such entries from their reasons and shows the change (doc 37 §5
+dependency doctor, PAT7) [V code; practical effect I].
 
 **Lints** (problems panel, doc 09 S2):
 
@@ -399,15 +432,19 @@ part of the mission. Missions keep byte-stable ordering and the original spellin
 - **D6** an addon in a cycle, with a missing requirement, or with a config lacking `CfgPatches` (silently dropped).
 - **D7** island from an addon.
 - **D8** hazards from ported tests: `model=""`, more than 10 magazine slots.
+- **D9–D12** are defined elsewhere: D9 redistribution guard (doc 34 mo10); D10 stub owner (§4.4), D11 master-server
+  redirect and D12 platform launcher state (doc 42 §6.4).
 
 **Never inject editor-only dependencies.** Entries come only from reasons. The active mod set, our plugins, T0
 packs and preview helpers never add names. Opening and saving a mission without edits leaves its arrays unchanged,
 except for exact-parity `addOnsAuto` recomputation, which the user can turn off.
 
 **Dependency manifest (export).** A human `README` block plus JSON: mod ids, folder names, versions or
-`packageRevision`, fingerprints, `CfgPatches` per mod, the island, the target and the reason summary. Its fields
+`packageRevision`, fingerprints, `CfgPatches` per mod, the island, the target and the reason summary. Per requirement
+it also carries doc 42 §2.8's fields: `shape` (`mod` | `platform`), `need` (`required` | `recommended`, §4.9),
+per-channel ids (`channels`: PB modId, GS 8-hex id, homepage) and, for platforms, `launcher_state`. Its fields
 align with `mod.json` (`modId`, `name`, `version`) and Game Schedule names, so launchers can consume it (doc 09 CO9).
-It is written next to the exported PBO by default. Embedding it in the PBO is opt-in.
+It is written next to the exported PBO by default, never into `mission.sqm`. Embedding it in the PBO is opt-in.
 
 **Badge.** "Requires: CWR 3.05 · @CSLA (3 addons) · island `CSLA_Isle`". This takes the max of the target's script
 requirements (doc 24 L8/L9) and the mods' `requiredVersion`s, and it opens the dependency panel.
@@ -457,7 +494,9 @@ pub struct AddonListPlan { addons: Vec<AddonName>, addons_auto: Vec<AddonName> }
   - target profile and exe version;
   - ordered layers;
   - for each mounted PBO: stem, size, mtime and a hash of its header plus config and stringtable entries;
-  - loose `bin\*` hashes.
+  - loose `bin\*` hashes;
+  - for a launcher platform set, its launcher-state inputs: the launcher-selected PBOs (such as the sound-system
+    PBO), the generated headers (present or missing) and the declared stringtable (doc 42 §2.10, MAT16).
 
   At startup, a stat-only pass revalidates; any change re-hashes only the changed PBOs. The per-mod fingerprint is
   kept separately so it can align with CE #233's "sort per-file hashes, hash again" proposal if CE adopts it.
@@ -500,9 +539,17 @@ pub struct AddonListPlan { addons: Vec<AddonName>, addons_auto: Vec<AddonName> }
   config depth, class count, string length, `#include` depth and preprocessor output. Every guard is fuzzed, with
   adversarial tests per crate.
 - **Filesystem.** Reject `..`, absolute and drive paths in PBO entries (the ported zip-slip cases). Resolve `#include`
-  only inside the owning PBO or mod root; the engine resolves it against the cwd [V:
-  `P:Asset/Addon/ConfigParsers.cpp#L61-L82`, `P:Asset/Addon/AddonSystem.cpp#L183-L194`], and we must not. Do not follow
-  symlinks out of a scan root.
+  only inside the owning PBO or another bank mounted in the same mod set (by bank prefix, as CWE's version addon
+  does), never through `..`, absolute paths or unmounted files (amended from "owning PBO or mod root", doc 42 §6.1);
+  the engine resolves it against the cwd [V: `P:Asset/Addon/ConfigParsers.cpp#L61-L82`,
+  `P:Asset/Addon/AddonSystem.cpp#L183-L194`], and we must not. A missing include is a per-addon diagnostic ("supplied
+  by the platform launcher?"), not a failure. Do not follow symlinks out of a scan root.
+- **Parser rules to mirror [V: doc 42 §6.1].** A scalar ends at `;` or at the end of the line; braces inside an
+  unquoted value are ordinary characters, not balanced (`P:IO/ParamFile/ParamFile.cpp#L81-L103`, `#L1797-L1803`);
+  `enum` constants; function-like macros (`##`, `#`, multi-line bodies, `#undef`/`#ifdef`/`#else`, a mid-line
+  `#include` inside arrays); top-level classes outside `Cfg*`. Without the first two, CWE's `CfgVehicles` parse
+  stopped at 13 public classes instead of 788. Each becomes a synthetic fixture with parser-security tests, including
+  caps on macro passes, include depth and line joins.
 - **No execution.** Config expressions (`db+0`, `EventHandlers`, `init` strings) are parsed as text only. Scripts in
   mods are linted, never run by the editor.
 - **Isolation.** Parse each addon on a worker with a time budget. A failure marks *that* addon `ParseFailed` and
@@ -536,7 +583,10 @@ pub struct AddonListPlan { addons: Vec<AddonName>, addons_auto: Vec<AddonName> }
    `addWeapon` of an unlisted addon's weapon (warning, refusal or silent); absolute paths in `-mod=`; the effect of
    `requiredVersion` [U].
 2. What the vanilla `CfgAddons >> PreloadAddons` lists contain, and which vanilla classes carry owners. This needs the
-   user's install, and nothing may be committed [U].
+   user's install, and nothing may be committed [U]. **Partly answered (doc 35 §10) [V]:** the preload lists are
+   `WeaponBIStudio` (9 addons), `MiscBIStudio` and `ResistanceBIStudio`; base-config classes have no owner; 40 of 71
+   public addon vehicles are missing from their own `units[]` and are named through ownership (§2.4). The full
+   per-class owner table stays a local, uncommitted artefact.
 3. Should the extended set (§4.5) be written by default, or only offered as a lint? It is an owner decision. The
    engine-parity-only mode stays available.
 4. After a mod replaces `bin\config`, do base `AddOns\` classes still appear (the 3.05 note suggests not; the code
@@ -544,7 +594,9 @@ pub struct AddonListPlan { addons: Vec<AddonName>, addons_auto: Vec<AddonName> }
 5. Manifest location and schema: next to the PBO, inside it, or both; and whether to align with papa-bear catalog
    ids or with a CE #233 hash format if one lands.
 6. Should the editor ever *install* mods (network)? This note assumes no: installing stays with the game's MODS
-   manager, Fwatch or Game Schedule, and we deep-link at most.
+   manager, Fwatch or Game Schedule, and we deep-link at most. **Answered: never (doc 42 §3).** Plotroom never
+   downloads, installs, unpacks or mirrors mods; it links out and hands installs to the channels' own tools. An
+   opt-in, read-only metadata connector is proposal-only, blocked on the `feed` connector decision (doc 42 §3.3–§3.4).
 7. Policy for D3 replacement-only claims: drop them silently, warn, or keep for parity with in-game re-saves.
 8. Language-suffixed PBO variants and `GFileBankPrefix` banks in the mount plan [U].
 9. Where the CWR and 1.99 installs keep the stock config (`bin\` vs `res\bin\`), and hence whether vanilla itself is a
@@ -580,7 +632,7 @@ pub struct AddonListPlan { addons: Vec<AddonName>, addons_auto: Vec<AddonName> }
   <https://www.moddb.com/mods/csla-mod-for-operation-flashpoint>; WGL/FDF/ECP summaries
   <https://www.twcenter.net/threads/operation-flashpoint-mods.32119/>. BIKI pages returned HTTP 403 and are not cited.
 
-**Related notes:** docs/research/03, 04, 05, 07, 08, 09, 17, 19, 20, 22, 23, 24, 25, 26.
+**Related notes:** docs/research/03, 04, 05, 07, 08, 09, 17, 19, 20, 22, 23, 24, 25, 26, 34, 35, 37, 42.
 
 ## Verification notes
 
@@ -601,8 +653,8 @@ Adversarial re-check, 2026-09-27, against the pinned clones and live URLs. Nothi
   `--strict`; only the first "addon missing" warning per mission is emitted (§4.6); an addon config without
   `CfgPatches` is dropped and unmounted (new `RejectedNoPatches`, lint D6); CWR's version integer is exactly 3050;
   "CE hardens" path handling → CE *adds* `..` collapsing and aliases; the base-config owner sentence; the `DisplayUIMultiplayer.cpp` and `AppConfig.cpp` line ranges; mod size range (155 KB–3 GB, not
-  31 MB–1.4 GB) and the Game Schedule count (~128); the OFrP editor-addon detail; the LIBMOD launch string; the
-  Kronzky quote (post-mission cutscene, not "intro").
+  31 MB–1.4 GB) and the Game Schedule count (~128) (both superseded: see the consolidation pass below); the OFrP
+  editor-addon detail; the LIBMOD launch string; the Kronzky quote (post-mission cutscene, not "intro").
 - **Tests:** all named files exist at the stated paths and every one has a row in `docs/porting/upstream-test-map.csv`
   (statuses `todo`, `reference` or `not-applicable`, matching the table). Corrected ranges: `test_mod_collection`
   L40–L385 (16 cases, `ModId` only indirectly); `test_paramfile_inheritance` merge cases L410–L811, whose access and
@@ -611,3 +663,25 @@ Adversarial re-check, 2026-09-27, against the pinned clones and live URLs. Nothi
 - **Unverifiable here:** CSLA's founding date and WGL's scope (search summaries only); everything tagged [U] about
   1.99; whether a product-refused bank keeps its stem (lazy check, needs a probe); the classic `res\bin\config`
   layout.
+
+### Consolidation pass (2026-09-27)
+
+Corrections carried in from later research; each was checked against its source doc before it was applied.
+
+- 2026-09-27, from doc 35 §10 (and §6.1): §2.4 confirmed; CWE's 168-class `units[]` claim added as a live D3 case;
+  the 40-of-71 owner-path fact added to §2.4; open question 2 marked partly answered (preload lists, owner-less
+  base config); "launcher platform" added to §1 and as a mod-set kind in §4.2 (`ModSetKind`), aligned with doc 42
+  §2.8 `shape = "platform"`.
+- 2026-09-27, from doc 37 §10 gap (h) and its engine review "Save-time pruning": §2.4's "manual `addOns[]` entries
+  are never pruned" is corrected (the stock editor prunes against an in-memory auto list that survives loading
+  another mission in the same display) [V code; practical effect I]. The TL;DR and the §4.5 write-rule table now say
+  so; the write rule itself stands.
+- 2026-09-27, from doc 42 §8.3 row 27 and its "Corrections carried" list: Game Schedule scale corrected in the TL;DR
+  and §3 (123 records / 120 names, 11 KB–19.16 GB, about 58 GB, not 77 records and 155 KB–3 GB) [V 2026-09-27]; the
+  home page's "~128" names was not re-checked and is labelled as a first count. Open question 6 answered ("never
+  install", doc 42 §3). §4.10 amended (includes resolve only inside the owning PBO or a bank mounted in the same
+  set; missing include = per-addon diagnostic) and given the doc 42 §6.1 parser rules. Launcher-state inputs added
+  to §4.7; `owner_from_stub` (lint D10) to §4.4; the §2.8 fields (`shape`, `need`, `channels`, `launcher_state`) to
+  the §4.5 manifest; game-folder addons (doc 42 §4.1) to §4.2. A pointer to lints D9–D12 was added to §4.5.
+- No "Field Manual", "Boot camp"/"Bootcamp"/"Academy", doc 33 or `skills/field-manual` references exist in this
+  doc, so the rename to Standing Orders / Drill needed no edits here.

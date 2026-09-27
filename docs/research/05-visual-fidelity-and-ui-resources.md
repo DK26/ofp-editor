@@ -12,22 +12,24 @@ Epistemic tags used below: **[V]** verified in code or on a fetched web page (ci
 
 - **Layout numbers are not in the source repos.** Neither `BohemiaInteractive/CWR` nor `ofpisnotdead-com/CWR-CE`
   contains any `RscDisplayArcade*` class body (positions, fonts, colors). The engine loads them by name
-  from game data (`bin/resource.cpp` or `resource.bin`, plus `bin/config.bin`). **[V]**
+  from game data (`bin/resource.cpp` or `resource.bin`, plus `bin/config.bin`). **[V]** Both 1.99 and Remastered
+  ship them **rapified** (`RESOURCE.BIN`, `CONFIG.BIN`). Remastered adds text overlays, and neither ships a text
+  `resource.cpp` (doc 35 §10). **[V]**
 - **Code does give us everything else.** It defines the resource *schema*: which keys each control reads,
   the IDD/IDC numbers (`resincl.hpp`), the `ST_*`/`CT_*` constants, and the exact drawing algorithm of every
   control and of the 2D map. We can reimplement the renderer 1:1 from GPL code. **[V]**
 - **Classic look = vector lines and flat fills.** Buttons, list boxes, combos, edits, scroll bars, sliders and
   frames are drawn with line primitives laid out on a 1‑px grid, plus solid rectangles. Only a few textures are
-  involved: the dialog background tile, the GroupBox2 tile, the HUD corner, cursors, map icons, fonts, and the
-  remaster's `textureWhite`/`textureLine`. Note that the GL33 backend draws *every* 2D line as a 3‑px‑wide quad
-  sampled from `textureLine`, so the on-screen line profile depends on that data texture. **[V]**
+  involved: the dialog background tile, the GroupBox2 tile, the HUD corner, the map's paper tile, cursors, map
+  icons, fonts, and the remaster's `textureWhite`/`textureLine`. Note that the GL33 backend draws *every* 2D line
+  as a 3‑px‑wide quad sampled from `textureLine`, so the on-screen line profile depends on that data texture. **[V]**
 - **UI space is a 0..1 rectangle authored against an 800x600 (4:3) canvas.** Text height is `sizeEx` × UI
   height. The remaster's default "Modern" policy maps that rectangle to the full window from 4:3 up to 16:9 (+2%).
   Between that and the 21:9 clamp it uses a centred **4:3** band. Beyond 21:9 it uses a centred 21:9 band, and
   below 4:3 a letterboxed 4:3 band. "Legacy" mode stretches it over the whole window. **[V]**
-- **The editor map is procedural, not a bitmap.** Its layers are sea gradient, optional texture colours,
-  contour lines at a zoom-dependent interval, forests, roads, object icons, town names, spot heights and a grid,
-  with the editor overlay on top. All colours and icons come from config. Rendering it needs our own parsers for
+- **The editor map is procedural, not a bitmap,** drawn over a tiled paper texture. Its layers are the paper tile,
+  sea gradient, optional texture colours, contour lines at a zoom-dependent interval, forests, roads, object icons,
+  town names, spot heights and a grid, with the editor overlay on top. All colours and icons come from config. Rendering it needs our own parsers for
   WRP terrain, P3D `map` properties and `CfgWorlds`. **[V]**
 - **Recommendation (assets): runtime-load from the user's install and never redistribute.** Probe for the Steam
   or GOG *Remastered* install, then the **free Steam demo** (app 4819000), then legacy CWA 1.99. Parse
@@ -42,8 +44,9 @@ Epistemic tags used below: **[V]** verified in code or on a fetched web page (ci
   NonCommercial terms into our GPL releases, and because of the synthetic-fixtures rule. **[I]** Our own code and
   our fallback theme stay under our licence.
 - **Recommendation (fallback): ship an original "Classic look-alike" theme.** Author the layout data in the same
-  schema (our own numbers traced from screenshots), draw vector chrome, use OFL fonts and our own icon set, and
-  take the map palette from GPL engine constants. Used when no install is found. **[I]**
+  schema (our own numbers traced from screenshots), draw vector chrome, use OFL fonts (Remastered's own five are
+  all OFL 1.1) and our own icon set, and take the map palette from GPL engine constants. Those constants match the
+  in-game colours composited over white within 1/255 (§7.4). Used when no install is found. **[I]**
 - **Build a golden-image harness early.** Render each display with our renderer and with the CWR engine
   (Trident `triScreenshot` on local demo data), then diff them. This needs the full-game binary (`PoseidonGame`)
   built from source, because the demo exe has no editor. Screenshots stay local and are never committed. **[I]**
@@ -58,7 +61,7 @@ Epistemic tags used below: **[V]** verified in code or on a fetched web page (ci
 | **Display / dialog** | A full-screen or modal UI screen (`ControlsContainer` subclass). Identified by an **IDD** (int). |
 | **Control** | Widget inside a display, identified by an **IDC** (int); `IDC_STATIC` (= -1) for decoration. |
 | **Rsc class** | A config class (e.g. `class RscDisplayArcadeMap { idd=26; controls[]=…; }`) describing a display's controls and their `x,y,w,h,type,style,font,sizeEx,color*` values. |
-| **resource.cpp / resource.bin** | The game's UI config file ("Res" ParamFile) holding all `Rsc*` classes. Text `.cpp` wins over binarized `.bin` if both exist. |
+| **resource.cpp / resource.bin** | The game's UI config file ("Res" ParamFile) holding all `Rsc*` classes. Text `.cpp` wins over binarized `.bin` if both exist. Both editions ship only the `.bin` (§2.1). |
 | **config.bin** | Main game config ("Pars") — `CfgVehicles`, `CfgWorlds`, `CfgMarkers`, `CfgWrapperUI`, `CfgInGameUI`, `CfgFonts`, … |
 | **remaster.cpp** | Remaster-only config ("Remaster" ParamFile), e.g. `CfgPreloadTextures`. |
 | **PBO** | BI archive format holding game data (`Dta\*.pbo`, `AddOns\*.pbo`). |
@@ -100,7 +103,12 @@ cursor sizing, wheel-zoom binding and a `LayoutCanvas` refactor (see §4).
   (`CWR:engine/Poseidon/Asset/Addon/ConfigParsers.cpp#L233-L281`). `Pars` is loaded from
   `bin/config.cpp|config.bin` + `config-extra.cpp` (`#L179-L213`); `Remaster` from `bin/remaster.cpp|.bin`
   (`#L215-L231`). **[V]**
-- Whether the remaster's UI resource is plain text is **unverified; the evidence conflicts**.
+- **The shipped UI resource is rapified in both editions (resolved).** Doc 35 read the owner's 1.99 and 3.05
+  installs. Both ship binary `RESOURCE.BIN` and `CONFIG.BIN`, with 138 top-level resource classes in each.
+  Remastered adds text overlays: `resource-extra.cpp` with its includes (44 more top-level classes) and
+  `config-extra.cpp`. Neither edition ships a text `resource.cpp`
+  (doc 35 §10; [`data/catalog-sizes.csv`](data/catalog-sizes.csv)). **[V]** The code evidence below conflicted
+  and is kept for the record.
   - *For text:* two comments say that apps "that ship config.bin + resource.cpp + remaster.cpp (Game)"
     see every flag true (`CWR:tests/unit/engine/Poseidon/Core/test_config_system.cpp#L1-L3`,
     `engine/Poseidon/Core/Config/ConfigSystem.hpp#L10-L12`).
@@ -108,10 +116,13 @@ cursor sizing, wheel-zoom binding and a `LayoutCanvas` refactor (see §4).
     to text `.hpp` includes. `ConfigParsers.cpp#L261-L262` says that `resource-extra.cpp` adds displays "without
     rebuilding RESOURCE.BIN".
   - So our `rsc` crate must handle the rapified `resource.bin` as a first-class input, not as a fallback. **[V]** for
-    the quotes; which format the retail and demo data actually ship is **[U]**.
+    the quotes. *Superseded:* "which format the retail data ships is [U]" is now answered above (rapified). The
+    demo data is still unchecked **[U]**.
 - Legacy CWA 1.99: community guides say that `Resource.cpp` goes to `…\Arma Cold War Assault\BIN\` and that the
   shipped `resource.bin` is overridden by a `.cpp` there. For OFP 1.96 the path is `…\Res\Bin\`. Search results
-  report this; the primary pages were not fetched (403/429). **[U]**
+  report this; the primary pages were not fetched (403/429). **[U]** It is still [U] after doc 35 (its open
+  question 10). What is verified is that the shipped 1.99 `RESOURCE.BIN` equals the 3.05 one except for 51 values
+  (see Open question 5).
 
 ### 2.2 Display inventory (editor-relevant)
 
@@ -217,11 +228,11 @@ The white, black, default and **line** (`textureLine`, 8x8, 4x4 mip used) textur
 | **Scrollbar** (inside list/combo) (`#L853-L985`) | inherits list colour | Frame, chevron spins of 0.8×width, rectangular thumb. |
 | **Progress** `CT_PROGRESS`=8 (`#L987-L1012`) | `colorFrame, colorBar` | frame + bar. |
 | **HTML** `CT_HTML`=9 (`UIControlsExt.cpp#L66-L106`) | `colorBackground, colorText, colorBold, colorLink, colorLinkActive, H1..H6/P >> font, fontBold, size/sizeEx` | Briefing renderer (not used on the editor map screen). |
-| **Map** `CT_MAP`=100 | see §5 | Procedural. |
+| **Map** `CT_MAP`=100 | see §5 | Procedural. **The editor map is not declared `CT_MAP`:** in the shipped resource, `RscMapControl` (IDC 51) is type 0 (`CT_STATIC`) and style 48 (`ST_PICTURE`) (doc 35 §10). `DisplayArcadeMap::OnCreateCtrl` builds `CStaticMapArcade` from the IDC alone (`CWR:engine/Poseidon/UI/Map/UIMapExtDisplay.cpp#L482-L486`), so loaders must dispatch special controls by (display IDD, IDC), not by `CT_MAP`. |
 | **Azimuth picker** (C++ subclass `CStaticAzimut` on IDC 114 / group IDC 105) (`UIArcade.cpp#L43-L107`) | static keys | Static picture + a dark (0.08,0.08,0.12) triangle needle; click snaps to 5°. |
 
 **Consequence:** a pixel-faithful classic skin needs very little art: line primitives, solid fills, one tiled
-background texture, cursors, fonts and map icons.
+background texture, the map's paper tile (§5.2), cursors, fonts and map icons.
 
 Caveat **[V]**: the remaster's only renderer (`engine/PoseidonGL33`) turns every 2D `DrawLine` into a **3‑px‑wide
 quad** textured with `textureLine`, using v = 0.25..1 across its width (`EngineGL33_2D.cpp#L112-L167`). The visible
@@ -287,7 +298,7 @@ Class chain: `CStaticMap` → `CStaticMapArcadeViewer` → `CStaticMapArcade`. T
 
 | # | Layer | Algorithm / LOD | Colour source |
 |---|---|---|---|
-| 0 | Paper | tiles the control's own picture every 0.5/scale if the control has a texture (`style` `ST_PICTURE` + `text`) | control `colorBackground` × texture — **whether CWA's map class uses a paper texture is [U]** |
+| 0 | Paper | tiles the control's own picture every 0.5/scale if the control has a texture (`style` `ST_PICTURE` + `text`) | control `colorBackground` × texture. CWA's editor map class **does tile a paper texture**: it is style 48 (`ST_PICTURE`) with a texture in `text` (doc 35 §10; supersedes the earlier [U]) |
 | 1 | Sea | per block of `ceil(6/ptsLand)` cells; depth ≤ −5 m is solid sea; −5..+5 m fades alpha from sea to 0 (shoreline gradient) (`#L1374-L1443`) | `colorSea` |
 | 2 | Textures ("Show Textures" button, `_showScale=false`) | per-cell ground texture average colour ×0.75, or at full zoom the texture itself ×1.5 random tint; alpha `0.5 + 0.1·height` (`#L1248-L1372`) | terrain textures from WRP |
 | 3 | Contours | marching triangles per terrain cell; interval = `50·scale` rounded up to 2/5/10 × 10ⁿ (**5 m at the default zoom**); below-sea lines use a separate colour (`#L850-L895`, `#L1876-L1969`) | `colorCountlines`, `colorCountlinesWater` |
@@ -340,7 +351,12 @@ Poseidon** (0 grep hits in the whole CWR repo) **[V]**. That they belong to late
   `colorFriendly, colorEnemy, colorCivilian, colorNeutral, colorUnknown, colorMe, colorPlayable, colorSelect,
   colorSensor, colorDragging, colorExposureEnemy, colorExposureUnknown, colorRoads, colorGrid, colorGridMap,
   colorCheckpoints, colorCamera, colorMissions, colorActiveMission, colorPath, colorInfoMove, colorGroups,
-  colorActiveGroup, colorSync, colorLabelBackground`.
+  colorActiveGroup, colorSync, colorLabelBackground`. These are the 29 keys the engine reads. The shipped class has
+  **34 keys** (doc 35 §10; `catalog-sizes.csv` row `CfgInGameUI.IslandMap.keys`), so also accept
+  `colorDetectorSync`, `iconCheckpoint`, `colorCountlines`, `colorCountlinesWater` and `colorInactive`. Our
+  consolidation check of the pinned clone shows how these five are used. The first two have no reader anywhere in
+  CWR (0 grep hits). The engine reads the last three from the map control class above, not from `IslandMap`
+  (`UIMap.cpp#L262-L267`). Parse all 34 permissively. **[V]**
 - **Per world** in `CfgWorlds`: `centerPosition, Names, Grid`. **Per vehicle**: `icon, mapSize, displayName`.
   **Markers**: `CfgMarkers`, `CfgMarkerColors`, `CfgMarkerBrushes`.
 
@@ -371,13 +387,15 @@ Poseidon** (0 grep hits in the whole CWR repo) **[V]**. That they belong to late
   |---|---|
   | `cwr_title` | "Oswald 700" |
   | `cwr_body` | "Roboto 700" |
-  | `cwr_mono` | "Unuaranga Kuriero Bold" (family not identified) |
+  | `cwr_mono` | "Unuaranga Kuriero Bold": a Courier Prime derivative (doc 35 §10) |
   | `cwr_serif` | "Vollkorn 700" |
   | `cwr_hand` | "Caveat" |
 
-  Confirm them from the TTF `name` tables of an install. Our fallback theme can take the same upstream families
-  from their original publishers. Check each one's licence first; for example, Roboto releases have shipped under
-  Apache‑2.0 and under OFL (unverified which).
+  **Confirmed from an install** (doc 35 §10; `catalog-sizes.csv` row `fonts.remastered_ttf`). The five TTFs are
+  Roboto (variable), Oswald, Vollkorn, Caveat and a Courier Prime derivative, and **all five are SIL OFL 1.1**.
+  **[V]** This supersedes the earlier "confirm from the `name` tables" and "Roboto: Apache‑2.0 or OFL (unverified
+  which)" notes. Our fallback theme can take the same upstream families from their original publishers, with
+  Courier Prime for mono. Check the licence of each download when it is bundled. **[I]**
 - **Recommendation [I]:** support both paths (FXY+PAA for legacy installs, TTF for remaster). Copy the
   per-prefix metric-matching table so that `sizeEx` produces identical line heights.
 
@@ -414,7 +432,7 @@ Poseidon** (0 grep hits in the whole CWR repo) **[V]**. That they belong to late
 | Steam *Arma: Cold War Assault Remastered* (app 65790) | `…/steamapps/common/<game>/Remastered/` | CWR-CE: copy binaries "into the `Remastered` folder" (`CE:docs/build/win.md#L79`). Original owners got the remaster free, and old and new **install side by side** (vgtimes, 2026-07). **[V]** |
 | GOG *ARMA: Cold War Assault Remastered* | install dir; Remastered layout **[U]** | listed as supported data in CE docs. |
 | Steam **demo** (app 4819000, free) | top level of the demo download | full-game binary + demo data "unlock[s] … the editor" (`CE:docs/build/win.md#L11-L12`). BI tests open editor displays 26/27/29 on `data_dir = "packages/Demo"` (`CWR:tests/integration/ui/editor/editor_mission_save_unicode_name.test.toml`, `.sqf#L9-L22`). The official demo exe does **not** register the editor module (`CWR:apps/cwr/GameDemo/GameDemoApplication.cpp#L5-L13`), but that restricts the exe, not the data. **[V]** |
-| Legacy CWA 1.99 (Steam/GOG, pre-remaster) | root with `bin\`, `Dta\`, `AddOns\` | FXY fonts, `resource.bin` **[U]**; useful for "original 2009 look". |
+| Legacy CWA 1.99 (Steam/GOG, pre-remaster) | root with `bin\`, `Dta\`, `AddOns\` | FXY fonts, rapified `resource.bin` (its layouts equal 3.05 except for 51 values; doc 35 §1.2) **[V]**; useful for "original 2009 look". |
 | Manual folder | user picks it | also covers old OFP 1.96 (`Res\bin\`) **[U]**. |
 
 Mount rules to replicate: `dta\*.pbo` and `addons\*.pbo` (addon configs merged), `Campaigns\` (only for
@@ -427,7 +445,7 @@ files: `config.*`, `config-extra.cpp`, `resource.*`, `resource-extra.cpp`, `rema
 
 | Need | Where (engine key) | Format |
 |---|---|---|
-| Dialog layouts | `Res >> RscDisplayArcade*`, `RscDisplayIntel*`, `RscDisplayTemplate*`, `RscDisplaySelectIsland`, `RscMsgBox`, base `Rsc*` templates | `bin/resource.cpp` (text) / `.bin` (rapified) |
+| Dialog layouts | `Res >> RscDisplayArcade*`, `RscDisplayIntel*`, `RscDisplayTemplate*`, `RscDisplaySelectIsland`, `RscMsgBox`, base `Rsc*` templates | `bin/resource.bin` (rapified, as both editions ship it) + text `resource-extra.cpp` overlays (Remastered); a text `resource.cpp` only as a mod or user override |
 | Chrome & cursors | `CfgWrapperUI` | config.bin |
 | Map colours, icons | map control class (Res) + `CfgInGameUI>>IslandMap` | config + PAA |
 | Unit/vehicle icons | `CfgVehicles>>*>>icon, mapSize` | config + PAA |
@@ -455,10 +473,12 @@ detection with Steam/GOG/manual probing is `…:src/architecture/first-runnable.
 3. **Map palette**: GPL-licensed constants in the engine's WMF map exporter can seed the defaults: sea
    RGB(200,230,253), land white, forest (205,230,154), forest border (102,205,0), roads (123,92,72), contours
    (211,186,163), water contours (128,196,255), grid (112,112,83)
-   (`CWR:engine/Poseidon/UI/Map/UIMapExport.cpp#L31-L47`). Whether they match the in-game `config.bin` values is **[U]**.
+   (`CWR:engine/Poseidon/UI/Map/UIMapExport.cpp#L31-L47`). They equal the in-game colours composited over white
+   within 1/255 (doc 35 §10) **[V]**, so the fallback map palette is faithful. This supersedes the earlier "match
+   is [U]".
 4. **Fonts**: bundle OFL families only, e.g. Caveat for "hand". The first candidates are the families named in
-   the CWR tests (Roboto, Oswald, Vollkorn, Caveat; §6). Each licence still needs confirming, and a mono face is
-   still to be picked.
+   the CWR tests (Roboto, Oswald, Vollkorn, Caveat; §6). Remastered ships all of them under OFL 1.1 (§6). For mono,
+   use Courier Prime, the upstream of Remastered's mono face. **[I]**
 5. **Icons**: author an original SVG set (NATO-ish unit symbols, waypoint circle, trigger flag, marker shapes).
    Without an install there is also **no island**: offer a synthetic demo terrain (procedural heightmap) so the
    editor stays usable for UI and agent development.
@@ -506,10 +526,11 @@ reported by the fetch tool were not individually verified.
 
 ## 10. Recommendations for implementation
 
-1. **`rsc` crate:** parse text `resource.cpp`/`resource-extra.cpp` and the rapified `.bin` (both first-class, see
-   §2.1) into a typed `DisplaySpec`/`ControlSpec`
-   (newtypes `Idd`, `Idc`). Be permissive about unknown keys and strict about structure, following the project
-   parser rules. Resolve class inheritance and `IDC_STATIC`.
+1. **`rsc` crate:** parse the rapified `.bin` (what both editions ship) and text `resource-extra.cpp`/`resource.cpp`
+   (Remastered overlays, mod overrides). Both are first-class (§2.1). Parse them into a typed
+   `DisplaySpec`/`ControlSpec` (newtypes `Idd`, `Idc`). Be permissive about unknown keys and strict about structure,
+   following the project parser rules. Resolve class inheritance and `IDC_STATIC`. Dispatch special controls (the
+   map, the azimuth picker) by (IDD, IDC), as the engine's `OnCreateCtrl` does, not by `type` (§3.3).
 2. **`ui-classic` renderer:** a small immediate-mode layer offering `line`, `rect_fill`, `tiled_texture`,
    `text(font,sizeEx,clip)` and `poly`. Port each `OnDraw` from §3.3 literally, then verify with golden images.
    The choice of GUI toolkit is covered elsewhere; whatever it is, it must allow custom painting at pixel
@@ -534,11 +555,18 @@ reported by the fetch tool were not individually verified.
    Install app 4819000 and run the probe.
 2. Does the remaster ship `bin/resource.cpp` (text) or a rapified `RESOURCE.BIN` plus text `resource-extra.cpp`?
    Code comments conflict (§2.1). Does it still use the OFP-era class names (`RscText`, `RscMapControl`, …) as base
-   templates?
+   templates? **Answered (doc 35 §10):** both editions ship rapified `RESOURCE.BIN`/`CONFIG.BIN`, and Remastered
+   adds text overlays. Neither ships a text `resource.cpp`. `RscMapControl` is present. The rest of the base-template
+   list was not enumerated here.
 3. Does the editor's map class use a paper texture (`ST_PICTURE` + `text`), or a flat `colorBackground`?
+   **Answered (doc 35 §10):** it tiles a paper texture (style 48). See §5.2.
 4. Font families behind `Fonts\cwr_*.ttf`: the CWR tests name Oswald, Roboto, "Unuaranga Kuriero", Vollkorn and
    Caveat (§6). Confirm this against the TTF `name` tables, identify "Unuaranga Kuriero", and check each licence.
+   **Answered (doc 35 §10):** the fonts are Roboto, Oswald, Vollkorn, Caveat and a Courier Prime derivative, all OFL 1.1.
 5. Legacy CWA 1.99 layout and defaults (`bin\resource.bin`, `uiTopLeftX…` in the user cfg): verify on a real install.
+   **Partly answered (doc 35 §1.2, §10):** the 1.99 `RESOURCE.BIN` layouts equal 3.05 except for 51 values: 48 layout
+   fixes in the Trigger dialog, 1 in the Waypoint dialog and 2 title texts. Still open **[U]**: whether 1.99
+   honours a loose `bin\resource.cpp` override (doc 35 open question 10), and the `uiTopLeftX…` defaults.
 6. Do Steam/GOG remaster installs keep data in loose `Dta/`/`AddOns/` PBOs identical to the demo? Is the GOG
    layout also `Remastered/`?
 7. Does APL‑SA "ArmaOnly" cover a *local cache* our tool derives from the data (e.g. PNGs of icons)? We believe
@@ -550,6 +578,9 @@ Code (pinned):
 - `BohemiaInteractive/CWR@ffc61838b7`: `engine/Poseidon/Core/resincl.hpp`; `engine/Poseidon/UI/Map/{UIContainers,UIMap,UIMapExt,UIMapExtDisplay,UIArcade,UIArcadeWaypoint,UIArcadeMarker,UIMapMain,UIMapExport,UIMapDisplayBriefing}.cpp`, `UIMap.hpp`; `engine/Poseidon/UI/Controls/{UIControls,UIControlsBase,UIControlsImpl,UIControlsSlider,UIControlsExt,UIControlsHTML}.cpp`; `engine/Poseidon/UI/{DisplayUI.hpp,DisplayUIMultiplayerWizard.cpp,OptionsUI.cpp}`; `engine/Poseidon/UI/Settings/AspectRatio.cpp`; `engine/Poseidon/UI/Text/ScreenTextLayout.hpp`; `engine/Poseidon/Graphics/Core/Engine.cpp`; `engine/Poseidon/Graphics/Rendering/Draw/{Font.cpp,FontData.cpp,FontDraw.cpp,FontMapping.hpp}`; `engine/Poseidon/Graphics/Textures/{TexturePreload.cpp,PAADecoder.cpp,PixelFormat.cpp}`; `engine/Poseidon/Graphics/Rendering/Shape/ShapeLOD.cpp`; `engine/Poseidon/World/{WorldInit.cpp,Terrain/Geography.cpp,Terrain/WrpReader.hpp}`; `engine/Poseidon/IO/ParamFileExt.cpp`; `engine/Poseidon/Asset/Addon/ConfigParsers.cpp`; `engine/Poseidon/Core/GameState.cpp`; `engine/Poseidon/AI/ArcadeTemplate.cpp`; `apps/cwr/GameDemo/{CMakeLists.txt,GameDemoApplication.cpp}`; `tests/integration/ui/editor/*.test.{sqf,toml}`; `tests/unit/engine/Poseidon/Core/test_config_system.cpp`; `tests/README.md`; `.trident.env.example`; `README.md`; added in verification: `engine/PoseidonGL33/EngineGL33_2D.cpp`, `engine/Poseidon/UI/Settings/Presentation.cpp`, `engine/Poseidon/Core/Config/ConfigSystem.hpp`, `engine/Poseidon/UI/OptionsUIApp.cpp`, `engine/Poseidon/World/Terrain/LandFile.hpp`, `tests/unit/engine/Poseidon/Graphics/Rendering/test_font_mapping.cpp`, `tests/unit/engine/Poseidon/UI/InGame/test_inGameUI.cpp`, `apps/tetris/Tetris/TetrisNotebookUI.cpp`, `.gitattributes`.
 - `ofpisnotdead-com/CWR-CE@b67bf3bd62`: `engine/Poseidon/UI/LayoutCanvas.hpp`; `engine/Poseidon/UI/Map/UIMap.cpp` (diff vs CWR); `docs/build/win.md`; `README.md`; `tests/fixtures/config-replace/bin/resource.cpp`.
 - `iron-curtain-engine/iron-curtain-design-docs@2fda63f5a9`: `src/decisions/09c/D032-ui-themes.md`, `src/architecture/first-runnable.md`.
+
+Corpus (added in the consolidation pass): doc 35 §1.2 and §10 (the owner's local 1.99 and 3.05 installs, read
+locally, never committed) and [`data/catalog-sizes.csv`](data/catalog-sizes.csv).
 
 Web:
 - APL‑SA text: https://www.bohemia.net/community/licenses/arma-public-license-share-alike
@@ -611,8 +642,37 @@ Adversarial fact-check, 2026-09-26, against the pinned clones and live web pages
 
 **Not verified:**
 - The demo island list.
-- Whether retail data ships text or binary resource.
-- The real TTF families and licences.
+- Whether retail data ships text or binary resource. *(Resolved 2026-09-27: binary; see the Consolidation pass.)*
+- The real TTF families and licences. *(Resolved 2026-09-27: all five OFL 1.1; see the Consolidation pass.)*
 - Legacy 1.99 paths.
 - "Later Arma engines" provenance of the unused map params.
 - The COMBATSIM 2026 page (DNS failure).
+
+### Consolidation pass (2026-09-27)
+
+These edits apply the doc 35 §10 corrections (row C35-05). Their evidence was checked against doc 35 §1.2 and §10,
+against `data/catalog-sizes.csv` (rows `CfgInGameUI.IslandMap.keys` = 34, `fonts.remastered_ttf`,
+`resource.top_level_classes`, `resource.remastered.extra_top_level_unique` and `resource.remastered.changed_values`
+= 51), and against the pinned CWR clone (`UIMapExtDisplay.cpp#L478-L487`, `UIMap.cpp#L245-L364`).
+
+- **TL;DR.** Added the shipped format (rapified in both editions, plus text overlays in Remastered), the map's paper
+  tile, the fact that Remastered's fonts are OFL, and the 1/255 match of the palette.
+- **§1 and §2.1.** The format question is resolved as rapified, and the conflicting code quotes are kept for the
+  record. The loose `resource.cpp` override on 1.99 stays [U].
+- **§3.3.** The editor map is `RscMapControl` (IDC 51), declared type 0 and style 48, and C++ creates it by IDC.
+  Loaders dispatch special controls by (IDD, IDC), not by `CT_MAP`. The "Consequence" line now lists the paper tile.
+- **§5.2 layer 0.** The paper texture is confirmed, which supersedes the earlier [U].
+- **§5.4.** `IslandMap` has 34 keys; the five extras were added. Added by this pass, from the code: the engine reads only
+  29 of them. `colorDetectorSync` and `iconCheckpoint` have no reader in CWR, and the engine reads `colorCountlines`,
+  `colorCountlinesWater` and `colorInactive` from the map control class.
+- **§6, §7.4.4.** The five Remastered fonts are Roboto, Oswald, Vollkorn, Caveat and a Courier Prime derivative,
+  all OFL 1.1. The fallback mono face is Courier Prime.
+- **§7.2, §7.3, §10.1.** The 1.99 resource is rapified and equals 3.05 except for 51 values. The dialog-layout
+  source is `.bin` plus overlays. The `rsc` crate dispatches special controls by (IDD, IDC).
+- **§7.4.3.** The GPL export palette equals the in-game colours composited over white within 1/255.
+- **Open questions.** 2, 3 and 4 are answered and 5 is partly answered. The original question texts are kept.
+- **Rename check.** The doc has no "Field Manual", "Boot camp"/"Bootcamp" or "Academy" references and no doc-33 or
+  `skills/field-manual` links, so nothing was renamed.
+- **Not re-verified here.** The type 0/style 48 declaration, the paper texture and the 1/255 palette match are
+  install readings made by doc 35. They were accepted as doc 35's [V] and are consistent with the code: the map is a
+  `CStatic` subclass (`UIMap.cpp#L247`), and layer 0 is drawn only for `ST_PICTURE` + `text`.

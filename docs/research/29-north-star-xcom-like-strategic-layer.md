@@ -26,8 +26,9 @@ extensions); `CwrCe{…}` (opt-in engine extensions).
 
 - **Feasible on the engine as shipped** [V by reading CWR; I design]: named roster, permadeath, wounds counted in ops, recruiting, squad
   selection, pooled loadouts, currencies, research, a hangar, expiring offers, a doom clock and a walkable base all map onto vanilla
-  commands plus the doc 19 compiler. **Remastered** can host it today; on **1.99** about 20 behaviours stay [U] until the §9 probes pass,
-  with degraded fallbacks designed in (radio-menu camp, bucketed briefing lines).
+  commands plus the doc 19 compiler. **Remastered** can host it today. On **1.99**, content and the executable settle that the core
+  commands exist (doc 35 §8 [V]), but about 20 behaviours stay [U] until the §9 semantics probes pass, with degraded fallbacks designed
+  in (radio-menu camp, bucketed briefing lines).
 - **Shape: one strategic turn = one deployment.** There is no real-time geoscape. Decisions happen at extraction through the radio menu,
   which costs no extra load. Every 3–4 ops the campaign stops at a playable camp. Pressure counts deployments, not days, as in FTL and Dawn
   of War II [V].
@@ -48,7 +49,8 @@ extensions); `CwrCe{…}` (opt-in engine extensions).
 - **Offers need no routers:** story ops are their own missions; side ops are layers of one per-island template selected by `cmp_op`,
   with consecutive side ops alternating between two classes that share it. The reference campaign has **0 routers**, ≤ 16 book rows [I].
 - **The camp is a real mission** (chapter cutscenes lose campaign vars [V]): walkable stations, presence-gated facilities, a memorial and
-  a command terminal using the best UI the profile has (`createDialog` on Remastered, 1.99 [U]; else `addAction`; else the radio menu).
+  a command terminal using the best UI the profile has (`createDialog` on Remastered; on 1.99 it exists [V doc 35 §8] but its
+  behaviour is [U] until PR07; else `addAction`; else the radio menu).
 - **Balance lab** (§5): 50–500 seeded simulated campaigns under strategic play-tester policies and an editable abstract combat-outcome
   model must show that the pessimistic policy still reaches a finale, ≥ 2 distinct strategies win, and permanent losses happen but
   rarely early.
@@ -366,7 +368,7 @@ Rank comes from a static `mission.sqm` rank or from `loadIdentity` of a versione
 | ID | Sev. | Rule |
 | --- | --- | --- |
 | SL01 | error | Under the pessimistic policy, an op needs more fit soldiers plus reserves than exist (roster death spiral; a special case of CF07) |
-| SL02 | error | The deployed squad is > 11, or the player group would exceed 12 (a silent `createUnit` no-op) |
+| SL02 | error | The deployed squad is > 11, or the player group would exceed 12 (a silent `createUnit` no-op). The cap matches the largest group in official content, 12 units (doc 35 §2.1) [V] |
 | SL03 | warn | More than 3 currencies, 6 facilities, 10 projects or 3 visible cards (management overhead) |
 | SL04 | error | A strategic variable (doom, a currency, Pressure, a soldier status) is not surfaced on turn 1, or not within 2 turns of a change |
 | SL05 | error | A card lacks an "if ignored" disclosure, or its consequence never surfaces within 2 turns on some path |
@@ -627,18 +629,26 @@ CI covers AC01–AC13 and AC18 on synthetic fixtures. AC14–AC17 are opt-in loc
 All probes run as a local-only probe-mission suite on a legal 1.99 install (doc 19 Open question 1). Most also run on Remastered through
 Preview (doc 08) to confirm our reading of the source.
 
+**Existence is settled; these are semantics probes** (doc 35 §8, rc89). Shipped content and a string scan of the 1.99 executable show the
+commands exist [V]. Tier T1 (used by official content, per [`cwa199-observed-commands.csv`](data/cwa199-observed-commands.csv)) covers `createUnit`, the four
+identity and status commands (`saveIdentity`, `loadIdentity`, `saveStatus`, `loadStatus`) and the pool family (`addWeaponPool`,
+`addMagazinePool`, `pickWeaponPool`, `fillWeaponsFromPool`). Tier T2 (used by released community content and present in the executable)
+covers the `createDialog` dialog and list family and `onMapSingleClick`. PR01, PR03, PR07, PR09 and PR10 stay, but they test arguments,
+ordering, return values and side effects, not availability. Existence alone never clears the "unverified on 1.99" badge (§3.1). The
+content does not record which `createUnit` form it uses: one official file makes 11 calls, so PR01 still tests the 5-element form.
+
 | ID | Probe | Gates |
 | --- | --- | --- |
-| PR01 | `createUnit` 5-element form (wiki tag ofp 1.34): are rank and skill applied; does the init-string global capture work; does the unit appear on the briefing Group page and gear screen when created in `init.sqs`; is `LIEUTNANT` the spelling | Roster A, Recruitment |
+| PR01 | Semantics only (existence T1). `createUnit` 5-element form (wiki tag ofp 1.34): are rank and skill applied; does the init-string global capture work; does the unit appear on the briefing Group page and gear screen when created in `init.sqs`; is `LIEUTNANT` the spelling | Roster A, Recruitment |
 | PR02 | `setIdentity`, after `createUnit` or on a pre-placed unit, keeps name, face and voice for the whole mission and leaves rank, xp and skill alone | Roster |
-| PR03 | `saveIdentity`/`loadIdentity`/`saveStatus`/`loadStatus`: return values, `objects.sav` location, whether rank/xp/skill are restored, use in unit init and `init.sqs` | Roster B, Hangar detail |
+| PR03 | Semantics only (existence T1). `saveIdentity`/`loadIdentity`/`saveStatus`/`loadStatus`: return values, `objects.sav` location, whether rank/xp/skill are restored, use in unit init and `init.sqs` | Roster B, Hangar detail |
 | PR04 | `presenceCondition` reads `saveVar`-injected globals, both for non-playable units and for empty vehicles and objects | Roster B, Unlocks, Memorial, Hangar, variant layers |
 | PR05 | `setRadioMsg` with `format` labels and `"NULL"` hiding; repeating radio triggers as a paged menu; leader-only listing | SquadSelection, extraction choices |
 | PR06 | `addAction [title, script]` on the player and on NPCs: contents of `_this`, the 10 m range, how `removeAction` ids behave | Camp stations |
-| PR07 | `createDialog` with a campaign-level class, opened from an action or a trigger; `lbAdd`/`lbSetValue`/`lbCurSel`/`buttonSetAction`/`ctrlSetText`/`lbSetPicture`; Esc; whether SP simulation continues | Terminal |
+| PR07 | Semantics only (existence T2). `createDialog` with a campaign-level class, opened from an action or a trigger; `lbAdd`/`lbSetValue`/`lbCurSel`/`buttonSetAction`/`ctrlSetText`/`lbSetPicture`; Esc; whether SP simulation continues | Terminal |
 | PR08 | `objStatus "HIDDEN"` in `init.sqs` before the briefing; `OBJ_` lines revealed by the finisher show on the debriefing pane | Displays, Memorial |
-| PR09 | `setMarkerType "Empty"` / `setMarkerColor` in `init.sqs` before the briefing map is built; the `onMapSingleClick` payload; whether `forceMap`/`mapAnimAdd` are usable | Ops map |
-| PR10 | `weaponPool = 1` with a `createUnit`'d squad: decrement on Apply; `add*Pool`/`pickWeaponPool` in the finisher; `fillWeaponsFromPool`; duplication of class-default gear. Retry without an autosave re-runs `init.sqs`, then re-applies `weapons.cfg`, whose saved pool overwrites the row (`CWR:UI/DisplayUIMenus.cpp#L1054-L1084`): do its saved unit references reach the re-created units | Loadout |
+| PR09 | Semantics only (marker and map commands T1, `onMapSingleClick` T2). `setMarkerType "Empty"` / `setMarkerColor` in `init.sqs` before the briefing map is built; the `onMapSingleClick` payload; whether `forceMap`/`mapAnimAdd` are usable | Ops map |
+| PR10 | Semantics only (pool family T1). `weaponPool = 1` with a `createUnit`'d squad: decrement on Apply; `add*Pool`/`pickWeaponPool` in the finisher; `fillWeaponsFromPool`; duplication of class-default gear. Retry without an autosave re-runs `init.sqs`, then re-applies `weapons.cfg`, whose saved pool overwrites the row (`CWR:UI/DisplayUIMenus.cpp#L1054-L1084`): do its saved unit references reach the re-created units | Loadout |
 | PR11 | Pool commands in a non-first mission's `init.sqs` apply once, and do not double after restart-from-row (safe by reading: `AddMission` re-reads rows from disk, `CWR:UI/OptionsUI.cpp#L1704-L1711`) | Loadout |
 | PR12 | `debriefing = 0` skips the debriefing; the debriefing Restart exists and drops vars; `lives` semantics | Save semantics |
 | PR13 | A camp self-loop adds no row and keeps the old snapshot; how rows are named when classes share a template (by reading: keyed by class, shown by the template's `briefingName`, `CWR:UI/DisplayUIMenus.cpp#L812-L821`) | Camp, offer lowering |
@@ -680,7 +690,7 @@ Preview (doc 08) to confirm our reading of the source.
 `BohemiaInteractive/CWR@ffc61838b7:tests/unit/engine/Poseidon/AI/test_entity_event_handlers.cpp#L16-L29` (event-handler names) and
 `ofpisnotdead-com/CWR-CE@b67bf3bd62:engine/Poseidon/UI/OptionsUI.cpp#L1900`.
 
-**Repository docs.** Docs 08, 18, 19, 21 §11.6, 23 §4, 25 §4–§11, 26 §1, §5, §8–§10.
+**Repository docs.** Docs 08, 18, 19, 21 §11.6, 23 §4, 25 §4–§11, 26 §1, §5, §8–§10, 35 §2.1 and §8 (consolidation pass).
 
 **Web** (accessed 2026-09-27; fetched unless marked "search").
 
@@ -776,3 +786,16 @@ debriefing Restart button; the AC17 gate adds PR17, PR18 and PR20; `--test-missi
 behaviour (§9); whether Retry's `weapons.cfg` references reach re-created `createUnit` units (PR10); the configured `renegadeLimit`
 (unverified); how a `nil` compare evaluates in a presence condition (unverified); whether `--test-mission` loads a campaign
 `description.ext` [I].
+
+### Consolidation pass (2026-09-27)
+
+- **2026-09-27, correction C35-29 (from doc 35 §10 "Doc 29" and rc89).** §9 gains an "existence is settled" paragraph. PR01, PR03,
+  PR07, PR09 and PR10 are marked as semantics-only probes. The evidence was checked against doc 35 §8.3 (tiers T1 and T2) and against
+  `data/cwa199-observed-commands.csv`, where `createUnit`, the identity and status commands, the pool commands and the PR09 marker and map
+  commands are `observed_legacy_official`, while `createDialog`, the `lb*` commands and `onMapSingleClick` are not. The probes themselves
+  and the AC17 gate are unchanged: all 1.99 *behaviour* stays [U].
+- **2026-09-27, same correction.** SL02 now notes that its cap matches the largest group in official content, 12 units (doc 35 §2.1,
+  §10) [V].
+- **2026-09-27, knock-on edits.** Two TL;DR bullets (the feasibility bullet and the camp-terminal bullet) now separate settled 1.99
+  existence from unverified 1.99 behaviour. Sources list doc 35 §2.1 and §8. The "Standing Orders" / "Drill" rename needed no change here: this doc never mentions the
+  concept manual, the tutorials or doc 33's file.

@@ -23,7 +23,8 @@ against the citation in the same row.
   editing dialogs are separate modal `Display` subclasses loaded by name from **Rsc config classes**
   (`RscDisplayArcadeUnit`, `…Waypoint`, `…Sensor`, `…Marker`, `…Group`, `…Effects`, `RscDisplayIntel`,
   `RscDisplayTemplateSave/Load`); Unit, Waypoint, Trigger, Marker, Effects and Intel also have an
-  `…Simple` twin used in **Easy mode** (Group/Save/Load do not) [V].
+  `…Simple` twin used in **Easy mode** (Group/Save/Load do not) [V]. The twins only drop expert and
+  code fields and add none (§3.2; doc 35 §10) [V].
 - **The Rsc layouts, fonts, colors, icons, string table and all `Cfg*` classes are NOT in the repo** —
   they live in the (non-GPL, APL-SA) game data (`bin/resource.cpp|.bin`, `config.bin`, stringtable).
   Visual accuracy therefore requires reading the user's installed data at runtime [V: P:Asset/Addon/ConfigParsers.cpp#L242-L249, R:README.md#L14-L18].
@@ -35,7 +36,9 @@ against the citation in the same row.
   `OutroLoose` [V: P:UI/Map/UIMapExtDisplay.cpp#L99-L133].
 - `mission.sqm` is written by `ParamArchive` (format version **11**): values equal to their declared
   default are **omitted** (only keys that declare a default, see §3.7), enums are written as **strings**
-  (unknown names on load abort the load), arrays of classes as `items=N; class ItemK` [V].
+  (an unknown name on load fails its key; inside an `ItemN` that failure is only logged, so the item
+  half-loads and the mission still loads, see §3.7 and doc 04 §2.3), arrays of classes as
+  `items=N; class ItemK` [V].
 - 6 editor modes on F1–F6: Units, Groups, Triggers("Sensors"), Waypoints, Synchronize, Markers [V].
   Interaction is double-click-to-insert/edit, click/Ctrl/Shift/rubber-band selection, drag-move,
   **Shift-drag rotate**, drag-to-link (Groups/Synchronize modes), Del, Ctrl+C/X/V clipboard [V].
@@ -132,14 +135,19 @@ IDD numbers: `P:Core/resincl.hpp#L286-L341` (also 202 = clear-confirm, 203 = exi
   `OnChildDestroyed(idd, exit)` reads `_child` and applies it to the template
   (`P:UI/Map/UIMapExtDisplay.cpp#L2021-L2362`). Cancel discards the copy.
 - Because the code only touches controls that exist, the `…Simple` Rsc variants hide fields simply by
-  omitting controls; which fields each Simple variant omits is in game data **[U]**.
+  omitting controls. Which fields they omit is in game data. It was read from the owner's install
+  (doc 35 §10) [V]: the Simple variants drop exactly the expert and code fields and add none. The
+  counts are Unit 9, Marker 5, Trigger 11, Effects 9, Waypoint 11 and Intel 2. Doc 35 names only
+  the Unit fields (§4.4); the other dialogs' dropped field names still have to be listed from the
+  same resource reading. (This was **[U]** before the consolidation pass.)
 
 ### 3.3 Entry points and lifecycle [V]
 
 1. Main menu button IDC 115 → `CreateDisplayEditor` → `DisplaySelectIsland` (IDD 51) listing
    `CfgWorldList` entries whose `.wrp` exists (`P:UI/OptionsUIApp.cpp#L1232-L1237`,
    `P:UI/DisplayUI.cpp#L1193-L1238`). A "Wizard" button there opens the template wizard
-   (`DisplayWizardTemplate`/`DisplayWizardMap`, out of scope here).
+   (`DisplayWizardTemplate`/`DisplayWizardMap`). This code map does not cover it, but it is the
+   reference for our "New mission from template" (doc 35 §5.8).
 2. OK → sets user-missions base dir, `SetMission(world,"")`, `SwitchLandscape(world)` (the **full
    landscape is loaded**), `CreateEditor(this)` → `new DisplayArcadeMap` (`P:UI/OptionsUIApp.cpp#L800-L827`,
    `P:UI/DisplayUIMultiplayer.cpp#L2418-L2421`).
@@ -242,10 +250,20 @@ Invariants maintained by `ArcadeTemplateFind.cpp`:
   arrays are omitted (`ParamArchive.hpp#L380-L381`). Enums are saved as the string names below
   (`ParamArchive.cpp#L484-L511`). Default-valued enums therefore never appear in CWR-written files
   (e.g. waypoint `type="MOVE"`, unit `special="FORM"`, trigger `activationBy="NONE"`), while
-  `side="WEST"` always does. On load, enum names match case-insensitively, and **an unknown enum
-  string fails the whole load with `LSStructure`** (`#L521-L529`). A missing root `version` key also
-  fails the load (`ParamArchive.cpp#L590-L592`). A Rust reader that must be "permissive on unknown values"
-  is deliberately more lenient than the engine here.
+  `side="WEST"` always does. On load, enum names match case-insensitively, and an unknown enum
+  string makes that key return `LSStructure` (`#L521-L529`). **Qualified in the consolidation pass
+  (2026-09-27):** this text used to say the unknown string "fails the whole load". That holds only
+  outside list items. The list loader ignores `SerializeArrayItem`'s return value, and `OnError`
+  only records a context and writes an RPT line. So inside an `ItemN`, an unknown enum (or a
+  missing required key) stops that item's remaining keys from being read. Those keys keep their
+  `Init()` values, and the mission still loads with a half-default item (doc 04 §2.3,
+  `ParamArchive.hpp#L406-L411`; doc 37 §10 design-gap candidate (b)) [V]. A missing root `version`
+  key also fails the load (`ParamArchive.cpp#L590-L592`). Doc 04 §3 refines this: the result
+  depends on the reader. The game's `ParseCutscene` fails the mission, while the editor ignores the
+  result and silently loads nothing. Our validator must flag an in-item unknown enum or missing
+  required key as an error, because the game swallows it (doc 04 §2.3). A Rust reader that is
+  "permissive on unknown values" keeps the token as written instead of dropping the item's
+  remaining keys.
   Defaults in the file format sometimes differ from in-memory `Init()` defaults (see §4 tables) — a
   round-trip-exact writer must use the *serialization* defaults.
 - On save: `ScanRequiredAddons()` (units' `CfgPatches` owners → `addOnsAuto`, merged into `addOns`),
@@ -328,7 +346,7 @@ Title "insert"/"edit" by `_index<0` (`#L809-L821`). Data: `ArcadeUnitInfo` (`P:A
 | IDC | Field → member | Values / range | Default (Init / file) | Code |
 | --- | --- | --- | --- | --- |
 | 102 | Side → `side` | West, East, Resistance, Civilian (+Logic, Empty only if non-playable); **disabled when editing** | WEST / required | `#L824-L874` |
-| 107 | Class (vehicleClass) | distinct `CfgVehicles.vehicleClass` with `scope==2`, side match; empty side excludes Logic & `Man`-derived; types with no driver/gunner/commander seat are excluded for non-empty sides; "Men" first then A–Z; label `STR_DISP_ARCUNIT_CLASS_<NAME>` (CWR-added key [I]) or raw name | — | `#L242-L355` |
+| 107 | Class (vehicleClass) | distinct `CfgVehicles.vehicleClass` with `scope==2`, side match; empty side excludes Logic & `Man`-derived; types with no driver/gunner/commander seat are excluded for non-empty sides; "Men" first then A–Z; label `STR_DISP_ARCUNIT_CLASS_<NAME>` (CWR-added key [V]: the 9 `STR_DISP_ARCUNIT_CLASS_*` keys exist only in Remastered's editor stringtable, doc 35 §10) or raw name | — | `#L242-L355` |
 | 103 | Unit → `vehicle` | `displayName` of matching classes, sorted | "" / required | `#L357-L453` |
 | 104 | Rank → `rank` | Private…Colonel; hidden for Empty/Logic | PRIVATE / "PRIVATE" | `#L899-L914` |
 | 105 | Control → `player` | Non-playable; Player (as commander/driver-or-pilot/gunner); Playable (C/D/G/CD/CG/DG/CDG, "pilot" wording for air); for men just Player/Playable; list depends on seats of the chosen type; the widest combination is stored as `PLAY CDG` | NONPLAY | `#L455-L803` |
@@ -351,6 +369,8 @@ no player yet else non-playable, health/fuel/ammo/presence = 1, placement 0 (`UI
 On OK for a *new* unit: Empty ⇒ goes to `emptyVehicles`; otherwise joins the **nearest same-side group whose leader is
 within 100 m**, else a new group (`ArcadeTemplateFind.cpp#L412-L471`). Non-editable fields also in the
 struct: `markers[]` (random start markers, set via drag), `leader` (computed), `id`.
+Easy mode (`RscDisplayArcadeUnitSimple`) drops 9 fields: rank, special, info age, placement,
+presence, presence condition, name, lock and init. It adds none (doc 35 §10) [V].
 
 ### 4.5 Group dialog (`RscDisplayArcadeGroup`, IDD 40) [V: P:UI/Map/UIArcade.cpp#L1250-L1428]
 
@@ -382,6 +402,7 @@ unit per class entry: `side`, `vehicle`, `rank` (skill from rank), position = cl
 
 Non-dialog members: `position`, `id` (bound unit), `idStatic` (bound building), `synchronizations[]`.
 Enum names: `P:AI/ArcadeTemplate.cpp#L46-L100`, `P:AI/AICenter.cpp#L146-L171`.
+Easy mode drops 11 fields, all expert or code fields, and adds none (doc 35 §10; the count only) [V].
 
 ### 4.7 Trigger dialog (`RscDisplayArcadeSensor[Simple]`, IDD 41) [V: P:UI/Map/UIArcade.cpp#L1430-L1934]
 
@@ -406,6 +427,7 @@ Enum names: `P:AI/ArcadeTemplate.cpp#L46-L100`, `P:AI/AICenter.cpp#L146-L171`.
 
 Non-dialog: `idStatic`, `idVehicle` (set by drag-linking), `synchronizations[]`. Enum names
 `P:AI/ArcadeTemplate.cpp#L149-L203`; defaults `#L446-L562`.
+Easy mode drops 11 fields, all expert or code fields, and adds none (doc 35 §10; the count only) [V].
 
 ### 4.8 Effects dialog (`RscDisplayArcadeEffects[Simple]`, IDD 44) [V: P:UI/Map/UIArcadeMarker.cpp#L350-L1170]
 
@@ -425,6 +447,8 @@ Shared by waypoints and triggers (`ArcadeEffects`, `P:AI/Path/ArcadeWaypoint.hpp
 | 109 | Title effect → `titleEffect` | PLAIN, PLAIN DOWN, BLACK, BLACK FADED, BLACK OUT, BLACK IN, WHITE OUT, WHITE IN | PLAIN |
 | 110/111/112 | Title text / `RscTitles` resource / `CfgTitles >> titles[]` object → `title` | shown by type; empty text ⇒ type NONE | "" |
 
+Easy mode drops 9 fields, all expert or code fields, and adds none (doc 35 §10; the count only) [V].
+
 ### 4.9 Marker dialog (`RscDisplayArcadeMarker[Simple]`, IDD 45) [V: P:UI/Map/UIArcadeMarker.cpp#L18-L348]
 
 | IDC | Field → member | Values | Default |
@@ -439,6 +463,7 @@ Shared by waypoints and triggers (`ArcadeEffects`, `P:AI/Path/ArcadeWaypoint.hpp
 | 108 | Angle → `angle` | float ° | 0 |
 
 Icon size in px = `CfgMarkers >> size` × a/b (`P:AI/ArcadeTemplate.cpp#L762-L798`, `UIMapExt.cpp#L909-L932`).
+Easy mode drops 5 fields, all expert or code fields, and adds none (doc 35 §10; the count only) [V].
 
 ### 4.10 Intel dialog (`RscDisplayIntel[Simple]`, IDD 32) [V: P:UI/Map/UIArcadeWaypoint.cpp#L589-L830]
 
@@ -454,6 +479,7 @@ Icon size in px = `CfgMarkers >> size` × a/b (`P:AI/ArcadeTemplate.cpp#L762-L79
 
 Serialization `P:AI/ArcadeTemplate.cpp#L1474-L1539`. Intel is per section; the notebook date/weather
 widgets follow the current section (`UIMapExtDisplay.cpp#L334-L377`).
+Easy mode drops 2 fields, all expert or code fields, and adds none (doc 35 §10; the count only) [V].
 
 ### 4.11 Load / Save / Merge / Clear / Export [V: P:UI/Map/UIMapExtDisplay.cpp, UIArcadeWaypoint.cpp#L447-L578]
 
@@ -613,8 +639,11 @@ watch CE for bug fixes [I].
 
 ## Open questions
 
-- Exact Rsc layouts (positions, sizes, fonts, colors), toolbox label texts and which fields each
-  `…Simple` dialog omits — need a legally obtained `resource.*` from an install to inspect [U].
+- Exact Rsc layouts (positions, sizes, fonts, colors) and toolbox label texts need a legally
+  obtained `resource.*` from an install to inspect [U]. *Partly answered (consolidation pass,
+  2026-09-27):* which fields each `…Simple` dialog omits is now [V] from doc 35 §10 (see §3.2).
+  Only the Unit dialog's dropped field names are listed; the names for the other five dialogs
+  are still open.
 - Retail CWA 1.99 vs CWR differences in editor defaults (e.g. Easy vs Advanced default, user mission
   folder) — only CWR source was read [U].
 - Does the retail/Steam CWR build accept `--autotest <mission.sqm>` for players (flag is tagged
@@ -727,7 +756,8 @@ authored 2026-07-27 and committed 2026-09-21. The CWR commit "3.05" is dated 202
 - The launch path must be `<name>.<world>/mission.sqm`, and `.pbo` is not dispatched.
 - Added the `--autotest` vs in-editor Preview differences and the `--test-mission` alternative.
 - Clarified which keys are always written, that empty arrays are omitted, and that enum loading is
-  strict (unknown name ⇒ load fails).
+  strict (unknown name ⇒ load fails). The consolidation pass below narrows the strictness to the
+  top level, because items are lenient.
 - Noted that the example default enums are never written by CWR.
 - Corrected line counts (`UIMap.cpp`, `UIContainers.cpp`, `ArcadeTemplateFind.cpp`), the
   `CamEffects.cpp` range, the Easy-mode section-combo citation, and the contour density basis.
@@ -737,3 +767,38 @@ authored 2026-07-27 and committed 2026-09-21. The CWR commit "3.05" is dated 202
 
 **Not re-verified:** retail CWA 1.99 behaviour, runtime behaviour of `--autotest`/`--test-mission`,
 and exact Rsc layouts. These still need game data or a runtime test.
+
+### Consolidation pass (2026-09-27)
+
+Cross-doc corrections applied. Each one was checked against its source doc before it was applied.
+
+- **C35-03 (doc 35 §10, Doc 03 item; doc 35 §5.8).**
+  - Easy-mode `…Simple` omissions went from [U] to [V] in §3.2.
+  - Added per-dialog notes: the Unit field names in §4.4, and counts only in §4.6–§4.10.
+  - The TL;DR now says the twins only drop fields.
+  - The open question is marked partly answered.
+  - `STR_DISP_ARCUNIT_CLASS_*` in §4.4 went from [I] to [V].
+  - §3.3 now names the template wizard as the reference for "New mission from template".
+  - Evidence: doc 35 §10 states the Simple counts [V], and its verification notes confirm that
+    this doc marked the class-name key [I].
+  - Doc 35 lists field names only for the Unit dialog, so the other names remain open (as doc 37
+    open question 8 also notes).
+- **C37-03 (doc 37 §10, design-gap candidate (b); doc 04 §2.3).**
+  - §3.7 and the TL;DR no longer say an unknown enum fails the whole load. It fails its key; inside
+    an `ItemN` the failure is only logged, and the item half-loads with `Init()` values.
+  - Evidence: doc 04 §2.3 [V] and doc 37's engine review ("item-level leniency: return value
+    ignored; `OnError` only records a context, plus an RPT line") [V].
+  - The original sentence is kept, marked as qualified.
+  - A pointer to doc 04 §3 was added for the adjacent missing-`version` sentence, which doc 04
+    finds reader-dependent. This goes slightly beyond the correction as listed, so it is a pointer
+    only and the sentence was not rewritten.
+  - The design-gap request for (b) is still to be filed under `docs/design-gap-requests/` with
+    doc 37's other candidates. That folder does not exist yet, and this pass did not create it.
+  - *Supersedes the bullet above (verification step, 2026-09-27).* The folder now exists
+    (`docs/design-gap-requests/README.md`). Its index treats (b) as a factual correction, already
+    applied here, not as a request; only doc 37's candidate (g) was filed (DG003). Nothing in this
+    doc waits on a design-gap request for (b).
+- **Renames.** This doc has no mention of the concept manual, the live tutorials, doc 33's path
+  or `skills/field-manual`, so it needed no Standing Orders / Drill edits.
+- **Not re-verified here:** the engine source itself. No local clone at the pinned SHAs was
+  available in this pass, so both corrections rest on the [V] findings of docs 04, 35 and 37.

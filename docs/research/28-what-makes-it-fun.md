@@ -21,17 +21,20 @@ One 2018 personal retrospective (Kai Wüest) supplies many reception quotes; it 
 - **The community's craft** converged on four separators between good and bad missions: it reliably ends, the enemy reacts, the
   briefing answers what/why/how, and presentation is short and emotional [I from ~16 OFPEC reviews] (§3).
 - **Research on fun** that holds up: need satisfaction (competence, autonomy, relatedness), flow's clear goals and feedback,
-  failure the player can own, peak-end memory. Pacing waves, interesting decisions and curation are strong practitioner wisdom.
-  Player types and "N kinds of fun" are vocabulary, not science [V] (§4).
+  failure the player can own, peak-end memory. Pacing waves, interesting decisions and curation are strong practitioner wisdom
+  (the "series of interesting decisions" line has an unverified origin [U]). Player types and "N kinds of fun" are vocabulary,
+  not science [V]. Healthy pull is judged by need satisfaction, regret and consent, never by time played (§4, rows from doc 36).
 - **LLM defaults are nearly the inverse of the OFP register**: positive, tidy, explanatory, ornate, verbose, generic, and
   homogeneous across runs [V]. A prompt alone cannot fix that, least of all on 3–9B models [I] (§5).
 - **Most fun levers are spatial or countable** (sightlines, travel time, end conditions, counters, checkpoints, variety), so
   code owns them. The prompt carries only tone, intent and the reasons behind the design [I] (§6).
 - **Principle map:** 69 principles, each with one owner: 29 code-generator, 21 code-lint, 7 prompt-guidance, 12 user-choice-ux
-  (§6.2). It proposes 31 new lints: MC01–MC19 (mission), CF13–CF18 (campaign), TX01–TX06 (text) (§6.3).
+  (§6.2). It proposes 31 new lints: MC01–MC19 (mission), CF13–CF18 (campaign), TX01–TX06 (text), and lists doc 36's
+  provisional MC30, MC31 and TX07 beside them (§6.3).
 - **The embedded prompt is a set of slices**, not an essay: a ~150-word stance card written in the target register, a per-slot
   voice card, 2–3 rotated micro-exemplars and code-supplied seeds (§6.4).
-- **A 9-dimension fun rubric** (1–5 with anchors) ranks candidates and scores evals. Lints admit; judges only rank (§7).
+- **A 9-dimension fun rubric** (1–5 with anchors) ranks candidates and scores evals. Lints admit; judges only rank. Anchor notes
+  from doc 36 are queued for pack v0.2 evaluation, not adopted (§7).
 
 ## 1. The OFP/CWA campaign and mission formula
 
@@ -201,6 +204,9 @@ custom music and addons do not rescue a mission that fails these.
 | Need *frustration* is distinct: constrained playstyle, stagnation, unfair situations, meaningless choices, disconnection | Ballou & Deterding, CHI PLAY 2023 (12 interviews); BANGS scale 2024 | Qualitative, then validated scale | The anti-pattern list in §6 |
 | Only competence frustration predicted ill-being | Tyack & Wyeth, CHI PLAY 2021 (n=148) | Single study | Fairness lints are top priority |
 | Competence-impeding play raised aggression independent of violent content | Przybylski et al., JPSP 2014 (7 experiments) | Well-supported | Grim themes are fine; thwarted competence sours play |
+| Low need satisfaction went with obsessive passion, more play, tension after play and lower enjoyment; high need satisfaction with harmonious passion and energy | Przybylski, Weinstein, Ryan & Rigby, *CyberPsychology & Behavior* 12(5), 2009 | Correlational; abstract only [V-search] | Optimise need satisfaction, never time played |
+| Interrupted tasks: no general memory advantage (Zeigarnik), but a general tendency to resume them (Ovsiankina) | Ghibellini & (Beat) Meier, meta-analysis, 2025 | Meta-analysis [V-search] | Open threads pull players back; close them at natural stopping points |
+| Goal gradient: effort rises as a reward nears and resets after it pays | Kivetz, Urminsky & Zheng, *JMR* 2006 (coffee-card field study) | Field study [V-search] | Staggered tracks between camps; no illusory progress (doc 36 cv01, cv43) |
 | Flow: challenge matched to skill, clear goals, immediate feedback; players' zones differ | Chen, CACM 2007; GameFlow 2005 | Established construct; game models are heuristics | Clear objectives, feedback, user-chosen difficulty |
 | Difficulty alone showed no pooled effect on enjoyment; music did | Caroux & Pujol, IJHCI 2024 (meta-analysis, few studies) | Absence of evidence | "Harder = more fun" is folklore |
 | Pacing waves: Build Up → Sustain Peak (3–5 s) → Peak Fade → Relax (30–45 s); "adjusts pacing, not difficulty"; "structured unpredictability" | Booth, *AI Systems of Left 4 Dead*, 2009 | Practitioner wisdom (co-op shooter) | Mission-scale use is analogy [I] |
@@ -208,7 +214,13 @@ custom music and addons do not rescue a mission that fails these.
 | Value lives in the player's mental model; apophenia supplies story; unseen complexity is wasted | Sylvester, *The Simulation Dream*, 2013 | Design argument | Few, legible systems |
 | Emergent material "will almost always lack story structure" without curation | J. Ryan, PhD 2018 | Well-argued thesis | Record and retell (FP14) |
 | Fun is learning patterns; boredom when exhausted | Koster, 2004 book; 2012 talk | Designer's argument | Teach, then rotate |
-| Interesting decisions: tradeoffs, situational, expressive, with enough information | Meier, GDC 1989 (revisited 2012) | Practitioner | No dominated options |
+| Interesting decisions: tradeoffs, situational, expressive, with enough information | Meier, GDC 2012 ("Good decisions are situational") [V]. The older "series of interesting decisions" line: a GDC talk Meier recalls, year and wording [U]; the 1997 Usenet version is Darren Reid's (doc 36 §3.2) | Practitioner | No dominated options |
+| Removing time pressure lets players set their own learning curve; Meier's real-time Civilization prototype overwhelmed players | Johnson, "Turn-Based Versus Real-Time", 2009 | Practitioner [V] | Strategic picks never under fire (doc 36 cv22) |
+| Interfaces have a teaching level and a reference level; players must be able to track their options at one time | Johnson, "Seven Deadly Sins", 2008 (reprinted 2013) | Practitioner [V] | Teaching and reference layers; few live options |
+| "(total fun) = (meaningful decisions) / (time played)", offered as a heuristic, not a law | Johnson, "When choice is bad", 2013 | Practitioner heuristic [V] | Code does the chores; few weighty picks (FP32) |
+| "Given the opportunity, players will optimize the fun out of a game" | Johnson, "Water Finds a Crack", 2011 | Practitioner [V] | Defaults discourage tedious exploits (doc 36 cv21) |
+| Theme is not meaning: "meaning emerges from a game's rules", its decisions and consequences | Johnson, GDC 2010 "Theme is Not Meaning" (session description) | Design argument [V] | Told consequences need a typed effect (TX07) |
+| Framing: a rest penalty recast as a bonus with "exactly the same" maths was loved | Rob Pardo, GDC 2010, via Shacknews | Practitioner anecdote [V as reported] | Bonus framing for optional modifiers; numbers stay visible (doc 36 cv13) |
 | Meaningful play: outcomes "discernable and integrated" | Salen & Zimmerman, 2003 | Definition | Visible consequences |
 | Acknowledging a choice preserved agency as well as real branching (short text stories) | Fendt et al., ICIDS 2012 | Narrow experiment | Acknowledge every choice |
 | Meaningful choices are consequential, social, moral | Iten et al., CHI 2018 | Mixed-method | Few, weighty choices |
@@ -218,7 +230,12 @@ custom music and addons do not rescue a mission that fails these.
 | Curiosity comes from information gaps; uncertainty sources | Loewenstein 1994; Costikyan 2013; Schell lenses | Theory + wisdom | Anticipation cues |
 | Variety must be perceived: "10,000 bowls of plain oatmeal" | Compton, blog (the Casual Creators paper says 1000, doc 26) | Practitioner | Perceptual differentiation |
 | Choice overload: mean effect "virtually zero", large variance | Scheibehenne et al., JCR 2010 | Meta-analysis | Menu caps justified by weak models, not psychology |
+| Dark pattern: used intentionally against players' best interests and "likely to happen without their consent" | Zagal, Björk & Lewis, FDG 2013 | Definition [V, via Deterding et al.] | No streaks, dailies, grind or nags (doc 36 §4.5) |
+| The dark-pattern concept is "ontologically incoherent", but transparency and regret are fruitful starting points | Deterding, Stenros & Montola, DiGRA 2020 | Critique [V] | Judge pull by regret, consent and transparency |
 | Eight aesthetics; Four Keys; Bartle types; 12 motivations | MDA 2004; Lazzaro 2004; Bartle; Quantic Foundry | Vocabulary | Use to name targets only |
+
+The Johnson, Pardo, 2009 Przybylski, Ovsiankina, goal-gradient, Zagal and Deterding rows come from doc 36 (§1, §3.1, §4.5), which
+holds their fetch status. Doc 36's **[V-search]** (seen only in search results or an abstract) counts as [U] under this file's legend.
 
 **Folklore kept out of the harness [I].** "Fun = dopamine" (not actionable), Bartle types as the audience model for single-player
 campaigns, the 8 aesthetics or 4 keys as validated science, "more branches = more agency", "harder = more fun", "realism = fun",
@@ -356,7 +373,9 @@ heuristic lint, but never a hard dependency on the model obeying.
 ### 6.3 Proposed lints (complement doc 19 C01–C21 and doc 26 CF01–CF12) [I]
 
 Thresholds marked [I] are starting values for playtesting. `Seized by` needs no lint: the typed trigger model for target `Cwa199`
-cannot represent it, and C14 rejects raw commands outside the whitelist.
+cannot represent it, and C14 rejects raw commands outside the whitelist. MC30, MC31 and TX07 are **provisional** codes proposed by
+doc 36 §4.6 and listed here so the mission and text series stay in one table; MC20–MC29 are doc 34's provisional codes. The design
+round assigns final numbers.
 
 | ID | Level | Fires when |
 | --- | --- | --- |
@@ -379,6 +398,8 @@ cannot represent it, and C14 rejects raw commands outside the whitelist.
 | MC17 | warn | A twist card fires with no foreshadowing cue earlier in the mission |
 | MC18 | warn | Missing debrief text for a reachable outcome; climax phase not in the last third [I] |
 | MC19 | warn | Scene over its cap, player squad not secured, scene not skippable, or music scheduled under a sustained firefight |
+| MC30 | info | *Provisional (doc 36).* Static analysis (or the simulator, where it models the mission) finds a win reachable with no player movement or action, for example an END trigger on a timer alone with no reachable loss condition; a timed defence the player can lose is fine |
+| MC31 | warn | *Provisional (doc 36); extends MC08.* An enemy reinforcement or spawn has no earlier announce cue, or a script grants the enemy knowledge of the player without a declared sensor; which commands grant knowledge waits on doc 24's audit [U] |
 | CF13 | warn | A node with no link to the operation goal or previous outcome; protagonist role change without a story reason; untagged tonal outlier |
 | CF14 | warn | The opening mission is the hardest on its path |
 | CF15 | warn | A critical-path capability is held by only one persistent specialist (extends CF07) |
@@ -391,6 +412,7 @@ cannot represent it, and C14 rejects raw commands outside the whitelist.
 | TX04 | warn | Stock-phrase or stock-name list hit (project-authored list) |
 | TX05 | warn | A speaker's signature phrase over its rate; candidates or briefing openings too similar across a campaign |
 | TX06 | info | Heuristic: debrief or epilogue states a moral, or text names emotions instead of showing them |
+| TX07 | info | *Provisional (doc 36).* A generated line claims a consequence ("the villagers will remember") that no typed effect or guard implements (text-mechanic dissonance) |
 
 ### 6.4 The prompt-guidance slice: what the embedded prompt carries [I, proposal-only]
 
@@ -447,6 +469,14 @@ acknowledgement).
 | R7 Consequence and people | Do choices and people matter? | Hollow choices; invisible state; nameless squad | Some echoes; thin characters | Few weighty choices; visible consequences with causes; named people whose fates show | CF04–CF06, C18, C21 |
 | R8 Voice and authenticity | Does the text sound like this war? | Invented facts, anachronism, purple, moralising, stock names | Correct but generic | Plain, specific, era-true, understated, distinct voices, humane | TX01–TX06, CF11 |
 | R9 Respect for time | Is the player's time protected? | 30+ min without a checkpoint; long unskippable scenes; walls of text | One long exposure | Checkpoints per policy; text within caps; short skippable scenes | MC12, MC19, TX01 |
+
+**Queued for design-sensibility pack v0.2 [I, not adopted].** Doc 36 §4.4 proposes rubric notes: R3 at 5 adds "every offered
+option is the best pick in some situation"; R9 at 5 adds "each op ends at a natural stopping point"; a calibration note scores a
+timer or countdown that carries no decision R9 ≤ 3 (it may fit R4 better; doc 36 residual concern 8); the rubric never scores
+session length or return rate. It also proposes lens candidates cv40 (`campaign-arc`: pay-offs in flight and a new back half), cv41
+(`branching-and-consequence`: each option is the best pick in some named situation) and cv42 (`briefing`: the debrief names what was
+settled and the player's pick, and leaves one thing open, nothing after the finale). None of these changes the table above or the
+pack until it passes the evaluation round in `prompts/design-sensibility/EVALUATION.md`.
 
 ## Open questions
 
@@ -525,6 +555,16 @@ Iten et al. (2018), doi 10.1145/3173574.3173915; Juul: <https://jesperjuul.net/t
 Loewenstein (1994), doi 10.1037/0033-2909.116.1.75; To et al. (2016): <https://dl.digra.org/index.php/dl/article/view/793>;
 <https://artificials.ch/lens-6-the-lens-of-curiosity/>; Compton: <https://www.tumblr.com/galaxykate0/139774965871/so-you-want-to-build-a-generator>;
 Scheibehenne et al. (2010): <https://academic.oup.com/jcr/article-abstract/37/3/409/1827647>.
+**Added from doc 36 (consolidation pass, 2026-09-27; fetch status per doc 36 Sources):** Goodfellow on the "interesting
+decisions" quote (2008): <https://flashofsteel.com/index.php/2008/07/07/quote-misquote-cite/>; Johnson, "Turn-Based Versus
+Real-Time" (2009): <https://www.gamedeveloper.com/game-platforms/analysis-turn-based-versus-real-time>, "Seven Deadly Sins":
+<https://www.gamedeveloper.com/business/seven-deadly-sins-of-strategy-game-design>, "When choice is bad" (2013):
+<https://www.gamedeveloper.com/design/when-choice-is-bad-finding-the-sweet-spot-for-player-agency>, "Water Finds a Crack" (2011):
+<https://www.designer-notes.com/game-developer-column-17-water-finds-a-crack/>, "Theme is Not Meaning" (GDC 2010):
+<https://gdcvault.com/play/1012750/Theme-is-Not>; Pardo via Leahy, Shacknews (2010): <https://www.shacknews.com/article/62807/sid-meier-and-rob-pardo>;
+Przybylski et al. (2009), doi 10.1089/cpb.2009.0083; Ghibellini & Meier (2025): <https://www.nature.com/articles/s41599-025-05000-w>;
+Kivetz, Urminsky & Zheng (2006), doi 10.1509/jmkr.43.1.39; Zagal, Björk & Lewis (2013):
+<http://www.fdg2013.org/program/papers/paper06_zagal_etal.pdf>; Deterding, Stenros & Montola (2020): <https://eprints.whiterose.ac.uk/156460/>.
 
 **Mil-sim and LLM narrative:** Hammar & Woodcock: <https://oro.open.ac.uk/68740/3/68740.pdf>;
 <https://en.wikipedia.org/wiki/Tom_Clancy's_Rainbow_Six_(video_game)>; <https://en.wikipedia.org/wiki/Tom_Clancy%27s_Ghost_Recon_(2001_video_game)>;
@@ -546,3 +586,22 @@ Wenger & Kenett: <https://academic.oup.com/pnasnexus/article/5/3/pgag042/8529001
 Fandom (music), TV Tropes, a third-party repost of a mission readme. **Conflicts resolved:** the Ryan et al. page range is 344–360
 per Crossref (one pass read 347–363 from a PDF); the full Next Generation sentence was re-fetched from Wikipedia on 2026-09-27
 after one pass could not find its second clause.
+
+## Verification notes
+
+### Consolidation pass (2026-09-27)
+
+Corrections from doc 36 (§3.2 Misattributions row 1; §5 "Doc 28 and the design-sensibility pack"), each checked against doc 36
+before it was applied. No verified finding was deleted.
+
+- **§4 interesting-decisions row (2026-09-27).** "Meier, GDC 1989 (revisited 2012)" replaced: the 2012 talk stays [V]; the
+  origin of the "series of interesting decisions" line is now [U] (a GDC talk Meier recalls, year and wording unverified), and the
+  1997 Usenet version is credited to Darren Reid. The TL;DR notes the unverified origin.
+- **§4 research rows added (2026-09-27):** Johnson's turn-based calm, two levels, fun per time, "optimize the fun out" and "theme
+  is not meaning"; Pardo's framing; Przybylski et al. 2009; Ovsiankina over Zeigarnik; the goal gradient; Zagal et al. 2013;
+  Deterding et al. 2020. Tags follow doc 36; its [V-search] is read as [U] under this file's legend. Sources added.
+- **§6.3 (2026-09-27):** MC30, MC31 and TX07 added as provisional doc 36 codes, with a note that MC20–MC29 belong to doc 34. The
+  "31 new lints" count in the TL;DR is unchanged, because the three codes are doc 36's.
+- **§7 (2026-09-27):** doc 36's rubric notes and lens candidates cv40–cv42 queued for pack v0.2 evaluation, not adopted.
+- **Rename sweep (2026-09-27):** no "Field Manual", "Boot camp", "Bootcamp" or "Academy" references to our features, and no
+  links to doc 33 or `skills/field-manual`, were found in this file; nothing to rename.

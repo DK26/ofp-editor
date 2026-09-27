@@ -21,6 +21,9 @@ report was checked against a running game: nothing was executed.
 - **Side effect: "autotest" mode [V].** `--test-mission` sets the global `AutoTest` flag. Any SQF/SQS script
   error aborts the game (exit code 2), and mission end, player death or *Abort* quits the process. For a preview,
   "quit returns you to the editor" is fine. Aborting on script errors is harsh but is also useful diagnostics.
+  The abort also covers errors in harness `eval`/`exec` text, so one bad debug-console line or watch expression ends
+  the session; a console that survives its own errors needs a launch that is both non-`AutoTest` and `--no-strict`
+  (design gap, §4.4) [V static].
 - **Live link exists today [V].** `--harness <port|0>` opens a loopback-only TCP server that speaks
   newline-delimited JSON. It supports `eval`/`exec` of SQF, `screenshot`, `query`, key injection and `exit`, and
   emits `ready`/`display` events. The editor can drive a running preview with it: stop, teleport the player,
@@ -48,7 +51,8 @@ report was checked against a running game: nothing was executed.
   4. **P4:** MP preview through a local `PoseidonServer --private` plus a client with `--connect 127.0.0.1`.
   5. **Always:** keep the zero-patch "export and open the game" fallback for legacy 1.99 and unknown builds.
 - **Features that need no engine changes (built by editing a staged copy):** "Preview from camera position"
-  (move the player unit in the staged `mission.sqm`), "Preview Intro/Outro" (swap sections in the staged copy),
+  (move the player unit in the staged `mission.sqm`), "Preview Intro/Outro" (stage the section as `class Intro`
+  beside a group-less `Mission`, so `StartAutoTest` plays it in intro mode; §4.2, corrected from doc 32 §4.3),
   and "Validate mission" (`--check --test-mission`, exit 0 plus the log line `AUTO-TEST SUCCESS`).
 
 ---
@@ -404,20 +408,37 @@ PoseidonGame --test-mission "<stage>/<name>.<World>" --window --no-splash --no-s
   `#L985-L987`), so read the log to tell them apart.
 - **Staged-copy tricks, with no engine change [I]:**
   - *Preview from camera position:* set the player unit's `position[]` in the staged `mission.sqm`.
-  - *Preview Intro / OutroWin / OutroLoose:* copy that section's content into the staged `class Mission` (or
-    empty `Mission`, which triggers the intro fallback in `StartAutoTest`).
+  - *Preview Intro / OutroWin / OutroLoose* [V static; runtime untested] (corrected 2026-09-27 from doc 32 §4.3):
+    stage the section through `StartAutoTest`'s intro fallback, not through `class Mission`. With a `Mission`
+    section that has no groups, `StartAutoTest` initialises `class Intro` in intro mode and opens `DisplayIntro`
+    (`DisplayUIMenus.cpp#L2020-L2034`, `#L2057-L2060`, `#L1225-L1230`).
+    - *Intro:* stage it as-is, next to a group-less `Mission`.
+    - *OutroWin / OutroLoose:* copy the outro into the staged `class Intro` and remove `initintro.sqs` from the
+      stage, because real outros never run it [I]. The stock editor's Preview does run it for outros
+      (`UIMapExtDisplay.cpp#L566-L611`), so doc 32's lint warns when an outro depends on that file.
+    - Empty the staged `OutroLoose` unless the Intro-then-outro chain is being previewed: when the staged Intro
+      ends, the menu re-parses the group-less `Mission` and plays `OutroLoose` (`OptionsUIApp.cpp#L850-L875`).
+    - `StartAutoTest` clears all campaign variables first (`DisplayUIMenus.cpp#L2039`;
+      `engine/Poseidon/AI/AICenter.hpp#L555`), so a campaign-state variant previews only if the staged
+      `initintro.sqs` sets those variables itself.
+    - *Superseded:* the earlier recipe "copy that section's content into the staged `class Mission`". That path
+      runs in arcade mode, where a section without a player unit either fails the single-player consistency check
+      (doc 04 §3.9) or ends at once as "killed" (`engine/Poseidon/World/WorldImpl.cpp#L543-L551`), and radio and
+      effect lifetimes differ [I]. Doc 32 §7 (phase 0) lists this refinement as a design-gap entry for
+      `docs/design-gap-requests/`.
   - *Preview at time/weather X:* edit `class Intel` in the stage.
 - **Validation action ("Check mission loads"):** `--check --test-mission <stage> --nosound [--render dummy]`
   should exit 0 after logging `AUTO-TEST SUCCESS`. Whether the dummy renderer can load a mission is **[I]**,
   not verified. This is the natural "tool" for the AI agent's verify loop.
 - **Caveats:**
   - `AutoTest` aborts the preview on script errors. That is useful for authors, but surprising in a mission that
-    tolerates errors.
+    tolerates errors. It also applies to errors in text sent over the harness (debug console, watches), see §4.4.
   - There is no briefing.
   - `tri*` commands are registered.
   - Never pass `--no-menu-scene`.
   - The engine's staging means edits to scripts during the session are not seen. Use the positional-plus-
-    `--autotest` variant (§2.4 C) to run in place when "edit a script and re-exec it" is wanted.
+    `--autotest` variant (§2.4 C) to run in place when "edit a script and re-exec it" is wanted. That variant
+    also sets `AutoTest`, so it aborts on script errors just the same.
 
 ### 4.3 Option 3: upstream `--preview-mission` / `--edit-mission` patch to CWR-CE (exact hook points)
 
@@ -462,11 +483,26 @@ unaffected **[I]**.
 | Know when the mission is running or has ended | `display` event (46 = mission, 49 = pause), process exit code, stdout `jsonl` logs | [V] building blocks |
 | Stop preview | `{"cmd":"exit"}`, then kill after a timeout (Trident's `kill_after_failure` pattern, `instance.rs#L253-L274`) | [V] |
 | Teleport to editor cursor / "play from here" mid-session | `exec` `player setPos [x, y, 0]` | [V] SQF used in engine tests |
-| Debug console panel (watch expressions, run SQF) | `eval` / `exec` | [V] |
+| Debug console panel (watch expressions, run SQF) | `eval` / `exec` | [V] mechanism; **under `--test-mission` any runtime error in console or watch text aborts the game (exit code 2)**, see the caveat below |
 | Screenshot for thumbnails or AI visual checks | `screenshot{path}` | [V] |
 | Live tweaks (time, weather, spawn) | `exec` `skipTime`, `setOvercast`, `createUnit`, … These are ephemeral: warn that they are not saved to `mission.sqm`. | [I] |
 | Hot reload of `mission.sqm` | Not possible in-process today. Relaunch instead (boot cost unmeasured), or the Option 3 `preview_restart`. | [V] absent |
 | Script hot edit | Re-`exec` a script file edited in place; needs the in-place launch variant because `--test-mission` stages a copy | [I] |
+
+**AutoTest caveat for everything sent over `eval`/`exec` [V static] (added 2026-09-27, from doc 31 §7.4).**
+`--test-mission` sets `AutoTest = true` (`BohemiaInteractive/CWR@ffc61838b7:apps/cwr/Game/GameApplication.cpp#L1703-L1718`,
+same in CE). Harness `eval` runs `EvaluateMultiple`, whose `ShowError` calls `DisplayErrorMessage`, which requests close
+with exit code 2 under `AutoTest` (`engine/Evaluator/express.cpp#L2768`, `#L2988-L3011`;
+`engine/Poseidon/Game/Scripting/ExpressExt.cpp#L146-L165`). So in the P1 launch one runtime error in a console line, a
+watch expression, a teleport or live-tweak snippet, or an agent `eval` ends the whole preview; the positional-plus-
+`--autotest` variant (§2.4 C) behaves the same. `--no-strict` alone does not help, because `--test-mission` itself sets
+`AutoTest`, and `--strict` makes any script error fatal on its own. A tolerant debug session therefore needs a launch
+that is **both** non-`AutoTest` and `--no-strict`: the P3 `--preview-mission` flag (§4.3), or a harness launch without
+`--test-mission`, such as the positional path of §2.4 B plus `--harness 0 --no-strict`, whose playability is **[U]**
+(open questions 2 and 10). Until one exists, the interim is the one doc 32 §4.2 already uses: pre-check generated
+snippets before sending them, and present the session as a "strict preview" (§7). Recorded as a design gap in
+[`docs/design-gap-requests/DG-preview-non-aborting-launch.md`](../design-gap-requests/DG-preview-non-aborting-launch.md);
+doc 31 §5.4 ("Try it", "why didn't this fire?") and §7.4 (console, watches) and doc 32 §4.2 (live shot preview) depend on it.
 
 **Security:** the harness has no authentication, so any local process could send SQF while a preview runs
 [V]. Keep it opt-in, use port 0, and connect immediately, since the backlog is 1 (whether a second client is
@@ -563,7 +599,8 @@ configs (a possible picker prompt) is **[U]**.
 - Do the Steam 3.0x Windows and Linux binaries honour `--test-mission`, `--harness 0`, `--check` and
   `--render dummy`?
 - Does a positional `…/name.Island/mission.sqm` open the in-game editor (static reading) or play the mission
-  (CE #35 member)? If it plays without `AutoTest`, prefer it to `--test-mission` for P1.
+  (CE #35 member)? If it plays without `AutoTest`, prefer it to `--test-mission` for P1. With `--harness 0
+  --no-strict`, does it survive an `eval` error (the non-aborting console of §4.4, open question 10)?
 - Boot-to-mission time on typical hardware.
 - Does `PoseidonGame` start without Steam running?
 - Does the Linux build run outside the Steam runtime?
@@ -583,7 +620,8 @@ configs (a possible picker prompt) is **[U]**.
   - Stage the mission, then launch with `--test-mission <stage folder>` (no trailing separator).
   - Stream `--log-format jsonl` stdout into a **Preview log** panel and map exit codes to messages.
   - Provide a "Validate" button (`--check`).
-  - Preview-from-camera and Intro/Outro previews via stage edits.
+  - Preview-from-camera and Intro/Outro previews via stage edits (§4.2; Intro/Outro go through the intro
+    fallback, not `class Mission`).
 - Zero-change fallback: Option 1, including a legacy 1.99 profile.
 
 **P2: live link.**
@@ -594,6 +632,9 @@ configs (a possible picker prompt) is **[U]**.
   thumbnails and for the AI agent's visual verification tool.
 - The agent's tools (see reports on the harness agent) would get `validate_mission`, `preview_screenshot` and
   `eval_sqf_in_preview`, each gated by user approval.
+- Under the P1 `--test-mission` launch, a runtime error in console, watch or agent `eval` text ends the preview
+  (§4.4). A tolerant console, and features built on it, wait on a non-aborting launch (P3, or the [U] positional
+  harness launch); see the design gap linked from §4.4.
 
 **P3: upstream pull request to CWR-CE.**
 
@@ -601,6 +642,8 @@ configs (a possible picker prompt) is **[U]**.
   tests (§4.3). Reference issue #35 and first discuss the design in the issue.
 - After merge, capability-probe for the flags and prefer them over `--test-mission`. Later add
   `preview_restart` for hot restart.
+- `--preview-mission` without `AutoTest`, launched with `--no-strict`, is also the fix for the debug-console abort
+  (§4.4 caveat and its design gap).
 
 **P4: MP preview.** Local dedicated server plus N clients (§4.5), with slot presets per side and a PvP/JIP
 toggle. Use `--private` always and a sandboxed server `POSEIDON_USER_DIR`.
@@ -613,7 +656,7 @@ before P3.
 | Risk | Likelihood | Mitigation |
 |---|---|---|
 | The official build strips or changes hidden dev flags in a future update | Medium [I] | Capability probe; Option 1 fallback; upstream the documented flags (P3) |
-| AutoTest's abort on script errors frustrates users | Medium | Present it as "strict preview", show the error with its location, and add the tolerant mode after P3 |
+| AutoTest's abort on script errors frustrates users | Medium | Present it as "strict preview", show the error with its location, and add the tolerant mode after P3. The abort also hits debug-console, watch and agent `eval` text (§4.4 caveat; design gap filed) |
 | Staging hides live script edits | Low | In-place variant (§2.4 C) behind a setting |
 | The local harness can be abused by other local processes | Low | Opt-in, loopback only (already enforced), short-lived sessions |
 | GPL contamination by copying Trident or engine code | Medium if careless | Clean-room protocol client, no copied fixtures, licence note in CODE-INDEX.md |
@@ -639,6 +682,11 @@ before P3.
    enabled?
 9. Will CE maintainers accept preview flags, or prefer generalizing `--test-mission` (for example
    `--test-mission-mode play`)?
+10. **Non-aborting debug launch (added 2026-09-27).** Does a harness launch without `--test-mission` (the positional
+    `…/name.Island/mission.sqm` of §2.4 B plus `--harness 0 --no-strict`) play the mission and keep running after an
+    `eval` error? If yes, it gives a tolerant debug console before P3; if not, the console waits for P3 (§4.4 caveat).
+    The shipping default of `--strict` is also unconfirmed: the member default is `false`, but the flag help says it
+    is on in Debug/RelWithDebInfo builds (doc 31 §7.4), so every launch passes `--strict` or `--no-strict` explicitly.
 
 ## Sources
 
@@ -658,6 +706,10 @@ before P3.
 - Mission flow, `OpenEditor`, `StartAutoTest`: `…/engine/Poseidon/UI/DisplayUIMenus.cpp#L911-L1012`,
   `#L1979-L2066`
 - Main-menu mission flow and editor launch: `…/engine/Poseidon/UI/OptionsUIApp.cpp#L800-L827`, `#L944-L969`
+- Intro/Outro staging (§4.2; cited from doc 32 §4.3, not re-read in this pass): `…/engine/Poseidon/UI/DisplayUIMenus.cpp#L1225-L1230`,
+  `#L2020-L2034`, `#L2039`, `#L2057-L2060`; `…/engine/Poseidon/UI/OptionsUIApp.cpp#L850-L875`;
+  `…/engine/Poseidon/AI/AICenter.hpp#L555`; `…/engine/Poseidon/World/WorldImpl.cpp#L543-L551`;
+  `…/engine/Poseidon/UI/Map/UIMapExtDisplay.cpp#L566-L611`
 - In-game editor Preview and save/export: `…/engine/Poseidon/UI/Map/UIMapExtDisplay.cpp#L410-L427`,
   `#L529-L614`, `#L2190-L2264` (CE Preview case at `ofpisnotdead-com/CWR-CE@b67bf3bd62:engine/Poseidon/UI/Map/UIMapExtDisplay.cpp#L452`)
 - Editor display constructor: `…/engine/Poseidon/UI/Map/UIMapExt.cpp#L2883-L2925`
@@ -665,7 +717,9 @@ before P3.
 - Mission path resolution: `…/engine/Poseidon/Game/Mission/MissionPathLoader.hpp#L28-L88`
 - Directory and mission helpers: `…/engine/Poseidon/UI/OptionsUI.cpp#L121-L141`, `#L191-L205`, `#L826-L919`
 - Init scripts: `…/engine/Poseidon/UI/DisplayUI.cpp#L121-L144`
-- Script-error handling under AutoTest: `…/engine/Poseidon/Game/Scripting/ExpressExt.cpp#L146-L175`
+- Script-error handling under AutoTest: `…/engine/Poseidon/Game/Scripting/ExpressExt.cpp#L146-L175`; harness `eval`
+  error path (`EvaluateMultiple` → `ShowError` → `DisplayErrorMessage`): `…/engine/Evaluator/express.cpp#L2768`,
+  `#L2988-L3011` (cited from doc 31 §7.4, not re-read in this pass)
 - Unfocused rendering: `…/engine/Poseidon/Core/Game/GameLoop.cpp#L194-L196`
 - Path resolution: `…/engine/Poseidon/Foundation/Common/GamePaths.cpp#L18-L153`,
   `PlatformPaths_win.cpp#L30-L49`, `PlatformPaths_posix.cpp#L81-L119`
@@ -751,3 +805,32 @@ Adversarial fact-check, 2026-09-26. Static source reading only; nothing was exec
   - The GOG registry-view caveat.
 - **Could not verify:** Steam `-applaunch` (ArchWiki returned access-denied); anything about shipping binaries,
   Steam depots, or runtime behaviour.
+
+### Consolidation pass (2026-09-27)
+
+- **Corrected (from doc 31 §7.4, open question 7 and its engine-review item 8):** §4.4 listed the debug console and
+  watch (`eval` / `exec` [V]) without the caveat that under `--test-mission` (`AutoTest`) any runtime script error,
+  including one in console or watch text, aborts the game with exit code 2 [V static: `GameApplication.cpp#L1703-L1718`;
+  `express.cpp#L2768`, `#L2988-L3011`; `ExpressExt.cpp#L146-L165`]. Added the caveat to the §4.4 table and a paragraph
+  under it, and matching notes in the TL;DR (AutoTest bullet), §4.2 caveats (including the §2.4 C variant), §6 P0,
+  P2 and P3, §7 risks, open question 10 and Sources. The `express.cpp` lines are taken from doc 31 and were not
+  re-read here.
+- **Filed the design gap:** `docs/design-gap-requests/DG-preview-non-aborting-launch.md`. A non-aborting launch must
+  be both non-`AutoTest` and `--no-strict`: the P3 `--preview-mission` flag, or a harness launch without
+  `--test-mission` whose playability is [U]. Doc 32 §4.2 and doc 31 §5.4 ("Try it") and §7.4 (console) depend on it.
+- **Renames checked:** this doc has no references to the concept manual or the live tutorials, so nothing to rename.
+- **Corrected (C32-08, from doc 32 §4.3 and §7 phase 0):** the §4.2 Intro/Outro recipe, "copy that section's content
+  into the staged `class Mission`", is superseded. It now stages an Intro as-is beside a group-less `Mission` (the
+  `StartAutoTest` intro fallback). It stages an outro by copying it into `class Intro` and stripping `initintro.sqs`,
+  empties `OutroLoose` unless the chain is being previewed, and notes that `StartAutoTest` clears campaign variables
+  first. The old recipe stays in §4.2 as a marked superseded item with the reason: the `class Mission` path runs in
+  arcade mode, where a player-less section fails the SP consistency check or ends at once as killed
+  (`WorldImpl.cpp#L543-L551`). The TL;DR "Features that need no engine changes" bullet and the §6 P1 behaviour
+  bullet were updated to match, and the citations were added to Sources. Evidence is doc 32 §4.3 [V] and its
+  engine review note "Staging clears campaign vars and plays OutroLoose after the staged Intro". The line numbers
+  are CWR's and come from doc 32; they were not re-read here, and nothing was run. The design gap is listed in
+  doc 32 §7 phase 0. No design-gap file for this staging refinement exists yet under `docs/design-gap-requests/`,
+  so none is linked; filing one is left to the design-gap step.
+- **Renames re-checked (2026-09-27):** there are no links to `docs/research/33-field-manual-and-live-tutorials.md` or
+  `skills/field-manual`, and no "Field Manual", "Boot camp", "Bootcamp" or "Academy" mentions, so no link or
+  name needed changing.

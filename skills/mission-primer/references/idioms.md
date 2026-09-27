@@ -10,7 +10,7 @@ The 25 script and mission idioms that the game's own 1.99-era missions, campaign
 - **`cwa199`:** every command in the examples appears in that content, so it is tier T1 (doc 35 §8.3). Commands that the gotchas name as absent, ineffective or unused say so where they appear. Seeing a command used proves that 1.99 had it, not how it behaved. Its 1.99 behaviour is assumed from the same code lineage **[I]** unless a line says otherwise.
 - **`cwr` and `ce`:** every command used here is registered in both engines' command tables: `GSE` (CE's lines sit about 2 earlier) or `EVAL:express.cpp`, which is byte-identical in CE (`ofpisnotdead-com/CWR-CE@b67bf3bd62`). Semantics are read from CWR at the pin.
 - **Legend.** Unmarked statements are verified by the count or the cited line. **[I]** marks an inference, **[U]** an open question that needs a Preview probe. "Read from source" means verified by reading the code, not by running it.
-- **Aliases.** `CWR:` = `BohemiaInteractive/CWR@ffc61838b7:engine/Poseidon/`; `GSE#L…` = `CWR:Game/Commands/GameStateExt.cpp#L…` (the command table); `EVAL:` = `BohemiaInteractive/CWR@ffc61838b7:engine/Evaluator/`; `doc NN` = `docs/research/NN-*.md`; "Field Manual `x`" = the field-manual skill's page `x`.
+- **Aliases.** `CWR:` = `BohemiaInteractive/CWR@ffc61838b7:engine/Poseidon/`; `GSE#L…` = `CWR:Game/Commands/GameStateExt.cpp#L…` (the command table); `EVAL:` = `BohemiaInteractive/CWR@ffc61838b7:engine/Evaluator/`; `doc NN` = `docs/research/NN-*.md`; "Standing Orders `x`" = the standing-orders skill's page `x`.
 - **Replacements** are proposal-only designs from docs 19, 29, 31, 32 and 35 §9. Their names are provisional **[I]**.
 
 ## Index
@@ -158,7 +158,7 @@ The 25 script and mission idioms that the game's own 1.99-era missions, campaign
 - **Gotchas:**
   - The delay is one random draw between min and max, bunched around mid, taken each time the condition turns true. Set all three equal for a fixed time.
   - With max below 0.1 s the trigger fires at once, even if min and mid are set.
-  - A Timeout is cancelled when the condition drops; a Countdown fires at expiry anyway. Which dialog label maps to which engine flag is unverified (Field Manual `countdown-vs-timeout`).
+  - A Timeout is cancelled when the condition drops; a Countdown fires at expiry anyway. Which dialog label maps to which engine flag is unverified (Standing Orders `countdown-vs-timeout`).
 - **No-code:** a rule "after N s" or "held for N s" (doc 31 §5.2). A Deadline module announces long timers to the player (doc 35 rc19).
 
 ### I07 Hold a group until a trigger fires
@@ -176,7 +176,7 @@ The 25 script and mission idioms that the game's own 1.99-era missions, campaign
 - **Gotchas:**
   - The group reaches the synced waypoint, then waits, so sync the waypoint *before* the move you want to release.
   - A waypoint with several syncs waits for all of them.
-  - A SWITCH trigger does something else: it jumps the group past its synced waypoint, and backwards if the group already passed it (Field Manual `trigger-end-types`).
+  - A SWITCH trigger does something else: it jumps the group past its synced waypoint, and backwards if the group already passed it (Standing Orders `trigger-end-types`).
 - **No-code:** a rule "THEN release group X", which compiles to exactly this sync (doc 31 §5.3 step 2); the Reinforcements module (doc 31 §4.6 #3); Alarm and Reaction Force (doc 35 rc18).
 
 ### I08 Logic gates (AND/OR waypoints on a game logic)
@@ -192,7 +192,7 @@ The 25 script and mission idioms that the game's own 1.99-era missions, campaign
 
 - **Profiles:** all three. 408 AND/OR waypoints in official content (402 in SP missions, 6 in co-op MP), all in logic groups. 45% of SP missions use them, and seven single missions plus the four training missions run whole timelines on them (doc 35 §2.2, §4). `CWR:UI/Map/UIArcadeWaypoint.cpp#L74-L105`; `CWR:AI/AIArcade.cpp#L309-L369`; `CWR:AI/AICenterImpl.cpp#L786-L807`.
 - **Gotchas:**
-  - The gate's output is the logic's *next* waypoint, so sync the held group there (Field Manual `logic-gates`; read from source, probe pending).
+  - The gate's output is the logic's *next* waypoint, so sync the held group there (Standing Orders `logic-gates`; read from source, probe pending).
   - OR exists only on logic waypoints.
   - Several END triggers with the same number also act as AND.
 - **No-code:** the "Wait for all / any" gate module (doc 35 rc15), or ALL OF / ANY OF in a rule (doc 31 §5.1).
@@ -229,7 +229,7 @@ The 25 script and mission idioms that the game's own 1.99-era missions, campaign
 - **Gotchas:**
   - Slots are numbered 1 (Alpha) to 10 (Juliet); any other number does nothing. The label applies to every trigger on that slot.
   - Hiding a slot with `"null"` is shipped 1.99-era practice, but the hiding itself is confirmed only by reading CWR (doc 31 §4.5) **[I for 1.99]**.
-  - Radio triggers ignore timers (Field Manual `radio-triggers`).
+  - Radio triggers ignore timers (Standing Orders `radio-triggers`).
 - **No-code:** the Player's Call module, which shows the label only while the call is valid, with the compiler's radio allocator (doc 35 rc19; doc 31 §4.5).
 
 ## Unit setup
@@ -288,7 +288,7 @@ The 25 script and mission idioms that the game's own 1.99-era missions, campaign
 - **Profiles:** all three. `moveInCargo` 182 uses (44 files), `moveInDriver` 89, `moveInGunner` 22, `moveInCommander` 15. `GSE#L1316-L1319`; handler `CWR:Game/Commands/GameStateExtUi.cpp#L2795-L2851`.
 - **Gotchas:**
   - Nothing happens, and nothing is reported, when there is no free seat, the unit is not a soldier, or the soldier is not local to this machine.
-  - For a vehicle of the unit's own group, the stock Special "In cargo" does this without code (Field Manual `special-placement`).
+  - For a vehicle of the unit's own group, the stock Special "In cargo" does this without code (Standing Orders `special-placement`).
 - **No-code:** Special "In cargo" for the unit's own group. For an empty vehicle or another group's, a start-seat picker on the unit (a proposal, not yet in doc 31 §3) **[I]**.
 
 ### I14 Wrecks, damage and protected rides
@@ -540,3 +540,10 @@ The 25 script and mission idioms that the game's own 1.99-era missions, campaign
 ## Not in the official content
 
 Official 1.99-era content is pure SQS, with 0 `.sqf` files. It never uses `if`/`then`/`else`, `while`, `private`, `isServer`, `onMapSingleClick`, dialogs or `loadFile`, and uses `addEventHandler` only 3 times (doc 35 §4, §5.7, §8). Community content used some of these (T2), and some exist only as strings in the 1.99 executable (T3). On `cwa199`, probe them in Preview before relying on them. Commands from later titles are listed in the primer's §4.
+
+## Verification notes
+
+### Consolidation pass (2026-09-27)
+
+- 2026-09-27: the concept manual is renamed from Field Manual to **Standing Orders** by owner decision. The alias in Evidence and the five page citations (I06 `countdown-vs-timeout`, I07 `trigger-end-types`, I08 `logic-gates`, I10 `radio-triggers`, I13 `special-placement`) now say "Standing Orders". Page names and findings are unchanged. The skill folder is still `skills/field-manual` until the rename step moves it to `skills/standing-orders`.
+- 2026-09-27 (supersedes the last sentence above): the rename step is done; the folder was moved with `git mv` to `skills/standing-orders`, so the Standing Orders page citations in this file resolve there. No citation text changed.

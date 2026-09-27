@@ -24,9 +24,10 @@ campaigns a first-class thing you can design, not just a folder of missions.
   community patterns, a "when / if / do" rule builder, and a cinematics timeline for camera
   shots and cutscenes, all compiling to readable SQS/SQF that you can inspect and edit. For
   scripters: a mission-aware language service with completions, diagnostics and quick-fixes.
-- **A Field Manual and live tutorials.** Every cryptic concept (Game Logic, synchronisation,
-  "Guarded by", presence conditions, …) explained plainly, with small demos and learn-by-doing
-  exercises checked by the editor itself.
+- **Standing Orders and Drill.** Standing Orders, the built-in concept manual, explains every
+  cryptic concept (Game Logic, synchronisation, "Guarded by", presence conditions, …) plainly,
+  with small demos. Drill, the live tutorials, teaches by doing, with exercises checked by the
+  editor itself.
 - **Addons and mods handled properly.** Mod sets, catalogs that show which mod every unit comes
   from, and mission dependencies derived automatically.
 - **Wilco, an optional AI co-pilot.** Off by default. Bring your own model, cloud or local. It can

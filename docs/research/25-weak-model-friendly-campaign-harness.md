@@ -31,7 +31,8 @@ factions, places, items, events and threads. *T1/T2/T3*: local small / local med
   bounded slots.
 - **Menus beat free generation for weak models.** When every option is valid by construction, a wrong pick is merely *suboptimal*, never
   broken [I]. Offering fewer tools "significantly improves" small-model function calling [V, 2411.15399]; LLMs show position "selection bias" in
-  multiple choice [V, 2309.03882], so menus are short, shuffled, and labelled with neutral letters mapped to real IDs by code.
+  multiple choice [V, 2309.03882], so menus are short, shuffled, and labelled with neutral letters mapped to real IDs by code. More than half
+  of the vanilla Unit dialog's lists are longer than 7, so catalog menus are split into facet steps (side → kind → role group → role) rather than truncated (§6.2).
 - **Constrain the answer, not the thinking.** Constrained decoding raised Llama-3.1-8B task accuracy (GSM8K 80.1% → 81.6–83.8% across four
   engines) in JSONSchemaBench [V, 2501.10868], but strict format constraints can hurt reasoning [V, 2408.02442] and grammars can distort the model's
   distribution [V, 2405.21047]. Remedy: a short free `why` field *before* the answer, small flat schemas, dynamic enums, and an explicit
@@ -240,7 +241,7 @@ points; each ends with a completion gate and an optional user gate.
 | --- | --- | --- | --- | --- | --- | --- |
 | S0 | **Describe**: intake | Free text, installed islands and catalog | `CampaignBrief` | Fill brief fields that the text states, each with a literal quote (Fill) | Check quotes are substrings; resolve islands/sides/eras against the catalog; apply code defaults as visible "assumption" chips; compute questions for missing required fields; flag engine-impossible wishes (e.g. "branch when the player dies", doc 18) with alternatives | All required fields set by user, text or default |
 | S1 | Premise | Brief | `Premise` (logline, protagonist unit, antagonist faction, inciting incident, stakes, tone preset) | Pitch 3 premise cards by filling a premise template; the user picks or rerolls (Fill ×3) | Archetype menus by side/era; lints (length, codepage, anachronism) | User pick, or seeded default |
-| S2 | Story bible | Premise, brief | `StoryBible` rows (§8) | One character/faction/place row per call: name, traits, speech style (Fill); pick a home town from a menu (Pick) | Roster slots from the brief's tier; unit class and rank from catalog menus; places bound to island `Names`; uniqueness | Bible lints clean |
+| S2 | Story bible | Premise, brief | `StoryBible` rows (§8) | One character/faction/place row per call: name, traits, speech style (Fill); pick a home town from a menu (Pick) | Roster slots from the brief's tier; unit class and rank from faceted catalog menus (§6.2); places bound to island `Names`, or to fallback clusters where an island has none (§6.1); uniqueness | Bible lints clean |
 | S3 | **Outline**: skeleton | Brief, bible | Campaign graph: nodes, outcomes, edges, endings (doc 19 §4.2) | Pick a graph shape from a menu; pick a beat per node from a beat menu; name nodes (Pick/Fill) | Shape library parameterised by length and complexity tier (doc 19 §6.8); instantiate; enforce totality (C02/C03), endings (C10), no livelock (C09); prefer shapes with ≤ 7 sockets per mission and show each router the compiler must add (C11/C12: +1 book row, +1 short load, doc 19 §6.2) on the shape card | Lints clean; user approves the Flow view |
 | S4 | State schema | Skeleton, brief features | Declared variables, roster, pools, guards, effects | Pick consequence archetypes (reputation counter, intel flags, squad roster, weapon pool, doom clock) from a menu; fill guard constants inside computed ranges (Pick/Fill) | Declare typed vars (doc 19 §4): guards use `Bool`/`Int`/`Enum`/`Set` only (string `==` is case-insensitive, F3); object/group values are never persisted (doc 18 §7); instantiate guard/effect CXL templates; typecheck (C06), intervals (C17), coverage (C03), `.sqc` growth (C20) | CXL clean; explorer finds every ending reachable |
 | S5 | **Missions**: concept | Node beat, bible digest | `MissionConcept`: site, scene template, conditions | Pick site from the fact-provider menu; pick a compatible scene template; fill enums (time, weather, enemy strength band) (Pick/Fill) | Site menus (§6); template compatibility; map each template outcome to the node's outcomes (menu) | Every node outcome has a template outcome |
@@ -382,7 +383,7 @@ Weak local models benefit *more* from larger K (§2.5), and K costs only local t
 | Provider | Answers | Source | Used in |
 | --- | --- | --- | --- |
 | `catalog.units(side, era, role, kind)` | Class IDs, display names, crew seats, side | User's installed config (doc 04 `ofp-catalog`) + our own `llm` overlay text (doc 17 §7.2) | S2, S5, S6 |
-| `island.places(kind, near, radius)` | Towns and named locations with positions | `CfgWorlds >> world >> Names` (doc 05 §5.2) | S0, S2, S5 |
+| `island.places(kind, near, radius)` | Towns and named locations with positions | `CfgWorlds >> world >> Names` (doc 05 §5.2). Returns **nothing** for Kolgujev and the desert island, which have 0 named places in config [V, doc 35 §2.2; `data/catalog-sizes.csv`]; there it falls back to settlement clusters from building density, labelled by grid and terrain, plus user-named places (doc 35 rc57) [I] | S0, S2, S5 |
 | `island.sites(purpose, near, constraints)` | Candidate sites: road bends, road–water crossings, forest edges, crests from spot heights, flat open LZs, shorelines | WRP heightmap, road objects, forests (doc 05 §5.2) + deterministic terrain analysis; richer analysers may come from plugins (doc 22 §1.2 #5, #7) | S5 |
 | `island.route(a, b)` | Road distance and travel-time estimate | Road graph [U: road connectivity extraction untested] | S3 timeline, S5 |
 | `limits.*` | 7 end codes per mission (more successors cost routers, each a book row and a load); ≤ 7 debrief narratives per mission; player death is unroutable; no campaign vars in chapter cutscenes/outros/awards; `Int` within ±2^24; ≤ 12 crew seats per group; per-side `MaxGroups`; ≤ 10 radio choices, player must lead; text codepage and SQS line limits | Doc 04 (`IsConsistent`), doc 18 §5, §7, doc 19 F2, F6–F11 | All |
@@ -403,8 +404,15 @@ Weak local models benefit *more* from larger K (§2.5), and K costs only local t
 6. **Describe** each option in one line from facts only (no model text), so the menu itself cannot mislead.
 7. **Record** the menu with its seed, so the decision can be replayed and diffed.
 
+**Catalog menus need a facet step.** Step 5's cap cannot be met by truncating a catalog list: 15 of the 27 Side × Class lists in the vanilla
+Unit dialog exceed k ≤ 7 (median 8, max 60 for Empty > Objects) [V, doc 35 §2.2; `data/catalog-sizes.csv`]. `catalog.units` menus are
+therefore split into facet steps, side → kind → role group → role, each ≤ 7 options plus escapes on both the vanilla and CWE catalogs, with
+variants resolved by the brief's era chip or a separate variant Pick (doc 42 §2.4; doc 35 rc33) [V/I]. Farthest-point diversification (step 4)
+stays for sites and other open-ended candidates, where dropping near-duplicates is harmless.
+
 An empty filtered menu is itself a finding: the node's beat cannot be realised here, so the harness offers a different beat or island area
-rather than asking the model to improvise [I].
+rather than asking the model to improvise [I]. An island with no named places is not an empty menu: the `island.places` fallback (§6.1)
+supplies the options.
 
 ## 7. Verifiers, candidate selection and repair
 
@@ -598,6 +606,7 @@ Never: silently retry with a larger or cloud model, hide a failing lint, or clai
 ## Open questions
 
 1. **Menu size:** is k ≤ 7 right for 3–4B models, and does position debiasing by permutation cost more than it gains at K = 3? (E4) [U]
+   Keeping the cap already costs extra facet steps for unit menus (§6.2); E4/E5 should measure whether the added steps lose more than a longer menu would.
 2. **Shape qualification thresholds:** what pass^k per step grants Fill → Compose? Proposal: pass^3 ≥ 0.8 on the step's instrument [U].
 3. **Site analysis quality:** can road-bend, crossing and crest finders be built reliably from WRP data, and which belong in core rather than a
    plugin (doc 22)? Road connectivity for `island.route` is untested [U].
@@ -616,7 +625,8 @@ Never: silently retry with a larger or cloud model, hide a failing lint, or clai
 **Repository docs:** `docs/research/04-mission-data-model-and-formats.md` (IsConsistent, `MaxGroups`); `05-visual-fidelity-and-ui-resources.md`
 §5.2 (island map layers, `Names`); `13-local-inference-in-rust.md` §4; `14-model-selection.md` §2, §4.1, §6, §8; `15-prior-art-ai-content-creation.md`
 §8–§11; `17-iron-curtain-ai-editor-ideas.md` §6–§9; `18-campaign-system-in-engine.md` TL;DR, §5, §7, §8; `19-campaign-designer-ux-and-state-model.md`
-§1 (F2–F11), §4–§8; `22-plugin-system.md` §1.2, §4.2.
+§1 (F2–F11), §4–§8; `22-plugin-system.md` §1.2, §4.2; `35-lessons-from-real-content-and-later-armas.md` §2.2, §9 (rc33, rc57), §10;
+`42-mods-in-generation-and-distribution.md` §2.4; `data/catalog-sizes.csv` (`CfgWorlds.*.named_places`, `editor.unit_dialog.*`).
 
 **Papers (arXiv abstracts fetched 2026-09-26 via arxiv.org / export.arxiv.org; most re-fetched 2026-09-27, see Verification notes):**
 
@@ -683,3 +693,12 @@ Never: silently retry with a larger or cloud model, hide a failing lint, or clai
   2104.08786, 2307.09702, 2411.15100 and the JAMA "rule of three" paper. The dottxt post shows no date ("2024" unconfirmed).
 - **Public rule:** this file names no private or unpublished project, benchmark or coined term (searched 2026-09-27). All design content in
   §3–§11 is [I] and proposal-only; step counts, budgets, menu sizes and token budgets are placeholders for E1–E11.
+
+### Consolidation pass (2026-09-27)
+
+- **2026-09-27, from doc 35 §10 (Doc 25).** §6.1: `island.places` returns nothing for Kolgujev and the desert island (config has 0 named
+  places, `data/catalog-sizes.csv` rows `CfgWorlds.Cain.named_places` and `CfgWorlds.Intro.named_places`) [V]; the provider now names the
+  doc 35 rc57 fallback, and S2 binds places to it. §6.2: 15 of 27 Side × Class unit lists exceed k ≤ 7 (median 8, max 60; rows
+  `editor.unit_dialog.lists`, `lists_over_7`, `list_median`, `list_max`) [V], so a "Catalog menus need a facet step" paragraph adds the
+  side → kind → role group → role facet of doc 42 §2.4 (doc 35 rc33). The TL;DR menu bullet, open question 1 and Sources were updated to match.
+  No earlier finding was removed. No Standing Orders / Drill renames or doc 33 / skill links occur in this file, so none were needed.

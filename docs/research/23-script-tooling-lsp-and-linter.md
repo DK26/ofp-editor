@@ -21,13 +21,13 @@ script text, and lowering of the campaign condition language (doc 19 §5).
   - the result is the union of the matching return types, and an empty union is an error.
 
   This mirrors `VyhCast`. Surrounding it are an independent oracle, differential fuzzing, engine-verdict vectors and a source-completeness scan. [V, §2, §9]
-- **The catalog is not a clean "extracted" table, and nothing in the repo regenerates it.** Against what CWR 3.05 actually registers (555 unique signatures, 524 names; the raw tables list 560/529, but 5 debug rows sit under `#if _ENABLE_CHEATS`, which `PoseidonPCH.hpp` hard-defines to 0):
+- **The catalog is not a clean "extracted" table, and nothing in the repo regenerates it.** Against what CWR 3.05 actually registers outside the `tri*` test modules (555 unique signatures, 524 names; the raw tables list 560/529, but 5 debug rows sit under `#if _ENABLE_CHEATS`, which `PoseidonPCH.hpp` hard-defines to 0; the ungated `tri*` Generic/Getters commands are a separate population, §0):
   - it misses `voiceLanguage`, added in 3.03;
   - it contains 26 signatures the game never registers: two macro artifacts (`commandxxx`, `doxxx`), 19 rows from the **mock** `EvalState.cpp` host used by the standalone evaluator (`diag_log`, `str`, `toArray`, `toString`, `setVariable`, `getVariable`, `enableSimulation`, unary `createVehicle [...]`, …), and 5 compiled-out cheat commands (`DBG_switchLandscape`, `DBG_screenshot`, `diag_drawmode`, `diag_toggle`, `diag_enable`);
   - entries carry no dialect or version tag.
 
   The fork's own CI went red on the 3.05 merge (Test step). [V, §3]
-- **It is not the 1.99 dialect.** The released source is the Remastered engine. It registers Arma-era commands (`for`, `exitWith`, `remoteExec`, `parseSimpleArray`) and accepts Arma 3 `private _x = …` syntax. Per the BI wiki, 38 of its command names were first introduced in OFP: *Elite* (Xbox). Only `find`, `setPosASL` and `getPosASL` of those are also tagged `ofp 1.99`. The fork's "classic 2001 dialect" claim therefore does not hold for `Cwa199`. [V wiki tags; I conclusion, §4]
+- **It is not the 1.99 dialect.** The released source is the Remastered engine. It registers Arma-era commands (`for`, `exitWith`, `remoteExec`, `parseSimpleArray`) and accepts Arma 3 `private _x = …` syntax. Per the BI wiki, 38 of its command names were first introduced in OFP: *Elite* (Xbox). Only `find`, `setPosASL` and `getPosASL` of those are also tagged `ofp 1.99`. The fork's "classic 2001 dialect" claim therefore does not hold for `Cwa199`. A name-string scan of the 1.99 executable agrees: the Elite-only names are absent, and the `ofp 1.99` and 1.85 names are present (doc 35 §8.2). [V wiki tags, V strings; I conclusion and registration, §4]
 - **Editor-field semantics are missing.** The original editor validates each field with one of three check modes:
   - `CheckExecute`: every statement must yield Nothing, and assigning Nothing is an error;
   - `CheckEvaluateBool`: the result must be Bool;
@@ -61,7 +61,7 @@ Engine files in `DK26/CWR@6fd6ca3974` are byte-identical to `CWR@ffc61838b7`: `g
 
 Legend: **[V]** verified against the cited code or a fetched source; **[I]** inferred; **[U]** unknown. Nothing was built or run. Behavioural statements about the fork come from reading its code and tests.
 
-Numbers marked "scan" come from a PowerShell regex pass over the registration macros. It expanded `TABLE_COMMAND`/`TABLE_COMMAND_S`, normalised `MockGame*` to `Game*` and compared `(lowercase name, kind, argument types)` keys. Registration sites: `engine/Evaluator/express.cpp`, `engine/Poseidon/Game/Commands/GameStateExt.cpp` and `engine/Poseidon/World/Scene/SceneDraw.cpp`. `engine/Evaluator/EvalState.cpp` is kept separate as "host"; it is linked into the engine library but its `RegisterEvalCommands()` is called only by `EvaluatorHost` (`EvaluatorHost.cpp#L88`). The `GameStateExt*Test*.cpp`/`ServerTest` files register only `tri*` harness commands and are excluded. Rows inside `#if _ENABLE_CHEATS` (`GameStateExt.cpp#L1173-L1176`, all of `SceneDraw.cpp#L469-L555`) are compiled out: `PoseidonPCH.hpp#L44` defines `_ENABLE_CHEATS 0` unconditionally and is the target's precompiled header (`engine/Poseidon/CMakeLists.txt#L181`). Counts were independently recounted on 2026-09-27.
+Numbers marked "scan" come from a PowerShell regex pass over the registration macros. It expanded `TABLE_COMMAND`/`TABLE_COMMAND_S`, normalised `MockGame*` to `Game*` and compared `(lowercase name, kind, argument types)` keys. Registration sites: `engine/Evaluator/express.cpp`, `engine/Poseidon/Game/Commands/GameStateExt.cpp` and `engine/Poseidon/World/Scene/SceneDraw.cpp`. `engine/Evaluator/EvalState.cpp` is kept separate as "host"; it is linked into the engine library but its `RegisterEvalCommands()` is called only by `EvaluatorHost` (`EvaluatorHost.cpp#L88`). The `GameStateExt*Test*.cpp`/`ServerTest` files register only `tri*` harness commands and are excluded from these counts. Not all of them are gated, though: the Audio module registers only under `--dev`/`--harness`/`--test-mission` (`GameStateExtTestAudio.cpp#L2960-L2966`), but the Generic and Getters modules register with no flag check (`GameStateExtTestGeneric.cpp#L437-L456`, `GameStateExtTestGetters.cpp#L534-L588`; doc 24 §2 counts 17 and 39 registration lines, F1). An ordinary game state therefore also holds `tri*` names such as `triGetCameraEffectActive` (doc 32). The 555/524 counts below are the non-`tri*` game commands, not every name a shipping build registers; the ungated `tri*` population was not recounted per signature here. [V code per docs 24 and 32; I linkage] Rows inside `#if _ENABLE_CHEATS` (`GameStateExt.cpp#L1173-L1176`, all of `SceneDraw.cpp#L469-L555`) are compiled out: `PoseidonPCH.hpp#L44` defines `_ENABLE_CHEATS 0` unconditionally and is the target's precompiled header (`engine/Poseidon/CMakeLists.txt#L181`). Counts were independently recounted on 2026-09-27.
 
 ## 1. What the fork adds
 
@@ -117,7 +117,7 @@ Numbers marked "scan" come from a PowerShell regex pass over the registration ma
 
 | Set | Unique signatures | Unique names |
 | --- | --- | --- |
-| CWR 3.05 game tables as registered (express + GameStateExt; `_ENABLE_CHEATS` rows excluded) | 555 | 524 |
+| CWR 3.05 game tables as registered (express + GameStateExt; `_ENABLE_CHEATS` rows excluded; ungated `tri*` Generic/Getters rows not included, §0) | 555 | 524 |
 | CWR 3.05 raw table rows incl. the 5 cheat-gated rows (2 in GameStateExt, 3 in SceneDraw) | 560 | 529 |
 | CE@b67bf3bd62 game tables as registered (raw: 559 / 528) | 554 | 523 (no public `endGame`; CE renamed it `triEndGame`, harness-only: `CE@b67bf3bd62:engine/Poseidon/Game/Commands/GameStateExtTestAudio.cpp#L2996`; otherwise identical to 3.05) |
 | Mock evaluator host (`EvalState.cpp`) | 72 rows | — |
@@ -172,9 +172,9 @@ Evidence from the BI Community Wiki MediaWiki API (`community.bistudio.com/wikid
 | `private _x = value` shorthand | accepted by `CheckAssignment`/`PerformAssignment`, whose code comment calls it "modern-SQF style" (`express.cpp#L2664-L2699,L2828-L2837`) | Arma 3 idiom [I: not 1.99] |
 
 - **Category sizes** (2026-09-26): "Introduced with Operation Flashpoint version 1.00" has 258 pages, 1.75 has 62, 1.85 has 18, 1.99 has 2 (`getWorld`, `isServer`). The other twelve OFP version categories (1.04 to 1.90) total 43 pages, and the unversioned category holds 16. Categories can include non-command pages. "Introduced with Operation Flashpoint: Elite version 1.00" has 108. [V]
-- **The Elite overlap** (scan against the Elite list): 38 of those 108 names are registered by CWR 3.05, and only `find`, `setPosASL` and `getPosASL` carry an extra `ofp 1.99` tag. The released engine therefore descends from a code line that includes Elite-era commands. A table taken straight from source would let about 35 non-1.99 commands into `Cwa199` output. A tag can sit anywhere in the `gameN` list, so the generator must read all of them, not just `game1`/`game2`. [V tags; I conclusion; must be confirmed on a 1.99 install, §14.3]
+- **The Elite overlap** (scan against the Elite list): 38 of those 108 names are registered by CWR 3.05, and only `find`, `setPosASL` and `getPosASL` carry an extra `ofp 1.99` tag. The released engine therefore descends from a code line that includes Elite-era commands. A table taken straight from source would let about 35 non-1.99 commands into `Cwa199` output. A tag can sit anywhere in the `gameN` list, so the generator must read all of them, not just `game1`/`game2`. [V tags; I conclusion] The owner-local string scan of the 1.99 executable (doc 35 §8.2) agrees: every Elite-only name is absent, `find`, `setPosASL`, `getPosASL` and `getWorld` are present, and the 1.85 names are present [V strings]. A present string proves neither registration nor semantics, so disputed overloads still need probes (§14.1 item 4).
 - **Overload granularity.** Wiki pages list syntaxes as `|sN=` with `|sNsince=` and per-syntax `|pN=`/`|rN=` types. For example, `in` has `s3since=arma3 0.50`, `s4since=arma3 1.96` and `s5since=arma3 2.02`. [V] Availability therefore has to be tracked **per overload**, not per name.
-- **Answers for doc 19 §5.4.** The `[U]` for `in` and `count` in 1.99 now has wiki evidence (`ofp 1.00` for the base syntaxes). A 1.99 probe should still confirm it (§14.3). [V wiki; U runtime]
+- **Answers for doc 19 §5.4.** The `[U]` for `in` and `count` in 1.99 now has wiki evidence (`ofp 1.00` for the base syntaxes). A 1.99 probe should still confirm it (§14.1 item 4). [V wiki; U runtime]
 
 ## 5. SQS and SQF: engine behaviour vs the fork
 
@@ -319,7 +319,7 @@ Crate names follow doc 07 and remain subject to its crate-prefix question.
 3. **Field contexts.** Map `.sqm` keys to check modes following the dialog code (§6). Every `ofp-config` field edit command runs `check_field` before commit. This is the "typed, validated, undoable command" path of AGENTS.md.
 4. **Typed signatures for lowering.** The CXL compiler (doc 19 §5.4) selects overloads from `ofp-script-catalog` by `TypeSet`. It refuses anything outside `Cwa199 ∩ Cwr ∩ Ce ∩ whitelist` (C14). It re-checks every emitted SQS line with `check_field` in the right mode, and emitted text never contains a `:` inside a `?` condition string.
 5. **Catalog correctness.**
-   - Exclude `EvalState.cpp`; record `tri*` harness commands in a separate `harness` table for Preview (doc 08).
+   - Exclude `EvalState.cpp`; record `tri*` harness commands in a separate `harness` table for Preview (doc 08), with a per-row gate flag, because the Generic and Getters rows register ungated (§0; doc 24 F1).
    - Evaluate preprocessor conditionals with the engine's own defines, so `#if _ENABLE_CHEATS` rows (`DBG_*`, `diag_drawmode`/`diag_toggle`/`diag_enable`) are dropped.
    - Expand macros only at use sites; add `voiceLanguage`; fix provenance; key priority by first registration.
 6. **AGENTS.md compliance.**
@@ -358,7 +358,7 @@ The AI repair loop (doc 14 §4.4) needs machine-actionable fields, not prose. Pr
    - category lists "Introduced with Operation Flashpoint version X" and ": Elite version 1.00".
 
    Store only facts (names, versions, syntax skeletons) as a dated JSON snapshot. Wiki prose licensing is **[U]**, so descriptions stay authored. Cross-check against `acemod/arma3-wiki` `dist` YAML (`since.flashpoint`).
-3. **Owner-local 1.99 evidence (opt-in, gated by environment variable, never in CI).** Scan the installed CWA 1.99 executable for the command-name string literals, because registration tables are string literals in the binary. [I] Only the resulting *name list and its hash* is committed. Doc 02 should confirm that this is acceptable. [U]
+3. **Owner-local 1.99 evidence (opt-in, gated by environment variable, never in CI).** Scan the installed CWA 1.99 executable for the command-name string literals, because registration tables are string literals in the binary. [I] Only the resulting *name list and its hash* is committed. Doc 02 should confirm that this is acceptable. [U] A first owner-local run is in doc 35 §8.2: complete recall on the 236 names seen in content, and 142 present / 131 absent among the 273 never-observed registered names. Doc 35 §8.3 proposes evidence tiers (T1–T4) for `Cwa199` availability built on it. [V strings per doc 35; I availability]
 4. **Probe missions** for disputed overloads. A tiny mission per candidate is run by hand on 1.99. Record the verdict with the probe's source. The CWR harness cannot drive 1.99 (doc 08). [I]
 5. **`overrides.toml`:** a manual verdict per `(name, overload)` with an evidence citation. It wins over heuristics and is reviewed like code.
 
@@ -382,19 +382,19 @@ The AI repair loop (doc 14 §4.4) needs machine-actionable fields, not prose. Pr
 
 ## 15. Phasing
 
-1. **P0, catalog:** `xtask catalog` over the CWR snapshots and CE; fix the §3.2 defects; provenance report. Evidence: drift test green, completeness equal to the scan (555/524 registered for 3.05; 554/523 for CE@b67bf3bd62).
+1. **P0, catalog:** `xtask catalog` over the CWR snapshots and CE; fix the §3.2 defects; provenance report. Evidence: drift test green, completeness equal to the scan (555/524 non-`tri*` registrations for 3.05; 554/523 for CE@b67bf3bd62), with the ungated `tri*` rows counted in the `harness` table (§0).
 2. **P1, parity checker:** port the lexer and checker into `ofp-script` with an AST, check modes and the `SqsFile` model; port the fork's 92 tests where they still apply plus upstream vectors. Evidence: parity tests per §6 rules 1-5, SQS boundary tests.
 3. **P2, dialects:** wiki snapshot, overrides and the optional 1.99 name scan; `Requires:` badge; glue whitelist wired into the CXL compiler.
 4. **P3, AI and UX:** diagnostic schema v1 in the agent's `validate_script` tool, hover and completion in the in-app script editor, optional `ofp-script-lsp`.
 
 ## Open questions
 
-1. **1.99 command set.** Does the CWA 1.99 executable contain `createGroup`, `createTrigger`, `setDate` or other Elite-tagged names? The wiki says no for 35 of the 38 (§4; it tags `find`, `setPosASL` and `getPosASL` as 1.99), and only an install scan or probe can settle it.
+1. **1.99 command set.** Does the CWA 1.99 executable contain `createGroup`, `createTrigger`, `setDate` or other Elite-tagged names? The wiki says no for 35 of the 38 (§4; it tags `find`, `setPosASL` and `getPosASL` as 1.99), and only an install scan or probe can settle it. **Answered as far as a string scan can** (doc 35 §8.2, §10): the Elite-only names, including `createGroup`, `createTrigger` and `setDate`, are absent from the 1.99 executable, the `ofp 1.99` names are present, and the 1.85 names are present, exactly as the §4 wiki tags say [V strings; I registration]. Still open: registration and semantics of the present names, which need probes (§14.1 item 4).
 2. **Check-mode locals.** Code reading says a bare `_x` in an editor field raises `EvalNamespace`, because the base context has no local space (§6). A probe should confirm this. What an unset `_x` yields when a space exists (`express.cpp#L183-L193`) is still open.
 3. **1.99 check semantics.** Did 1.99's `CheckExecute` already require Nothing-typed statements and reject top-level `,`, or are these CWR changes? The released source has no 1.99 history.
 4. **Wiki data licence.** Can we commit a factual snapshot (names, versions, syntax skeletons) from the BI wiki or `acemod/arma3-wiki`'s data branch?
 5. **Undocumented commands.** Are `boolEq`, `substr`, `sizeofstr`, `isJIP`, `serverPause`, `publicExec` and `VBS_*` CWR-era additions or older undocumented commands? This affects the `Cwr` minimum version.
-6. **Harness commands.** Should the `tri*` commands (registered only with `--dev`, `--harness` or `--test-mission`; `GameStateExtTestAudio.cpp#L2960-L2966`) appear in a Preview-only profile?
+6. **Harness commands.** Should the `tri*` commands appear in a Preview-only profile? The Audio module's commands register only with `--dev`, `--harness` or `--test-mission` (`GameStateExtTestAudio.cpp#L2960-L2966`), but the Generic and Getters modules register with no gate (§0; doc 24 F1), so those are probably reachable from ordinary missions [I linkage]. The checker must also decide whether ungated `tri*` names in mission scripts are accepted, warned on or rejected.
 7. **Fork disposition.** After P1, should the owner fix or archive `DK26/CWR/lsp` (stale README counts, red CI)? Should the vendor-neutral agent skill be re-pointed at our checker?
 
 ## Sources
@@ -417,7 +417,7 @@ Pinned code (aliases in §0):
 - **Editor dialogs:** `CWR@ffc61838b7:engine/Poseidon/UI/Map/UIArcade.cpp#L1103-L1125,L1714-L1750`; `…/UI/Map/UIArcadeWaypoint.cpp#L331,L343`; `…/UI/DisplayUIMenus.cpp#L1661,L1747`.
 - **Tools:** `CWR@ffc61838b7:apps/tools/Evaluator/Cli/main.cpp#L8,L38-L59`; `CWR@ffc61838b7:apps/tools/Tools/commands/LintCommand.cpp#L100-L141`; upstream tests `CWR@ffc61838b7:tests/unit/{engine,apps}/Evaluator/*.cpp` and `tests/fixtures/**`.
 - **Releases and CE:** release commits `fdc9596` (3.01), `a15f184` (3.03, adds `voiceLanguage`), `ffc6183` (3.05), and the 3.01→3.05 diff of `GameStateExt.cpp`/`GameStateExtUi.cpp`; `CE@b67bf3bd62:engine/Poseidon/Game/Commands/{GameStateExt.cpp#L906, GameStateExtTestAudio.cpp#L2996}`.
-- **Related research:** docs 02, 03, 04 §8, 07 §11/§17, 08, 14 §4.4, 18, 19 §5.
+- **Related research:** docs 02, 03, 04 §8, 07 §11/§17, 08, 14 §4.4, 18, 19 §5, 24 §2 (F1, ungated `tri*` modules), 32 (Verification notes, `triGetCameraEffectActive`), 35 §8.2-§8.3 and §10 (1.99 string scan).
 
 Web sources, fetched 2026-09-26:
 
@@ -469,4 +469,11 @@ Adversarial fact-check, 2026-09-27, against the same pinned clones (`CWR@ffc6183
 - There are 26 upstream Evaluator test files, not 25.
 - `~t` is executed as an assignment, not evaluated directly.
 
-**Still unverified.** Whether other CI tests failed (the logs need auth). The runtime behaviour of `_x` in editor fields. Anything about the 1.99 executable. Wiki and `acemod` data licensing. The "Arma 2+" `distance` hint. That no Elite-overlap page other than `getPosASL` carries a trailing `ofp` tag, which rests on model-summarised API output and deserves a scripted re-check when the generator is built.
+**Still unverified.** Whether other CI tests failed (the logs need auth). The runtime behaviour of `_x` in editor fields. Anything about the 1.99 executable (superseded in part: name-string presence was scanned in doc 35 §8.2; registration and semantics remain unverified). Wiki and `acemod` data licensing. The "Arma 2+" `distance` hint. That no Elite-overlap page other than `getPosASL` carries a trailing `ofp` tag, which rests on model-summarised API output and deserves a scripted re-check when the generator is built.
+
+### Consolidation pass (2026-09-27)
+
+- 2026-09-27: applied doc 35 §10 (evidence in doc 35 §8.2). Open question 1 is marked answered as far as a string scan can: Elite-only names absent from the 1.99 executable, the `ofp 1.99` and 1.85 names present, as the §4 wiki tags say [V strings; I registration]. The TL;DR dialect bullet, the §4 Elite-overlap bullet, §14.1 item 3 and "Still unverified" now point to it. Registration and semantics stay open.
+- 2026-09-27: applied doc 32's Verification notes ("Still open or risky"), cross-checked with doc 24 §2 and F1. `tri*` getters such as `triGetCameraEffectActive` register without the dev gate, so the 555/524 count is now labelled as non-`tri*` in the TL;DR, §0, the §3.2 table and §15 P0; §13.3 item 5 adds a per-row gate flag to the `harness` table; open question 6 no longer says that every `tri*` command is flag-gated. Nobody has recounted the ungated population per signature; doc 24 counts 17 + 39 registration lines. Its line range differs between docs (doc 32 `#L534-L572`, doc 24 `#L534-L588`); §0 cites doc 24's module range.
+- 2026-09-27: fixed two cross-references. §4 pointed to §14.3 (Maintenance) for the 1.99 install scan and probes; these live in §14.1 items 3-4.
+- 2026-09-27: checked the doc for the Field Manual / Boot camp / Academy feature renames and the `docs/research/33-…` / `skills/field-manual` links. The doc has none, so nothing changed.

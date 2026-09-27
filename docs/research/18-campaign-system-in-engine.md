@@ -22,7 +22,8 @@ docs but not run. **[U]** = unknown, needs a test. **[W]** = community or web do
   at once (AND). `LOOSE` wins over `END1`, which wins over `END2`, and so on **[V]** (`CWR:World/WorldImpl.cpp#L500-L665`,
   `CWR:UI/DisplayUIMenus.cpp#L984-L986`, `CWR:Game/Commands/GameStateExt.cpp#L1000-L1008`).
 - **Player death cannot be routed.** A dead SP player produces `EMKilled`, which leads to the Retry/Load/Quit dialog, not a transition **[V]**.
-  A mission file with no groups (a cutscene-only "mission") always takes the `lost` edge **[V]** (`CWR:UI/OptionsUIApp.cpp#L860-L875`).
+  `exit.sqs` does not run on death either (§5) **[V]**. A mission file with no groups (a cutscene-only "mission") always takes the `lost`
+  edge **[V]** (`CWR:UI/OptionsUIApp.cpp#L860-L875`).
 - **`saveVar "name"` is the global campaign state.** It copies a *global* variable into an in-memory campaign table. That table is re-injected as
   globals at the start of every later mission (before unit inits and `init.sqs`) and in mission intros (there only *after* the intro's unit init
   lines, before `initintro.sqs`). Scalars, bools, strings, sides and nested arrays serialize well. Object and group
@@ -35,8 +36,8 @@ docs but not run. **[U]** = unknown, needs a test. **[W]** = community or web do
   `saveStatus`/`saveIdentity` write one unversioned `objects.sav` per campaign. That file is never reverted, and it is not even cleared when a new
   campaign playthrough starts **[V]**.
 - **Several code paths do not see campaign state [V].** Chapter cutscenes, outros and award cutscenes wipe globals without reloading campaign
-  vars. The debriefing "Restart" path re-inits the mission without re-injecting campaign vars, which looks like a bug. Put state-dependent
-  cinematics in mission `Intro` sections or in router missions.
+  vars (and CWR's award selection never picks an award at all, §2 and §4). The debriefing "Restart" path re-inits the mission without
+  re-injecting campaign vars, which looks like a bug. Put state-dependent cinematics in mission `Intro` sections or in router missions.
 - **MP campaigns do not exist in this engine.** The dedicated server only runs a flat rotation list **[V]**.
 - **CWR-CE does not change campaign logic at the pinned SHAs.** The campaign files are byte-identical or differ only in unrelated UI/download
   code **[V]**.
@@ -76,7 +77,7 @@ The engine reads the keys below. Anything else is ignored, which is why extra ke
 | --- | --- | --- | --- |
 | root | `weaponPool` | Boolean at the **top level** (not inside `class Campaign`). It gates only briefing gear selection from the pool, `fillWeaponsFromPool`, and saving the leftover pool after gear selection. The pool itself is carried forward regardless | **[V]** `CWR:UI/Map/UIMapDisplay.cpp#L468-L477`, `#L532-L536`, `#L1132-L1144` |
 | root | `exitScore` | If present and the campaign score is `<= exitScore` when a mission ends, the campaign ends. Skipped for missions with `noAward` | **[V]** `CWR:UI/OptionsUI.cpp#L1905-L1923` |
-| root | `class Awards` / `class Penalties` | Children have `limit` plus one cutscene per island (`<worldname> = "<mission>.<island>"`). When the score falls, the unplayed qualifying penalty with the lowest `limit` plays. When it rises, every qualifying award is marked played but, as coded, **none is selected** (`best` starts at `INT_MAX` and the test is `limit > best`), so no award cutscene plays in CWR. Played ones are remembered | **[V by reading]** `CWR:UI/OptionsUI.cpp#L1756-L1892` (award loop `#L1843-L1888`). Runtime and 1.99 parity **[U]** |
+| root | `class Awards` / `class Penalties` | Children have `limit` plus one cutscene per island (`<worldname> = "<mission>.<island>"`). When the score falls, the unplayed qualifying penalty with the lowest `limit` plays. When it rises, every qualifying award is marked played but, as coded, **none is selected** (`best` starts at `INT_MAX` and the test is `limit > best`), so no award cutscene plays in CWR. Played ones are remembered | **[V by reading]** `CWR:UI/OptionsUI.cpp#L1756-L1892` (award loop `#L1843-L1888`); doc 35 §3.4 reads the same bug, so 1985's authored awards never play in CWR. Runtime and 1.99 parity **[U]** |
 | `Campaign` | `name` | Title in the campaign menu | **[V]** `CWR:UI/OptionsUIImpl.cpp#L1041` |
 | `Campaign` | `firstBattle` | Chapter class to start in. If it is empty, the campaign silently does not start | **[V]** `CWR:UI/OptionsUIApp.cpp#L350-L384` |
 | chapter | `firstMission` | The **only** entry point of a chapter. It is used at campaign start and on every chapter transition | **[V]** `CWR:UI/OptionsUI.cpp#L1985`, `CWR:UI/OptionsUIApp.cpp#L559-L566` |
@@ -131,8 +132,9 @@ StartMission ─► DisplayIntro(mission Intro; loads campaign vars; initintro.s
                               └─ groups ─► SwitchLandscape; load campaign vars; InitVehicles (unit inits, init.sqs)
                                   ─► briefing.html? DisplayGetReady : DisplayMission (AddMission → history row + snapshot)
   ─► mission runs ─► end mode set (triggers) ─► exit.sqs(_this = code) ─► IDD_MISSION
+     (player killed: EMKilled ─► onPlayerKilled.sqs? ─► RscDisplayMissionEnd; no exit.sqs, no transition, §5)
   ─► debriefing (unless description.ext debriefing=0) ─► Outro (OutroWin / OutroLoose)
-  ─► IDD_OUTRO: CheckAward (unless noAward) ─► NextMission(code)
+  ─► IDD_OUTRO: CheckAward (unless noAward; in CWR only penalties are ever selected, §2) ─► NextMission(code)
 ```
 
 | Step | Code |
@@ -168,8 +170,12 @@ Consequences:
   (`CWR:UI/OptionsUI.cpp#L1122-L1127`) **[V]**.
 - If `EMKilled` ever reaches `NextMission` (possible only when `lives = 0`), the `switch` has no case for it. The same mission is re-selected and is
   marked "completed" **[V by reading, runtime U]**.
-- Several mission classes may share one `template`. The engine only reads the string **[I]**. One physical router folder can therefore serve many
-  campaign nodes, each with its own end mapping.
+- Several mission classes may share one `template`. The engine only reads the string **[I]**. Field evidence now backs this: community dynamic
+  campaigns point three classes at one template and use the graph as a router **[V in community content]** (doc 35 §6.3, §10). One physical
+  router folder can therefore serve many campaign nodes, each with its own end mapping.
+- **Awards never fire in CWR.** `CheckAward` runs after the outro, but the award loop starts `best` at `INT_MAX` and tests `limit > best`, so it
+  never selects an award; only penalties play (§2; doc 35 §3.4 reads the same code) **[V by reading; runtime and 1.99 U]**. Generated
+  campaigns must not depend on award cutscenes.
 - **Recommendation: use one engine chapter for the whole graph by default.** That makes any-to-any mission edges legal. Editor "acts" can then be
   cosmetic; map them to real chapters only where a chapter cutscene is wanted and the act is entered at its first mission.
 
@@ -189,7 +195,9 @@ Consequences:
   (`CWR:Game/Commands/GameStateExt.cpp#L1000-L1008`, `CWR:Game/Commands/GameStateExtUi.cpp#L1729-L1735`, `CWR:World/World.hpp#L428-L448`).
   Biki calls `titleCut` obsolete in favor of `cutText` **[W]**; the layer used by the 1.99 binary is **[U]**.
 - `exit.sqs` in the mission folder runs at close with `_this` = code (0 = lost, 1..6 = endN). It gets a single `SimulateScripts()` call **[V]**
-  (`CWR:UI/DisplayUIMenus.cpp#L987-L994`). So it should be straight-line code with no delays **[I]**.
+  (`CWR:UI/DisplayUIMenus.cpp#L987-L994`) with no line limit, so several straight-line statements do complete (doc 35 §3.3) **[V by reading;
+  runtime U]**. So it should be straight-line code with no delays **[I]**. It does **not** run when the player is killed: the `EMKilled`
+  branch (`CWR:UI/DisplayUIMenus.cpp#L966-L981`) opens the mission-end dialog instead (doc 35 §3.3) **[V]**.
 - **There is no script command that picks an ending.** `endMission` and `failMission` are not registered (Biki lists `endMission` as an Arma 2-era
   command **[W]**). CWR's `endGame` (renamed `triEndGame`
   in CWR-CE) is an automation "quit app" command, not a campaign ending **[V]** (`CWR:Game/Commands/GameStateExtWorld.cpp#L787-L803`,
@@ -197,8 +205,8 @@ Consequences:
 - **How a script picks an ending:** use condition-only triggers such as `cmpEnd == 3` with type `END3`, and `forceEnd` in On Activation.
 - **Player death:** the game shows the `RscDisplayMissionEnd` screen (Retry/Load/Quit). If `scripts\onPlayerKilled.sqs` exists, it runs first and
   must call `enableEndDialog` **[V]** (`CWR:UI/DisplayUIMenus.cpp#L966-L981`, `CWR:World/Entities/Infantry/SoldierOldMove.cpp#L1068-L1086`).
-  A "death branch" is impossible. To branch on failure, route it through a `LOOSE` trigger while the player is still alive (for example "squad
-  wiped", or "objective failed"). Respawn is not a way out in SP: outside `GModeNetware` the respawn mode is hard-wired to `RespawnNone`
+  `exit.sqs` does not run. A "death branch" is impossible. To branch on failure, route it through a `LOOSE` trigger while the player is still
+  alive (for example "squad wiped", or "objective failed"). Respawn is not a way out in SP: outside `GModeNetware` the respawn mode is hard-wired to `RespawnNone`
   **[V]** (`CWR:World/Entities/Infantry/SoldierOldMove.cpp#L1026-L1029`).
 
 ## 6. Persistence mechanisms
@@ -341,7 +349,8 @@ The pool is stored on the **current history row** (`MissionHistory.weapons/magaz
 | At most 7 outgoing edges per mission class (`lost`, `end1..6`) | [V] | Chain router missions (7^depth leaves) |
 | Transition targets are static: no conditions or expressions in the campaign classes. The campaign description.ext is re-parsed at every `NextMission` (`CWR:UI/OptionsUI.cpp#L1896`, `#L777-L794`), and CWR's parser does support `__EVAL(...)`/`__EXEC(...)` against the global game state (`CWR:IO/ParamFile/ParamFile.cpp#L1703-L1733`, `#L1805-L1808`; `CWR:IO/ParamFile/ParamFileEval.cpp#L121-L129`). But a string result comes back via `GetText()` with embedded quotes, so it cannot name a mission class, and 1.99 support is unknown | [V] no conditions; [I] `__EVAL` unusable for targets | Decide in script, then pick one of the 7 codes |
 | Mission-level edges must stay in the same chapter. Cross-chapter edges land on `firstMission` | [V] | A single engine chapter, or a router as each chapter's `firstMission` |
-| Death (`EMKilled`) is not routable | [V] | A `LOOSE` trigger while the player is alive (SP respawn is hard-wired off, §5) |
+| Death (`EMKilled`) is not routable and runs no `exit.sqs` | [V] | A `LOOSE` trigger while the player is alive (SP respawn is hard-wired off, §5) |
+| Award cutscenes are never selected in CWR (penalties are) | [V by reading; 1.99 U] | Never depend on `Awards` (doc 35 rc80); put reward beats in a mission `Intro` or a cutscene node |
 | Campaign arrays alias in memory; in-place `set` bypasses `saveVar` and corrupts the row snapshot | [V by reading] | Copy-then-assign only (§6.1 gotcha 4) |
 | `END<n>` needs **all** `END<n>` triggers active. Lower number wins on ties | [V] | Generate exactly one trigger per code, driven by `cmpEnd` |
 | No script command to end with a specific code in 1.99-era script | [V] | Condition-only triggers plus `forceEnd` |
@@ -374,7 +383,7 @@ The compiler lowers each guard into engine primitives.
 - **Guards can read both global and mission state**, because campaign vars are ordinary globals inside the mission.
 - Covers most designs when a mission has 7 or fewer distinct successors. It costs no UX.
 - A commit-only fallback in `exit.sqs` catches endings not raised through the finisher. That is only for bookkeeping, e.g.
-  `cmp_lastEnd = _this; saveVar "cmp_lastEnd"`.
+  `cmp_lastEnd = _this; saveVar "cmp_lastEnd"`. `exit.sqs` does not run on player death (§5), so this fallback commits nothing on a death.
 
 ### 8.2 Pattern B: zero-gameplay router missions
 
@@ -469,9 +478,12 @@ show that router UX hurts. Keep generated content 1.99-clean always.
 
 ## 10. How the community did it [W]
 
-- **1985 (CWC)** used the 7-code table for branching. After "Montignac Must Fall", success leads to "After Montignac" (a scripted
-  withdrawal) and failure leads to "Strange Meeting"; both paths rejoin at "Rescue" (corrected 2026-09-27 per the doc 26 fact-check,
-  which cites a GameRevolution walkthrough and a Bohemia forum thread). Early squad deaths did not persist ("they just reappear").
+- **1985 (CWC)** used the 7-code table for branching. "Montignac Must Fall" ends in a scripted reversal whatever the player does, and
+  its successor depends on how the player leaves the town (the exit route), not on whether the assault succeeded: END1 leads to a
+  lone-escape mission and the other codes to a different one ("After Montignac" and "Strange Meeting"); both paths rejoin at "Rescue"
+  (doc 35 §3.1, §3.5, §10, read from the shipped campaign files). This supersedes the success/failure reading applied here earlier on
+  2026-09-27 from the doc 26 fact-check (a GameRevolution walkthrough and a Bohemia forum thread); see the consolidation pass below.
+  Early squad deaths did not persist ("they just reappear").
 - **Resistance (1.75)** introduced persistent team casualties, the weapon pool, `saveStatus`/`loadStatus`, and `saveIdentity`/`loadIdentity`.
   Known issues:
   - pool commands failed in some missions on 1.75 (fixed in 1.85+);
@@ -499,7 +511,7 @@ show that router UX hurts. Keep generated content 1.99-clean always.
    - empty-value syntax (`key = ;` vs `""`);
    - `forceEnd` with an active BLACK FADED title, and whether 1.99's `titleCut` uses the cut or the title layer;
    - the `WIN` alias;
-   - whether award cutscenes ever play (the CWR award-selection loop never selects one, §2);
+   - whether award cutscenes ever play (the CWR award-selection loop never selects one, §2; doc 35 open question 6);
    - whether 1.99 parses `__EVAL` in a campaign description.ext;
    - the array-aliasing behavior of `saveVar` plus in-place `set` (§6.1 gotcha 4).
 
@@ -508,7 +520,8 @@ show that router UX hurts. Keep generated content 1.99-clean always.
    **[U]**?
 3. Does 1.99 skip `AddMission` history rows or store them identically? Where does 1.99 keep `.sqc` and `objects.sav` **[U]**?
 4. Which unit-status fields beyond those listed (fuel, ammo per vehicle class) round-trip through `saveStatus` **[U]**?
-5. Does `exit.sqs` run to completion within one `SimulateScripts()` call when it has several statements **[I]**? Needs a test.
+5. Does `exit.sqs` run to completion within one `SimulateScripts()` call when it has several statements **[I]**? Needs a test. Partly
+   answered by reading: the call has no line limit (doc 35 §3.3); a runtime Preview check on 1.99 remains **[U]**.
 6. Should editor "acts" become real engine chapters (chapter cutscene, book grouping) at the cost of edge restrictions, or stay cosmetic
    (recommended default)? This is a product decision.
 7. Is CWR-CE open to upstreaming E5 and E6 (and later E1 and E3)? Maintainer contact needed.
@@ -582,3 +595,19 @@ Corrected:
 
 The bottom line is unchanged. Transitions are a static 7-code table. Vanilla routers plus in-mission sockets can express arbitrary state-based
 trees. A CE patch adds polish and fixes, not expressiveness.
+
+### Consolidation pass (2026-09-27)
+
+Cross-doc corrections from doc 35 §10 ("Doc 18"), with evidence checked in doc 35 §3.3, §3.4, §6.3 and its verification notes:
+
+- §4: the shared-template consequence now cites field evidence (community dynamic campaigns point three classes at one template, doc 35 §6.3,
+  §10; the count of three is stated only in §10, §6.3 says "several"). The engine-reading label stays **[I]**.
+- §2 row, §4, §3 flow, §7 and the TL;DR: CWR's award selection never picks an award (already in §2; now surfaced where the flow and limits
+  are read), with a new §7 row and the doc 35 rc80 advice not to depend on `Awards`.
+- §5, §3 flow, §7, §8.1 and the TL;DR: `exit.sqs` does not run on player death.
+- §5 and open question 5: doc 35 §3.3 reads the `exit.sqs` call as having no line limit; open question 5 is marked partly answered.
+- §10, Montignac branch (doc 35 §10 "Doc 26", evidence in §3.1 and §3.5): the success → "After Montignac" / failure → "Strange
+  Meeting" wording applied earlier today from the doc 26 fact-check is superseded. The mission ends in a scripted reversal and
+  the branch keys on the exit route (END1 → a lone-escape mission, other codes → a different mission); both legs still rejoin at
+  "Rescue". Doc 35 does not name the two successors, so which name belongs to which route is left unstated here.
+- No Standing Orders / Drill renames or doc 33 / skill links were needed in this doc (re-checked 2026-09-27).
