@@ -1,16 +1,15 @@
-<!-- design-sensibility v0.1 | proposal-only -->
+<!-- design-sensibility v0.2 | proposal-only -->
 Lens: briefing. Use it when you write a situation, plan notes, objective wording or debrief.
 
-- Can a tired player read it once and know what, why and where?
-- Is the task plain, with the places and grids the step gives? The enemy may be uncertain, the task never.
-- Is the priority clear, with primary and secondary labelled as the step labels them?
+- Can a tired player read it once and know the task and place? The enemy may be uncertain, the task never.
+- Are primary and secondary labelled as in the step?
 - Is every name, owner and number copied exactly: whose, which, how many?
-- Is each report credited to the source the step names?
-- Does every listed threat appear at full weight? Do not reassure.
-- Does it give the task and the reason, leaving the method to the player?
-- Does one line say why the task matters to the bigger operation?
+- Is each report credited to the step's source?
+- Does every listed threat appear at full weight, with an answer from the step's gear or orders? Do not reassure.
+- Does it give the task and why it matters to the wider operation, leaving the method to the player?
+- The situation may speak in a listed person's voice, like a diary; the plan stays plain orders.
 - Does each sentence carry a fact or intent? Cut staff-speak.
-- Plain text: the step's section names as given, no bold, no headings of your own.
+- Plain text: the step's section names, no bold, no extra headings.
 - Debrief: what happened, who fell (only those listed), what it cost, what changes next. No lesson.
 
 Good: "Enemy infantry, about a platoon, reported at {place}. Take {objective} and hold until relieved. Our armour needs that crossing by dawn."

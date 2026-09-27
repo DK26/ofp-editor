@@ -1,4 +1,4 @@
-<!-- design-sensibility v0.1 | proposal-only -->
+<!-- design-sensibility v0.2 | proposal-only -->
 # Fun rubric
 
 This rubric scores how well a piece of generated content delivers the player experience the pack aims at. The nine dimensions
@@ -59,6 +59,7 @@ Score each dimension that applies, with a one-line reason that quotes the words 
 | Briefing or debrief | R1, R2, R3, R5, R7, R8 | |
 | Radio or dialogue lines | R8; also R1 and R2 when a line promises support or orders a move | |
 | Campaign skeleton | R1 to R7; R8 on titles and effect wording | |
+| Multiplayer mode, rules, limits, spawns or balance (v0.2) | R1 to R4 and R6; R5 for co-op; R8 on any text | Judge every side, and the smallest player count the step allows. There are no multiplayer calibration notes yet; add them after the first v0.2 run [I]. |
 | Whole mission or campaign (simulator or Preview) | R1 to R9 | R9 needs the simulator's duration estimates or a playtest. |
 
 ## Composite

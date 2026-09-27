@@ -1,8 +1,9 @@
-<!-- design-sensibility v0.1 | proposal-only -->
+<!-- design-sensibility v0.2 | proposal-only -->
 # Design-sensibility prompt pack
 
-**Status: proposal-only.** Version `design-sensibility v0.1`. No code loads this pack yet. The research drafts were compared
-on one small round of evaluation, but v0.1 itself has not been evaluated (see [EVALUATION.md](EVALUATION.md)).
+**Status: proposal-only.** Version `design-sensibility v0.2`. No code loads this pack yet. The research drafts were compared
+on one small round of evaluation and v0.1 had one informal confirmation run, but v0.2 has not been evaluated at all (see
+[EVALUATION.md](EVALUATION.md)).
 
 ## What the pack is
 
@@ -22,7 +23,9 @@ This pack is the text the harness adds to those calls to steer the model's taste
 
 The research behind it is [docs/research/28-what-makes-it-fun.md](../../docs/research/28-what-makes-it-fun.md). That doc
 covers the OFP formula, what players loved and hated, the community's mission-making craft, research on fun, and the pitfalls
-of LLM narrative.
+of LLM narrative. v0.2 adds lessons from the shipped campaigns, single and multiplayer missions, community classics and later
+titles, from [docs/research/35-lessons-from-real-content-and-later-armas.md](../../docs/research/35-lessons-from-real-content-and-later-armas.md)
+§9.
 
 **The pack carries taste only.** Facts, limits, counts and checkable rules are code-owned: generators build them in, lints
 reject violations and the director UX offers the choices (doc 28 §6.1; docs 25 and 26). The pack never replaces a check.
@@ -33,13 +36,13 @@ reject violations and the director UX offers the choices (doc 28 §6.1; docs 25 
 | File | Role | Sent to the generating model? |
 | --- | --- | --- |
 | [core.md](core.md) | Always-on core: the player experience, the house voice, the facts discipline and the answer rule (≤ 350 words) | Yes, on every creative call |
-| [lenses/](lenses/) `<id>.md` | Seven step-specific lenses, each a short list of design questions plus one good-versus-flat pair (≤ 220 words each) | Yes, exactly one per step |
+| [lenses/](lenses/) `<id>.md` | Eight step-specific lenses, each a short list of design questions plus one good-versus-flat pair (≤ 220 words each) | Yes, exactly one per step |
 | [rubric.md](rubric.md) | The fun rubric: gates, dimensions R1 to R9, judge protocol, calibration notes | **Never.** Judges and the report card only |
-| [code-owned-principles.md](code-owned-principles.md) | Checklist of the 62 principles that code or UX must own, plus proposed checks from round 1 | No |
-| [EVALUATION.md](EVALUATION.md) | Method, tasks, round-1 results, limitations, next round | No |
+| [code-owned-principles.md](code-owned-principles.md) | Checklist of the 62 principles that code or UX must own, proposed checks from round 1, and the multiplayer facts the lens leaves to code | No |
+| [EVALUATION.md](EVALUATION.md) | Method, tasks, round-1 and confirmation results, limitations, next round, v0.2 changes | No |
 
 Lens ids: `campaign-arc`, `mission-concept`, `encounter-and-pacing`, `briefing`, `dialogue-and-radio`,
-`branching-and-consequence`, `variety-and-surprise`.
+`branching-and-consequence`, `variety-and-surprise`, `multiplayer` (new in v0.2).
 
 Word limits are counted by splitting on whitespace, after removing line 1. List dashes count as words.
 
@@ -63,7 +66,9 @@ Word limits are counted by splitting on whitespace, after removing line 1. List 
 4. **Load the core only** for extraction steps (S0 intake quotes, S9 refine-request parsing) and use no lens. Deterministic
    steps (S6 build, S8 verify) call no model.
 5. **Route each creative step to its natural lens**, following the table below. `variety-and-surprise` is for steps whose job is
-   variety itself. A briefing slot sampled with K candidates still uses `briefing`.
+   variety itself. A briefing slot sampled with K candidates still uses `briefing`. `multiplayer` is only for decisions that
+   exist because the mission is multiplayer. Other steps in a multiplayer mission keep their natural lens: a co-op mission's
+   site still uses `mission-concept`, and a per-side briefing still uses `briefing`.
 6. **Send lens placeholders as they are.** `{place}`, `{objective}`, `{hq}`, `{me}`, `{name}` and `{count}` in the lens examples
    are illustrations. They mean "a fact from the step goes here". Do not substitute them. Admission must reject any literal `{…}`
    that leaks into an output (a proposed TX02 extension, listed in [code-owned-principles.md](code-owned-principles.md)).
@@ -78,13 +83,14 @@ Word limits are counted by splitting on whitespace, after removing line 1. List 
 | S7 `Main`, `Plan` colour, `OBJ_` rephrase, debriefings | `briefing` |
 | S7 radio colour, banter, dialogue and scene lines | `dialogue-and-radio` |
 | Twist-card ranking, mood or variant ranking, "surprise me", "more like #2" | `variety-and-surprise` |
+| Multiplayer mode or template pick; rules sentence; limits, respawn or lives preset; spawn, base and flag anchor picks; role slots and side balance (doc 35 rc01, rc23 to rc26, rc34, rc39) [I] | `multiplayer` |
 
 ## Token budget [I]
 
 - **Estimated size.** These counts are character-based estimates; measure with each target model's tokenizer before
   qualifying.
-  - The core is 347 words, about 1,900 characters, roughly 480 tokens.
-  - Each lens is 215 to 219 words, about 1,150 to 1,260 characters, roughly 290 to 320 tokens.
+  - The core is 348 words, about 1,920 characters, roughly 480 tokens.
+  - Each lens is 214 to 220 words, about 1,150 to 1,260 characters, roughly 290 to 320 tokens.
   - Core plus one lens comes to about 800 tokens.
 - **Share of the T1 budget.** Doc 25 §4.4 budgets 2K tokens for T1 (3 to 4B) prompts and 4K for T2. Core plus lens is about 40%
   of a T1 prompt and 20% of a T2 prompt.
@@ -104,12 +110,15 @@ Word limits are counted by splitting on whitespace, after removing line 1. List 
 - **Minor version:** any wording change in the core, a lens, the rubric anchors or the gates.
 - **Major version:** changes to the lens ids, the loading order, the routing table, the gate definitions or the layer model
   (core plus one lens).
+- **Before v1.0 (proposal).** While no version has reached `evaluated`, every change bumps only the minor version, including a
+  new lens or routing row. v0.2 adds the `multiplayer` lens this way. The major-version rule applies from v1.0. This rule is a
+  proposal for the owner to confirm.
 - **Status labels.** Each version is `proposal-only`, then `evaluated` (it passed an evaluation round per EVALUATION.md), then
   `default` (an owner decision).
   - The harness may ship only an `evaluated` or `default` version.
   - Older versions stay loadable by id, so that decision logs can be replayed.
 - **Keep the eval scenarios out of the pack.** Never copy an evaluation scenario's names, places or situations into the core or
-  a lens, or the next evaluation measures memorisation. v0.1's examples avoid the round-1 scenario on purpose.
+  a lens, or the next evaluation measures memorisation. The v0.1 and v0.2 examples avoid the round-1 scenario on purpose.
 
 ## How to evaluate a change
 
@@ -130,7 +139,8 @@ Follow the full method in [EVALUATION.md](EVALUATION.md). In short:
 
 - **No Bohemia content.** The pack contains no Bohemia character names, mission titles or mission text, and never names the
   game. That keeps small models from recalling stock lore.
-- **Our own words.** All example lines are the project's own, and quotes in the docs are short and attributed.
+- **Our own words.** All example lines are the project's own, and quotes in the docs are short and attributed. The v0.2
+  refinements restate doc 35's aggregate findings in our own words; no game text, script or mission content is copied.
 - **No private references.** Nothing here refers to private or unpublished work (`AGENTS.md`).
 
 ## Related
@@ -138,11 +148,57 @@ Follow the full method in [EVALUATION.md](EVALUATION.md). In short:
 - Research: [doc 28 — what makes it fun](../../docs/research/28-what-makes-it-fun.md) (formula, principle map FP01 to FP69,
   rubric); [doc 25 — weak-model-friendly harness](../../docs/research/25-weak-model-friendly-campaign-harness.md) (stages,
   prompt contract, evaluation plan); [doc 26 — campaign content structures](../../docs/research/26-campaign-content-structures-and-fun.md)
-  (SMEAC slots, radio templates, twist cards).
+  (SMEAC slots, radio templates, twist cards); [doc 35 — lessons from real content and later titles](../../docs/research/35-lessons-from-real-content-and-later-armas.md)
+  (corpus measurements, multiplayer craft, harness implications rc01 to rc90).
 - Evaluation: [EVALUATION.md](EVALUATION.md).
 - Rules: [`AGENTS.md`](../../AGENTS.md), which covers product-scoped agents, glass-box generation and design authority.
 
 ## Changelog
+
+### v0.2 (2026-09-27, proposal-only, unevaluated)
+
+Source: doc 35 §9, rows rc01 to rc06, rc22, rc45 and rc79. Those rows rest on measurements of the shipped campaigns, single
+and multiplayer missions, community classics and later titles. Every change is [I]; the evidence for each row is in doc 35.
+
+- **New lens `multiplayer`** (rc01; doc 35 §5 and §7.2). It covers co-op and competitive modes:
+  - rules in one sentence, clear within half a minute of a respawn
+  - still playable with two humans, AI in empty slots or someone leaving
+  - host-picked limits, including none
+  - spawns out of enemy sight and spread out
+  - a stalemate that breaks itself, and a way back for the side behind
+  - the score available at any time
+  - asymmetry that is paid for
+  - visible bounds that warn before they hurt
+  - one ending for everyone, with a short outro
+  - co-op groups with their own jobs, and a team that can still lose
+  - only the step's mechanics, not habits from other games
+
+  Locality, lobby parameters, respawn modes and other multiplayer facts stay code-owned (see
+  [code-owned-principles.md](code-owned-principles.md)).
+- **Core.** Framed for missions and campaigns and for more than one player, so that it reads correctly beside the new lens.
+- **Lens refinements:**
+  - `briefing` (rc02): each listed threat comes with an answer drawn from the step's gear or orders; the situation may speak
+    in a listed person's voice while the plan stays plain orders; the task and its reason are one question.
+  - `encounter-and-pacing` (rc03): the response to being spotted comes in waves the player can hear; the world keeps its own
+    clock and announces each deadline more than once. Dropped: "orders stay simple under fire" (FP31 stays code-owned).
+  - `campaign-arc` (rc03, rc22, rc79): each new seat or chapter starts quietly; a small covert job visibly shapes the next
+    big fight. Dropped: the verb, seat and hour question, which the core's Variety line already asks.
+  - `variety-and-surprise` (rc04): side and squad size join the variation axes; one signature mechanic the neighbours lack.
+  - `dialogue-and-radio` (rc05): lines that can be said in one breath; no HQ on the radio unless the step gives one; the
+    enemy gets only the nationality the step gives.
+  - `branching-and-consequence` (rc06): failing, or losing a vehicle or the leader, still leads somewhere playable; no hidden
+    score decides the story.
+  - `mission-concept` (rc45): a survivable failure with its own ending.
+- **Compression.** Every lens was reworded to stay within 220 words. The round-1 fixes are kept, but a few lost a second
+  sentence (for example "If not, it is no decision." in `branching-and-consequence`).
+- **Left out of the pack on purpose:**
+  - code-owned facts and defaults: AI-field defaults (rc07), moment cards and music (rc08), hour and weather defaults (rc43),
+    and multiplayer locality and settings (rc11, rc65)
+  - support roles scoring like combat, whose evidence is [U]
+- **Other files.** [rubric.md](rubric.md) gains a row for multiplayer outputs. [code-owned-principles.md](code-owned-principles.md)
+  updates its echo columns, seeds TX04 with the new flat example and lists the multiplayer facts left to code. Versioning
+  gains a pre-1.0 rule.
+- **Not yet evaluated.** See "v0.2 changes (unevaluated)" in [EVALUATION.md](EVALUATION.md).
 
 ### v0.1 (2026-09-27, proposal-only)
 

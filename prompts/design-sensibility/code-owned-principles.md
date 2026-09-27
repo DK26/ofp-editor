@@ -1,4 +1,4 @@
-<!-- design-sensibility v0.1 | proposal-only -->
+<!-- design-sensibility v0.2 | proposal-only -->
 # Code-owned principles: an implementer's checklist
 
 The design-sensibility pack carries only **taste**: tone, intent and the reasons behind the design, which a model can act on in a
@@ -36,10 +36,10 @@ and FP60, are prompt guidance and live in [core.md](core.md) and [lenses/](lense
 | [ ] | FP16 | Telegraph before you punish | At least one cue (sound, radio, sighting, intel line) before each lethal set piece | MC08 | core, encounter-and-pacing |
 | [ ] | FP18 | Every mission can always finish | End templates built from `thisList` thresholds, `fleeing`, named-target state and timeouts; never a large "Not present" | MC01 | mission-concept |
 | [ ] | FP22 | Legible stealth and alarms | Detection with visible causes; an alarm that escalates (radio, flare) into a QRF from a known direction | MC08 | encounter-and-pacing |
-| [ ] | FP25 | Failure moves the story forward | Every node has a survivable failure outcome routed to a detour or a harder variant | C03, CF07 | branching-and-consequence |
+| [ ] | FP25 | Failure moves the story forward | Every node has a survivable failure outcome routed to a detour or a harder variant | C03, CF07 | mission-concept, branching-and-consequence |
 | [ ] | FP28 | Sane skill bands and a gentle opener | Skill drawn from a band by node depth and preset; force ratio counted | MC16, CF14 | none |
 | [ ] | FP30 | A tension curve inside every mission | Phases (insertion, approach, contact, objective, reaction, exfil) with intensity tags; the model picks the complication from a menu | MC18 | encounter-and-pacing |
-| [ ] | FP31 | Few commands under fire | Set pieces never require micromanaging many AI units; squad tasks default to simple orders | none yet | encounter-and-pacing |
+| [ ] | FP31 | Few commands under fire | Set pieces never require micromanaging many AI units; squad tasks default to simple orders | none yet | none (dropped from encounter-and-pacing in v0.2) |
 | [ ] | FP34 | Start low, earn command | The skeleton grows rank, authority and seats; squad command arrives near mid-campaign via a learning mission | none yet | campaign-arc |
 | [ ] | FP35 | One spine role; guest seats as punctuation | About two-thirds of nodes in the spine role; guest seats later and rotating faster | none yet | campaign-arc |
 | [ ] | FP38 | Perceived variety, not oatmeal | Variation axes chosen for perceptual difference; creative slots seeded (twist, mood, detail token, names); K candidates | TX05 | variety-and-surprise |
@@ -61,21 +61,21 @@ and FP60, are prompt guidance and live in [core.md](core.md) and [lenses/](lense
 | [ ] | FP02 | One operation, not a mission pack | A node with no link to the operation goal or the previous outcome; a role change with no story reason; an untagged tonal outlier | CF13 | campaign-arc |
 | [ ] | FP08 | Hide the enemy, never the objective | Objective assets stay inside the marked or briefed area in every variant; the briefing names only markers and places that exist | MC10 | core, briefing |
 | [ ] | FP09 | Options must trade something | An offered loadout, support or route that is dominated on every cost axis, or whose outcome is random whatever the pick | MC13 | branching-and-consequence |
-| [ ] | FP15 | Lethal but legible | No enemy MG or sniper line of sight onto the start, LZ or rally point; no spawns in view; known threats named in the briefing | MC08 | encounter-and-pacing |
+| [ ] | FP15 | Lethal but legible | No enemy MG or sniper line of sight onto the start, LZ or rally point; no spawns in view; known threats named in the briefing | MC08 | briefing, encounter-and-pacing, multiplayer |
 | [ ] | FP17 | Every threat has a counter; gear fits every phase | Armour needs AT, air needs AA or cover; stealth kit needs a fallback for the loud phase; no armoury buffet | MC05 | mission-concept, encounter-and-pacing |
 | [ ] | FP19 | No single point of failure on the critical path | A critical NPC, vehicle or trigger has a fallback (backup unit, timeout, player takeover) | MC09 | none |
-| [ ] | FP20 | No hidden rules | Every failure trigger's rule and consequence is stated in `OBJ_`, Plan or an earlier radio line | MC02 | none |
+| [ ] | FP20 | No hidden rules | Every failure trigger's rule and consequence is stated in `OBJ_`, Plan or an earlier radio line | MC02 | branching-and-consequence |
 | [ ] | FP21 | Critical AI stays on terrain where it behaves | Critical convoys, drives and landings avoid dense towns, tight forest and unprobed bridges | MC14 | none |
 | [ ] | FP23 | No lone wolf without means | A solo mission has a stealth route, the right tools, a planned extraction and a consequence | MC15 | none |
 | [ ] | FP29 | Persistence never punishes the AI's mistakes | No critical-path capability held by only one persistent specialist; replacements, wounded state, a minimum loadout | CF15 | none |
 | [ ] | FP32 | No dead air | Movement legs over about 3 minutes [I] with no event slot; quiet missions short and labelled as breathers | MC03 | encounter-and-pacing |
 | [ ] | FP33 | Campaign rhythm is a sawtooth with valleys | Relax nodes are real missions or scenes, not gaps | CF01, CF02 | campaign-arc |
-| [ ] | FP36 | Teach a new seat just in time, at low stakes | The first node with a new seat or role is not Peak or Finale intensity | CF16 | none |
-| [ ] | FP37 | Vary verb, seat, clock and weather | The same verb, seat and time of day three times in a row; no night or stealth mission in a campaign of 6+ | CF17, CF03 | core, campaign-arc, variety-and-surprise |
+| [ ] | FP36 | Teach a new seat just in time, at low stakes | The first node with a new seat or role is not Peak or Finale intensity | CF16 | campaign-arc |
+| [ ] | FP37 | Vary verb, seat, clock and weather | The same verb, seat and time of day three times in a row; no night or stealth mission in a campaign of 6+ | CF17, CF03 | core, variety-and-surprise |
 | [ ] | FP45 | Yesterday's result changes today, and says why | Each consequence variant or persistent effect differs visibly and carries a cause line in the next briefing or gear screen | CF04, C21 | core, branching-and-consequence |
 | [ ] | FP47 | Acknowledge every choice; make a few real | A choice framed as momentous must change state; lines see earlier choices in their fact scope | CF05 | campaign-arc, branching-and-consequence |
 | [ ] | FP62 | Era-true words, no hindsight | An era lexicon hit or hindsight about later events | CF11, TX03 | core, dialogue-and-radio |
-| [ ] | FP63 | Short enough to read under fire | Hard caps per slot; over the cap, reject and fall back to the skeleton line | TX01 | core |
+| [ ] | FP63 | Short enough to read under fire | Hard caps per slot; over the cap, reject and fall back to the skeleton line | TX01 | core, dialogue-and-radio |
 | [ ] | FP64 | One voice per character; tics rationed | A speaker's signature phrase over its rate; candidates too similar | TX05 | dialogue-and-radio |
 | [ ] | FP65 | Polish the text and the package | Spelling, consistent names, a named mission, no single-use addons, a readme | MC07 | none |
 | [ ] | FP69 | Performance budget in view | Units, groups per side, crew seats per group and triggers against the target profile | MC06 | none |
@@ -92,7 +92,7 @@ and FP60, are prompt guidance and live in [core.md](core.md) and [lenses/](lense
 | [ ] | FP48 | Few, weighty choices of conscience | Loyalty or conscience choice nodes with hinted consequences; the archetype vocabulary has no atrocity objective | none | branching-and-consequence |
 | [ ] | FP52 | Show the other side, with a new idea | A perspective flip or prequel as a pattern parameter, which must add a mechanic or situation | none | none |
 | [ ] | FP55 | Story-driven or content-driven: the user chooses | A style slider sets budgets for scenes, dialogue slots and mission count | none | none |
-| [ ] | FP56 | Co-op versions with friends | An MP target adds playable slots and co-op respawn and end rules; campaigns stay single-player | none | none |
+| [ ] | FP56 | Co-op versions with friends | An MP target adds playable slots and co-op respawn and end rules; campaigns stay single-player | none | multiplayer |
 | [ ] | FP66 | The user is the director | No blank canvas; three outlines; "surprise me" with pins; drafts with provenance; accept, edit, pin, re-roll; human edits never overwritten | E9 (doc 25 §11) | none |
 | [ ] | FP67 | A craft report card, not a verdict | Overview, Briefing, Camera, Playability and Polish, rolled up from lints and the simulator, each item linked to its element | [rubric.md](rubric.md) | none |
 | [ ] | FP68 | Playtesting is part of the editor | Preview from any phase; observer mode; the campaign backbone run through every transition; beta pack export | none | none |
@@ -102,7 +102,7 @@ and FP60, are prompt guidance and live in [core.md](core.md) and [lenses/](lense
 Round 1 showed that wording reduces these failures without removing them (see [EVALUATION.md](EVALUATION.md)). Each pattern
 needs a deterministic backstop. The pack wording is listed only to show where the prompt already pushes; it is not the guard.
 
-| Done | Pattern seen in round 1 | Pack wording (v0.1) | Proposed code backstop | Extends |
+| Done | Pattern seen in round 1 | Pack wording (v0.1, kept in v0.2) | Proposed code backstop | Extends |
 | --- | --- | --- | --- | --- |
 | [ ] | An enemy nationality or sponsor that the data never gave | core: "Add no nationality…" | Check demonyms and nationality adjectives (from the name-pool nationality list) against the slot's fact scope | TX02 |
 | [ ] | An owner or role drifted (whose objective, who a contact is) | core: "copied exactly: same owner, role and side" | Check that each possessive ("X's Y") and role noun attached to a known entity matches the story bible | TX02 |
@@ -124,8 +124,8 @@ needs a deterministic backstop. The pack wording is listed only to show where th
 | [ ] | A lens placeholder (`{place}`, `{name}`…) copied literally into an output | lens examples use placeholders on purpose | Reject any literal `{…}` in model output at admission | TX02 |
 | [ ] | Stock phrasing | lens flat examples | Seed the TX04 list with the pack's flat lines and the phrases judges flagged (see below) | TX04 |
 
-**Seed phrases for TX04 [I].** These come from two places: the flat examples in the v0.1 lenses, which must never be produced
-verbatim, and the phrases the round-1 judges flagged as generic.
+**Seed phrases for TX04 [I].** These come from two places: the flat examples in the lenses (v0.1, plus the `multiplayer` lens
+added in v0.2), which must never be produced verbatim, and the phrases the round-1 judges flagged as generic.
 
 - **Flat examples in the lenses:**
   - "vital to the success of the entire operation"
@@ -135,6 +135,7 @@ verbatim, and the phrases the round-1 judges flagged as generic.
   - "choose wisely", "every decision matters"
   - "we've got a situation", "total chaos"
   - "surprises make missions more exciting"
+  - "battle it out", "epic fight", "total domination" (v0.2)
 - **Phrases the judges flagged:**
   - "critical opportunity"
   - "secure objectives"
@@ -142,3 +143,20 @@ verbatim, and the phrases the round-1 judges flagged as generic.
   - "builds momentum"
   - "plays to squad strength"
   - "protect civilian populations"
+
+## Multiplayer facts the `multiplayer` lens leaves to code [I]
+
+The `multiplayer` lens (v0.2) asks design questions only. The facts below decide whether a multiplayer mission works on the
+target profile at all, and weak models tend to fill them in from later games (doc 35 §5 and rc11). Code, menus and lints own
+them, and the lens never states them. The rows come from doc 35 §9, which assigns no final lint codes, so each check still needs
+the design-round step described at the top of this file.
+
+| Done | Fact or rule | Owned by (proposed) | Doc 35 |
+| --- | --- | --- | --- |
+| [ ] | Which machine decides each event, and how the others learn of it | A compiler-owned authority guard and generated broadcast mirrors; the model never chooses locality | rc11, rc53 |
+| [ ] | Lobby limits: two parameters on `Cwa199` (time, then score or hold), each with an Unlimited entry | MP Game Rules module; lints on a third parameter or a parameter read without its title | rc23, rc52, rc65 |
+| [ ] | Respawn modes and spawn-marker lookup; no vehicle respawn | Respawn module with honest notes per mode; respawn lints | rc24, rc65 |
+| [ ] | Later-title features absent on `Cwa199`: join-in-progress, a save-disable switch, a mission-local respawn hook on stock data (probe) | Profile-gated menus and lints | rc26, rc65; §7.3 |
+| [ ] | Per-side briefing sections and side-filtered objective prefixes | Briefing generator; a lint on a misspelt side section | rc11, rc65 |
+| [ ] | One ending that every side can reach, with the outro run on each machine | Game Rules ending controller; a lint when no ending is reachable, or only one side can reach one | rc11, rc23, rc65 |
+| [ ] | The mission still plays at the smallest player count, with AI or disabled slots | A "scales down" check in the simulator or Preview | rc52 |

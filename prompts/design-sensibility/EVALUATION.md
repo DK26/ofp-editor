@@ -1,11 +1,12 @@
-<!-- design-sensibility v0.1 | proposal-only -->
+<!-- design-sensibility v0.2 | proposal-only -->
 # Evaluating the design-sensibility pack
 
 This file covers how pack versions are compared, what round 1 found and what the next round must do. The rubric is in
 [rubric.md](rubric.md). The wider evaluation plan for the harness is doc 25 §11.
 
 **Status:** round 1 compared four candidate prompt drafts. Nobody has evaluated v0.1 itself yet. It merges the round-1 winner with
-fixes for the failures the judges found, and those fixes are untested [I].
+fixes for the failures the judges found, and those fixes are untested [I]. (The confirmation round below later ran v0.1 once,
+informally.) v0.2 has not been run at all; see [v0.2 changes (unevaluated)](#v02-changes-unevaluated) at the end of this file.
 
 ## 1. Method (round 1)
 
@@ -316,3 +317,45 @@ rerun. Read informally, it would fail all three conditions:
   - full R vectors; the reasons give only a few R scores in prose
   - R9 (respect for time), token counts and latency
   - whether any lens example was copied
+
+## v0.2 changes (unevaluated)
+
+**Status.** v0.2 is `proposal-only`, and nothing has been run on it: no generation, no judging and no deterministic checks. No
+result in this file measures v0.2. The round-1 and confirmation results describe the drafts and v0.1, and do not transfer to
+v0.2 [I]. **v0.2 needs its own evaluation run** before it can become `evaluated`.
+
+The only measurement so far is size [V]: counted by the README rule, the core is 348 words and the eight lenses are 214 to 220
+words each, all within their caps.
+
+### What changed
+
+The full list is the v0.2 entry in the [README changelog](README.md#changelog). The rows cite doc 35 §9.
+
+| Change | Doc 35 | What the evaluation should watch |
+| --- | --- | --- |
+| New `multiplayer` lens | rc01 (§5, §7.2) | Features pulled in from later games that the target profile lacks, such as join-in-progress, revive or a third lobby parameter; rules that no longer fit in one sentence |
+| Core framed for missions, campaigns and several players | rc01 | No change in the single-player scores on T1 to T5 |
+| `briefing`: each threat comes with an answer from the step's gear or orders; the situation may speak in a listed person's voice | rc02 | `facts_ok` on T3, which was already the hardest task: invented counters, timings, people or events |
+| `encounter-and-pacing`: responses in audible waves; the world's clock; deadlines announced more than once | rc03 | Invented timers, deadlines or reinforcements in Compose outputs such as T2 |
+| `campaign-arc`: new seats and chapters start quietly; a small covert job shapes the next big fight | rc03, rc22, rc79 | T5: whether the shaping link is a state effect that a later mission reads, not just an assertion |
+| `variety-and-surprise`, `dialogue-and-radio`, `branching-and-consequence` and `mission-concept` refinements | rc04, rc05, rc06, rc45 | T4: an HQ invented on the radio. T2 and T5: whether a survivable failure is present and wired to a distinct outcome |
+| Wording compressed to fit the caps | none | Regressions on the round-1 patterns in §6, especially hollow decisions now that "If not, it is no decision." is gone |
+
+### What its own run must include
+
+- **Design.** The §8 round-2 design, with v0.2 as the candidate, v0.1 as the current version and `baseline`. Keep §8's
+  models, seeds, judges and deterministic metrics.
+- **Regression tasks.** The five round-1 tasks, plus the held-out scenarios §8 requires.
+- **Multiplayer tasks.** At least two new tasks on a new synthetic scenario, written without reading the lens:
+  - a co-op Pick, such as mode, respawn preset and limits from a menu
+  - a competitive Compose, such as a rules sentence, limits, spawns and balance for two sides
+
+  Judges use the multiplayer row in [rubric.md](rubric.md).
+- **Ablation.** v0.2 core-only against v0.2 with the `multiplayer` lens on the multiplayer tasks, because the lens has no earlier
+  version to beat.
+- **Extra deterministic checks.** Verbatim copies of the new multiplayer example, and any mechanic in a multiplayer output that
+  is not in the step's menu.
+- **Adoption.**
+  - On the shared tasks, apply the §8 rule to v0.2 against v0.1.
+  - On the multiplayer tasks, the lens must beat both `baseline` and core-only by more than the judges' disagreement, with no
+    gate regression.
