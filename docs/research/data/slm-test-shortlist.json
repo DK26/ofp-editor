@@ -1,0 +1,826 @@
+{
+  "generated": "2026-09-27",
+  "source_doc": "docs/research/47-small-model-landscape.md (section 6)",
+  "status": "proposal; no model was run for this list; every memory figure is an estimate [I] until measured",
+  "reference_machine": {
+    "gpu": "NVIDIA GTX 1070, 8192 MiB; about 2700 MiB used by the desktop, about 5490 MiB free (doc 44)",
+    "ram": "32 GB",
+    "os": "Windows 10",
+    "runtime": "llama.cpp llama-server; Vulkan build (Plotroom's own target); CUDA 12.x build as a comparison for the MoE-offload rows (CUDA 13 dropped Pascal)"
+  },
+  "protocol": {
+    "order": [
+      "1. Re-run the doc 44 baselines on the same llama-server build (Ollama numbers are not comparable across runtimes)",
+      "2. Priority A rows (1-4) on the reference GPU",
+      "3. Priority B/C rows (5-9) as the 4-6 GB and CPU-only tiers, then the doc 14 carry-overs",
+      "4. Optional, owner's call: the 'bonsai' paired probe (Bonsai 2 27B on the PrismML fork against Qwen3.8-27B UD-IQ2_XXS on mainline), only after the Priority A rows"
+    ],
+    "server_common_flags": "--jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+    "placement_flags": {
+      "full_gpu": "-ngl 99",
+      "moe_offload_all_experts": "-ngl 99 --cpu-moe",
+      "moe_offload_first_n_layers": "-ngl 99 --n-cpu-moe N",
+      "cpu_only": "-dev none -t <physical cores>",
+      "kv_q8_variant": "-ctk q8_0 -ctv q8_0 -fa on"
+    },
+    "notes": [
+      "--fit is on by default and adjusts only unset arguments (1024 MiB margin); set -ngl, --n-cpu-moe and -c explicitly and record the effective values from the server log",
+      "-np 1 keeps the whole 8192-token context for one request",
+      "run.py sends chat_template_kwargs {enable_thinking: false} and records thinking_chars; for a template that ignores it, start the server with --reasoning off",
+      "Record nvidia-smi before and after load, host working set for offload rows, cold and warm load, prompt-processing and generation tokens/s",
+      "Sampler pinned identically for every model (run.py flags in PIN); the per-suite temperature comes from run.py (0.6 pick/fill/text, 0.2 explain)",
+      "Download each file from its pinned url and check the SHA-256 before starting the server"
+    ],
+    "sampler_pin_flags": "--top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+    "score": "python tools/local-qual/score.py"
+  },
+  "baselines_rerun_first": [
+    {
+      "name": "Gemma 4 E4B-it QAT (doc 44 provisional 8 GB default)",
+      "files": {
+        "UD-Q4_K_XL": {
+          "repo": "unsloth/gemma-4-E4B-it-qat-GGUF",
+          "commit": "8c5a9e4fd5482e2be20fe0bf013b4c262a8f4265",
+          "file": "gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf",
+          "bytes": 4215695776,
+          "sha256": "df0fd4ee07072c607c29a0a1cb4f98918426cca12f45a2776bdd6ee6d09a4de3",
+          "url": "https://huggingface.co/unsloth/gemma-4-E4B-it-qat-GGUF/resolve/8c5a9e4fd5482e2be20fe0bf013b4c262a8f4265/gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf"
+        },
+        "Q4_0_QAT_google": {
+          "repo": "google/gemma-4-E4B-it-qat-q4_0-gguf",
+          "commit": "4b4a2c1d584be7264f87aac328a1bc739ce81b6c",
+          "file": "gemma-4-E4B_q4_0-it.gguf",
+          "bytes": 5154941280,
+          "sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
+          "url": "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/4b4a2c1d584be7264f87aac328a1bc739ce81b6c/gemma-4-E4B_q4_0-it.gguf"
+        }
+      },
+      "server": "llama-server -m <file> -ngl 99 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+      "suites": [
+        "pick",
+        "pick-hard",
+        "fill",
+        "explain",
+        "text"
+      ]
+    },
+    {
+      "name": "Qwen3.5-4B (doc 44 equal alternative)",
+      "files": {
+        "Q4_K_M": {
+          "repo": "unsloth/Qwen3.5-4B-GGUF",
+          "commit": "e87f176479d0855a907a41277aca2f8ee7a09523",
+          "file": "Qwen3.5-4B-Q4_K_M.gguf",
+          "bytes": 2740937888,
+          "sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+          "url": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/e87f176479d0855a907a41277aca2f8ee7a09523/Qwen3.5-4B-Q4_K_M.gguf"
+        },
+        "UD-Q4_K_XL": {
+          "repo": "unsloth/Qwen3.5-4B-GGUF",
+          "commit": "e87f176479d0855a907a41277aca2f8ee7a09523",
+          "file": "Qwen3.5-4B-UD-Q4_K_XL.gguf",
+          "bytes": 2912109728,
+          "sha256": "b252c5610a42ca82d20fe2a12813e9d069eed89292907e26c783eeb0bc961bc7",
+          "url": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/e87f176479d0855a907a41277aca2f8ee7a09523/Qwen3.5-4B-UD-Q4_K_XL.gguf"
+        }
+      },
+      "server": "llama-server -m <file> -ngl 99 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+      "measured_reference": "UD-Q4_K_XL on Vulkan b11146: GPU 2703 -> 6017 MiB at -c 8192 (+3314 MiB), tools/local-qual/README.md",
+      "suites": [
+        "pick",
+        "pick-hard",
+        "fill",
+        "explain",
+        "text"
+      ]
+    }
+  ],
+  "shortlist": [
+    {
+      "rank": 1,
+      "priority": "A",
+      "name": "Qwen3-4B-Instruct-2507",
+      "weights_repo": "Qwen/Qwen3-4B-Instruct-2507",
+      "licence": "Apache-2.0",
+      "files": {
+        "Q4_K_M": {
+          "repo": "unsloth/Qwen3-4B-Instruct-2507-GGUF",
+          "commit": "a06e946bb6b655725eafa393f4a9745d460374c9",
+          "file": "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+          "bytes": 2497281120,
+          "sha256": "3605803b982cb64aead44f6c1b2ae36e3acdb41d8e46c8a94c6533bc4c67e597",
+          "url": "https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/a06e946bb6b655725eafa393f4a9745d460374c9/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
+        },
+        "UD-Q4_K_XL": {
+          "repo": "unsloth/Qwen3-4B-Instruct-2507-GGUF",
+          "commit": "a06e946bb6b655725eafa393f4a9745d460374c9",
+          "file": "Qwen3-4B-Instruct-2507-UD-Q4_K_XL.gguf",
+          "bytes": 2546340960,
+          "sha256": "4bbe1f2f8ebe69fad3be8e15d69f220b06448a9dd26f82d7d81cce88ebfc39fd",
+          "url": "https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/a06e946bb6b655725eafa393f4a9745d460374c9/Qwen3-4B-Instruct-2507-UD-Q4_K_XL.gguf"
+        }
+      },
+      "placement": "full GPU",
+      "expected_vram": "[I] about +3850-4050 MiB at 8K f16 KV (weights 2382 MiB + KV 1152 MiB + compute 300-500 MiB); about +3250-3450 MiB with q8_0 KV; fits the ~5490 MiB free",
+      "expected_host_ram": "[I] under 1 GiB beyond the mapped file",
+      "llama_server": [
+        "llama-server -m Qwen3-4B-Instruct-2507-Q4_K_M.gguf -ngl 99 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+        "llama-server -m Qwen3-4B-Instruct-2507-UD-Q4_K_XL.gguf -ngl 99 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
+      ],
+      "request_settings": "no thinking mode exists (thinking_kwarg_changes_prompt should read false); card sampler T 0.7 / top_p 0.8 / top_k 20 / min_p 0 is not used, the common pin is",
+      "suites": [
+        "pick",
+        "pick-hard",
+        "fill",
+        "explain",
+        "text"
+      ],
+      "run": [
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick --condition none --k 3 --warmup --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition none --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite fill --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite explain --condition cards --k 2 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite text --condition none --k 2 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0"
+      ],
+      "why": "Non-thinking by construction, so doc 44's thinking-on default cannot occur; the highest-scoring Apache-2.0 non-thinking instruct model near 4B on the official BFCL V4 table (Live Simple 79.07, Live Multiple 76.16, irrelevance 84.93); control arm against Qwen3.5-4B, paired item by item; also a Q4_K_M vs UD-Q4_K_XL quant pair.",
+      "watch_for": "KV is 4.5x Qwen3.5-4B's at 8K; explanation quality relative to Qwen3.5-4B's 20/20."
+    },
+    {
+      "rank": 2,
+      "priority": "A",
+      "name": "Qwen3-30B-A3B-Instruct-2507",
+      "weights_repo": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+      "licence": "Apache-2.0",
+      "files": {
+        "Q4_K_M": {
+          "repo": "unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF",
+          "commit": "eea7b2be5805a5f151f8847ede8e5f9a9284bf77",
+          "file": "Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf",
+          "bytes": 18556686752,
+          "sha256": "6c997b8af17debdfb01d890214400ccbab00db6acc0ba8da5de1cc906c4774d0",
+          "url": "https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF/resolve/eea7b2be5805a5f151f8847ede8e5f9a9284bf77/Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf"
+        },
+        "UD-Q4_K_XL": {
+          "repo": "unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF",
+          "commit": "eea7b2be5805a5f151f8847ede8e5f9a9284bf77",
+          "file": "Qwen3-30B-A3B-Instruct-2507-UD-Q4_K_XL.gguf",
+          "bytes": 17690497440,
+          "sha256": "535f831bf3034a7fcfdcc8f0277a57cbad3a36c650c6068bf1d0894f25fb4383",
+          "url": "https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF/resolve/eea7b2be5805a5f151f8847ede8e5f9a9284bf77/Qwen3-30B-A3B-Instruct-2507-UD-Q4_K_XL.gguf"
+        }
+      },
+      "placement": "MoE expert offload: attention, shared weights and KV on the GPU, experts in RAM",
+      "expected_vram": "[I] --cpu-moe: about 2-3 GiB (non-expert weights about 1 GiB + KV 768 MiB + buffers); each expert layer moved to the GPU adds about 0.33 GiB at UD-Q4_K_XL, so --n-cpu-moe 40 (8 of 48 layers on the GPU) reaches about 5 GiB, near the limit",
+      "expected_host_ram": "[I] about 16-17 GiB for UD-Q4_K_XL (experts are about 29.0B of 30.5B params)",
+      "llama_server": [
+        "llama-server -m Qwen3-30B-A3B-Instruct-2507-UD-Q4_K_XL.gguf -ngl 99 --cpu-moe -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+        "llama-server -m Qwen3-30B-A3B-Instruct-2507-UD-Q4_K_XL.gguf -ngl 99 --n-cpu-moe 40 -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
+      ],
+      "request_settings": "no thinking mode exists",
+      "suites": [
+        "fill",
+        "explain",
+        "text",
+        "pick-hard"
+      ],
+      "run": [
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite fill --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite explain --condition cards --k 2 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite text --condition none --k 2 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition none --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0"
+      ],
+      "why": "Answers doc 44 section 5.4 item 6 (bigger local models for whole-record Fill) on the 8 GB + 32 GB box; Apache-2.0, non-thinking by design, independent BFCL V4 row (41.39% overall, Live 77.94).",
+      "watch_for": "Prompt-processing speed under offload at our real prompt lengths (the GTX 1080 fork runs printed 50-67 tokens/s, but on 29-52-token prompts; the GTX 1070 run measured pp512 at 367 tokens/s); p90 fill latency; load time of an 18 GB file; RAM headroom next to the editor."
+    },
+    {
+      "rank": 3,
+      "priority": "A",
+      "name": "Gemma 4 26B-A4B-it QAT",
+      "weights_repo": "google/gemma-4-26B-A4B-it",
+      "licence": "Apache-2.0",
+      "files": {
+        "Q4_K_M": null,
+        "Q4_K_M_note": "no Q4_K_M exists for the QAT build; use Google's QAT Q4_0 as the pair",
+        "UD-Q4_K_XL": {
+          "repo": "unsloth/gemma-4-26B-A4B-it-qat-GGUF",
+          "commit": "7b92b5b28818151e8669af2e45e88d6086f490dd",
+          "file": "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf",
+          "bytes": 14249047104,
+          "sha256": "a7c5bc715f5ff8e99a3e8901ce7d2b42b402c669bf24f7c5250747633d0f5891",
+          "url": "https://huggingface.co/unsloth/gemma-4-26B-A4B-it-qat-GGUF/resolve/7b92b5b28818151e8669af2e45e88d6086f490dd/gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf"
+        },
+        "Q4_0_QAT_google": {
+          "repo": "google/gemma-4-26B-A4B-it-qat-q4_0-gguf",
+          "commit": "d1c082be9cf3c8a514acf63b8761f4b41935842e",
+          "file": "gemma-4-26B_q4_0-it.gguf",
+          "bytes": 14439363584,
+          "sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d",
+          "url": "https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf/resolve/d1c082be9cf3c8a514acf63b8761f4b41935842e/gemma-4-26B_q4_0-it.gguf"
+        }
+      },
+      "placement": "MoE expert offload",
+      "expected_vram": "[I] --cpu-moe: about 2.2-2.6 GiB (non-expert weights about 1.3-1.5 GiB + KV about 0.4 GiB at 8K f16 + compute); each expert layer moved to the GPU adds about 0.45-0.55 GiB, so about --n-cpu-moe 24-26 is the floor on ~5.5 GiB free. Evidence (GTX 1080, fork, 128K, fork-only KV types, non-QAT 16.9 GB file): 3,299 MiB total at --n-cpu-moe 29; model buffer 6,504 MiB at --n-cpu-moe 21; --n-cpu-moe 20 was the lowest value that fit an empty 8 GB card (19 ran out of memory)",
+      "expected_host_ram": "[I] about 12-13.5 GiB with --cpu-moe (the GTX 1080 run measured 14,747 MiB host at --n-cpu-moe 29 for the 16.9 GB non-QAT file)",
+      "llama_server": [
+        "llama-server -m gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf -ngl 99 --cpu-moe -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+        "llama-server -m gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf -ngl 99 --n-cpu-moe 26 -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080  # then lower N one step at a time while GPU use stays below the free VRAM",
+        "llama-server -m gemma-4-26B_q4_0-it.gguf -ngl 99 --n-cpu-moe 26 -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
+      ],
+      "request_settings": "send enable_thinking false; with thinking off the 26B still emits an empty thought block, so check one --dry-run and raw answers for parse_ok before the battery",
+      "suites": [
+        "fill",
+        "text",
+        "explain",
+        "pick-hard"
+      ],
+      "run": [
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite fill --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite text --condition none --k 2 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite explain --condition cards --k 2 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition none --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0"
+      ],
+      "why": "Same template family as the provisional default (Gemma 4 E4B QAT); best creative-writing evidence among local candidates (EQ-Bench Longform 50.7; Creative v3 1304.6) and strong Czech/Polish EuroEval (1.71 / 2.05); the smallest offload file (14.25-14.44 GB).",
+      "watch_for": "Prompt processing at real prompt lengths (the GTX 1080 fork's 50-67 tokens/s were 29-52-token prompts); do not enable the MTP drafter first (the upstream PR author saw no MoE speed-up; a fork run went from 19.78 to 24.48 tokens/s with fork-only flags, and the drafter needs extra VRAM)."
+    },
+    {
+      "rank": 4,
+      "priority": "A",
+      "name": "NuExtract3",
+      "weights_repo": "numind/NuExtract3",
+      "licence": "Apache-2.0",
+      "files": {
+        "Q4_K_M": {
+          "repo": "numind/NuExtract3-GGUF",
+          "commit": "28a1aae6288c5d50bdf999ca2e572240966d669b",
+          "file": "NuExtract3-Q4_K_M.gguf",
+          "bytes": 2783445984,
+          "sha256": "7ee3c0ee9e5699a4391624ae758487f583f73b3242aa4e73dc2bb33e508d703e",
+          "url": "https://huggingface.co/numind/NuExtract3-GGUF/resolve/28a1aae6288c5d50bdf999ca2e572240966d669b/NuExtract3-Q4_K_M.gguf"
+        },
+        "UD-Q4_K_XL": null,
+        "UD_note": "no UD quant published; mmproj not needed for text"
+      },
+      "placement": "full GPU",
+      "expected_vram": "[I] about +3150-3300 MiB at 8K (by analogy with Qwen3.5-4B UD-Q4_K_XL's measured +3314 MiB; 8 full-attention layers keep KV at about 256 MiB)",
+      "expected_host_ram": "[I] under 1 GiB beyond the mapped file",
+      "llama_server": [
+        "llama-server -m NuExtract3-Q4_K_M.gguf -ngl 99 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
+      ],
+      "request_settings": "PREREQUISITE: a run.py adapter that converts each Fill item's JSON Schema into a NuExtract template (vendor SDK: convert_json_schema_to_nuextract_template) and sends chat_template_kwargs {\"template\": <template>, \"enable_thinking\": false}; the card recommends temperature 0.2 without reasoning; keep response_format json_schema as well",
+      "suites": [
+        "fill"
+      ],
+      "run": [
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite fill --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0  # after the template adapter exists"
+      ],
+      "why": "Purpose-built verbatim span extraction (verbatim-string leaf type); targets doc 44's unqualified span fields (target, place).",
+      "watch_for": "The vendor's advantage was measured with reasoning on and mostly reflects failed runs of general models; cannot co-reside with Gemma 4 E4B on 8 GB (a swap)."
+    },
+    {
+      "rank": 5,
+      "priority": "B",
+      "name": "MiniCPM5-2B",
+      "weights_repo": "openbmb/MiniCPM5-2B",
+      "licence": "Apache-2.0",
+      "files": {
+        "Q4_K_M": {
+          "repo": "openbmb/MiniCPM5-2B-GGUF",
+          "commit": "2079a22f3beaa4e306449978533478fe0522f4b3",
+          "file": "MiniCPM5-2B-Q4_K_M.gguf",
+          "bytes": 1561318368,
+          "sha256": "ec2d5801640099e97d8d7e8003ad4d81f336e757811f03a26173dddf386602fd",
+          "url": "https://huggingface.co/openbmb/MiniCPM5-2B-GGUF/resolve/2079a22f3beaa4e306449978533478fe0522f4b3/MiniCPM5-2B-Q4_K_M.gguf"
+        },
+        "UD-Q4_K_XL": null,
+        "UD_note": "no UD quant; no Unsloth or bartowski repo found"
+      },
+      "placement": "GPU as a 4 GB-class budget, then CPU-only",
+      "expected_vram": "[I] about +2050-2200 MiB at 8K (weights 1489 MiB + KV 336 MiB + compute about 300 MiB)",
+      "expected_host_ram": "[I] about 2.1 GiB when run CPU-only",
+      "llama_server": [
+        "llama-server -m MiniCPM5-2B-Q4_K_M.gguf -ngl 99 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+        "llama-server -m MiniCPM5-2B-Q4_K_M.gguf -dev none -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
+      ],
+      "request_settings": "enable_thinking must be sent false (unset lets the model decide); min_p 0 per the card (the pin already does this)",
+      "suites": [
+        "pick",
+        "pick-hard",
+        "fill",
+        "text"
+      ],
+      "run": [
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick --condition none --k 3 --warmup --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition none --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite fill --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite text --condition none --k 2 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0"
+      ],
+      "why": "Cheapest 2B with strong vendor tool numbers (BFCL v4 66.6, mode unstated); could be the 4-6 GB-VRAM Pick/Fill option at half doc 44's memory.",
+      "watch_for": "Non-thinking quality unknown (post-training was thinking-heavy); English and Chinese only, so no locale text."
+    },
+    {
+      "rank": 6,
+      "priority": "C",
+      "name": "Qwen3.5-2B",
+      "weights_repo": "Qwen/Qwen3.5-2B",
+      "licence": "Apache-2.0",
+      "files": {
+        "Q4_K_M": {
+          "repo": "unsloth/Qwen3.5-2B-GGUF",
+          "commit": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+          "file": "Qwen3.5-2B-Q4_K_M.gguf",
+          "bytes": 1280835840,
+          "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223",
+          "url": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/f6d5376be1edb4d416d56da11e5397a961aca8ae/Qwen3.5-2B-Q4_K_M.gguf"
+        },
+        "UD-Q4_K_XL": {
+          "repo": "unsloth/Qwen3.5-2B-GGUF",
+          "commit": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+          "file": "Qwen3.5-2B-UD-Q4_K_XL.gguf",
+          "bytes": 1339752704,
+          "sha256": "0af96165ea615bea39a04118d63f0b6d35908aea850ee4a51aa6151d851b8b35",
+          "url": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/f6d5376be1edb4d416d56da11e5397a961aca8ae/Qwen3.5-2B-UD-Q4_K_XL.gguf"
+        }
+      },
+      "placement": "CPU-only",
+      "expected_vram": "none (-dev none)",
+      "expected_host_ram": "[I] about 1.7-1.9 GiB (weights 1221 MiB + KV 96 MiB + recurrent state and buffers)",
+      "llama_server": [
+        "llama-server -m Qwen3.5-2B-Q4_K_M.gguf -dev none -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
+      ],
+      "request_settings": "send enable_thinking false (the card says non-thinking by default; the 2B is prone to thinking loops when on)",
+      "suites": [
+        "pick",
+        "pick-hard",
+        "fill"
+      ],
+      "run": [
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick --condition none --k 3 --warmup --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition none --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite fill --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0"
+      ],
+      "why": "CPU-tier floor from the family doc 44 measured; lets a CPU Pick badge be decided (doc 14 section 5's unqualified 8 GB-RAM experiment).",
+      "watch_for": "Non-thinking IFEval is only 61.2 (card); CPU p50 pick latency against the 3 s proposal."
+    },
+    {
+      "rank": 7,
+      "priority": "C",
+      "name": "Granite-4.0-H-1B (paired with dense Granite-4.0-1B)",
+      "weights_repo": "ibm-granite/granite-4.0-h-1b; ibm-granite/granite-4.0-1b",
+      "licence": "Apache-2.0",
+      "files": {
+        "Q4_K_M": {
+          "repo": "unsloth/granite-4.0-h-1b-GGUF",
+          "commit": "74f5511840300fdee7c70ccfc5bd57ecde0c8bbc",
+          "file": "granite-4.0-h-1b-Q4_K_M.gguf",
+          "bytes": 901162560,
+          "sha256": "fd3b85f09520df9d898e2bbcf5da22fc518dbf9d662bb52e214d946c72aafacc",
+          "url": "https://huggingface.co/unsloth/granite-4.0-h-1b-GGUF/resolve/74f5511840300fdee7c70ccfc5bd57ecde0c8bbc/granite-4.0-h-1b-Q4_K_M.gguf"
+        },
+        "UD-Q4_K_XL": {
+          "repo": "unsloth/granite-4.0-h-1b-GGUF",
+          "commit": "74f5511840300fdee7c70ccfc5bd57ecde0c8bbc",
+          "file": "granite-4.0-h-1b-UD-Q4_K_XL.gguf",
+          "bytes": 911791680,
+          "sha256": "b66caabd187723071cbbd623c56e221cd08e219c3e026f3d4058150486ce1d46",
+          "url": "https://huggingface.co/unsloth/granite-4.0-h-1b-GGUF/resolve/74f5511840300fdee7c70ccfc5bd57ecde0c8bbc/granite-4.0-h-1b-UD-Q4_K_XL.gguf"
+        },
+        "Q4_K_M_official_ibm": {
+          "repo": "ibm-granite/granite-4.0-h-1b-GGUF",
+          "commit": "c2cb1972f511add21f3bae244990b8ff3a3ffb23",
+          "file": "granite-4.0-h-1b-Q4_K_M.gguf",
+          "bytes": 901162208,
+          "sha256": "da3d737121a96f3c9a316685212376257a7f167b74380855666dd488d6af3bcb",
+          "url": "https://huggingface.co/ibm-granite/granite-4.0-h-1b-GGUF/resolve/c2cb1972f511add21f3bae244990b8ff3a3ffb23/granite-4.0-h-1b-Q4_K_M.gguf"
+        },
+        "dense_1B_Q4_K_M_official_ibm": {
+          "repo": "ibm-granite/granite-4.0-1b-GGUF",
+          "commit": "b27c2fe3f211b7f44e80fa620177aea371099aaa",
+          "file": "granite-4.0-1b-Q4_K_M.gguf",
+          "bytes": 1023645440,
+          "sha256": "22ec0f9cc99a90185312de3c882c84e7bd6789bdd050389844380a01a831d7f1",
+          "url": "https://huggingface.co/ibm-granite/granite-4.0-1b-GGUF/resolve/b27c2fe3f211b7f44e80fa620177aea371099aaa/granite-4.0-1b-Q4_K_M.gguf"
+        }
+      },
+      "placement": "CPU-only",
+      "expected_vram": "none (-dev none)",
+      "expected_host_ram": "[I] H-1B about 1.2-1.3 GiB (KV 64 MiB); dense 1B about 1.9-2.0 GiB (KV 640 MiB)",
+      "llama_server": [
+        "llama-server -m granite-4.0-h-1b-Q4_K_M.gguf -dev none -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+        "llama-server -m granite-4.0-1b-Q4_K_M.gguf -dev none -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
+      ],
+      "request_settings": "no thinking mode; first run one --dry-run and one pick with json_schema: llama.cpp issue #29006 reports json_schema failing on Granite role tokens (Granite 3.1) while GBNF works",
+      "suites": [
+        "pick",
+        "pick-hard",
+        "fill"
+      ],
+      "run": [
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick --condition none --k 3 --warmup --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition none --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite fill --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0"
+      ],
+      "why": "Smallest OSI option (0.90 GB) from the family that qualified on Pick in doc 44; the floor for 8 GB-RAM and CPU-only machines; Fill scored on closed fields only.",
+      "watch_for": "Expect it to fall short of the 3-4B models; the question is whether any option clears the Pick bar under 2 GB."
+    },
+    {
+      "rank": 8,
+      "priority": "C",
+      "name": "Granite-4.0-H-Tiny",
+      "weights_repo": "ibm-granite/granite-4.0-h-tiny",
+      "licence": "Apache-2.0",
+      "files": {
+        "Q4_K_M": {
+          "repo": "ibm-granite/granite-4.0-h-tiny-GGUF",
+          "commit": "08d5a8a9741dd5c1a95d2d39e25253226aa1464e",
+          "file": "granite-4.0-h-tiny-Q4_K_M.gguf",
+          "bytes": 4230976352,
+          "sha256": "5a38b08c441ae1adbafb1d2b8a7167e0d48734d83af68b268cefea1eec553dcd",
+          "url": "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/08d5a8a9741dd5c1a95d2d39e25253226aa1464e/granite-4.0-h-tiny-Q4_K_M.gguf"
+        },
+        "UD-Q4_K_XL": {
+          "repo": "unsloth/granite-4.0-h-tiny-GGUF",
+          "commit": "56b37fdc52891304726c4a0a8b140dd1fc1582d5",
+          "file": "granite-4.0-h-tiny-UD-Q4_K_XL.gguf",
+          "bytes": 4072645792,
+          "sha256": "517b4f5cbff45c35090f70e8b1b06dc40f0df33077fb05c25deab98abc5c294f",
+          "url": "https://huggingface.co/unsloth/granite-4.0-h-tiny-GGUF/resolve/56b37fdc52891304726c4a0a8b140dd1fc1582d5/granite-4.0-h-tiny-UD-Q4_K_XL.gguf"
+        }
+      },
+      "placement": "CPU-only (optional GPU comparison: it fits the ~5.5 GiB free)",
+      "expected_vram": "none on the CPU run; [I] about +4.4-4.7 GiB if run with -ngl 99",
+      "expected_host_ram": "[I] about 4.4-4.7 GiB (KV only 64 MiB at 8K plus a small Mamba2 state)",
+      "llama_server": [
+        "llama-server -m granite-4.0-h-tiny-Q4_K_M.gguf -dev none -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
+      ],
+      "request_settings": "no thinking mode; same issue #29006 check as row 7",
+      "suites": [
+        "pick",
+        "pick-hard",
+        "fill"
+      ],
+      "run": [
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick --condition none --k 3 --warmup --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition none --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite fill --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0"
+      ],
+      "why": "1B-active MoE: CPU prefill and decode cost roughly a 1B dense model while holding 7B of weights; head to head with rows 6 and 7 for a CPU Pick badge on 16 GB-RAM machines.",
+      "watch_for": "Competitor-reported BFCLv4 28.52 and IFBench 21.28 are weak; Explain and Fill expectations are low."
+    },
+    {
+      "rank": 9,
+      "priority": "B",
+      "name": "Spark-X2.5-4B (critic pass)",
+      "weights_repo": "XHToken/Spark-X2.5-4B",
+      "licence": "Apache-2.0",
+      "files": {
+        "Q4_K_M": {
+          "repo": "XHToken/Spark-X2.5-4B-GGUF",
+          "commit": "9826e0be84e6e6e8b9668abc91421109a1df1e2d",
+          "file": "Spark-X2.5-4B-Q4_K_M.gguf",
+          "bytes": 2600224352,
+          "sha256": "adfcfa19a4ed6a5985da8bf565fe15f8e1a7e131d79bae2d19d48d1c40109428",
+          "url": "https://huggingface.co/XHToken/Spark-X2.5-4B-GGUF/resolve/9826e0be84e6e6e8b9668abc91421109a1df1e2d/Spark-X2.5-4B-Q4_K_M.gguf"
+        },
+        "UD-Q4_K_XL": null,
+        "UD_note": "no UD quant published",
+        "cpu_variant_1.7B_Q4_K_M": {
+          "repo": "XHToken/Spark-X2.5-1.7B-GGUF",
+          "commit": "1f7fa33b1245c14730da39e125714ad3a327901b",
+          "file": "Spark-X2.5-1.7B-Q4_K_M.gguf",
+          "bytes": 1107457856,
+          "sha256": "902bde2522394954ac17821b3e5fd0df02defbc6944f122253f2580acf0503f4",
+          "url": "https://huggingface.co/XHToken/Spark-X2.5-1.7B-GGUF/resolve/1f7fa33b1245c14730da39e125714ad3a327901b/Spark-X2.5-1.7B-Q4_K_M.gguf"
+        }
+      },
+      "placement": "full GPU (the 1.7B variant CPU-only, -dev none)",
+      "expected_vram": "[I] about +3.1-3.4 GiB at 8K f16 (weights about 2,480 MiB; KV about 290 MiB for 9 full-attention layers plus about 100 MiB for 27 sliding-window-512 layers; compute 300-500 MiB); fits the ~5,490 MiB free",
+      "expected_host_ram": "[I] under 1 GiB beyond the mapped file; the 1.7B CPU variant about 1.5 GiB",
+      "llama_server": [
+        "llama-server -m Spark-X2.5-4B-Q4_K_M.gguf -ngl 99 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+        "llama-server -m Spark-X2.5-1.7B-Q4_K_M.gguf -dev none -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
+      ],
+      "request_settings": "enable_thinking must be sent false (thinking is on by default in the template and the reasoning parser); needs a llama.cpp build containing PR #27868 (merged 2026-09-06; the card says b10828 or later); the card sampler (T 1.0, top_p 0.95, top_k -1) is not used, the common pin is; check one --dry-run and thinking_chars first",
+      "suites": [
+        "pick",
+        "pick-hard",
+        "fill",
+        "explain",
+        "text"
+      ],
+      "run": [
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick --condition none --k 3 --warmup --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition none --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition cards --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite fill --k 3 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite explain --condition cards --k 2 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+        "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite text --condition none --k 2 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0"
+      ],
+      "why": "Newest Apache-2.0 4B on a mainline architecture; the vendor table (thinking mode only) puts it at BFCL-V4 65.1 and IFEval 93.0 against Qwen3.5-4B's 50.3 and 89.8 and Gemma 4 E4B's 36.9 and 45.3; hybrid attention keeps KV near Qwen3.5-4B's; trending on Hugging Face (created 2026-08-24).",
+      "watch_for": "Non-thinking quality unknown; 'more than 200 languages' is a vendor claim with no EuroEval entry; the tool-call format is not documented on the card (irrelevant under json_schema)."
+    }
+  ],
+  "alternates_for_the_offload_slot": [
+    {
+      "name": "Qwen3.5-35B-A3B",
+      "files": {
+        "Q4_K_M": {
+          "repo": "unsloth/Qwen3.5-35B-A3B-GGUF",
+          "commit": "bc014a17be43adabd7066b7a86075ff935c6a4e2",
+          "file": "Qwen3.5-35B-A3B-Q4_K_M.gguf",
+          "bytes": 22016023168,
+          "sha256": "3b46d1066bc91cc2d613e3bc22ce691dd77e6f0d33c9060690d24ce6de494375",
+          "url": "https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-Q4_K_M.gguf"
+        },
+        "UD-Q4_K_XL": {
+          "repo": "unsloth/Qwen3.5-35B-A3B-GGUF",
+          "commit": "bc014a17be43adabd7066b7a86075ff935c6a4e2",
+          "file": "Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf",
+          "bytes": 22241950336,
+          "sha256": "1b0ac637dfa092bbba2793977db9485a40c4f8b42df5fe342f0076d61b66ae83",
+          "url": "https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf"
+        }
+      },
+      "note": "22 GB is heavy for 32 GB RAM next to the editor; the Unsloth UD-IQ4_XS (17.49 GB) is the fallback; best EuroEval instruct scores of any <=4B-active model; thinking on by default (send false)",
+      "llama_server": "llama-server -m Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf -ngl 99 --cpu-moe -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
+    },
+    {
+      "name": "Qwen3.6-35B-A3B",
+      "note": "the only offload row with an upstream GTX 1070 measurement (UD-IQ2_M, 25.78 tokens/s generation, pp512 366.93); coding-focused card; repo unsloth/Qwen3.6-35B-A3B-GGUF (UD-Q4_K_XL 22.36 GB); file hashes not fetched for this list"
+    }
+  ],
+  "next_wave_needs_new_instruments": [
+    {
+      "name": "decider-0.8b / decider-2b (Mapika)",
+      "needs": "letter-probability mode in run.py (/completion, n_predict 1, n_probs >= 20, renormalise over valid letters, fitted temperature)",
+      "role": "PICK in shadow through the D023 Selector seam"
+    },
+    {
+      "name": "Hy-MT2-7B and Hy-MT2-1.8B (Tencent)",
+      "needs": "EN->CZ/PL/RU translation suite with glossary, placeholders, codepage lints and native-speaker grading; pin a revision dated 2026-05-26 or later (licence)",
+      "role": "translate step of creative text"
+    },
+    {
+      "name": "Bielik-Minitron-7B-v3.0 and Bielik-11B-v3.0 (SpeakLeash)",
+      "needs": "the same non-English suite; 12-16 GB GPU or q8_0 KV on 8 GB",
+      "role": "Czech/Polish creative text and explanations"
+    },
+    {
+      "name": "TranslateGemma-4B (bring-your-own)",
+      "needs": "chat_template_kwargs source_lang_code / target_lang_code on the chat endpoint (PR #19052); if the Jinja parser fails as in issue #20305 (27B, closed as stale), --no-jinja was reported to work",
+      "role": "translation comparator"
+    }
+  ],
+  "critic_pass": {
+    "date": "2026-09-27",
+    "files": "every pinned file re-queried through the Hugging Face paths-info API at its pinned commit: bytes and LFS SHA-256 match, resolve URLs well-formed, repositories ungated",
+    "fixes": [
+      "row 3: --n-cpu-moe 20 cannot fit the ~5.5 GiB free on the reference card; the 3,299 MiB GTX 1080 figure was measured at --n-cpu-moe 29",
+      "rows 2 and 3: the 50-67 tokens/s prompt figures were timed on 29-52-token prompts, not throughput",
+      "TranslateGemma works through the chat endpoint with chat_template_kwargs language codes (PR #19052)"
+    ],
+    "added": [
+      "rank 9 Spark-X2.5-4B",
+      "doc14_carryovers_unmeasured (Gemma 4 E2B QAT, Granite 4.2-3B)"
+    ]
+  },
+  "doc14_carryovers_unmeasured": [
+    {
+      "name": "Granite 4.2-3B (doc 14 narrow-router option; successor of doc 44's Granite 4.1 3B)",
+      "licence": "Apache-2.0",
+      "files": {
+        "Q4_K_M_official_ibm": {
+          "repo": "ibm-granite/granite-4.2-3b-GGUF",
+          "commit": "c40945d71cd90f249a56985e8155551a9188dc30",
+          "file": "granite-4.2-3b-Q4_K_M.gguf",
+          "bytes": 2244011552,
+          "sha256": "e0406663965846ae22a403456eb826ccce5f450840491f71952f18a7cb78e7d5",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-GGUF/resolve/c40945d71cd90f249a56985e8155551a9188dc30/granite-4.2-3b-Q4_K_M.gguf"
+        }
+      },
+      "llama_server": [
+        "llama-server -m granite-4.2-3b-Q4_K_M.gguf -ngl 99 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+        "llama-server -m granite-4.2-3b-Q4_K_M.gguf -dev none -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
+      ],
+      "request_settings": "no thinking mode; same issue #29006 json_schema check as rows 7 and 8",
+      "suites": [
+        "pick",
+        "pick-hard",
+        "fill"
+      ]
+    },
+    {
+      "name": "Gemma 4 E2B-it QAT (doc 14 low-memory fallback)",
+      "licence": "Apache-2.0",
+      "files": {
+        "UD-Q4_K_XL": {
+          "repo": "unsloth/gemma-4-E2B-it-qat-GGUF",
+          "commit": "66a399f68ddd113b06dff02fca9523e55465d11d",
+          "file": "gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf",
+          "bytes": 2620370976,
+          "sha256": "e531007218dfab990486a5de7676a6932d6ea8dea233d1f698d7c21cf8a16889",
+          "url": "https://huggingface.co/unsloth/gemma-4-E2B-it-qat-GGUF/resolve/66a399f68ddd113b06dff02fca9523e55465d11d/gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf"
+        },
+        "Q4_0_QAT_google": {
+          "repo": "google/gemma-4-E2B-it-qat-q4_0-gguf",
+          "commit": "675cff42a74c774d6cb76f76d8eacb49b48c9b93",
+          "file": "gemma-4-E2B_q4_0-it.gguf",
+          "bytes": 3349516256,
+          "sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+          "url": "https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/resolve/675cff42a74c774d6cb76f76d8eacb49b48c9b93/gemma-4-E2B_q4_0-it.gguf"
+        }
+      },
+      "llama_server": [
+        "llama-server -m gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf -ngl 99 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+        "llama-server -m gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf -dev none -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
+      ],
+      "request_settings": "send enable_thinking false, as for the E4B baseline",
+      "suites": [
+        "pick",
+        "pick-hard",
+        "fill"
+      ]
+    }
+  ],
+  "bonsai": {
+    "status": "optional paired probe for the owner question 'What about Bonsai 2 27B?'; verdict Watch, not Priority A (doc 47 section 2.7); run only after the Priority A rows; every speed and memory figure below is an estimate [I] unless marked [V]",
+    "question": "Does ternary retraining buy quality over a mainline 2-bit build of the same base (Qwen3.8-27B) on Plotroom's steps with thinking off, and is either arm fast enough on the reference box?",
+    "reference_box_extra": "CPU 4 cores / 8 threads with AVX2, no AVX-512 or VNNI; RAM 4 x 8 GB DDR4-2400 in two channels, 38.4 GB/s peak (read locally through WMI, 2026-09-27); -t 4 below is the physical core count",
+    "model": {
+      "name": "Ternary-Bonsai-2-27B (PrismML)",
+      "licence": "Apache-2.0 (the NOTICE asks for 'Created using Bonsai by Prism ML'); base Qwen/Qwen3.8-27B Apache-2.0; fork runtime MIT",
+      "files": {
+        "PTQ1_0": {
+          "repo": "prism-ml/Ternary-Bonsai-2-27B-gguf",
+          "commit": "b072e1d3b35a0a630cece372c2127528e0994386",
+          "file_commit": "6ed5e12bf84b7a63069882c91dd9e9218647d17b",
+          "file": "Ternary-Bonsai-2-27B-PTQ1_0.gguf",
+          "bytes": 5946648928,
+          "sha256": "53107f530aa52eb00912263ab1ee29bd199261c87cd7b4ad4ca1318c1fe33ee3",
+          "url": "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/b072e1d3b35a0a630cece372c2127528e0994386/Ternary-Bonsai-2-27B-PTQ1_0.gguf"
+        },
+        "PQ2_0": {
+          "repo": "prism-ml/Ternary-Bonsai-2-27B-gguf",
+          "commit": "b072e1d3b35a0a630cece372c2127528e0994386",
+          "file_commit": "6ed5e12bf84b7a63069882c91dd9e9218647d17b",
+          "file": "Ternary-Bonsai-2-27B-PQ2_0.gguf",
+          "bytes": 7206168928,
+          "sha256": "3907dc1658db1f78a9826bf8d5bcb8dc65db0d466388937af57f2294fae62ec1",
+          "url": "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/b072e1d3b35a0a630cece372c2127528e0994386/Ternary-Bonsai-2-27B-PQ2_0.gguf"
+        }
+      },
+      "pin_note": "pin b072e1d (or the file commit 6ed5e12), never main: open HF PR #59 rewrites the metadata of every GGUF in the repository and changes every SHA-256",
+      "do_not_use": "the F16 file and the gguf-dev Q2_0 file with any stock llama.cpp build: they load without a warning and generate garbage (no prism.hadamard.* support); the mmproj files are not needed (--no-mmproj)"
+    },
+    "runtime": {
+      "fork": "PrismML-Eng/llama.cpp (MIT), release prism-b10743-adfffbe, published 2026-09-25, commit adfffbe41b2cabcd51fff326ab045662265062bb",
+      "vulkan_zip": {
+        "file": "llama-prism-b10743-adfffbe-bin-win-vulkan-x64.zip",
+        "bytes": 31302954,
+        "sha256": "d66e0c4d11ea937c8cb197d6c59ffc8c41599bd30ea58057e7e6a4d5a3ced466",
+        "url": "https://github.com/PrismML-Eng/llama.cpp/releases/download/prism-b10743-adfffbe/llama-prism-b10743-adfffbe-bin-win-vulkan-x64.zip"
+      },
+      "cuda_12_4_zip_optional": {
+        "file": "llama-prism-b10743-adfffbe-bin-win-cuda-12.4-x64.zip",
+        "bytes": 257322810,
+        "sha256": "1b849f713bee42fda258de83770cd422e8f48dd631ce370eb0641f6458c69d87",
+        "url": "https://github.com/PrismML-Eng/llama.cpp/releases/download/prism-b10743-adfffbe/llama-prism-b10743-adfffbe-bin-win-cuda-12.4-x64.zip",
+        "cudart": {
+          "file": "cudart-llama-bin-win-cuda-12.4-x64.zip",
+          "bytes": 391443627,
+          "sha256": "8c79a9b226de4b3cacfd1f83d24f962d0773be79f1e7b75c6af4ded7e32ae1d6",
+          "url": "https://github.com/PrismML-Eng/llama.cpp/releases/download/prism-b10743-adfffbe/cudart-llama-bin-win-cuda-12.4-x64.zip"
+        }
+      },
+      "cpu_zip_optional": {
+        "file": "llama-prism-b10743-adfffbe-bin-win-cpu-x64.zip",
+        "bytes": 19441568,
+        "sha256": "d0b3016c9cc4bc1385de68be034adee570277ba952dd94292ba3888b7f18cc44",
+        "url": "https://github.com/PrismML-Eng/llama.cpp/releases/download/prism-b10743-adfffbe/llama-prism-b10743-adfffbe-bin-win-cpu-x64.zip"
+      },
+      "notes": [
+        "b10743 contains fork PRs #206 (PQ2_0 AVX2 CPU kernels), #238 (Vulkan PQ2_0 no longer silently on the CPU), #245 (AVX-512 load crash), #248 (PTQ1_0 SSE2/SSSE3 CPU kernels) and #271 (CPU variants in the CUDA bundles) [V, GitHub compare API]; not #250 (PTQ1_0 AVX2, in review)",
+        "unpack into its own folder; never replace the mainline b11146 build that the other rows use",
+        "the release has Vulkan, CPU, CUDA and HIP builds but no SYCL build; #238 in b10743 carries #188's Vulkan PQ2_0 support and the PTQ1_0 integer-dot decode kernel that fork issue #247 measured",
+        "the fork's llama-server has --fit on by default (1,024 MiB margin, adjusts only unset arguments); set -ngl, -ot and -c explicitly and record the effective split from the log",
+        "do not use the CUDA 13.x builds: no Pascal target, and 13.3 exits silently on some Windows systems (KNOWN_ISSUES, fork issue #222)",
+        "the CUDA 12.4 arm is a comparison only, since Plotroom's own builds never bundle CUDA (D022 decision 2); it carries sm_61 as 61-virtual code that the driver compiles on first start, so the first load is slow",
+        "check each zip against the SHA-256 digest above (the digest GitHub lists for the asset) before unpacking"
+      ]
+    },
+    "placement": {
+      "a_partial_gpu_vulkan": {
+        "file": "PTQ1_0",
+        "expected_vram": "[I] keep total use below the ~5,490 MiB free: about 4.3-4.5 GiB of weights (the file minus the ~265 MiB token embedding, which llama.cpp always keeps on the CPU, minus 12 blocks) + KV 512 MiB at 8K f16 + about 150 MiB of Gated DeltaNet state + compute buffers; start with the last 12 of 64 blocks in RAM",
+        "expected_host_ram": "[I] about 0.95 GiB for the 12 CPU blocks (about 80 MiB each: 24.35B backbone parameters x 1.75 bits / 64 blocks) plus the ~265 MiB token embedding, served from the memory-mapped file",
+        "bench_first": "llama-bench -m Ternary-Bonsai-2-27B-PTQ1_0.gguf -ngl 99 -ot \"blk\\.(5[2-9]|6[0-3])\\.=CPU\" -t 4 -fa 1 -p 512 -n 128 -r 2  # the fork's llama-bench README documents -ot",
+        "llama_server": "llama-server -m Ternary-Bonsai-2-27B-PTQ1_0.gguf -ngl 99 -ot \"blk\\.(5[2-9]|6[0-3])\\.=CPU\" -t 4 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+        "tuning": "[I] keep -ngl 99 and move whole blocks with -ot, so the CPU blocks are named explicitly and every layer's KV cache and recurrent state stays on the GPU (a lower -ngl would also offload the output layer first, then the last blocks: src/llama-model.cpp); if nvidia-smi shows more than ~300 MiB left after the first request, return one block to the GPU (blk\\.(5[3-9]|6[0-3])\\. is 11 blocks); if loading fails or use exceeds the free VRAM, add one (blk\\.(5[1-9]|6[0-3])\\.); record the final pattern and the CPU and Vulkan0 model buffer sizes from the server log",
+        "kv_variant": "-ctk q8_0 -ctv q8_0 -fa on saves about 240 MiB at 8K [I], worth one to three more blocks on the GPU",
+        "expected_speed": "[I] generation about 3-6 tokens/s in llama-bench, lower in llama-server; prompt processing at or below the ~16 tokens/s measured with the whole model on a GTX 1070 (fork issue #247) [V], so at least 60 s per 1,000 uncached prompt tokens; a Pick (about 200 uncached tokens, doc 46 section 2.6) takes about 15-20 s"
+      },
+      "a2_partial_gpu_cuda_12_4_optional": {
+        "file": "PTQ1_0 (PQ2_0 as a second try: it has a Pascal tile configuration for prompt processing and AVX2 kernels for its CPU blocks)",
+        "llama_server": "llama-server -m Ternary-Bonsai-2-27B-PTQ1_0.gguf -ngl 99 -ot \"blk\\.(5[2-9]|6[0-3])\\.=CPU\" -t 4 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080  # the CUDA 12.4 zip's llama-server, with cudart unpacked beside it",
+        "expected_speed": "[U] unmeasured on Pascal; PTQ1_0 prompt processing there falls back to dequantise plus cuBLAS (its batched kernel needs Turing); the first-generation ternary 27B ran pp512 278 and tg128 20.5 tokens/s on a GTX 1080 Ti (CUDA), but as a Q2_0 file without the Hadamard rotation, wholly on an 11 GB card, so treat it as an upper bound",
+        "note": "a bring-your-own comparison only; a much faster result supports documenting the fork as a bring-your-own endpoint for NVIDIA users, not managing it"
+      },
+      "b_cpu_only": {
+        "file": "PQ2_0 (b10743 has AVX2 kernels for PQ2_0, #206, but only SSE2/SSSE3 for PTQ1_0, #248)",
+        "runtime": "the fork's win-cpu-x64 zip, or the Vulkan zip with -dev none",
+        "llama_server": "llama-server -m Ternary-Bonsai-2-27B-PQ2_0.gguf -dev none -t 4 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+        "expected_host_ram": "[I] about 7.5-8 GiB (7.21 GB of weights + 512 MiB of KV + about 150 MiB of state + buffers)",
+        "expected_speed": "[I] generation about 1-3 tokens/s (38.4 GB/s over 7.21 GB caps it at 5.3); prompt processing a few tokens/s",
+        "scope": "a speed data point only: llama-bench -m Ternary-Bonsai-2-27B-PQ2_0.gguf -dev none -t 4 -p 512 -n 64 -r 1, plus one fill call (--limit 1 --k 1); not a harness candidate"
+      }
+    },
+    "request_settings": "thinking off: run.py sends chat_template_kwargs {enable_thinking: false}, which this template honours by emitting an empty think block [V]; leave the server's --reasoning at its default (auto), because --reasoning on overrides a client's off switch (KNOWN_ISSUES); run.py sends exactly one system message, first, as the template requires; never send reasoning_effort 'high' (HTTP 500); check one --dry-run, then one real call for parse_ok and thinking_chars == 0",
+    "sampler": "the common pin (--top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0, with run.py's per-suite temperature), identical for the comparator; the card's non-thinking values (temperature 0.7, top_p 0.80, top_k 20, min_p 0, presence_penalty 1.5) are not used, so the two arms stay comparable; the GGUF's own general.sampling values are the thinking-mode ones",
+    "suites_in_order": [
+      "fill",
+      "text",
+      "explain",
+      "pick-hard"
+    ],
+    "run": [
+      "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite fill --k 1 --limit 3 --warmup --timeout 900 --out results/bonsai-gate__fill.jsonl --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0  # speed and loop gate; read prompt_n, timings and thinking_chars",
+      "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite fill --k 3 --timeout 900 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+      "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite text --condition none --k 2 --timeout 900 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+      "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite explain --condition cards --k 2 --timeout 900 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+      "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition none --k 3 --timeout 900 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+      "python tools/local-qual/run.py --backend llamacpp --base-url http://127.0.0.1:8080 --suite pick-hard --condition cards --k 3 --timeout 900 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1.0",
+      "python tools/local-qual/score.py"
+    ],
+    "expected_wall_time": "[I] roughly 1.5-2.5 hours per arm for the four suites (256 calls) at ~16 tokens/s of prompt processing: pick-hard is 180 calls at about 15-20 s (45-60 min); fill (36 calls), explain (20) and text (20) at about 30-80 s each add about 40-100 min; the comparator should take well under half of that if its prompt processing reaches 30-60 tokens/s",
+    "stop_rules": [
+      "stop and record if a gate call shows thinking_chars > 0 or fails parse_ok",
+      "stop and record if the server log shows a grammar parse failure ('failed to parse grammar'), or an answer ignores the schema (fork issue #87: a grammar that fails to compile is logged and generation continues unconstrained; reported for tool-call grammars)",
+      "stop if more than 1 of the first 10 calls hits the per-suite output cap (looping)",
+      "if llama-bench shows pp512 below 10 tokens/s or tg128 below 2 tokens/s, run fill and text only and skip pick-hard"
+    ],
+    "comparator_mainline": {
+      "name": "Qwen3.8-27B UD-IQ2_XXS (Unsloth)",
+      "why": "the same base as Bonsai 2 and nearly the size of PQ2_0 (7.27 against 7.21 GB); runs on the installed mainline b11146 Vulkan build that Plotroom ships; fork issue #283 used this file as the conventional 2-bit comparator, and PrismML's table lists an IQ2_XXS of the same 7.27 GB",
+      "licence": "Apache-2.0",
+      "files": {
+        "UD-IQ2_XXS": {
+          "repo": "unsloth/Qwen3.8-27B-GGUF",
+          "commit": "4ca720788d1e01f1bff70c033e0d0028fd02e502",
+          "file_commit": "313447f257f7ebde0b968e4778feef774546ed81",
+          "file": "Qwen3.8-27B-UD-IQ2_XXS.gguf",
+          "bytes": 7266070528,
+          "sha256": "e792d8fb3142fe6d9171876d6da0f71f05a71028718debc72dbec93ff645e67d",
+          "url": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/4ca720788d1e01f1bff70c033e0d0028fd02e502/Qwen3.8-27B-UD-IQ2_XXS.gguf"
+        }
+      },
+      "runtime": "mainline llama.cpp b11146 Vulkan (the build tools/local-qual used)",
+      "llama_server": "llama-server -m Qwen3.8-27B-UD-IQ2_XXS.gguf -ngl 99 -ot \"blk\\.(4[2-9]|5[0-9]|6[0-3])\\.=CPU\" -t 4 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+      "tuning": "[I] start with the last 22 of 64 blocks in RAM and adjust one block at a time as for arm a; --fit is on by default in mainline but adjusts only unset arguments, so record the effective split from the log",
+      "expected_vram": "[I] about 5.0-5.3 GiB",
+      "expected_host_ram": "[I] about 2.5-3 GiB of CPU-resident weights beyond the mapped file",
+      "expected_speed": "[I] generation about 5-8 tokens/s (about 4.5 GB on the GPU at the ~128 GB/s implied by doc 46's Qwen3.5-4B Vulkan tg32 44.0 on 2.91 GB, plus about 2 GB on the CPU at 15-25 GB/s); prompt processing unmeasured, about 30-60 tokens/s by scaling the 4B's pp256 of 382-389",
+      "request_settings": "send enable_thinking false (Qwen3.8 thinks by default), as run.py does; the same sampler pin",
+      "suites_in_order": [
+        "fill",
+        "text",
+        "explain",
+        "pick-hard"
+      ],
+      "run": "the same run.py commands as the Bonsai arm; records and file names default to the served GGUF's name, so the arms do not collide"
+    },
+    "optional_mainline_curiosity": {
+      "name": "Bonsai-27B Q1_0 (first generation, Qwen3.6-27B base)",
+      "licence": "Apache-2.0",
+      "files": {
+        "Q1_0": {
+          "repo": "prism-ml/Bonsai-27B-gguf",
+          "commit": "f10afb355f104535e3e3e98cf7ab7795c72bd292",
+          "file_commit": "0469926cd8878dbddb5b883740ab3df060058696",
+          "file": "Bonsai-27B-Q1_0.gguf",
+          "bytes": 3803452480,
+          "sha256": "17ef842e47450caeb8eaa3ebfbbab5d2f2278b62b79be107985fb69a2f819aa0",
+          "url": "https://huggingface.co/prism-ml/Bonsai-27B-gguf/resolve/f10afb355f104535e3e3e98cf7ab7795c72bd292/Bonsai-27B-Q1_0.gguf"
+        }
+      },
+      "runtime": "mainline b11146 Vulkan (Q1_0 on Vulkan since PR #21539)",
+      "llama_server": "llama-server -m Bonsai-27B-Q1_0.gguf -ngl 99 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
+      "expected_vram": "[V-vendor] peak 5.2 GB at 4K and 5.6 GB at 10K context (decimal GB, FP16 KV); [I] fits the ~5,490 MiB free at 8K, tightly (about 5,215 MiB interpolated), with less than doc 44's proposed 512 MiB margin above 4K",
+      "expected_speed": "[U] unmeasured on Pascal Vulkan",
+      "scope": "speed only (llama-bench -p 512 -n 128), one --dry-run and a fill gate (--limit 3); its vendor quality is thinking-mode only (89.5% of Qwen3.6-27B FP16), and one hands-on report got a false answer with thinking off"
+    },
+    "decision": "Bonsai earns a place over the comparator only if it leads by doc 44 section 6's noise rule on Fill all-validators pass^3 or on text grader passes, and passes the escape must-pass (doc 47 section 6.3 item 6). Neither arm earns a local badge on this box unless it meets section 6.3 item 3's offload bar (whole-record Fill pass^3 >= 0.8, p90 fill latency <= 10 s warm), which ~16 tokens/s of prompt processing cannot. A clear Bonsai lead would support listing it as a bring-your-own model for newer GPUs, not managing the fork (doc 47 section 2.7).",
+    "sources": "doc 47 S74-S85; the model-file pins were re-read through the Hugging Face paths-info API and the release digests through the GitHub API on 2026-09-27"
+  }
+}

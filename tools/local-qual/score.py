@@ -6,8 +6,9 @@ What it does
 Reads the JSONL written by run.py and computes, per (model, suite, condition,
 variant):
 
-* pick: accuracy per sample and overall, pass^k (every sample of an item
-  correct), majority-vote accuracy, position-bias tables (accuracy by the
+* pick (and pick-hard, whose suite file declares the Pick shape): accuracy
+  per sample and overall, pass^k (every sample of an item correct),
+  majority-vote accuracy, position-bias tables (accuracy by the
   correct option's letter, and how often each letter was chosen), escape use,
   and two baselines: random-valid (mean of 1/number of real options) and
   always-first-option (share of calls whose correct option landed on A);
@@ -511,14 +512,17 @@ def main(argv=None):
     summary = []
     for (model, suite, condition, variant), grp in sorted(groups.items()):
         suite_def, items, sha = suites.get(suite, ({}, {}, None))
+        # A suite file may declare the step shape it measures ("shape": "pick" in pick-hard.json); the
+        # scorer follows the shape, while the summary keeps the suite's own name.
+        shape = suite_def.get("shape", suite)
         ok = [r for r in grp if not r.get("error")]
-        if suite == "pick":
+        if shape == "pick":
             m = score_pick(ok, items)
-        elif suite == "fill":
+        elif shape == "fill":
             m = score_fill(ok, items, suite_def)
-        elif suite == "text":
+        elif shape == "text":
             m = score_text(ok, items, suite_def)
-        elif suite == "explain":
+        elif shape == "explain":
             m = score_explain(ok, items)
         else:
             m = score_knowledge(ok)
@@ -526,7 +530,7 @@ def main(argv=None):
         m.update(model=model, suite=suite, condition=condition, variant=variant,
                  errors=len(grp) - len(ok),
                  stale_suite_records=sum(1 for r in grp if sha and r.get("suite_sha") not in (None, sha)))
-        if suite == "fill":
+        if shape == "fill":
             m["accuracy"] = m["field_accuracy"]
         summary.append(m)
 
