@@ -38,6 +38,23 @@ Every rule must stand on its own without session context.
   forum lore. When porting or matching behavior, cite the upstream file and
   line range in a comment.
 
+## Maximum Within the Engine; Gaps Become Engine Requests (Required)
+
+- Plotroom does the maximum the shipped game engine allows. Features are
+  built from what the engine can already run (vanilla content, generated
+  scripts, pre-placed variants, engine-faithful workarounds) for each target
+  profile. No core feature may require an engine change.
+- Every engine limitation discovered along the way is recorded in the
+  engine-requests register under `docs/upstream/`: the limitation, what
+  Plotroom does today, the proposed engine feature with its hook points in
+  the engine source, the benefit, and its status (not filed, proposed to the
+  community engine project, accepted, shipped).
+- When the community engine ships a requested feature, Plotroom exposes it as
+  an opt-in capability of the matching target profile, never as a silent
+  requirement for content that must also run on older game versions.
+- Engine requests (gaps in the game) are distinct from design-gap requests
+  (gaps in this project's own design, under `docs/design-gap-requests/`).
+
 ## Porting Upstream Code and Tests (Required)
 
 The released engine source ships its own test suites (unit, integration,
