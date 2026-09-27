@@ -8,23 +8,27 @@ how much our harness improves them?
 
 **Status.** Research and a test plan. **Nothing has been run in the cloud**: no account was created, no keyed or paid API was called and
 no money was spent. Quality statements are public evidence or hypotheses. Every dollar figure is price-sheet arithmetic **[I]**.
-**Deferred (owner decision, 2026-09-27).** Round 1 (§6) waits until the local results of doc 49 (the measured local shortlist) are in.
-Nothing in §6 runs before then, and prices, promotions and uptimes must be re-read before any run, because they move weekly (§2.4).
-The plan gained an optional Bonsai 2 27B pair on 2026-09-27 (§6.6, runs O7 and O8), answering the owner's question of doc 47 §2.7.
+**Deferred (owner decision, 2026-09-27).** Round 1 (§6.1–§6.6) waits until the local results of doc 49 (the measured local shortlist)
+are in. Nothing in §6.1–§6.6 runs before then, and prices, promotions and uptimes must be re-read before any run, because they move
+weekly (§2.4). The plan gained an optional Bonsai 2 27B pair on 2026-09-27 (§6.6, runs O7 and O8), answering the owner's question of
+doc 47 §2.7.
+**Round 0 (§6.0, owner request, 2026-09-27)** tests OpenRouter's free models first: zero spend, synthetic suites only, a dedicated
+account and a DPAPI-stored key. It needs only the tool patch; when it starts is the owner's call.
 **Epistemic legend.** **[V]** verified on 2026-09-27 against the cited primary source (a provider's pricing, model, policy or docs page;
 OpenRouter's or Hugging Face's public keyless APIs; a paper). **[V per doc N]** taken from a sibling doc. **[I]** our inference, proposal
 or arithmetic. **[U]** unknown.
 **Prices** are USD per million tokens (MTok), read on 2026-09-27 from the *pinned endpoint's* row, not the model's list price. They move
 weekly, and several are promotions, marked **promo** with the list price. The editor reads prices from dated data (doc 40 R1), never from
 this doc.
-**Data.** [`data/cloud-candidates.csv`](data/cloud-candidates.csv): 67 rows, 2 of them added for §6.6 (`model, provider, kind,
-price_in_per_m, price_out_per_m, cached_in_per_m, batch, free_tier, precision, structured_output, context, privacy, read_on,
-battery_cost_usd, role, sources`).
+**Data.** [`data/cloud-candidates.csv`](data/cloud-candidates.csv): 73 rows, 2 of them added for §6.6 and 6 free-endpoint rows for §6.0
+(`model, provider, kind, price_in_per_m, price_out_per_m, cached_in_per_m, batch, free_tier, precision, structured_output, context,
+privacy, read_on, battery_cost_usd, role, sources`).
 `battery_cost_usd` is the estimated cost of battery B (§1.2) at that row's price, with the tokenizer factor 1.3 and reasoning at the
 row's lowest planned setting (§6.2); it is blank for aggregators and GPU rental.
 **Tooling.** A cloud backend for `tools/local-qual` (any OpenAI-compatible endpoint, a hard budget cap, the harness-uplift variants of §5
-and an `uplift.py` comparer) has been built and tested against a local mock server only. It lands as one patch, with its `CODE-INDEX.md`
-entry, once doc 49's local measurement run has finished with `tools/local-qual` [V for the mock tests; I for readiness].
+and an `uplift.py` comparer, plus the `--free-only` mode, DPAPI key scripts and free-tier rate caps of §6.0) has been built and tested
+against a local mock server only. It lands as one patch, with its `CODE-INDEX.md` entry, once doc 49's local measurement run has finished
+with `tools/local-qual` [V for the mock tests; I for readiness].
 **Relation to sibling docs.** Doc 14 (tiers, candidates), doc 21 and doc 25 (step shapes, evaluation), doc 40 (token economy, cost model,
 instrument E12), doc 44 (first local measurement), doc 46 (llama.cpp, UD quants, `pick-hard`), doc 47 (small models, MoE offload
 candidates); D021 (provider layer), D022 (Model Manager), D023 (model strategy), D026 (token economy). This doc changes no decision.
@@ -41,7 +45,7 @@ content.
   response and supports a credit limit per key. It adds no markup on tokens; buying credits by card costs 5.5% (minimum $0.80) [V]. A free
   Hugging Face account is optional: its $0.10/month of routed credits covers Qwen3-4B-Instruct-2507 at nscale ($0.01/$0.03), which
   OpenRouter does not host [V]. Free tiers (Cerebras, Groq, Gemini, OpenRouter `:free`) are rate-limited or train on the data, so they
-  suit smoke tests only.
+  suit smoke tests and round 0's zero-spend screening (§6.0) only.
 - **Cheap, reliable, strict-schema and privacy-acceptable hosts** [V]: DeepInfra, CoreWeave, AkashML and Parasail (DeepInfra,
   CoreWeave and Parasail are US-headquartered; OpenRouter lists no headquarters for AkashML; all four are on OpenRouter's ZDR list, with
   1-day uptime 98.9–100% on the endpoints we plan to use); Mistral first-party (EU vendor, pinned to
@@ -72,6 +76,10 @@ content.
   15% API double-grading sample, **$6.63 in all**. Hard caps per stage sum to $10.25; buy $15 of credits once (card fee $0.83) and set
   the key's own limit to $12. The two frontier comparators are 77% of the run cost; all 21 cheap arms together are about $1.15. Opus 5.5
   is optional (about $7.90 on its own).
+- **Round 0 comes first and costs $0** (§6.0, owner request) [I]: OpenRouter `:free` models only, on a dedicated account with a
+  DPAPI-stored key whose credit limit is $0, a free-only guard that stops on any charge, and client-side caps under the free limits
+  (20 a minute; 50 a day account-wide). The core is 204 requests over 6 days: plumbing, the §5 ladder on Qwen3.8-27B (the only free
+  general model on the ZDR list) and a same-weights Gemma 4 26B-A4B pair with the local build. It screens at k = 1 and qualifies nothing.
 - **Product implications** [I]: D021's seam needs an aggregator adapter that pins (model, endpoint, precision, reasoning setting), sends
   ZDR and no-data-collection flags by default for user content, records and shows the serving host, and probes strict schemas per
   endpoint, because capability flags disagree with vendor docs in at least six cases. D023's cloud recommendations should name endpoints,
@@ -501,6 +509,131 @@ lowest effort; cheap-full arms run at `none`.
 
 ## 6. The test plan
 
+### 6.0 Round 0: free models first (owner request, 2026-09-27)
+
+The owner asked for a safe way to test models over OpenRouter, starting with free models. Round 0 uses only OpenRouter's `:free`
+variants, sends only the repository's synthetic suites and has no path to spending money. It needs the tool patch and nothing else;
+round 1 (§6.1–§6.6) stays deferred. Nothing below has been run.
+
+**Free-tier rules** [V, read 2026-09-27; the catalogue figures at 20:06 UTC]:
+
+- A free variant is its own catalogue entry, `<author>/<slug>:free`. `openrouter/auto:free` is a router that can bill paid models, so
+  a suffix check alone is unsafe.
+- 20 requests a minute. 50 a day while fewer than 10 credits have ever been bought, 1,000 a day from then on (lifetime purchases, not
+  the balance). The limits belong to the account: more keys or accounts do not raise them. The day resets at 00:00 UTC. Whether failed
+  requests count is undocumented [U], so the tool counts every attempt.
+- A negative balance returns 402 even on free models. `GET /api/v1/key` sends no prompt and reports the key's `limit`,
+  `limit_remaining`, `usage`, `byok_usage`, `is_management_key` and the account's `free_model_daily_requests` (`used`, `limit`,
+  `remaining`).
+- Two account toggles gate free endpoints: "Free endpoints that may train on request data" and "Free endpoints that may publish
+  prompts". With one off, matching endpoints drop out and requests fail with 404 "No endpoints available matching your guardrail
+  restrictions and data policy". Account, organisation and key settings stack, and the strictest wins. ZDR removes every free endpoint
+  that retains prompts.
+- A free call can still cost money through file or PDF input (a paid parser), fallback model lists, BYOK routing, models billed per
+  item, or routers. Free variants come and go without notice; `expiration_date` was null on every one.
+- The catalogue: 458 models, 17 of them free text models with one endpoint each. Only 3 free text endpoints are on the ZDR list:
+  Qwen3.8-27B (ModelRun, fp4) and two Ling 3.0 Flash finance and health specialists. Four list `structured_outputs`: Qwen3.8-27B
+  (without `response_format`), dots-3-note-preview, Nemotron 3 Super and LFM 2.5 2.6B. None of doc 44's models, gpt-oss, the Mistral
+  models or Bonsai 2 has a free variant.
+
+**Safety design** [V for the tool against its mock server: 59 tests pass and 66 injected faults, one per guard, are all caught; I for
+real endpoints, which it has not met]:
+
+| Goal | How |
+| --- | --- |
+| The key never appears in chat, argv, shell history, logs, records or plaintext on disk | The owner types it once at the hidden prompt of `set-openrouter-key.ps1`, which stores it DPAPI-encrypted for the Windows user at `%LOCALAPPDATA%\plotroom-dev\secrets\openrouter.key` (user-only ACL; any path inside a git working tree is refused). `run-cloud.ps1` decrypts it only into the environment of the one `run.py` process it starts, and refuses a run without `--free-only` or with `sk-or-` or `--api-key` in its arguments. Records and logs redact `sk-or-*`; the key's `label` is never printed. Residual: the plaintext sits in those two processes' memory during a run; DPAPI protects the file from other users and machines, not from programs running as the same user |
+| Zero spend | A dedicated account with no payment method, Auto Top-Up off and no BYOK keys; one key with a $0 credit limit. `--free-only` refuses unless the id is `<author>/<slug>:free` outside `openrouter/` and, at every start and resume, the live keyless catalogue lists it with every price exactly 0 (a router's −1 fails; no model lists a `request` price today, so an absent price counts as 0), text output only and every endpoint at 0. The cap and all prices are 0; `require_parameters: true`, `allow_fallbacks: false` and `only` pinned to the endpoints read at start. A response whose `usage.cost` is anything but exactly 0, or that carries a BYOK cost, another model or an unlisted provider, stops the run at once (exit 9). `GET /api/v1/key` runs at the start, every 10 attempts or fewer and at the end: any rise in usage is exit 9, and the ledger keeps the last reading, so a charge no response showed stops the next start. The key check refuses a management key, a key without a limit and a key with more than `--max-key-headroom-usd` (default 0) left, unless the owner overrides it explicitly |
+| Rate limits | At most 18 attempts in any 60 s and 45 per UTC day in the shared ledger, and never more than the account's remaining free requests minus 5. Every attempt counts. A daily-cap 429 ends the run (exit 10) with the time to resume; a per-minute 429 waits for its reset; three 429s in a row end the run. One free run at a time per Windows user; `--resume` continues after 00:00 UTC |
+| Privacy | Only the synthetic suites are sent. The tier is an account setting (below) |
+
+**Privacy tiers** [V: OpenRouter's provider table, read 20:13 UTC, which describes providers, not single endpoints; I for the tiers].
+Input & Output Logging (Settings → Observability) and OpenRouter's use of inputs and outputs (Settings → Privacy, the 1% discount) stay
+off. So does the publish toggle: no free text provider was flagged as publishing. Account-wide ZDR stays off on this account, because
+tier 0 sends `zdr` per request.
+
+| Tier | Toggles "may train" / "may publish" | Per request | Models added, and their hosts' policies |
+| --- | --- | --- | --- |
+| 0 | off / off | `zdr: true`, `data_collection: "deny"` | Qwen3.8-27B `:free` (ModelRun: on the ZDR list; no training, no retention) |
+| 1 | off / off | none | Gemma 4 26B-A4B `:free` (Google AI Studio: no training, prompts kept 55 days); dots-3-note-preview `:free` (AtlasCloud: keeps prompts, no training) |
+| 2 (Z13–Z15 only) | **on** / off | none | Nemotron 3 Ultra and 3 Super `:free` (NVIDIA API trial terms), LFM 2.5 2.6B `:free` (Liquid): they train on and keep prompts and receive a pseudonymous user id |
+
+**Never turn either free-endpoint toggle on for an account whose keys carry real user content.** Round 0 therefore runs on a
+dedicated account, and the product default stays `data_collection: "deny"` with `zdr` offered (§7.1).
+
+**Runs** [I]. Every run is k = 1: sample 0, which pairs item by item with sample 0 of every local k = 3 record, because menu order is
+seeded by item and sample. About 40 requests are planned per day under the tool's 45; every request costs $0. Rungs are §5.1's. Each
+arm is one command (written on one line), for example Z04:
+
+```text
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\run-cloud.ps1 --backend openai --free-only
+  --base-url https://openrouter.ai/api/v1 --ledger tools/local-qual/results/free-ledger.jsonl --resume
+  --model qwen/qwen3.8-27b:free --reasoning none --drop-params seed --extra-body @tools/local-qual/cloud/provider-zdr.json
+  --suite pick-hard --condition cards --k 1
+```
+
+Gemma's model flags are `--model google/gemma-4-26b-a4b-it:free --reasoning none`. `--resume` makes every command safe to repeat: it
+skips calls already recorded, so preflight items are not sent twice and a run stopped at the daily cap continues the next day.
+
+| # | Model (tier) | Arms | Requests | Day | What it answers |
+| --- | --- | --- | --- | --- | --- |
+| Z00 | Qwen3.8-27B (0) | `pick` PW01 with `--dry-run` | 0 | D1 | The pinned request, and a worst case of $0 |
+| Z01 | Qwen3.8-27B (0) | `pick` PW01: P3 | 1 | D1 | What OpenRouter does not document: whether a key with a $0 limit may call `:free` models; the `model` string of a free response; `usage.cost` present and 0; whether a strict schema routes to an endpoint that lists `structured_outputs` but not `response_format`; whether reasoning off is honoured |
+| Z02 | Qwen3.8-27B (0) | `pick-hard` HW01: P4 and P2; `fill` F01: F2; `knowledge` T01: K0 | 4 | D1 | The §6.1 stage-1 preflight: served provider, finish reasons, reasoning tokens, schema conformance, τ |
+| Z03 | Gemma 4 26B-A4B (1) | `pick-hard` HW01: P2; `fill` F01: F0 | 2 | D1 | Tier-1 routing with both toggles off; the no-schema path |
+| Z04–Z07 | Qwen3.8-27B (0) | `pick-hard`: P4, P0, P3, P2, one a day | 29, 30, 30, 29 | D1–D4 | The Pick ladder on the harder suite |
+| Z08 | Qwen3.8-27B (0) | `fill`: F0, F1, F3 (F2 is each F3 record's first answer) | 39 (≤ 48) | D5 | The Fill ladder: schema enforcement and repair |
+| Z09 | Gemma 4 26B-A4B (1) | `pick-hard` P2; `fill` F0 | 40 | D6 | Same weights as doc 47's offload candidate and R05/R06, with no schema on either side (§4.2 item 5): the same two arms run on the local QAT build with the settings of its doc 49 run, at $0 and outside the quota |
+| Z10–Z12 | Qwen3.8-27B (0) | `pick-hard` P1; `pick` P0 and P4; `explain` E0 and E1, `knowledge` K0 and K1, `text` T0 and T1 | 30, 60, 63 | D7–D10 | Optional: the rest of the ladder; with Z11, 20 engine-vocabulary items for §5.2's headline split |
+| Z13 | Nemotron 3 Ultra 550B-A55B (2) | `pick-hard` P0; `fill` F0; `knowledge` K0 | 54 | D11–D12 | Optional: a large model's bare arms, for a proxy gap closure H′ = (Qwen full − Qwen bare) / (Ultra bare − Qwen bare). Not a frontier model |
+| Z14 | LFM 2.5 2.6B (2) | `pick-hard` P0 and P4; `fill` F0 and F3, at effort low (its reasoning is mandatory) | 87 (≤ 96) | D12–D14 | Optional: the weak-model floor, the size of doc 44's small tier |
+| Z15 | Nemotron 3 Super 120B-A12B (2) | `pick-hard` P0 and P4 | 60 | D14–D16 | Optional: whether the uplift carries to a second strict-schema model |
+
+The core (Z00–Z09) is 204 requests (213 if every Fill item needs its repair call) over 6 days; all of round 0 is 558 (576) over about
+16 days. Buying 10 credits once would raise the free limit to 1,000 a day for good and fit round 0 into one day at k = 1. That is a
+spend decision for the owner, and it leaves the $0 key limit as the only barrier.
+At 30 menus and k = 1 only effects of about 30 points are clear (§4.4); ten-point effects need round 1's k = 3 or the 100-menu
+instrument. Each free model is one host at 4-bit or undisclosed precision and may serve differently from paid hosts, so round 0 screens
+and qualifies nothing. It cannot stand in for the frontier comparators, the pinned precision rungs, doc 44's small models or Bonsai 2
+(none of them has a free variant), or any cost per correct decision.
+
+**Stop rules** [I]:
+
+- **Exit 9 after a request** (a charge, a missing `usage` or a `usage.cost` other than 0, another model or provider, a rise in the key's
+  usage): stop round 0, check the account's Activity page and revoke the key if anything was charged. That ledger never runs again.
+  **Exit 9 at start**, with nothing sent, means the model left the catalogue or lost its zero price: drop its runs and never substitute.
+- **Exit 4 (402) on Z01:** the $0 limit blocks free calls. Set the smallest limit the dashboard accepts ($0.01), add
+  `--max-key-headroom-usd 0.01` and rerun Z01. Any later 402 stops the round.
+- **Exit 5 on a Qwen strict arm:** never drop `require_parameters`. Qwen keeps its no-schema arms, and the strict arms move to
+  dots-3-note-preview (tier 1) as a labelled different model. For exit 5 on privacy grounds, fix the tier; never widen it beyond the
+  run's own tier.
+- **Exit 7** (reasoning on an effort-none call): rerun that model at effort low with `--num-predict 1024` as a separate arm, never
+  pooled with effort-none arms.
+- **The canary** (the first 20 calls of a 30-item arm): more than 20% non-conformant answers in a strict arm, or more than 10% errors,
+  stops that endpoint's strict arms.
+- **Exit 10:** rerun the same command after 00:00 UTC. Drop an endpoint that stops on upstream 429s or errors two days running.
+  Qwen3.8-27B's free endpoint read status −2 (not 0) with 98.17% 1-day uptime at 20:06 UTC.
+- **Timebox:** if Z00–Z09 are not done 14 days after Z01, stop and report instead of extending round 0.
+
+**What would justify the paid round** [I]:
+
+- **Precondition:** Z01–Z03 pass. Every response shows $0, the pinned model and provider, flat key usage and no reasoning leak, and at
+  least one free endpoint enforces a strict schema. The tool then works against a real endpoint, and round 1's remaining risk is money,
+  which its caps bound.
+- **A large uplift:** Qwen's P4 beats its P0 by at least 30 points on the 20 engine-vocabulary items (indicative at this n), or F3
+  beats F0 by 30 points on whole-record Fill. The substitution question is then live, so stage 3b's frontier comparators (R20, R21:
+  $3.94 of the $6.63) are worth running. With a gap under 10 points on engine vocabulary, shrink round 1 to stages 2 and 3a and keep 3b
+  optional.
+- **A usable hosted 27B:** Qwen3.8-27B with the full harness reaches 0.8 per-call accuracy on `pick-hard` P4 and on Fill F3. Then run
+  R23 (the same weights at bf16 on a ZDR host, k = 3) and stage 3a to price its cost per correct decision.
+- **Same weights that differ:** Z09 and the local Gemma build differ by at least 10 points on P2 or F0. Then run stage 2's R05 and R06
+  (about $0.07) to find the cause (§4.3). Under 10 points, nothing follows at this resolution.
+- **Friction:** if churn, upstream 429s or the 50-a-day limit break the timebox, move to round 1's pinned paid endpoints instead.
+
+**Owner steps.** The account, privacy settings, key and key storage follow the runbook `tools/local-qual/cloud/README.md`, which lands
+with the tool patch. Then Z00 and Z01, reading the exit code before anything else; Z02–Z04 the same day; Z05–Z09 on one day each. Tier 2
+(Z13–Z15) turns "may train" on for its days only and back off afterwards. When round 0 ends, delete the key in the dashboard and run
+`remove-openrouter-key.ps1`.
+
 ### 6.1 Stages and accounts
 
 | Stage | Who | What | Cap (USD) |
@@ -594,7 +727,8 @@ and full at the lowest effort ($0.37 each).
   than 10% errors, a cost per call over twice the estimate, or any served-provider mismatch.
 - Retry only 408, 429 and 5xx (exponential backoff with full jitter, honouring `Retry-After`); a 402 is out of budget; any other 4xx is a
   configuration fault and stops the arm.
-- `:free` endpoints only for plumbing smoke tests: precision unknown, schemas often missing, 20 requests a minute.
+- In round 1, `:free` endpoints serve only as plumbing smoke tests: precision unknown, schemas often missing, 20 requests a minute.
+  Round 0 (§6.0) uses them for zero-spend screening, never for qualification.
 
 ### 6.5 What result would change a recommendation [I]
 
@@ -767,6 +901,18 @@ Added for §6.6 (read 2026-09-27, 18:06–18:23 UTC): <https://openrouter.ai/api
 <https://openrouter.ai/api/v1/models/prism-ml/ternary-bonsai-2-27b/endpoints> · <https://openrouter.ai/api/v1/models/qwen/qwen3.8-27b/endpoints>
 (the `darkbloom/fp4` row) · <https://openrouter.ai/api/v1/endpoints/zdr> and <https://openrouter.ai/api/v1/providers> (Darkbloom) ·
 <https://www.darkbloom.dev/privacy> (updated 2026-08-28).
+Added for §6.0 (read 2026-09-27): <https://openrouter.ai/api/v1/models> (20:06 UTC; the 17 `:free` text models) ·
+`https://openrouter.ai/api/v1/models/<author>/<slug>:free/endpoints` for 13 of them (20:06 UTC) · <https://openrouter.ai/api/v1/endpoints/zdr>
+(20:06 UTC) · `https://openrouter.ai/api/frontend/v1/all-providers` (undocumented; the data behind the provider-logging docs table;
+20:13 UTC) · <https://openrouter.ai/docs/api-reference/limits> · <https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key> ·
+<https://openrouter.ai/docs/guides/routing/model-variants/free> · <https://openrouter.ai/docs/guides/routing/provider-selection> ·
+<https://openrouter.ai/docs/guides/features/zdr> · <https://openrouter.ai/docs/guides/privacy/provider-logging> ·
+<https://openrouter.ai/docs/guides/features/guardrails> · OpenRouter help-centre articles, through the public Help Center API:
+<https://openrouter.zendesk.com/hc/en-us/articles/51690904755227> (free endpoints and privacy toggles; updated 2026-09-23),
+<https://openrouter.zendesk.com/hc/en-us/articles/51679572756123> (`openrouter/auto:free`),
+<https://openrouter.zendesk.com/hc/en-us/articles/51678714631323> (file and PDF charges),
+<https://openrouter.zendesk.com/hc/en-us/articles/51690568268059> (capping spend) · free-variant churn, a third-party tracker (not
+OpenRouter): <https://github.com/cyclez2000/openrouter-free-models/issues/77>.
 
 **Hosts.** DeepInfra: <https://api.deepinfra.com/models/list>, <https://deepinfra.com/pricing>, <https://docs.deepinfra.com/account/data-privacy>.
 Mistral: <https://mistral.ai/pricing/api>, <https://mistral.ai/pricing>, <https://docs.mistral.ai/studio-api/conversations/structured-output/custom>,
@@ -925,3 +1071,27 @@ total is $8.121.
   47's owner ruling (OWQ-19)"; OWQ-19 is answered (a) and D037 lists not-yet-OSI licences such as OpenMDW as custom-only, so the row
   now says so. O3 stays blocked on this doc's own OQ9 (whether a model whose use policy bans military uses may be tested), which D037
   leaves open. No plan, cap or number changed.
+
+### 2026-09-27, round 0 (free models) addendum
+
+- **Request.** The owner asked for a safe way to test models over OpenRouter, free models first (2026-09-27). §6.0 answers it; round 1
+  stays deferred. No account was created, no key was used and no keyed or inference endpoint was called.
+- **Reads.** Keyless, on 2026-09-27: `GET /api/v1/models` at 20:06 UTC (458 models, 17 `:free` text models), the `/endpoints` lists
+  of 13 of them and `/api/v1/endpoints/zdr` (920 entries; 3 free text endpoints) at 20:06 UTC, and the provider table at 20:13 UTC.
+  The limits page and the help-centre article on free endpoints (updated 2026-09-23) were re-read the same evening and match the rules
+  in §6.0. An earlier read the same day, through the public Help Center API, supplied the other articles cited.
+- **Correction to a CSV row.** The Gemma 4 26B-A4B `:free` row called the route "plumbing smoke tests only" and gave only Google's
+  own free-tier terms. OpenRouter's provider table lists Google AI Studio with no training and 55-day retention under Google Cloud
+  terms; which policy governs this one endpoint is [U]. The row now says both and names its round-0 runs (Z03, Z09).
+- **Arithmetic.** Requests per run are suite sizes at k = 1 (pick 30, `pick-hard` 30, fill 12, explain 10, text 10, knowledge 12),
+  minus preflight items reused through `--resume`, plus Fill repairs at §6.2's 25% (ceiling). Core 204 (213 at one repair per item);
+  all runs 558 (576). Days assume 40 planned requests a day, one run a day in phases A–C.
+- **Tool claims.** The safety design in §6.0 is the scratch patch's free-only layer: its README, its mock-server tests (59 passing)
+  and its mutation check (66 injected faults, all caught), with the DPAPI scripts tested on a random dummy key. It has not met
+  OpenRouter.
+- **Not verified:** everything Z01–Z03 exists to settle (a $0 key limit with free calls, the `model` string of free responses,
+  `usage.cost` on free responses, strict-schema routing on Qwen3.8-27B's endpoint, reasoning off on it, `data_collection: "deny"` on
+  retain-only endpoints), per-endpoint data policies (the provider table describes providers), and whether failed requests count
+  against the daily quota.
+- **Hygiene.** §6.0 and the six new CSV rows name no private project, local path, user name or e-mail address. The key path is given
+  by its environment variable only.
