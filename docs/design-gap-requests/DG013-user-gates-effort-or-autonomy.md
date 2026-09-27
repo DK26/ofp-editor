@@ -1,6 +1,6 @@
 # DG013: User gates: set by effort or by autonomy
 
-> Design-gap request (`AGENTS.md`, "Design Authority"). Filed 2026-09-27 in the consolidation pass. Status: **open**.
+> Design-gap request (`AGENTS.md`, "Design Authority"). Filed 2026-09-27 in the consolidation pass. Status: **decided** (owner, 2026-09-27): autonomy (Ask / Propose / Confirm / Auto) alone governs every wait-for-click, plus a per-run "check-ins" choice on the plan card; effort only changes budgets. The recommended resolution below is adopted.
 > **Decision by: owner** (how often Wilco stops to consult the user is a product choice between speed and "the user stays the
 > director"). Blocks: `approve` and `ask` step semantics in doc 38, the plan card's gate options, `core/campaign-from-brief`.
 

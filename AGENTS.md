@@ -101,8 +101,12 @@ making faster, more useful, and more fun.
   filesystem browsing or writes, no arbitrary network or web access. File I/O
   happens only through the product's own open / save / import / export /
   preview flows, under the user's control. The only outbound network traffic
-  the agent causes is to the model provider the user configured and to the
-  services of plugins the user has enabled.
+  the product causes is to the model provider the user configured, to the
+  declared endpoints of plugins the user has enabled, and to download or feed
+  sources the user has explicitly enabled (for example model downloads from
+  Hugging Face, or read-only community mod catalogs). Such sources are off by
+  default, blocked in offline mode, integrity-checked (pinned revisions and
+  hashes), and every download is started by the user, never by the agent.
 - **Extensions only through the plugin system.** The agent's capabilities may
   be extended only by plugins the user explicitly installs and enables (for
   example, a connector to an external service that adds voice generation,

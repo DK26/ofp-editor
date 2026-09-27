@@ -84,7 +84,7 @@ verification notes).
 | [DG010](DG010-resume-and-replay-wording.md) | Resume reuses settled entries; one meaning for "replay" | technical | open | 38 §4.3, OQ3; 21 §6.2, §8.2; 25 §4.2 |
 | [DG011](DG011-admission-wrapper-name.md) | `Admitted<T>` or `Checked<T>`, and what a changed read does | technical | open | 21 §1.2, OQ1; 25 §4.2; 38 OQ4 |
 | [DG012](DG012-requalification-triggers.md) | Which prompt, lens or exemplar changes void a qualification | technical | open | 38 OQ5, §3.5; 21 §12.3 |
-| [DG013](DG013-user-gates-effort-or-autonomy.md) | User gates: set by effort or by autonomy | **owner** | open | 38 OQ12, §5.4, §8.1; 25 §5.2; 21 §7; 14 §8 |
+| [DG013](DG013-user-gates-effort-or-autonomy.md) | User gates: set by effort or by autonomy | **owner** | decided 2026-09-27 | 38 OQ12, §5.4, §8.1; 25 §5.2; 21 §7; 14 §8 |
 | [DG014](DG014-cross-plugin-chaining.md) | May one plugin's output feed another plugin's egress in a workflow | **owner** | open | 38 OQ13; 22 §3.1–§3.2 |
 | [DG015](DG015-pick-answer-schema.md) | `DecisionSpec.schema` must not be declarable for Pick | technical | open | 38 §3.3, §4.7; 40 R4–R5, §4.1 |
 | [DG016](DG016-budget-and-repair-accounting.md) | How turns, repairs, reservations and retries are counted | technical | open | 38 §3.4, §4.3, §4.5–§4.6, §7; 40 §6–§7; 25 §7.2; 21 §6.2 |
@@ -99,12 +99,12 @@ verification notes).
 | [DG025](DG025-cloud-prompt-budget-and-cache-minimum.md) | The cloud (T3) capsule budget and provider cache minimums | technical | open | 40 G7, R11, §2.3; 25 §4.4 |
 | [DG026](DG026-candidate-diversity-without-temperature.md) | Candidate diversity when `temperature` is rejected | technical | open | 40 G8, R7; 21 §7.1; 25 §7.3; 38 §3.3 |
 | [DG027](DG027-warm-first-fan-out.md) | Warm-first fan-out and llama.cpp slots | technical | open | 40 G9, R9, R14; 38 §4.5 |
-| [DG028](DG028-t2-read-only-catalog-feeds.md) | Read-only catalog feeds and registry traffic | **owner** | open | 42 §3.4, §5.1, OQ3; 22 §2.3, OQ4; AGENTS.md |
+| [DG028](DG028-t2-read-only-catalog-feeds.md) | Read-only catalog feeds and registry traffic | **owner** | decided 2026-09-27 | 42 §3.4, §5.1, OQ3; 22 §2.3, OQ4; AGENTS.md |
 | [DG029](DG029-mod-channel-outreach.md) | Outreach to the mod-channel maintainers | **owner** | open | 42 OQ1–OQ2, §4.2, §8.1 |
 | [DG030](DG030-mod-distribution-open-decisions.md) | Open decisions on mod install hand-off, directory freshness, CC-BY-SA and the registry operator | **owner** | open | 42 review "Still open", OQ8–OQ9; 34 OQ6 |
 | [DG031](DG031-concept-id-scheme.md) | Flat or dotted ids for Standing Orders entries and cards | technical | open | 33 OQ11, finding 10, §3.1–§3.4; 30 §4.6; 38 §3.5 |
 | [DG032](DG032-reference-tool-family.md) | One knowledge store and one tool family | technical | open | 30 OQ7, §4.4; 33 §6.1, OQ10; 21 §10.2; 23 |
-| [DG033](DG033-standing-orders-phase-0.md) | Standing Orders phase-0 decisions (schema, demos, Easy/Advanced, relabels) | technical; **owner** for items 3–4 | open | 33 §9 phase 0, OQ2–OQ3 |
+| [DG033](DG033-standing-orders-phase-0.md) | Standing Orders phase-0 decisions (schema, demos, Easy/Advanced, relabels) | technical; **owner** for items 3–4 | items 3–4 decided 2026-09-27; 1–2 open | 33 §9 phase 0, OQ2–OQ3 |
 | [DG034](DG034-camera-engine-defects-routing.md) | Camera and effects engine defects: route to the engine-requests register | technical | open | 32 §2.9, §3.7; 31 §10; AGENTS.md |
 
 ## Candidates noticed but not filed in this pass

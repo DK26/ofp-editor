@@ -1,6 +1,6 @@
 # DG028: Read-only catalog feeds and registry traffic
 
-> Design-gap request (`AGENTS.md`, "Design Authority"). Filed 2026-09-27 in the consolidation pass. Status: **open**.
+> Design-gap request (`AGENTS.md`, "Design Authority"). Filed 2026-09-27 in the consolidation pass. Status: **decided** (owner, 2026-09-27): user-enabled download and feed sources are allowed (model downloads such as Hugging Face; read-only community mod catalogs): off by default, blocked offline, integrity-checked, every download user-started. `AGENTS.md` amended accordingly.
 > **Decision by: owner** (it changes which outbound destinations the product may contact, and `AGENTS.md`'s wording). Blocks: the
 > Community catalog connector (doc 42 MS3) and registry phases RG1–RG2 (doc 42 MS4), which stay `proposal-only` until decided.
 

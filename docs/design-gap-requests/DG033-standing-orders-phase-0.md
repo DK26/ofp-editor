@@ -1,6 +1,6 @@
 # DG033: Standing Orders phase-0 decisions (schema, demos, Easy/Advanced, relabels)
 
-> Design-gap request (`AGENTS.md`, "Design Authority"). Filed 2026-09-27 in the consolidation pass. Status: **open**.
+> Design-gap request (`AGENTS.md`, "Design Authority"). Filed 2026-09-27 in the consolidation pass. Status: items 3-4 **decided** (owner, 2026-09-27): keep the original Easy/Advanced switch as a view preset (default Advanced) and keep the original labels, with plain-language relabels shown beside them; items 1-2 remain open (technical).
 > **Decision by:** items 1–2 **technical**; items 3–4 **owner** (they change what the faithful original dialogs show). Blocks: doc 33
 > phase 1 (registry and cards) for items 1 and 4; phase 3 (demos) for item 2; lesson C7 and the dialog layer for item 3.
 
