@@ -389,6 +389,11 @@ rule (the dated Answer line under each entry is authoritative). OWQ-24 to OWQ-27
 - **Also asked.** The wording for 18+ providers in an editor that under-18 modders may use; registering Plotroom as an OAuth app with
   Hugging Face under a project-owned account.
 - **Blocks.** Doc 50 §4's flow; the free-provider preset data in the provider layer (D021); the Settings → Wilco screen.
+- **Answer (owner, 2026-09-28).** (b): "connect a free model" presets on the user's own account (OpenRouter first by OAuth PKCE,
+  then Cloudflare Workers AI and Groq), each with a dated disclosure card; no Plotroom-owned key, proxy or keyless default; the preset
+  list is fixed at release after the legal review and the providers' written answers on fictional military content. Owner direction
+  of 2026-09-27 applies: only free models that pass Plotroom's qualification for a step kind are offered for it (re-qualified
+  regularly).
 
 ### OWQ-25: Aggregators as first-class providers (doc 48 OQ10)
 
@@ -404,6 +409,9 @@ rule (the dated Answer line under each entry is authoritative). OWQ-24 to OWQ-27
   aggregator, so it is "the model provider the user configured"; the design-gap request that doc 48 §7.4 item 2 proposes should be
   filed to settle how that wording covers the downstream host.
 - **Blocks.** The aggregator adapter in the provider layer (D021); doc 50 §4 steps 5–7.
+- **Answer (owner, 2026-09-28).** (a): aggregators are first-class providers with the safeguards above (pinned route, zero data
+  retention and no data collection by default for user content, serving host shown per call, per-key host allow-list, periodic
+  re-probes), and the design-gap request on downstream hosts is filed.
 
 ### OWQ-26: Models and services whose policies ban military uses (doc 48 OQ9)
 
@@ -420,6 +428,9 @@ rule (the dated Answer line under each entry is authoritative). OWQ-24 to OWQ-27
 - **Recommended.** (a). The suites are editor operations over code-owned menus plus English flavour text, so the risk is low; the two
   incompatible services are avoided entirely; D037 stays as written for recommendations, and the same principle carries to presets.
 - **Blocks.** Doc 48 runs O3, R01, R14 and round 0 tier 2 (Z13–Z15); D044's list of screening hosts.
+- **Answer (owner, 2026-09-28).** (a): testing with the synthetic suites only, never a recommendation or preset (D037 unchanged);
+  services with incompatible terms (the NVIDIA trial, Z.ai) are not used; combat-flavoured items never go to hosts with
+  violent-content clauses.
 
 ### OWQ-27: Spend and schedule for cloud screening (D044)
 
@@ -447,6 +458,9 @@ rule (the dated Answer line under each entry is authoritative). OWQ-24 to OWQ-27
 - **Recommended.** (b), with the schedule above. Only the synthetic suites are sent; the owner creates the account and the key, and
   agents never handle keys.
 - **Blocks.** D044's protocol; doc 49's offload and Bonsai rows; round 0's one-day option (doc 48 §6.0).
+- **Answer (owner, 2026-09-28).** (b): 10 OpenRouter credits bought once by the owner, a separate screening key capped at $1, the
+  tool's hard cap on every run; the cloud backend lands in `tools/local-qual` once the doc 49 run releases it. Round 1 stays deferred.
+  Purchase and key: *not yet done* (owner action).
 
 ## Verification notes
 
