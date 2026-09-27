@@ -494,7 +494,7 @@ pack until it passes the evaluation round in `prompts/design-sensibility/EVALUAT
 7. **Community sample bias [U].** Reddit, the BI forums and the BI wiki were unreachable; community evidence comes from OFPEC, Steam,
    2002–2003 forums and reviews.
 8. **Moral-choice boundaries [I].** Which conscience choices the archetype vocabulary offers, and how they are framed, may need an
-   owner decision recorded in `docs/`.
+   owner decision recorded in `docs/` (answered 2026-09-27 → [D041](../decisions/D041-moral-choice-suggestion-boundaries.md)).
 
 ## Sources
 
@@ -605,3 +605,9 @@ before it was applied. No verified finding was deleted.
 - **§7 (2026-09-27):** doc 36's rubric notes and lens candidates cv40–cv42 queued for pack v0.2 evaluation, not adopted.
 - **Rename sweep (2026-09-27):** no "Field Manual", "Boot camp", "Bootcamp" or "Academy" references to our features, and no
   links to doc 33 or `skills/field-manual`, were found in this file; nothing to rename.
+
+### Owner answers (2026-09-27)
+
+- **2026-09-27, folded by pointer:** open question 8 points to [D041](../decisions/D041-moral-choice-suggestion-boundaries.md)
+  (OWQ-22: a short boundary list for generated suggestions only, written in Standing Orders; the user's own content is never
+  filtered). FP48 already matches it. No analysis or principle changed.

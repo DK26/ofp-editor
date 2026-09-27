@@ -407,7 +407,8 @@ pub struct ClassProvenance { introduced_by: ClassSource, owner: Option<AddonName
 for parity) or → `ModNeed` (owner-less classes from a replaced `bin\config`; islands; path-only references). Take the
 closure over `requiredAddons` for the *mod* list only. The engine does not need transitive names in `addOns[]` [I].
 
-**Write rule (decision-critical).** It is grounded in the engine's pruning (§2.4):
+**Write rule (decision-critical).** It is grounded in the engine's pruning (§2.4; the default of writing the
+extended set: answered 2026-09-27 → [D038](../decisions/D038-mod-handling-owner-additions.md) item 5):
 
 | Array | Contents | Why |
 | --- | --- | --- |
@@ -588,7 +589,9 @@ pub struct AddonListPlan { addons: Vec<AddonName>, addons_auto: Vec<AddonName> }
    public addon vehicles are missing from their own `units[]` and are named through ownership (§2.4). The full
    per-class owner table stays a local, uncommitted artefact.
 3. Should the extended set (§4.5) be written by default, or only offered as a lint? It is an owner decision. The
-   engine-parity-only mode stays available.
+   engine-parity-only mode stays available. (answered 2026-09-27 →
+   [D038](../decisions/D038-mod-handling-owner-additions.md) item 5: written by default, with the engine-parity-only
+   mode kept.)
 4. After a mod replaces `bin\config`, do base `AddOns\` classes still appear (the 3.05 note suggests not; the code
    still mounts them) [U].
 5. Manifest location and schema: next to the PBO, inside it, or both; and whether to align with papa-bear catalog
@@ -597,6 +600,11 @@ pub struct AddonListPlan { addons: Vec<AddonName>, addons_auto: Vec<AddonName> }
    manager, Fwatch or Game Schedule, and we deep-link at most. **Answered: never (doc 42 §3).** Plotroom never
    downloads, installs, unpacks or mirrors mods; it links out and hands installs to the channels' own tools. An
    opt-in, read-only metadata connector is proposal-only, blocked on the `feed` connector decision (doc 42 §3.3–§3.4).
+   (The `feed` kind: decided 2026-09-27 → [D008](../decisions/D008-outbound-network-sources.md); the connector still
+   waits for the channel maintainers' non-objection, answered 2026-09-27 →
+   [D035](../decisions/D035-outreach-and-security-disclosure.md) item 4. The install hand-off, a user-clicked "Launch
+   the game to install mods" for CWR and CE targets: answered 2026-09-27 →
+   [D038](../decisions/D038-mod-handling-owner-additions.md) item 1.)
 7. Policy for D3 replacement-only claims: drop them silently, warn, or keep for parity with in-game re-saves.
 8. Language-suffixed PBO variants and `GFileBankPrefix` banks in the mount plan [U].
 9. Where the CWR and 1.99 installs keep the stock config (`bin\` vs `res\bin\`), and hence whether vanilla itself is a
@@ -685,3 +693,9 @@ Corrections carried in from later research; each was checked against its source 
   the §4.5 manifest; game-folder addons (doc 42 §4.1) to §4.2. A pointer to lints D9–D12 was added to §4.5.
 - No "Field Manual", "Boot camp"/"Bootcamp"/"Academy", doc 33 or `skills/field-manual` references exist in this
   doc, so the rename to Standing Orders / Drill needed no edits here.
+
+### Owner answers folded (2026-09-27)
+
+- 2026-09-27: folded by pointer, original words kept: open question 3 and the §4.5 write rule's default → D038 item 5
+  (OWQ-18); open question 6's `feed` blocker → D008, its channel-maintainer wait → D035 item 4 (OWQ-12), and its install
+  hand-off → D038 item 1 (OWQ-17). No recommendation here contradicts an answer.

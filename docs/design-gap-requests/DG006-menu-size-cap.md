@@ -55,3 +55,7 @@ Open.
 
 - Created from doc 26 TL;DR, §9.5 and OQ6; doc 29 §6.2; doc 25 §5.1, §6.2 and OQ1; doc 21 §3.1–§3.2; doc 38 §3.2; doc 42 TL;DR, §2.4
   and MAT6; doc 35 rc33, re-read on 2026-09-27.
+- *Docs 39, 41 and 43 step (2026-09-27).* The three final docs use ≤ 7 as well: doc 39 §7 step 2 and §8 (intent cards), doc 41 §7
+  step 1 (mood family and preset), doc 43 §2.9 (`VariationAxis` options 2..=7) and §7 (variation recipes). Doc 39 §8, doc 41 §7
+  and doc 43 §7 now point here; option C's maximum of 7 keeps all of them correct, and a smaller qualified cap would apply to them
+  like any other Pick.

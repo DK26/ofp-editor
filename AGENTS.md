@@ -173,10 +173,20 @@ making faster, more useful, and more fun.
 
 ## Naming and Trademarks (Required)
 
-- The product is **Plotroom**. User-facing surfaces (README, window title,
-  splash, About box, installer, listings) pair it with the descriptor
-  "Mission & Campaign Editor for Arma: Cold War Assault / Operation
-  Flashpoint" and show the non-affiliation disclaimer from `README.md`.
+- The product name is **Plotroom**. The descriptor "Mission & Campaign
+  Editor for Arma: Cold War Assault / Operation Flashpoint" is a descriptive
+  tagline, not part of the name.
+- **"Plotroom" alone, never with the descriptor:** the window title, the
+  installer's product name and file name, the application icon, the
+  repository, crate and binary names, and configuration and sidecar directory
+  names.
+- **"Plotroom" with the descriptor:** the README heading and tagline, the
+  splash screen, the About box, the website, release notes, store and forum
+  listings, and documentation headers. The descriptor is plain text (no
+  stylised marks or game logos), and the non-affiliation disclaimer from
+  `README.md` appears in the same place or one click away.
+- **In-app body text** (Preview labels, compatibility notes, target-profile
+  badges) names the game only to identify it.
 - Crates and binaries use the `plotroom` prefix (for example
   `plotroom-core`).
 - Never use third-party marks — Arma, Operation Flashpoint, OFP, Cold War

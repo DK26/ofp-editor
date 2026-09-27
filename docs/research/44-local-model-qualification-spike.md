@@ -445,7 +445,8 @@ bar (Ministral Pick with cards, Qwen text constraints, Granite explanations), an
 
 The owner's follow-up asks for recommended local models and an in-editor download, possibly straight from Hugging Face. The owner
 has already accepted that feature as the Model Manager (D022 decision 4; D023 for the model tiers), and which models it may recommend
-is still open (OWQ-19). This spike gives it its first evidence. The sketch below builds on D022, doc 13 §6 (manifest and download) and
+was then still open (OWQ-19; answered 2026-09-27: OSI licences with no field-of-use limit and qualified, everything else "custom",
+D037). This spike gives it its first evidence. The sketch below builds on D022, doc 13 §6 (manifest and download) and
 doc 14 §5 (packs, licences); all four measured builds are Apache-2.0, which fits D023 decision 6.
 
 - **It is a user feature, not an agent tool.** The Model Manager lives in Settings. The user browses, downloads, deletes and selects
@@ -640,3 +641,8 @@ A second pass re-derived the doc's numbers with its own script instead of the au
 - **Public hygiene.** `tools/local-qual/` (excluding the git-ignored `results/`), this doc and the CSV contain no absolute local paths,
   user names or private-project references. Suite text is our own; the knowledge evidence fields cite upstream source by file and line
   range with short paraphrases, and no mission, campaign or stringtable text is copied.
+
+### Owner answer folded (2026-09-27)
+
+- §5.3 said which models the Model Manager may recommend was still open (OWQ-19). The owner answered (a) on 2026-09-27, recorded as
+  D037; §5.3 now says so by pointer. No measurement or recommendation changed.

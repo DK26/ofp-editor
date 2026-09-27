@@ -62,7 +62,31 @@ and to package sources the user has enabled in the pack manager." The agent itse
 
 ## Decision record
 
-Open.
+- **Decided:** 2026-09-27. **By:** the owner. **Chosen:** option B (the `feed` connector kind) plus R1 (the registry as a user-enabled,
+  reviewed source), with a broader outbound rule than the proposal's wording. The durable rule is recorded as
+  [D008](../decisions/D008-outbound-network-sources.md), which this section summarises.
+- **Rule.**
+  1. Outbound traffic goes only to the model provider the user configured, the declared endpoints of plugins and connectors the user
+     enabled, and **download or feed sources the user explicitly enabled**: for example model downloads from Hugging Face, read-only
+     community mod catalogs, and Plotroom's pack registry once it exists.
+  2. Every such source is **off by default**, **blocked in offline mode**, **integrity-checked** (pinned revisions and hashes), and
+     every download is **started by the user, never by the agent**.
+  3. Catalog lookups use the narrow T2 **`feed`** kind with the limits of option B and doc 42 §3.3 (GET-only; pinned or user-typed
+     HTTPS origin; fixed host-owned response schema; enum filters only; no secrets; no binary or download routes; allowlist checked on
+     the final request path; ids percent-encoded as one path segment; no redirects off the origin; size, depth and time caps; schema
+     validation; doc 22's caps, egress card and egress log).
+  4. The pack registry's origin is shown and reviewed like a T2 origin; pack files come only from origins the signed index allowlists
+     and are checked against the pack hash before unpacking (doc 42 §5.1).
+  5. Not adopted: a general host-mediated `net.fetch` for plugins (option C; doc 22 OQ4). Unchanged: the editor never fetches web or
+     pricing pages (doc 40 R1) and never downloads mod files (D030).
+- **`AGENTS.md`.** "No general system access" was amended by the owner to state rules 1 and 2. Its wording is the owner's, not the
+  sentence proposed above: it names download and feed sources in general rather than only package sources in the pack manager.
+- **Reason.** Neither channel runs an MCP server, and a Plotroom-run shim would add a host and a service to operate (option A); a
+  general `net.fetch` is a much wider surface than the use needs (option C); an offline-only directory goes stale between releases
+  (option D, DG030 item 2); file-only pack installs lose discoverability and signed updates (R2).
+- **Still open.** The Community catalog connector also waits for the channel maintainers' non-objection and answers (DG029).
+- **Folding (what moves this request to `folded`).** Doc 22 §2.3 (transports), §3.2 (network control) and OQ4 (answered for feeds;
+  `net.fetch` not adopted); doc 42 §3.4, §5.1, MS3–MS4 and OQ3, unblocked by pointer. `AGENTS.md` is already amended.
 
 ## Verification notes
 
@@ -70,3 +94,12 @@ Open.
 
 - Created from doc 42 §3.3, §3.4 (with its manifest sketch), §5.1, §8.1, §8.3 and OQ3, doc 22 §2.3, §3.2 and OQ4, and `AGENTS.md`
   "No general system access", re-read on 2026-09-27. The file name follows doc 42 §3.4's suggestion.
+
+### Owner answers (2026-09-27)
+
+- The header said **decided** while the decision record still read "Open" (found by the consistency review). The record is now
+  filled from D008 and `AGENTS.md` "No general system access", both re-read for this step; no decision changed. Docs 22 and 42 were
+  not edited.
+- The owner's local-runtime decision of the same day (llama.cpp's `llama-server` as a managed sidecar, with GGUF files pulled from
+  Hugging Face at a pinned revision and checked by SHA-256; doc 46) is a user-enabled download source under rules 1–2 above and needs
+  no change here.

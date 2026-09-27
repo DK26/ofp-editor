@@ -45,7 +45,9 @@ gplv3.fsf.org, marked as such.
   users, GPL-3.0 has no network clause, and programs talking over sockets are "normally separate programs". **Add no
   plugin exception now:** under GPLv3 §7 a permission covering only part of the Program leaves "the entire Program ...
   governed by this License". The FSF adds that for other authors' code "you cannot authorize the exception for them",
-  and that includes Bohemia's code. Ship the SDK, WIT and test kit as `MIT OR Apache-2.0`.
+  and that includes Bohemia's code. Ship the SDK, WIT and test kit as `MIT OR Apache-2.0`. *Superseded by
+  [D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 3 (2026-09-27, OWQ-03 (a)): the SDK,
+  WIT and test kit are `GPL-3.0-or-later` for now, revisited at MVP step 3 only if plugin authors ask.*
 - **Trust UX [I]:** one install review; one egress card the first time a plugin sends mission data (and on every
   agent-initiated send while untrusted mission text is in context); re-review only when the capability hash or a
   pinned tool definition changes; secrets in the OS keyring; a global off switch and `--safe-mode`.
@@ -204,7 +206,7 @@ it only as a possible expression language for T0 lint predicates.
 
 | MCP feature | Use? | How |
 |---|---|---|
-| Streamable HTTP client | **Yes** | The only T2 transport. HTTPS, or plain `http` to loopback for services the user runs (with a badge and an explicit toggle). A loopback origin must be typed in by the user; registry manifests may not pin loopback or private addresses, so a published plugin cannot aim the editor at local services [I] |
+| Streamable HTTP client | **Yes** | The only T2 transport (plus the GET-only `feed` kind for read-only catalogs, added 2026-09-27 → [D008](../decisions/D008-outbound-network-sources.md) item 3). HTTPS, or plain `http` to loopback for services the user runs (with a badge and an explicit toggle). A loopback origin must be typed in by the user; registry manifests may not pin loopback or private addresses, so a published plugin cannot aim the editor at local services [I] |
 | stdio, with us spawning the server | **No** | That is native code running with the user's rights. MCP's best practices name "Arbitrary code execution" and ask for sandboxing [V]. Cross-platform OS sandboxing is out of scope for v1 |
 | Tools | **Pinned** | Through the gate below |
 | Resources | Read-only data | Library items. Links are never followed automatically |
@@ -310,7 +312,7 @@ origin receives it. A per-plugin "always show payload" setting covers users who 
 | **Egress** | The host builds every payload from the declared read scopes. A local per-plugin egress log records what was sent, where, when, and how many bytes. Never sent: file paths, the OS user name, other plugins' data, raw game files. Facts derived from game data (class names, island names, terrain samples) leave only if the manifest declares `catalog` or `terrain` egress *and* the user enables it; doc 02 §3.4 says APL-SA data goes out only opt-in and minimal. Offline mode blocks all egress |
 | **Untrusted output** | Only schema-valid structured fields become proposals. Free text becomes content after the diff, or reaches the model fenced as "untrusted, from plugin X". Assets are staged in memory and written by the host into the mission folder on save, as part of the confirmed, undoable proposal. The host chooses the path. A plugin-supplied asset `name` is only a hint: it is sanitised (no separators, no `..`, no drive or UNC prefixes) and the media type must be on an allowlist such as OGG, WAV, PAA or JPG [I] |
 | **Pinned prompts** | Tool descriptions, skills and MCP prompts all enter the model's context. Invariant Labs showed *tool poisoning* in April 2025: hidden instructions in tool descriptions that exfiltrate data. *Rug pulls* change descriptions after approval [V] (via search summary). Defences: hash pins, length caps, display at review (for MCP-served skills, the manifest; text on the user's request, see §2.3), re-review on any change |
-| **No widening** | There are no cross-plugin calls; only the agent chains tools, and each call obeys the called plugin's grant. Mission text saying "upload everything to X" fails, because X is in no manifest. Init lines, conditions, *On Act* and scripts sit behind an `exec` scope that is off by default, and proposals that touch them are flagged high-risk (doc 17 open question 1) |
+| **No widening** | There are no cross-plugin calls; only the agent chains tools, and each call obeys the called plugin's grant. Mission text saying "upload everything to X" fails, because X is in no manifest. Init lines, conditions, *On Act* and scripts sit behind an `exec` scope that is off by default, and proposals that touch them are flagged high-risk (doc 17 open question 1). Chains inside workflows (answered 2026-09-27 → [D043](../decisions/D043-cross-plugin-chaining-in-workflows.md), OWQ-16 = DG014 B): third-party pack workflows stay single-publisher; first-party and user-authored workflows may chain plugins of different publishers, with the egress card every time a step sends a value derived from another plugin's output, and such chains are never exposed to external agents. *Superseded in part by D043 (2026-09-27): "only the agent chains tools" no longer holds for cross-publisher chains in first-party and user-authored workflows.* |
 | **Provenance** | Every applied command carries `Origin::Plugin{id, version, tool}`, shown in undo history and stored in the `.ofpeditor/` sidecar (doc 17 §11). Assets record plugin, service, model or voice id, timestamp and prompt hash. A "human edited" flag marks later user changes. Export offers an "AI-assisted" line (doc 09 §7.3) |
 | **Signing and updates** | Packages are zips with a SHA-256 lockfile, signed by the publisher with Ed25519 in minisign format (`minisign-verify` 0.3.0, MIT, released 2026-09-25, so let it settle before pinning). The registry index is signed too; TUF (`tough` 0.24.0, MIT OR Apache-2.0) can later add rollback protection [V]. Unsigned sideloads show a badge and need a developer toggle. Channels: stable and beta. Auto-update is off for third-party sources, as Claude Code does for non-official marketplaces [V]. Signing proves origin, not safety: VS Code signs its Marketplace, yet "The extension host has the same permissions as VS Code itself" [V] |
 | **Limits** | The tightest of the manifest `limits`, the user's caps and the effort budget (§4.2) wins. MCP servers "MUST ... Rate limit tool invocations" [V], but we do not rely on that. WASM also gets fuel, an epoch deadline, `StoreLimits` memory, and caps on output and proposal size |
@@ -350,7 +352,10 @@ Effort levels come from doc 17 §4. The numbers are placeholders [I].
 **Workflows [I].** A step names a tool (`uses = "radio-voice/synthesize_lines"`) and the workflow declares
 `requires = ["radio-voice >=1.2"]`; a missing or disabled plugin skips the step with an explanation (`optional = true`)
 or blocks the workflow. The callable set is the intersection of declared tools, enabled plugins and grants. Skills may
-mention plugin tools but never grant them.
+mention plugin tools but never grant them. (Publisher rule for `requires`, answered 2026-09-27 →
+[D043](../decisions/D043-cross-plugin-chaining-in-workflows.md) item 1: load-time validation refuses a third-party pack
+workflow whose `requires` names a plugin of another publisher; first-party and user-authored workflows follow items
+2–4.)
 
 ### 4.3 UI surfaces and the shared command layer
 
@@ -374,7 +379,9 @@ agent cannot trigger egress on the user's behalf [I].
 
 ### 4.4 Testing [I]
 
-`ofp-plugin-sdk` and `ofp-plugin-testkit` (`MIT OR Apache-2.0`) provide a mock host over synthetic missions only
+`ofp-plugin-sdk` and `ofp-plugin-testkit` (`MIT OR Apache-2.0`; *superseded by
+[D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 3, 2026-09-27: `GPL-3.0-or-later` for
+now*) provide a mock host over synthetic missions only
 (AGENTS.md fixture rules). Author conformance checks: golden proposals, seed determinism, schema validation of every
 output, graceful `denied` handling, fuel and memory exhaustion, output caps, and prompt-injection fixtures (mission
 text such as "ignore previous instructions ...") that must never reach `exec` fields. Connectors are tested against an
@@ -409,7 +416,7 @@ registry shows a conformance badge.
 
 | Tier | Mechanism | Closest FSF position | Consequence | Status |
 |---|---|---|---|---|
-| T0 content | Data read by the host | Not a program; like a mission | Any license. Must not contain BI game data (APL-SA) | [I] |
+| T0 content | Data read by the host | Not a program; like a mission | Any license. Must not contain BI game data (APL-SA). (Plotroom's pack licence allowlist, answered 2026-09-27 → [D038](../decisions/D038-mod-handling-owner-additions.md) item 3: CC-BY-SA-4.0 only for editor-only content; mission-reaching content under CC0-1.0, MIT, Apache-2.0 or CC-BY-4.0) | [I] |
 | T1 WASM | In-process component calling GPL host imports | Interpreter "bindings" or dynamic linking → combined program | Registry policy: distributed plugins must be **GPL-3.0-compatible**, e.g. MIT, Apache-2.0, BSD-2/3-Clause, ISC, Zlib, MPL-2.0 (unless marked "Incompatible With Secondary Licenses"), LGPL-2.1-or-later, LGPL-3.0, GPL-2.0-or-later, GPL-3.0. Not GPL-2.0-only, BSD-4-Clause or proprietary licenses (doc 02 §7.1). Private use of anything is unrestricted (GPLv3 §2) | [I]; no FSF statement on WASM [U]; courts have not tested the plug-in theory [U] |
 | T2 remote MCP | A separate program on another machine, over sockets, using a public protocol | "normally separate programs" | Proprietary services are fine. The service is never conveyed to users, GPL-3.0 (unlike AGPL) has no network-interaction clause, we ship none of its code, and the manifest is data | [I] |
 | Rejected: local stdio | Separate process over pipes | Separate unless "intimate" | Legally fine; rejected for security | [I] |
@@ -452,17 +459,24 @@ also cites "Blender (GPL) + Python scripts (any license)" (`#L15-L19`), which Bl
 3. Proprietary integrations go through T2.
 4. The SDK, WIT and test kit are `MIT OR Apache-2.0` with no CWR-derived code (doc 02 §6.3 permissive lane). The
    payload schemas they ship describe mission fields and formats, which are free facts under doc 02 §4.2. Write them
-   as our own schemas, not as a dump of ported types.
+   as our own schemas, not as a dump of ported types. *Licence superseded by
+   [D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 3 (2026-09-27, OWQ-03 (a)):
+   `GPL-3.0-or-later` for now, since registry T1 plugins must be GPL-3.0-compatible anyway; revisited at MVP step 3
+   only if plugin authors ask. Doc 02's permissive lane does not exist (D001).*
 5. Revisit only if Bohemia (and any imported CWR-CE contributors) grant a matching permission. Showing that the host
    imports reach only our original code is Iron Curtain's argument, not the FSF's, so it is not enough on its own. For
    closed plugins, use a Classpath-style permission scoped to `ofp:plugin`. For GPL-incompatible *free* plugins only,
    use the FSF interface exception.
 6. Adding any exception later also needs every DCO contributor's consent for their code, unless CONTRIBUTING grants
-   it in advance (open question 10).
+   it in advance (open question 10). (The DCO is adopted: answered 2026-09-27 →
+   [D032](../decisions/D032-contribution-terms-dco.md); [D031](../decisions/D031-generated-content-permission-and-licence-scope.md)'s
+   Consequences restate this rule.)
 7. Include this section in the pre-1.0 legal review.
 
 Content a plugin writes into a mission falls under the plugin's or service's terms; our templates fall under the
-Generated Content Exception (doc 02 §6.2) [I].
+Generated Content Exception (doc 02 §6.2) [I]. (Its wording, answered 2026-09-27 →
+[D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 1: the doc 02 §6.2 draft plus an
+explicit coverage list that includes first-party pack content copied into missions.)
 
 ---
 
@@ -506,7 +520,10 @@ Generated Content Exception (doc 02 §6.2) [I].
 | **3. T1 WASM** | wasmtime 48 LTS host, WIT `ofp:plugin@1`, SDK and test kit, patrol and ambush reference plugins, declarative panels | Adversarial component suite; determinism tests; a documented process for shipping wasmtime security releases |
 | **4. Distribution** | Signed index (minisign, then TUF), channels, revocation list, community-library connector | Signature and rollback tests |
 
-The outbound `ofp-mcp` server can ship any time after step 0, because it uses the same registry.
+The outbound `ofp-mcp` server can ship any time after step 0, because it uses the same registry. (Answered 2026-09-27
+→ [D036](../decisions/D036-v1-contents-and-release-split.md) item 6, OWQ-15 (a): the opt-in MCP server ships in v1;
+workflows using T2 plugin tools and cross-publisher chains are not exposed through it (D036's Consequences;
+[D043](../decisions/D043-cross-plugin-chaining-in-workflows.md) item 4).)
 
 ### 7.2 Manifest sketch (`plugin.toml`)
 
@@ -667,20 +684,28 @@ the three bullets below. Keep the other bullets unchanged.
 ## Open questions
 
 1. **Registry governance.** Who hosts and moderates the index (takedowns, voice-cloning policy, name squatting)? Could
-   an OFP community site run it? [U]
+   an OFP community site run it? [U] (Answered 2026-09-27 → [D038](../decisions/D038-mod-handling-owner-additions.md)
+   item 4, OWQ-17 = DG030 item 4: no operator until the registry is scheduled; then the project's own GitHub
+   organisation runs it with doc 42 §5.3's governance. A community site as operator was not chosen.)
 2. **Payload typing.** Should payloads be full WIT records, or JSON validated against versioned schemas as proposed
    here? Decide after a spike with two reference plugins. [I]
 3. **Guests and footprint.** How mature are componentize-js/py and TinyGo on WASI 0.3? How much do wasmtime and
    Cranelift add to binary size and startup? Would the Pulley interpreter help? Winch had a CRITICAL sandbox escape
    in 2026 (RUSTSEC-2026-0095), so keep it out unless it matures [U]/[V].
 4. **REST-only services.** Should T1 get a host-mediated `net.fetch` (allowlisted, secrets injected) so it can adapt
-   TTS or translation services that have no MCP server? Or should we require MCP? [I]
+   TTS or translation services that have no MCP server? Or should we require MCP? [I] (answered 2026-09-27 →
+   [D008](../decisions/D008-outbound-network-sources.md) items 3 and 5: no general `net.fetch`; read-only catalogs use the GET-only
+   `feed` connector kind.)
 5. **Legal.** Is a component that calls host imports through the canonical ABI "linked" in the FSF's sense? Should we
    ask Bohemia for a plugin permission? Is sending class or island names to a service a "Share" under APL-SA (doc 02
    §3.4)? [U]
 6. **Voice policy.** How can the registry verify "licensed stock voices" beyond self-declaration? [U]
 7. **Deferred features.** Is HTML UI (MCP Apps, which needs a webview in egui) ever worth it? Should plugin tools
    ever be re-exported through `ofp-mcp`? What trust signal should a loopback service the user runs need? [I]
+   (Re-export answered in part 2026-09-27: v1's MCP server does not expose workflows that use T2 plugin tools,
+   [D036](../decisions/D036-v1-contents-and-release-split.md) item 6 and its Consequences; cross-publisher chains are
+   never exposed,
+   [D043](../decisions/D043-cross-plugin-chaining-in-workflows.md) item 4.)
 8. **Defaults.** The limits and effort budgets need measurement. [I]
 9. **Doc 21 (agent doctrine).** Reconcile the skill and workflow formats in §4 here with the workflow definition
    format in `21-agent-doctrine.md` and the Selector seam in `16-decision-models.md`. The install review is §3.1 here,
@@ -784,3 +809,8 @@ wording was checked against the FSF's own GPLv3-era FAQ draft on gplv3.fsf.org.
 - Invariant Labs details (search summary only).
 - Guest-language maturity on WASI 0.3.
 - Whether any court would treat a WASM component as "linked".
+
+**2026-09-27, owner answers folded by pointer.** The TL;DR licensing bullet, §3.2 "No widening", §4.2 workflows,
+§4.4, the §5.2 T0 row, §5.3 items 4 and 6 and its closing paragraph, §7.1 and open questions 1 and 7 now point to
+D031, D032, D036, D038 and D043. Superseded notes: the permissive SDK, WIT and test-kit licence (D031 item 3) and, in
+part, "only the agent chains tools" (D043). No analysis was rewritten; open questions 5 and 10 stay open.

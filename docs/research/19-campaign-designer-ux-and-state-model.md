@@ -629,6 +629,10 @@ cmpEnd = _e
 7. **Eject:** drop the sidecar and keep the generated files as a plain campaign. Never commit imported game campaigns as fixtures; opt-in corpus
    tests stay local-only (`AGENTS.md`).
 
+*Note (2026-09-27).* Extension overlays (doc 34 cw13) build on this import: a sidecar that adds nodes and edges to a Preserved parent
+campaign. Whether one may be shared is answered (2026-09-27 → [D033](../decisions/D033-campaign-extension-overlays.md)): extension-only
+for Bohemia's campaigns, and for third-party campaigns only with the parent's licence or its author's recorded permission.
+
 ## 8. How the AI harness helps
 
 | Typed action (same command bus as the UI, undoable) | Purpose | Guardrail |
@@ -673,6 +677,8 @@ cmpEnd = _e
    known **[U]**.
 6. Is there an identifier length limit for globals or `saveVar` names in 1.99 **[U]**? The generator assumes ≤ 24 characters.
 7. Should restart-from-row re-roll random Decision nodes, or should `roll` pre-roll in the predecessor's commit for reproducibility? (Design.)
+   (2026-09-27, related but not settled: [D040](../decisions/D040-play-seeds-and-memory.md) item 3 says restarting never re-rolls stored rolls in v1,
+   which sits uneasily with §5.3's "a restart re-rolls" and §7.4's "re-rolled on restart" row; the router mechanism stays a design question.)
 8. Will CWR-CE accept E1/E3 (invisible routers) and E5/E6 (robustness) (doc 18 §9)?
 
 ## Sources
@@ -754,3 +760,11 @@ their quotes match. BIKI command pages returned 403, so 1.99 command presence st
   (rule 4 now takes END4, rule 5 retries on `lost`); the failure-branch row in §7.4; Sources. The new defaults are a proposal **[I]**; the
   underlying corpus facts are **[V]** in doc 35.
 - **Renames checked:** this doc has no references to the concept manual, the live tutorials or doc 33, so nothing was renamed.
+
+### Owner answers (2026-09-27)
+
+- **2026-09-27, folded by pointer:** §7.6 gains a dated note pointing to [D033](../decisions/D033-campaign-extension-overlays.md)
+  (OWQ-06, sharing extension overlays built on a Preserved import; §7.6 had no open licensing mark of its own). Open question 7 is a
+  design question outside OWQ-21 and is not folded; D040 item 3 (no re-roll on restart in v1) bears on it. No analysis changed.
+- **2026-09-27, verifier pass:** open question 7 gained a dated "related but not settled" note naming D040 item 3, so the tension
+  noted above is visible beside the question. The question stays open and no analysis changed.

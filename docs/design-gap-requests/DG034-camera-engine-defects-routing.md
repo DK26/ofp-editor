@@ -56,7 +56,8 @@ Each lint stays in doc 32 §3.7 (and in the code registry, DG005). Doc 32 §2.9 
 
 ## Affected docs
 
-Docs 31, 32; `docs/upstream/` (new); DG001, DG005, DG009.
+Docs 31, 32; `docs/upstream/` (new); DG001, DG005, DG009. Added 2026-09-27, as sources of register entries: docs 18, 29, 39, 41
+and 43 (see the verification notes).
 
 ## Decision record
 
@@ -70,3 +71,15 @@ Open.
   2026-09-27. Engine line ranges are doc 32's (CWR `ffc61838b7`, engine-reviewed there) and were not re-read against the source in
   this pass. The "what Plotroom does today" column quotes doc 32 §2.4, §2.9, §3.7 and §3.8; items 3 and 7 have no mitigation in doc 32
   yet, which the register entries should record.
+- *Docs 39, 41 and 43 step (2026-09-27).* The three final docs route their engine limits correctly (to `docs/upstream/`, not to this
+  folder). The register was created in the same pass as `docs/upstream/engine-requests.csv`, and a check on 2026-09-27 found every
+  limit these docs name in it:
+  - Doc 39 §1.2: no look-at offset (ER-071), no end-of-speech signal (ER-073), no view-distance getter (ER-074), no formation-spacing
+    command (ER-109, which also cites DG035).
+  - Doc 41 §2 and §3.1: no weather or date getters (ER-080), no wind, lightning, snow or valley fog (ER-082), no script light sources
+    (ER-083), one music slot with no crossfade or `fadeRadio` (ER-084), the ignored `CfgRadio` volume (ER-085), and ER-076, ER-081,
+    ER-086 to ER-092 for its other findings.
+  - Doc 43 §2.1–§2.7: no seedable or saved script random (ER-093, which also cites DG038), campaign variables missing after the
+    debriefing Restart (ER-026, doc 18's E5), and ER-043, ER-044, ER-094 to ER-096 and ER-101.
+  - This request's seven items are ER-062, ER-063 and ER-065 to ER-069; doc 18 §9's and doc 29 §7's CE extension lists appear as
+    entries such as ER-026, ER-027, ER-029 and ER-033. The docs 39, 41 and 43 now point to their entries.

@@ -8,7 +8,7 @@ Question answered (owner): "Research how to create beautiful scenarios and/or at
 **Citation aliases.** `CWR:` = `BohemiaInteractive/CWR@ffc61838b7:engine/Poseidon/`; `OAL:` = `BohemiaInteractive/CWR@ffc61838b7:engine/PoseidonOpenAL/`; `CE:` = `ofpisnotdead-com/CWR-CE@b67bf3bd62:engine/Poseidon/` (as in docs 32 and 39). Line numbers are CWR's; CE was compared where a line says so.
 **Profiles.** `Cwa199` (the CWA 1.99 executable), `Cwr` (Remastered, the CWR source) and `Ce` (the community continuation), as in doc 31. A *CWE mount* is the Cold War Enhanced mod set (docs 27, 42). 1.99 availability comes from a names-only string scan of the executable plus the forms that official content shipping with it uses; that scan cannot see overloads.
 **Corpus and hygiene.** The corpus is the owner's install, read locally by uncommitted scripts: 24 SP missions, 118 campaign entries (the 1985 and Resistance campaigns, cutscenes and interludes included), 30 MP missions, the base config and the CWE mod. "Playable" means the 87 SP and campaign missions left after removing cutscenes and interludes. Counts from different scripts can differ by a few percent, so each number names its population. Only aggregate numbers, command and class names and our own descriptions appear here: no game or mod content is quoted, and no audio was extracted. Game audio is proprietary, so Plotroom references stock sounds and music by class name and never bundles, copies or redistributes them. Web sources are paraphrased. Nothing here refers to private or unpublished work.
-**Codes (provisional; the design round assigns final numbers).** Heuristics `AH1`–`AH12`, mood presets `AM01`–`AM12`, soundscape layers `SX01`–`SX08`, cue plans `QP1`–`QP6`, audio lints `AU01`–`AU24`, atmosphere lints `AL01`–`AL17`, probes `AP1`–`AP18`, phases `AD0`–`AD4`, acceptance tests `AMT1`–`AMT14`. A grep of `docs/` finds none of these families, and none collides with the codes listed in the headers of docs 36, 37, 39 and 42.
+**Codes (provisional; the design round assigns final numbers).** Heuristics `AH1`–`AH12`, mood presets `AM01`–`AM12`, soundscape layers `SX01`–`SX08`, cue plans `QP1`–`QP6`, audio lints `AU01`–`AU24`, atmosphere lints `AL01`–`AL17`, probes `AP1`–`AP18`, phases `AD0`–`AD4`, acceptance tests `AMT1`–`AMT14`. A grep of `docs/` finds none of these families, and none collides with the codes listed in the headers of docs 36, 37, 39 and 42. DG005 proposes the registry that assigns final codes.
 **Companions.** Doc 03 (Intel and Effects dialogs), doc 04 (Intel keys, `description.ext` classes), doc 08 (Preview harness), doc 22 (plugins, Radio Voice), doc 25 (menus, Pick/Fill), docs 26 and 28 (fun; FP42, MC19), docs 27 and 42 (mods, CWE), doc 31 (modules 7, 15, 16, 19; the no-code ladder), doc 32 (timeline; §2.5–§2.6, §3.5), doc 34 (ed12, mo06, mo07, mo09, mo10, MC28, D9), doc 35 (rc08, rc14, rc33, rc43), doc 37 §6 (map-object actions), doc 39 (cutscene audio plans). This doc owns the atmosphere and audio *design*; the modules and the timeline it compiles into stay in their own docs.
 
 ## TL;DR
@@ -153,11 +153,11 @@ Rain 0.5 gives ≈ 775 m. Night, or overcast ≥ ≈ 0.91, caps sight at ≈ 900
 
 CWE replaces stock weather with a scripted system that scripts can read back (start and forecast values, rain, fog, transition times). Its readmes ask mission makers not to call `setRain`, `setFog`, `setOvercast` or `fadeSound` directly, but to use its own functions. Its Dynamic Sound System is an external helper program, driven through Fwatch, that plays gun sounds chosen by distance tier and surroundings (forest, hill, town, indoors, …). It is forced on with `-dss`, off with `-nodss`, and always on in MP [V local readmes and folder names]. Earlier community packs (ECP, FlashFX) mostly added effects: fire, smoke, dust, random weather and snow, radio chatter [V/V-search]. Plotroom treats all of this as optional mount data (doc 27): missions must sound right on vanilla, and CWE targets get CWE-aware lowering and lints (AU13, AL17).
 
-### 2.5 Corrections for sibling docs (to file as design-gap requests)
+### 2.5 Corrections for sibling docs (filed as DG036)
 
-1. **Doc 34 ed12.** `soundEnv` is a global bed switch that lasts until it is replaced, restored with `Default` or the section ends; it is not an ambient zone, and switching it is an instant cut. A music "crossfade" is a dip (fade out, switch, fade in), because only one track can play.
+1. **Doc 34 ed12.** `soundEnv` is a global bed switch that lasts until it is replaced, restored with `Default` or the section ends; it is not an ambient zone, and switching it is an instant cut. A music "crossfade" is a dip (fade out, switch, fade in), because only one track can play. Ed12's optional mood playlist, which switches music on the leader's behaviour, would also put music under firefights against §5.2 and doc 28 MC19 (added 2026-09-27; DG036).
 2. **Doc 32 §2.5 and the doc 23 catalog.** Official content that ships with 1.99 uses `playMusic [class, start]` (43 of 88 music scripts) and `say [class, 0]`, some calls with a third element (30 calls, Resistance). Both forms therefore very likely work on Cwa199 [I]; probe AP3 confirms. The third `say` element sets the subtitle speed, not the audio.
-3. **Rain threshold in docs 31 and 32.** Both use 0.7, while the engine's threshold is ≈ 0.673. Keep 0.7 as the compiler's safety margin, and quote the real value in lints.
+3. **Rain threshold in doc 32.** Doc 32 uses 0.7 (the §3.2 World track row and a §3.7 lint), while the engine's threshold is ≈ 0.673. Keep 0.7 as the compiler's safety margin, and quote the real value in lints. Doc 31 already quotes ≈ 0.67 (§4.6 module 15), so it needs no change (corrected 2026-09-27; this item first named docs 31 and 32).
 4. **Doc 35 rc08, "one cue per mission, no repeats".** The rule comes from community campaigns; BI used about two `playMusic` calls per mission where it used music at all. Keep it as a default, not a rule.
 5. **Doc 35 rc43.** Its defaults (hour 7, overcast 0.3) work as *values*, but the Director instead asks for the light as the first mood choice and never leaves the engine default in place silently (AL01).
 
@@ -168,7 +168,7 @@ CWE replaces stock weather with a scripted system that scripts can read back (st
 - One **Atmosphere card** per mission section (Intro, Mission, OutroWin, OutroLoose). Each is linked to the Mission card by default, and a time jump is shown explicitly ("intro 04:30 → mission 05:10").
 - The user or the model chooses a **mood**. Code solves every number for the island, date and profile, and prints the consequences before anything is applied.
 - The output is ordinary content: Intel fields, compiler-owned init lines, objects, triggers, `description.ext` classes and timeline cues. Each is tagged with the preset and the step that made it (glass box). Editing any of them marks the card *customized*, and regeneration never overwrites customized or pinned values.
-- **Profile honesty.** A control no profile offers (wind direction, valley fog, light colour, snow) is shown locked with its reason and is never faked. These gaps, and the others in §2 (no light creation, weather getters, music crossfade or `fadeRadio`; the ignored `CfgRadio` volume), are candidates for the engine-requests register under `docs/upstream/` that AGENTS.md requires; once filed, a locked control links to its entry. The panel layout follows later Armas' environment attributes (paired start and forecast values, a "time of changes") and named weather states [V: BIKI Eden Scenario Attributes; Reforger `TimeAndWeatherManagerEntity`], lowered to what CWA can do.
+- **Profile honesty.** A control no profile offers (wind direction, valley fog, light colour, snow) is shown locked with its reason and is never faked. These gaps, and the others in §2 (no light creation, weather getters, music crossfade or `fadeRadio`; the ignored `CfgRadio` volume), are candidates for the engine-requests register under `docs/upstream/` that AGENTS.md requires; once filed, a locked control links to its entry. The register is `docs/upstream/engine-requests.csv`; this doc's gaps are ER-080 to ER-092 and ER-076 there, and DG034 records how engine limits are routed. The panel layout follows later Armas' environment attributes (paired start and forecast values, a "time of changes") and named weather states [V: BIKI Eden Scenario Attributes; Reforger `TimeAndWeatherManagerEntity`], lowered to what CWA can do.
 
 ### 3.2 Mood presets
 
@@ -193,7 +193,7 @@ In stock CWA, "winter" is light and sky only: vegetation stays green and there i
 
 ### 3.3 Consequence card
 
-For every preset, and for every manual edit in the panel, code computes and shows: the sight range at start and after the 30-minute ramp; the sun phase at the start and at the estimated end; whether rain is possible, whether thunder occurs, and the wind band; the time point lights become visible; the enemy's night-vision share and the resulting AI sight factor at night; the earshot ring for trigger sounds; lamp twilight gaps (AUTO switching against the night factor); church-bell times near the route; the music budget used; and performance notes (view distance on Cwa199, particle rate, emitter count). A consequence that conflicts with the mission, such as a 600 m sniper objective in fog 0.5, becomes a lint (§6), never a block. So that the card informs without overwhelming, it leads with three chips (sight, light phase, sky) and folds the rest under *Details*; Easy mode shows only the chips (doc 09 M2) [I].
+For every preset, and for every manual edit in the panel, code computes and shows: the sight range at start and after the 30-minute ramp; the sun phase at the start and at the estimated end; whether rain is possible, whether thunder occurs, and the wind band; the time point lights become visible; the enemy's night-vision share and the resulting AI sight factor at night; the earshot ring for trigger sounds; lamp twilight gaps (AUTO switching against the night factor); church-bell times near the route; the music budget used; and performance notes (view distance on Cwa199, particle rate, emitter count). A consequence that conflicts with the mission, such as a 600 m sniper objective in fog 0.5, becomes a lint (§6), never a block. So that the card informs without overwhelming, it leads with three chips (sight, light phase, sky) and folds the rest under *Details*; Easy mode shows only the chips (doc 09 M2) [I]. Easy is the original editor's Easy/Advanced switch, kept as a view preset with Advanced as the default (DG033 item 3, decided by the owner; D029).
 
 ### 3.4 Weather and time timeline
 
@@ -309,7 +309,7 @@ Kits are optional finds and never gate progress. The default budget is 1–3 kit
 
 ### 4.3 Composition helpers
 
-- **Vista finder.** Using the island heightfield and object heights, code scores viewpoints near the planned start and route for openness, a landmark in frame (named places from the island's names list, church towers, hilltops, the coast), water or valley depth, and the sun's direction at the chosen hour (side light for warm presets, backlight for silhouettes). It proposes the start facing, a postcard spot for the intro (doc 39's establishing shot), and a reveal point where the objective first comes into view.
+- **Vista finder.** Using the island heightfield and object heights, code scores viewpoints near the planned start and route for openness, a landmark in frame (named places from the island's names list, which is empty on Kolgujev and the desert island, where doc 25 §6.1's settlement-cluster fallback applies; church towers, hilltops, the coast), water or valley depth, and the sun's direction at the chosen hour (side light for warm presets, backlight for silhouettes). It proposes the start facing, a postcard spot for the intro (doc 39's establishing shot), and a reveal point where the objective first comes into view.
 - **Landmark sightlines.** Line of sight from route points to the objective within the current sight range. Info lints fire when the objective is visible the whole way (no reveal) or is never seen before the last 200 m (no anticipation).
 - **Opening checklist.** Within the first 15 s the player should know where, when and why: a title card, a landmark in frame, and the light and weather mood (Carson).
 
@@ -475,11 +475,13 @@ Severity follows AGENTS.md: realism and taste are info or warn, and only what th
 | AL16 | warn | MP: weather, music, particle or sound actions run only on the server |
 | AL17 | warn | Stock `setRain`, `setFog` or `setOvercast` on a CWE mount |
 
+AL03 is also doc 43's VY19 (first clause), and AL16's weather part is also doc 43's VY08; each pair shares one finding and message, as doc 39's DR checks do with doc 32's lints, until the code registry (DG005) assigns one id.
+
 ## 7. The AI angle
 
 The agent works only through the product's typed tools (AGENTS.md). The atmosphere workflow is a code-owned state machine (docs 25 and 38):
 
-1. **Pick** a mood family (≤ 7), then a preset within it (≤ 7), then an intensity (3). Code computes the menus for the island, date and profile, and shows locked options with their reasons.
+1. **Pick** a mood family (≤ 7), then a preset within it (≤ 7), then an intensity (3); 7 is the menu cap under review in DG006. Code computes the menus for the island, date and profile, and shows locked options with their reasons.
 2. **Pick** a cue plan (QP1–QP6) and, for each phase, a music mood from Plotroom's own tags (tense, somber, triumphant, ambient, …).
 3. **Fill** only text: subtitles, radio lines and captions within the reading-speed limit, plus one story tag and detail token per vignette kit.
 4. **Code computes** the solved hour, Intel values, holds, lamp and fire states, flare beats, emitter positions and gates, cue times, fade ramps, duck levels, file placement and class definitions, then runs every lint.
@@ -555,7 +557,7 @@ Apart from the lines of text it writes, the model never supplies a number, a tim
 | AP13 | What is the 3D voice budget on Cwa199? |
 | AP14 | Do files from a modern Vorbis encoder play on Cwa199? |
 | AP15 | How does Cwa199 resolve a `sound[]` path that already starts with `sound\`? |
-| AP16 | How far does MP weather drift between clients, and what do join-in-progress clients see? |
+| AP16 | How far does MP weather drift between clients, and what do join-in-progress clients see? (Shared with doc 43's P-R7 and P-R8.) |
 | AP17 | Do AUTO lamps in winter twilight look as predicted? |
 | AP18 | How intense and how frequent is the lightning flash at overcast 0.95 and 1.0 (for the photosensitivity note)? |
 
@@ -569,7 +571,7 @@ Apart from the lines of text it writes, the model never supplies a number, a tim
 6. Should the accessibility fallback for sound tells (AU24) be a hint track in the UI, or captions only? [U]
 7. Does the 1.99 renderer match CWR's sun, moon and night-factor code (AP1, AP17)? [U]
 8. Should the Director script flare beats on Cwa199 before AP9 passes, or only hand out flares as gear? [I]
-9. Which Plotroom content pack owns the presets and kits (T0 data per doc 22), and how are community presets reviewed (doc 42's registry)? [U]
+9. Which Plotroom content pack owns the presets and kits (T0 data per doc 22), and how are community presets reviewed (doc 42's registry; its operator is DG030, open)? [U]
 10. How does CWE's scripted weather treat Intel values? Should CWE targets author weather only through CWE's data? [U]
 
 ## Sources
@@ -616,13 +618,13 @@ A product, fun and legal review on 2026-09-27 checked the doc against AGENTS.md 
 - **Paraphrase (AH1).** The NME line was a direct quote, although the header promises paraphrase.
 - **Defaults, never walls (§5.2, §5.5, §6).** The planner never schedules music under a firefight, and a hand-placed cue gets MC19 (warn, dismissible). Staggering and explosion moves apply to generated plans; on hand-placed lines AU22 and AU12 offer them as fixes. Every info or warn finding is dismissible as "intentional", and taste notes follow the visible realism setting (doc 39 §5.1).
 - **Tedium and glass box (§3.3, §3.7).** The consequence card leads with three chips (Easy mode shows only those). Smoke columns are doc 31 module 16 effects, edited as map markers rather than as generated script.
-- **Maximum within the engine (§3.1).** The engine gaps found here are named as candidates for the engine-requests register. `docs/upstream/` does not exist yet.
+- **Maximum within the engine (§3.1).** The engine gaps found here are named as candidates for the engine-requests register. `docs/upstream/` does not exist yet. (Superseded 2026-09-27: the register now exists; see the consolidation pass note.)
 
 Checked and kept: the scope (atmosphere and audio for missions and campaigns only; TTS only through a doc 22 plugin with its egress card; the agent picks from menus and writes only text); restraint as the default (AH9, AH11, the silence budget, QP6, the restraint meter as info); and consistency with doc 31 modules 7, 15, 16 and 19, doc 32's timeline and fenced regions, and doc 39's audio plans.
 
 Left for the design round:
 
-1. There are 41 lint codes. Even with dismissal, group them into a few user-facing families in the UI.
+1. There are 41 lint codes. Even with dismissal, group them into a few user-facing families in the UI (the code registry, DG005).
 2. Free CWA missions are non-commercial in practice, so an NC warning (here and in doc 34 mo13) may nag. Consider info on assignment and a warning only for commercial channels.
 3. Whether in-mission (non-cutscene) music counts as "synched with a moving image" is [U]. Only cutscene cues are treated as certain.
 4. The voice allowlist policy (doc 22 open question 6) should decide whether a single-speaker dataset voice needs a consent statement from its provider.
@@ -663,4 +665,15 @@ An adversarial engine review on 2026-09-27 re-read the pinned CWR source (CE whe
 - On Cwa199: CfgRadio volume (AP5), `soundEnv` restore and reset (AP4), the array forms (AP3), the voice budget (AP13), scripted ruins, and whether 1.99 mixes in software (the −40 dB floor) or through a hardware path.
 - The object distance is clamped to 100–3000 m (`ViewDistance.hpp#L24-L25`), so the cut-off stops growing at 3.5 km (view distance 4500 m and above); the earshot ring must use the clamped value. Without a mission `setViewDistance`, earshot follows the player's own setting, and the compiler-owned init line in §3.7 removes that variance.
 - In MP a remote entity keeps the importance it was sent (`Simul.cpp#L1200-L1203`). How that affects client-side emitters is [U] (AP16 could cover it).
-- The §2.5 corrections are not yet filed: none of DG002–DG018 in `docs/design-gap-requests/` covers them.
+- The §2.5 corrections are not yet filed: none of DG002–DG018 in `docs/design-gap-requests/` covers them. (Superseded 2026-09-27: re-checked against DG001–DG034, none covers them, so they are filed as DG036.)
+
+### Consolidation pass (2026-09-27)
+
+This doc was left out of consolidation part 1 while it was being written. This step checked it against the owner's renames and decisions (`docs/decisions/`), the design-gap index (DG001–DG034), the owner questions (OWQ-01–OWQ-23, none of which comes from this doc) and the corrections other docs made in part 1. No engine fact, preset, lint rule or acceptance test changed.
+
+- **Renames (D028).** The doc never names the concept manual or the live tutorials (the "tutorials" in AH7 and §5.3 are community and practitioner tutorials), and it has no links to doc 33's file or `skills/standing-orders`, so no Standing Orders or Drill edit was needed.
+- **Design-gap filing.** The re-check found that none of DG001–DG034 covers §2.5, so §2.5 is filed as DG036 (heading and the last "Still unverified" bullet point to it). Filing it also corrected §2.5 item 3: doc 31 already quotes ≈ 0.67 (§4.6 module 15); only doc 32 uses 0.7. Filing also found that ed12's optional mood playlist conflicts with §5.2's "never under a firefight"; item 1 now says so and DG036 records it. §3.1's engine gaps now point to their entries in the engine-requests register (`docs/upstream/engine-requests.csv`, created in the same pass) and to DG034.
+- **Pointers to other requests.** DG005 (codes header, the 41-code grouping in "Left for the design round"), DG006 (the ≤ 7 menus of §7), DG030 (registry operator, open question 9), DG033 item 3 (decided, recorded as D029: the Easy/Advanced switch stays as a view preset, default Advanced; §3.3's Easy chips follow it). The Atmosphere Director's name is part of DG037 (six features called "Director").
+- **Corrections carried in.** §4.3's vista finder: doc 25 §6.1 (from doc 35 §10) records that the island names list is empty on Kolgujev and the desert island, so landmarks there come from the settlement-cluster fallback. §6.2 and §9.3: doc 43, written in parallel, restates AL03 and part of AL16 as VY19 and VY08 and probes MP weather again as P-R7 and P-R8; the pairs now share one finding and one probe run.
+- **Checked, unchanged.** Doc 31 §7.5's part-1 note that `soundLength` is absent on 1.99 matches §2 ("Cwr and Ce only"); the `upstream-test-map.csv` rows 50, 269 and 272 still carry `reference`, `not-applicable` and `not-applicable`; doc 39's CA10 now cites §2.5 item 2 for the array `say` form.
+- **Length.** The file is about 680 lines, over the ~600-line ceiling; splitting it was out of scope for this step.

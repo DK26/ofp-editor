@@ -54,7 +54,7 @@ machine in a shared project are all undecided.
 
 ## Affected docs
 
-Docs 21, 25, 34, 38.
+Docs 21, 25, 34, 38; doc 43 (added 2026-09-27, see the verification notes).
 
 ## Decision record
 
@@ -66,3 +66,9 @@ Open.
 
 - Created from doc 38 §4.2, §4.3, §4.5, §4.7, §8.1, OQ2 and OQ10; doc 25 OQ10; doc 21 §12.4; doc 34 mo15, re-read on 2026-09-27.
   The mo15 interaction was found while filing and is not recorded elsewhere.
+- *Docs 39, 41 and 43 step (2026-09-27).* Doc 43 §3.4 and open question 5 add a second case of journal data leaving the machine:
+  the **replay record** (the seed code, the journal's settled answers with Pick letters mapped to stable ids, admitted Fill text and
+  human edits as ops; never raw replies or reasoning), shared from the Share dialog so another user can reproduce a model-assisted
+  campaign with no model call. Doc 43 calls it an exception to "journal excluded from export" (doc 21 §9.3). The export rule above
+  should say whether the replay record is its own opt-in item, separate from "Include AI history", and which size caps apply on
+  import (doc 43 §3.4 already requires caps, verifier re-runs and untrusted-text handling). Doc 43 is added to the affected docs.

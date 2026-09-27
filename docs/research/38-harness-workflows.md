@@ -40,7 +40,8 @@ definition format, one runtime and one UX**, and proposes answers to doc 21 open
 - **Tested like durable-execution code** (§6.4): golden journals replayed in CI, cassettes keyed by capsule hash, a faux model walking every
   menu escape, and a crash at every journal entry that must resume to the same document with zero extra model calls.
 - **External agents use the same doors** (§9): `ofp-mcp` lists and starts workflows and, where a workflow opts in, lets an external agent
-  answer decision points through the same admission. Plans and questions are still answered in the editor.
+  answer decision points through the same admission. Plans and questions are still answered in the editor. (The MCP server in
+  v1, `workflow.decide` after v1: answered 2026-09-27 → [D036](../decisions/D036-v1-contents-and-release-split.md) item 6.)
 - **Build a small interpreter; depend on no workflow engine** (§4.7). duroxide (MIT, embeddable) is the reference design.
 
 ## 1. What we borrow, and from whom
@@ -402,7 +403,7 @@ effort), declared effects (undoable writes, plugin egress, a Preview button offe
 | Ask | Only read-only workflows run; writing ones show "switch to Propose" | Shown | — | None |
 | Propose | Shown | Shown | Always, with map ghosts and a semantic diff | Only after the click |
 | Confirm (default) | Once per run | Shown | When a batch deletes or moves existing entities or exceeds the size threshold | One highlighted undo group |
-| Auto | Skipped only where "always" was granted | Required inputs still ask; optional ones take defaults | Skipped, except before irreversible effects | One undo group per step; never Preview, idea cards or a plugin's first egress |
+| Auto | Skipped only where "always" was granted | Required inputs still ask; optional ones take defaults | Skipped, except before irreversible effects | One undo group per step; never Preview, idea cards or a plugin's first egress (a send derived from another plugin's output shows the egress card every time: answered 2026-09-27 → [D043](../decisions/D043-cross-plugin-chaining-in-workflows.md) item 3) |
 
 ## 6. Authoring and distribution
 
@@ -414,6 +415,8 @@ effort), declared effects (undoable writes, plugin egress, a Preview button offe
 - **T0 packs.** `workflows/*.toml` listed under `[provides] workflows` in `plugin.toml` (doc 22 §2.1, §7.2). The install review shows per
   workflow: model policy, roles, step counts by kind, declared effects, required plugins, budgets and `external`. Pack workflows **cannot**
   add step kinds, code steps, types, checks, providers or wider tool sets, so a pack cannot add nondeterminism or effects.
+  (Cross-publisher chains: a third-party pack workflow stays single-publisher; first-party and user-authored workflows may
+  chain, with the egress card every time: answered 2026-09-27 → [D043](../decisions/D043-cross-plugin-chaining-in-workflows.md).)
 - **Hash-pinned trust**, after Codex's hooks (Trusted when the stored hash matches, Modified when it differs, Untrusted when none is
   stored; `CX:codex-rs/hooks/src/engine/discovery.rs#L794-811`) [V]: an update that changes a workflow's hash marks it Modified, and it
   does not run until re-approved with a diff of its declared steps and effects. Started runs keep their snapshot.
@@ -427,7 +430,8 @@ drive execution, so a misspelled `verify` must not pass); unknown kinds, types, 
 templated or generated step ids; cycles (petgraph); bindings to anything but inputs or earlier admitted outputs, or of an incompatible type
 (doc 21 §6.4's build-time test plus type checking); a model step without `verify` or `on_fail`; `on_fail = "split"` without `split`;
 `required` with no model step, `forbidden` with one; tools outside registry ∩ grants ∩ role; a `map` without a stable key or above the
-item cap; `requires` naming an unknown plugin;
+item cap; `requires` naming an unknown plugin (and, in a third-party pack workflow, a plugin of another publisher: answered
+2026-09-27 → [D043](../decisions/D043-cross-plugin-chaining-in-workflows.md) item 1);
 pack text failing minijinja under fuel; files over 64 KiB or 128 steps [I: caps]. Overlapping parallel write sets are serialised with a
 warning. Every refusal is a CI fixture (AT-W1).
 
@@ -684,13 +688,17 @@ capability; doc 12 §3.4 and doc 22 §4.3 call it `ofp-mcp`. Workflows join it a
 - **Tools.** `workflow.list` (id, title, description, model policy, input schemas, availability); `workflow.start { id, args, effort }` →
   `{ run, plan }`; `workflow.status`; `workflow.cancel`; and, only for `external = "start-and-decide"`, `workflow.decide { run, key,
   answer }`: the external agent gets the menu or slot spec a model would get, and its answer goes through the same admission, checks and
-  repair, recorded as `Origin::External { client }`. Read-only `forbidden` workflows (validate, readiness coach, Path Explorer; doc 21
-  §6.3) run without a card; "explain a finding" is `Optional` there, so it spends the user's model budget and keeps the card.
+  repair, recorded as `Origin::External { client }` (`workflow.decide` ships after v1, its answers excluded from model
+  qualification: answered 2026-09-27 → [D036](../decisions/D036-v1-contents-and-release-split.md) item 6). Read-only `forbidden`
+  workflows (validate, readiness coach, Path Explorer; doc 21 §6.3) run without a card; "explain a finding" is `Optional` there, so it
+  spends the user's model budget and keeps the card.
   Definitions are readable as resources, and one MCP prompt per exposed workflow aids discovery; prompts carry no authority.
 - **Approvals stay in the editor.** An MCP-started run waits in `Planned` for the user's click on a card badged "requested by an external
   agent"; `ask` and `approve` cards are never answerable over MCP. This is §2 item 8, and it mirrors Claude Code's rule that messages
   between agents cannot supply the user's consent [V].
 - **No egress by proxy.** Workflows using T2 plugin tools are not exposed in v1, since plugin tools are not re-exported (doc 22 §4.3).
+  (Cross-publisher chains are never exposed: answered 2026-09-27 → [D043](../decisions/D043-cross-plugin-chaining-in-workflows.md)
+  item 4.)
 - **Claude Code and Codex users** connect `ofp-mcp` like any MCP server. `mission-primer` is served as an Agent Skill or MCP prompt (doc 30
   §4.6), and its body should say "prefer `workflow.start` over composing edits yourself" [I]. Their own scripts may orchestrate our tools;
   every call is still admitted by our runtime. We ship no Claude Code workflow scripts or Codex-specific plugins in v1; a portable bundle of
@@ -701,13 +709,13 @@ capability; doc 12 §3.4 and doc 22 §4.3 call it `ofp-mcp`. Workflows join it a
 
 | Phase | Delivers | Acceptance tests |
 | --- | --- | --- |
-| W0 Decisions | Design-gap requests: one format and how recipes relate (doc 21 OQ7, doc 17 §10); resume wording (§4.3); `Admitted<T>` vs `Checked<T>` (doc 21 OQ1); whether prompt or exemplar changes void qualification (doc 21 §12.3 is silent); journal storage; whole-run budget semantics (§3.4); definitions replacing doc 25's `Stage` enum (§4.7); effort- versus autonomy-driven user gates (OQ12) | Recorded under `docs/design-gap-requests/`; no runtime code before the format decision |
-| W1 Definitions | `ofp-workflow`: schema, loader, validator, type checker; `core/give-patrol` and `core/validate-and-fix` running with no model | **AT-W1** every §6.2 refusal has a fixture and a structured, field-labelled error naming the offending value; fuzzed TOML never panics. **AT-W2** doc 21 §6.4's build-time test passes over every registered definition |
+| W0 Decisions | Design-gap requests: one format and how recipes relate (doc 21 OQ7, doc 17 §10); resume wording (§4.3); `Admitted<T>` vs `Checked<T>` (doc 21 OQ1); whether prompt or exemplar changes void qualification (doc 21 §12.3 is silent); journal storage; whole-run budget semantics (§3.4); definitions replacing doc 25's `Stage` enum (§4.7); effort- versus autonomy-driven user gates (OQ12; decided 2026-09-27 → [D024](../decisions/D024-effort-autonomy-role-binding.md)) | Recorded under `docs/design-gap-requests/`; no runtime code before the format decision |
+| W1 Definitions | `ofp-workflow`: schema, loader, validator, type checker; `core/give-patrol` and `core/validate-and-fix` running with no model | **AT-W1** every §6.2 refusal has a fixture and a structured, field-labelled error naming the offending value (including the cross-publisher `requires` refusal: answered 2026-09-27 → [D043](../decisions/D043-cross-plugin-chaining-in-workflows.md) item 1); fuzzed TOML never panics. **AT-W2** doc 21 §6.4's build-time test passes over every registered definition |
 | W2 Runtime core | Journal, resume, idempotent commit, cancellation tree, ledger, virtual clock, plan card, run panel | **AT-W3** a crash at every journal entry resumes to the same document, and a journal equal to an uninterrupted run's apart from `Interrupted` records, with zero extra model calls for settled entries (§6.4). **AT-W4** cancelling any step leaves no half-applied edit. **AT-W5** a commit the user undid is never re-applied on resume |
 | W3 Model steps | Capsules, K candidates, repair, cassettes, inspector, run graph, `core/write-briefing` | **AT-W6** CI cassette runs make no network call. **AT-W7** faux-model path tests over every menu escape and malformed reply hold the §6.4 invariants. **AT-W8** every generated element opens an inspector with its journal record |
 | W4 Fan-out and campaigns | `map`, child runs, seeds, key-order join; `core/populate-town`; `core/campaign-from-brief` on seeded defaults, then with models | **AT-W9** concurrency 1 and 8 yield byte-identical documents and identical canonical journals (records in key order, timing fields excluded), including under a budget that runs out mid-`map` (§4.5). **AT-W10** doc 25 E9: zero clobbers with edits made during a run. **AT-W11** doc 25 E10: 100% validity at T0 |
-| W5 Packs | T0 pack workflows, install review, hash trust, pinned snapshots, upgrade replay check, `plotroom workflow test` | **AT-W12** a Modified pack workflow does not run until re-approved. **AT-W13** a started run resumes after its pack is updated or uninstalled. **AT-W14** a hostile pack (asking for more tools, higher autonomy, egress, unknown kinds) gains nothing, modelled on Codex's role-authority test |
-| W6 External | `workflow.*` on `ofp-mcp` | **AT-W15** an MCP-started run waits for the editor click; `ask`/`approve` are not answerable over MCP; external answers pass admission; no T2-plugin workflow is listed |
+| W5 Packs | T0 pack workflows, install review, hash trust, pinned snapshots, upgrade replay check, `plotroom workflow test` | **AT-W12** a Modified pack workflow does not run until re-approved. **AT-W13** a started run resumes after its pack is updated or uninstalled. **AT-W14** a hostile pack (asking for more tools, higher autonomy, egress, unknown kinds) gains nothing, modelled on Codex's role-authority test (a third-party pack workflow requiring another publisher's plugin is refused at load: answered 2026-09-27 → [D043](../decisions/D043-cross-plugin-chaining-in-workflows.md) item 1) |
+| W6 External | `workflow.*` on `ofp-mcp` (the MCP server in v1, `workflow.decide` after v1: answered 2026-09-27 → [D036](../decisions/D036-v1-contents-and-release-split.md) item 6) | **AT-W15** an MCP-started run waits for the editor click; `ask`/`approve` are not answerable over MCP; external answers pass admission; no T2-plugin workflow is listed |
 
 Evidence per phase is the listed tests plus doc 21 §12 reporting; nothing is "done" without them (AGENTS.md evidence rule).
 
@@ -723,6 +731,8 @@ Evidence per phase is the listed tests plus doc 21 §12 reporting; nothing is "d
 7. **Campaign-scale budgets.** Do long runs need their own effort table beside doc 21 §7.1's per-request one, and what defaults suit
    concurrency, soft deadlines and the §4.5 caps on local hardware? [U]
 8. **External deciders.** Should `workflow.decide` ship in v1, and how are external answers counted in qualification and evaluation? [I]
+   (answered 2026-09-27 → [D036](../decisions/D036-v1-contents-and-release-split.md) item 6: after v1; external answers are journaled
+   with an external origin and excluded from model qualification.)
 9. **Codex provenance list.** Where do Apache-2.0 port records live (for example a `docs/porting/` file beside `upstream-test-map.csv`)? [I]
 10. **Retention and upgrades.** How many superseded attempts, candidates and capsules does the sidecar keep, what does export strip (doc 25
     OQ10), and what exactly counts as compatible for "Upgrade this run" (§6.3)? [U]
@@ -733,6 +743,8 @@ Evidence per phase is the listed tests plus doc 21 §12 reporting; nothing is "d
 13. **Cross-plugin chaining.** May a pack workflow's `requires` name another publisher's plugin, so that one plugin's output feeds
     another plugin's egress? Doc 22 §3.2 forbids plugin-to-plugin calls but lets the agent chain tools under each grant. Proposed:
     allow it only for first-party and user-authored definitions, with the egress card shown every time. [I]
+    (answered 2026-09-27 → [D043](../decisions/D043-cross-plugin-chaining-in-workflows.md): DG014 option B, as proposed; such chains
+    are never exposed to external agents.)
 
 ## Sources
 
@@ -798,7 +810,8 @@ clone and the live Claude Code docs.
   `campaign-from-brief` passed nothing to `s3-outline` or `s3-defaults`, so the chosen premise was lost, and its turn ceilings were
   below doc 25 §4.5's 200–300 decisions × K. The `s3-approve` comment claimed Propose "always shows" a step that `when` skips.
   §3.3 now says what `X` and `Q` do; the Rust sketch puts `menu` inside `Pick` and `split`/`tools` inside Compose and Draft.
-- **Recorded, not resolved.** Effort- versus autonomy-driven user gates (Open question 12); cross-plugin chaining (Open question 13);
+- **Recorded, not resolved.** Effort- versus autonomy-driven user gates (Open question 12); cross-plugin chaining (Open question 13;
+  answered 2026-09-27 → [D043](../decisions/D043-cross-plugin-chaining-in-workflows.md));
   definitions superseding doc 25's `Stage` enum and whole-run budgets both need doc 21 and doc 25 notes (W0). Doc 21 §6.1's single
   `completion_gate: GateId` and single `check` became non-empty lists here; this refines doc 21 and does not conflict with it.
 - **Invariants and hygiene.** Every step kind reaches only registered editor functions, typed tools or granted plugin tools; no
@@ -818,7 +831,16 @@ clone and the live Claude Code docs.
   `docs/research/33-standing-orders-and-drill.md` (both moved with `git mv`), so the Sources path `skills/standing-orders` and the `standing-orders:` skill ids resolve.
 - **Filing pointers (verification step).** The W0 row's design-gap requests and most open questions are now filed in
   `docs/design-gap-requests/` (checked against its index), all open: OQ1 → DG007, OQ2 and OQ10 → DG017, OQ3 → DG010, OQ4 → DG011,
-  OQ5 → DG012, OQ6 → DG008, OQ9 → DG018, OQ12 → DG013, OQ13 → DG014; the whole-run budget semantics of §3.4 (with OQ7 in its
-  context) → DG016; the Pick schema of §3.3 and §4.7 → DG015. Not filed: OQ8 (external deciders in v1), OQ11 (a [U] fact about
+  OQ5 → DG012, OQ6 → DG008, OQ9 → DG018, OQ12 → DG013 (decided 2026-09-27 →
+  [D024](../decisions/D024-effort-autonomy-role-binding.md)), OQ13 → DG014 (decided 2026-09-27 →
+  [D043](../decisions/D043-cross-plugin-chaining-in-workflows.md)); the whole-run budget semantics of §3.4 (with OQ7 in its
+  context) → DG016; the Pick schema of §3.3 and §4.7 → DG015. Not filed: OQ8 (external deciders in v1; answered 2026-09-27 →
+  [D036](../decisions/D036-v1-contents-and-release-split.md) item 6), OQ11 (a [U] fact about
   `rmcp`, not a design gap) and W0's "definitions replacing doc 25's `Stage` enum", which the folder index lists as noticed but not
   filed. No text above changed.
+
+### Owner answers folded (2026-09-27)
+
+- 2026-09-27: folded by pointer, original words kept: OQ8 (OWQ-15) → D036 item 6 in the TL;DR, §9 "Tools", the W6 row, OQ8 and
+  the filing note; OQ13 (OWQ-16 = DG014 option B) → D043 in §5.4's Auto row, §6.1, §6.2's refusal list, §9 "No egress by proxy",
+  AT-W1, AT-W14, OQ13 and the two notes above. No recommendation here contradicts an answer: OQ13's proposal is what the owner chose.

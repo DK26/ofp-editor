@@ -46,7 +46,7 @@ re-driving from the journal or cassettes, which makes no model call and never re
 
 ## Affected docs
 
-Docs 21, 25, 38, 40.
+Docs 21, 25, 38, 40; doc 43 (added 2026-09-27, see the verification notes).
 
 ## Decision record
 
@@ -58,3 +58,8 @@ Open.
 
 - Created from doc 21 §1.3, §6.2 and §8.2; doc 25 §4.2 and §6.2; doc 38 §4.2–§4.3, §6.4 and OQ3; doc 40 R13–R14, re-read on
   2026-09-27.
+- *Docs 39, 41 and 43 step (2026-09-27).* Doc 43 (final) uses "replay" in two more ways. Its **replay record** (§3.4: seed code,
+  settled answers and human edit ops, reproducing a campaign "with no model call") and "replayed from the journal … settled Recorded
+  steps are reused and never re-executed" (§3.1) already match option B. Separately, the game's own campaign book has a **Replay**
+  action for a completed row (doc 43 §2.2, doc 18 §6.2), a game term that the glossary should keep apart, capitalised and marked
+  as the game's. Doc 43 open question 5 now points here, and doc 43 is added to the affected docs.

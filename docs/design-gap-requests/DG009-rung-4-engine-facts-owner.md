@@ -59,3 +59,7 @@ Open.
 - Created from doc 31 verification notes ("Open" items 1 and 3 and the consolidation note on the map track), doc 32 product review
   "Still open" and engine review "Still open or risky", and doc 39 §1.1 (read only; doc 39 is still being written), re-read on
   2026-09-27.
+- *Docs 39, 41 and 43 step (2026-09-27).* Doc 39 is final. Its §1.1 now reads "Doc 32 owns the engine toolbox, the typed model, the
+  compiler and safety wrapper, hosts, lints, import, preview, templates and AI tools", without the section numbers quoted above, and
+  its companions line still cites doc 31 §6; both fit option A, so no change to doc 39. Doc 39's own "Length" item (terrain facts to
+  doc 07, AI facts to doc 31) raises the same question for other engine facts and is left to its product review.

@@ -20,8 +20,9 @@ original ones. Each item below gives its context, options (lettered) and a propo
 
 - **Context:** doc 33 §3.2 sketches `ConceptEntry`, `Grounding`, `UiAnchor` and `Demo`; §3.3 says a build step (`xtask` or
   `build.rs`) parses the authored Markdown into typed entries and generates SKILL.md's index; the parser follows `AGENTS.md` parser
-  rules (pure, size-capped, permissive on unknown keys). OQ3: a crate such as `standing-orders` or the editor core; `build.rs` or
-  `xtask`; who owns the schema version.
+  rules (pure, size-capped, permissive on unknown keys). OQ3: a crate such as `standing-orders` (doc 33's working name; any crate
+  takes the `plotroom-` prefix per D002, and the architecture proposal places the entries in `plotroom-knowledge`) or the editor core;
+  `build.rs` or `xtask`; who owns the schema version.
 - **Options:** (a) editor core; (b) a small registry crate owning the types, the parser and `schema: standing-orders/<major>`;
   generation by `build.rs`; (c) as (b), with generation by `xtask` and a CI check that the committed index matches.
 - **Proposal:** (c). The crate is pure (bytes in, entries out); `build.rs` should not write into the source tree, and `xtask` keeps
@@ -81,7 +82,20 @@ Docs 03, 05, 31, 33; DG031, DG032.
 
 ## Decision record
 
-Open (per item).
+- **Items 1–2: open** (technical). They are decided in the design round from doc 33's evidence; the proposals above stand as
+  proposals.
+- **Items 3–4: decided** 2026-09-27 by the owner. The durable rule is recorded as
+  [D029](../decisions/D029-easy-advanced-and-labels.md), which this section summarises.
+  - **Item 3, option (c).** The Easy/Advanced switch stays as a view preset over Plotroom's shared disclosure system: Easy hides what
+    the original hides, Advanced shows everything, and the default is **Advanced**, as in CWR.
+  - **Item 4, option (b).** Original labels stay primary on every control, resolved from the user's game locale. A plain-language
+    relabel sits beside them: as the hover card's "what" line, and as a dim secondary line in dialogs where space allows.
+  - **Reason.** Faithful to the original editor and to two decades of community tutorials, with one disclosure mechanism to maintain.
+    Keeping the switch with no shared disclosure system would mean two mechanisms for one job; dropping it breaks fidelity; replacing
+    the labels would make tutorials stop matching the screen; a label-style setting adds UI while the side-by-side form serves both
+    audiences at once.
+  - **Folding (items 3–4).** Doc 33 lesson C7 (teaches the preset, not a replacement) and OQ2 (answered); docs 03 and 05 record the
+    switch's exact behaviour where needed. Docs 41 and 43 already point to the Easy preset (verification note below).
 
 ## Verification notes
 
@@ -90,3 +104,16 @@ Open (per item).
 - Created from doc 33 §1.2 row 19, §3.1–§3.3, §4.1, §4.6, §5.4 (C7), §9 phase 0, OQ2 and OQ3; doc 31 §4.1; the README's
   description of the editor, re-read on 2026-09-27. The doc 03 and doc 05 references are where dialog fidelity is recorded; their
   Easy/Advanced text was not re-read here.
+- *Docs 39, 41 and 43 step (2026-09-27).* Item 3's decision reaches two new panels. Doc 41 §3.3's consequence card shows only three
+  chips in Easy mode; it now says that Easy is this view preset, default Advanced. Doc 43's product review asks that a newcomer see
+  only the Variety dial and "Roll 10"; it now points to the same Easy view. Both extend "Easy hides" to panels the original editor
+  never had, which the decision allows as long as Advanced stays the default and shows everything. Doc 39 has no Easy/Advanced text.
+- *Links and naming review (2026-09-27).* Item 1's context now says that doc 33's `standing-orders` crate is a working name: crates take
+  the `plotroom-` prefix (D002 item 2), and `docs/architecture/crate-map.md` proposes `plotroom-knowledge`. The skill folder and the
+  `standing-orders:` id prefix are not crate names and are unchanged (D028).
+
+### Owner answers (2026-09-27)
+
+- The header said items 3–4 were **decided** while the decision record still read "Open (per item)" (found by the consistency
+  review). The record now states items 3–4 from D029, re-read for this step, and keeps items 1–2 open; no decision changed. Doc 33
+  was not edited.

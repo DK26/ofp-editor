@@ -14,9 +14,9 @@ only in a search snippet (fetch refused); **[I]** our inference or proposal; **[
 our own descriptions only (doc 35 rules). No game or community script is quoted; papers, manuals and doctrine are paraphrased with a few
 short attributed quotes; nothing refers to private or unpublished work.
 **Companions.** Doc 32 (the timeline) and 31 §6; 25 (step shapes, menus, repair, pins); 38 (workflows); 26, 28 (content, fun); 33
-(Standing Orders); 35 (corpus lessons); 07 §6–§7 (WRP, P3D); 08 (harness); 18/19 (hosts, campaign variables); 23 (catalog).
-**Codes (provisional; unused elsewhere in `docs/`).** Archetypes CA01–CA12, checks DR01–DR22, tactical notes TP01–TP10, probes CP1–CP13,
-phases DP0–DP4, acceptance tests DAT1–DAT13.
+(Standing Orders and Drill); 35 (corpus lessons); 07 §6–§7 (WRP, P3D); 08 (harness); 18/19 (hosts, campaign variables); 23 (catalog).
+**Codes (provisional; unused elsewhere in `docs/`; final codes come from the registry proposed in DG005).** Archetypes CA01–CA12,
+checks DR01–DR22, tactical notes TP01–TP10, probes CP1–CP13, phases DP0–DP4, acceptance tests DAT1–DAT13.
 
 ## TL;DR
 
@@ -43,7 +43,7 @@ phases DP0–DP4, acceptance tests DAT1–DAT13.
   editing a key pins the shot, and re-planning works around pins.
 - **Weak models pick and write.** Intent, subjects, take, tempo/mood/emotion enums and text; never a coordinate, time, class or FOV.
   Qualified models may Compose custom idioms, which pass the same planner.
-- **Sibling fixes (§1.2).** Doc 32's "eye below 2 m" warning would flag over half of BI's shots; doc 32 gains a pan template and gates; doc 31's
+- **Sibling fixes (§1.2; filed as DG035).** Doc 32's "eye below 2 m" warning would flag over half of BI's shots; doc 32 gains a pan template and gates; doc 31's
   convoy "spacing" has no engine knob; doc 28's intro cap becomes a warning; doc 35's shot counts need one population.
 
 ## 1. Relation to doc 32
@@ -62,7 +62,7 @@ The Director is a **producer** that writes into that model; the timeline stays t
 | Checks | Lints (§3.7) | DR checks (filters and lints), TP notes, harness detectors, a readiness report (§6) |
 | AI | `cine.suggest`, `cine.fill`, `cine.critique` | The `core/make-cutscene` workflow; Compose for qualified models (§8) |
 
-### 1.2 Changes asked of siblings (filed through `docs/design-gap-requests/`; this doc edits no other file)
+### 1.2 Changes asked of siblings (filed as DG035 in `docs/design-gap-requests/`; this doc edits no other file)
 
 | Sibling | Proposed change | Evidence |
 | --- | --- | --- |
@@ -80,7 +80,9 @@ The Director is a **producer** that writes into that model; the timeline stays t
 | Doc 32 §3.4, §3.2 | `Shot` and actor cues carry their own `origin` and `pin`, not only `CineSequence`; the Actors rule "snaps only under a cut or fade" adds "or proven off-frame" (DR15) | Pins are per shot (§7); doc 25 §9.1 pins per element and field |
 
 Engine limits met here (no look-at offset, no view-distance getter, no end-of-speech signal, no spacing command) also belong in the
-engine-requests register under `docs/upstream/` (AGENTS.md); the Director works around each today and needs none of them.
+engine-requests register under `docs/upstream/` (AGENTS.md); the Director works around each today and needs none of them. The
+register, `docs/upstream/engine-requests.csv`, carries them as ER-071 (look-at offset), ER-073 (end of speech), ER-074 (view-distance
+getter) and ER-109 (formation spacing); DG034 records how engine limits are routed there.
 
 ## 2. Principles
 
@@ -105,7 +107,8 @@ Standard tempo; in-mission hosts default to ≤ 15 s. All ranges are [I], anchor
 use doc 41 §5.2's mood tags and cue budget, so the two Directors share one vocabulary.
 
 - **CA01 Establish the AO and reveal the objective** (where, when, who, what; ends with the player facing his first bearing). *Subjects:* AO
-  anchor (`island.places`/`island.sites`, doc 25 §6.1), objective, player's group. *Idiom:* vista or high orbit (Wide, 30–150 m AGL, arc ≤
+  anchor (`island.places`/`island.sites`, doc 25 §6.1; Kolgujev and the desert island have no named places, so there the anchor comes
+  from the doc 35 rc57 fallback that doc 25 §6.1 names), objective, player's group. *Idiom:* vista or high orbit (Wide, 30–150 m AGL, arc ≤
   60°, 6–10 s, place/date card) → objective insert (Tele, 3–5 s) or pan A→B ≤ 60° → friendly MS/MLS at eye level → leader MCU on his first
   line → hand-off from behind the player, or a fade. *Staging:* group halted or in a SAFE road file; garrison AWARE with outward sectors;
   protected-actor bundle (§5.3). *Audio:* fade in ≤ 1 s, music at 0, card gone before the first subtitle, first line at 10–15 s.
@@ -155,7 +158,8 @@ use doc 41 §5.2's mood tags and cue budget, so the two Directors share one voca
   and captioned "Callsign: text" through `titles[]`, so no radio channel is needed; sections never use group or vehicle radio, and side or
   global radio only with a living player unit (doc 32 §2.5) [V channels; I styling]. Code frames callsign, THIS IS and OVER/OUT; the model
   writes the body (TP08). *Length:* 20–60 s. *Profiles:* all; `say [name, 0, 1]` lifts the 100 m subtitle limit on Cwr/Ce; on 1.99 the
-  array form is (unverified) (doc 32 §2.5).
+  array form is still (unverified) as doc 32 §2.5 says, but official content that ships with 1.99 calls `say [class, 0]`, so it very
+  likely works there [I] (doc 41 §2.5 item 2; doc 41 probe AP3 confirms; DG036).
 - **CA11 Flyover and map orientation.** *Idiom:* map insert (notepad, compass, watch and radio hidden; animation steps zooming toward each
   objective marker; markers change colour or type on voice lines; `mapAnimDone` gate) → optional clearance-checked flyover ending behind
   the player, facing his first bearing. *Precedent [V, structure only]:* one official single-mission intro does this; two more official
@@ -268,7 +272,7 @@ checked offline instead of damped at runtime.
   and Christie 2015) pass at ≥ 80%, tolerating ≤ 0.5 s of occlusion; the engine's own test likewise walks terrain cells, then objects in a
   ±1.5-cell band (`World/Simulation/Collisions.cpp#L1724-L1843`). Tree boxes include canopies, so the thumbnail is the final judge.
 - **Draw distance [V].** `setViewDistance` clamps to 100–5000 m; objects draw only to min(2/3 × view, 3000 m) (never under 100 m), shadows
-  to 5/18 (at most 500 m); fog sets the far plane (visibility = 1 − 0.95·fog; rain pulls it toward 350 m; night × 0.75–1)
+  to 5/18 (at most 500 m); fog sets the far plane (visibility = 1 − 0.95·fog; rain pulls it toward 350 m; night × 0.75–1; doc 41 §2.3 tabulates the sight range)
   (`UI/Settings/ViewDistance.hpp#L8-L67`; `GameStateExtUi.cpp#L1774-L1805`; `Landscape.cpp#L654-L682`; `Scene.cpp#L122-L157`). Each mission
   or section load resets it to the preferred distance (900 m in MP) and no getter exists (`WorldImpl.cpp#L1075-L1089`; only `accTime` has one,
   `GameStateExt.cpp#L863`). On Cwr/Ce the preferred distance is the player's setting, or the Mission section's Intel `viewDistance` while
@@ -461,6 +465,8 @@ planning reads each actor's `Prediction`, and projection checks use predicted, n
 Each check filters generated candidates and lints hand-made shots. For hand work, errors are kept for what the engine will not do as shown
 or what can stall or lose state (AGENTS.md); the rest are warnings or dismissible style notes. Doc 32 §3.7's lints still apply; where a DR
 check restates one of them or doc 28 MC19 (DR11–DR13, DR16, DR18), both share one finding and message, so nobody sees a problem twice.
+In a mission with variant pools, doc 43's VY21 (a cinematic's anchor or camera path missing in some variant) also applies to Director
+shots, and its fix is §5.3's fallback shot (6) [I].
 
 | Code | Check | Filter | Lint |
 | --- | --- | --- | --- |
@@ -517,9 +523,9 @@ radio, terrain grid and view distance reset at every mission init, but the input
   `triWaitFrames` draws no scene; `triSetSimTime` pins game time
   (`GameStateExtTest.cpp#L1953-L2059`). `tri*` commands need `--dev`, `--harness` or `--test-mission`; `triGet*` getters register always
   (`GameStateExtTestAudio.cpp#L2960-L2965`; `GameStateExtTestGetters.cpp#L535-L573`).
-- **Per-shot thumbnails [I].** Stage the section as the Intro of a group-less Mission (doc 08 §4.2, correcting doc 32 §4.3); wait for
-  `triSceneReady`, then settle a few `triSimFrames`; freeze with `setAccTime 0` and `triSetSimTime`; per shot snap actors to planned marks
-  and poses, set the camera with `camCommit 0`, run `triSimFrames 2`, `triScreenshot "shot_<id>"`. For in-mission hosts first
+- **Per-shot thumbnails [I].** Stage the section as the Intro of a group-less Mission (doc 32 §4.3; doc 08 §4.2 now carries the same
+  recipe); wait for `triSceneReady`, then settle a few `triSimFrames`; freeze with `setAccTime 0` and `triSetSimTime`; per shot snap
+  actors to planned marks and poses, set the camera with `camCommit 0`, run `triSimFrames 2`, `triScreenshot "shot_<id>"`. For in-mission hosts first
   `triSetAspectGameplayActive true` (`GameStateExtTestAudio.cpp#L1318-L1322`) so the bars appear; `triSetPillarboxBarsEnabled false`
   previews the Legacy look (`#L1306-L1310`). Badge "camera exact, staging planned"; the image shows real subdivided terrain and objects, so
   it judges DR01–DR04 and DR22.
@@ -527,8 +533,9 @@ radio, terrain grid and view distance reset at every mission init, but the input
   sampling `getPos` against marks, `triPerfStats`, and `triGetCameraEffectActive` after the end; `triGetBackBufferNonBlackCount` for black
   frames or stuck fades; `triGetPixelMaxChannel`/`triGetPixelMaxDiff` grids for uniform frames (inside geometry, sky only); an A/B occlusion
   probe (move the subject away, diff offline); a pop-in diff for far cuts. Repeated runs give each AI cue a stability score.
-- **Risks [U].** Harness flags in shipped binaries; AutoTest ends the game on any script error; the `setAccTime 0` freeze and zero-step
-  `switchMove` poses (doc 08 §6; doc 32 open question 3). Without a harness: 2D checks; on 1.99, export plus the stock Preview.
+- **Risks [U].** Harness flags in shipped binaries; AutoTest ends the game on any script error (a non-aborting launch is DG001, open);
+  the `setAccTime 0` freeze and zero-step `switchMove` poses (doc 08 §6; doc 32 open question 3). Without a harness: 2D checks; on
+  1.99, export plus the stock Preview.
 
 ### 6.4 Cutscene readiness report
 
@@ -560,7 +567,7 @@ their keys and show their DR findings. (7) Check readiness, play the filmstrip.
 **Storyboard view.** Shot cards on doc 32 §3.3's shot lane: thumbnail and evidence badge, scale and lens (FOV and mm), duration, idiom step,
 check chips, line text. Hovering lights frustum, look line and action line on the map; gated spans show as elastic; pinned shots carry a pin.
 The inspector opens with one plain-language purpose line computed from the idiom step ("orients the player: objective 800 m north-east of
-the start"), linked to Standing Orders C1 (doc 33), then archetype, step, model, seed and the `ShotSpec` residuals, after PACE's
+the start"), linked to Drill lesson C1 (doc 33 §5.4), then archetype, step, model, seed and the `ShotSpec` residuals, after PACE's
 field-by-field conformance measure (Duan et al. 2026).
 
 **Fun touches.** *Director's cut:* Shuffle shows three seeded takes side by side. *"Like BI":* §9.1's official grammar as one preset.
@@ -576,9 +583,9 @@ doc 32 open question 6; a "replay-friendly" option; doc 32 §5.4's reading-speed
 
 | Decision (doc 25 shape) | Model decides | Code does |
 | --- | --- | --- |
-| Intent, variant (Pick) | One of ≤ 7 intents for the host; truck, helicopter or boat | Computes menus from host, mission state, story beat and available assets |
+| Intent, variant (Pick) | One of ≤ 7 intents for the host (the menu cap; DG006 open); truck, helicopter or boat | Computes menus from host, mission state, story beat and available assets |
 | Subjects (Pick per role) | A unit, group, marker or site from a menu | Builds role menus (doc 25 §6.2) described from facts only |
-| Take (the user, via `approve`) | Nothing: takes are judged by eye, so batch runs keep code's top-ranked take (doc 25 §7.3) | Plans, checks, ranks and renders the takes |
+| Take (the user, via `approve`) | Nothing: takes are judged by eye. Whether `approve` waits is set by autonomy and the run's check-ins, never by effort (DG013, decided; D024); when it does not wait, code's top-ranked take is kept (doc 25 §7.3) | Plans, checks, ranks and renders the takes |
 | Style and text (Fill) | Tempo, mood, emotion tag per line; captions and line bodies through doc 32's `screenplay.write`; a callsign only where the story bible has none (admitted once as a bible row, then picked) | Maps enums to pacing, music and coverage; frames prowords, times lines, routes subtitles, runs V-text |
 | Critique (Fill) | Phrases findings for the user through doc 32's `cine.critique` | Runs checks; computes and ranks fixes |
 
@@ -642,7 +649,7 @@ classes are heuristic.
 
 Doc 35 gives intro medians of 125 s (Resistance) against 87 s (1985) and a cutscene-node recipe of "25–35 shots, about 2.5 min"; this scan
 gives 115 s and 56.5 s, and cutscene missions median 125 s with 21 shots (Resistance 27; p75 32.5). The gap is probably population or shot
-definition [I]. Both docs should state them before feeding defaults; rc35 becomes a band (18–32 shots, 1.5–3.5 min).
+definition [I]. Both docs should state them before feeding defaults; rc35 becomes a band (18–32 shots, 1.5–3.5 min) (DG035).
 
 ## 10. Phased plan and acceptance tests
 
@@ -676,7 +683,10 @@ DAT9) are opt-in local tests behind an environment variable.
 5. Harness flags in shipped binaries and the `setAccTime 0` freeze (doc 08; doc 32 open question 3); in-mission skip via radio keys (CP12).
 6. House style: may a cutaway excuse an action-line crossing? Which taste bounds may a community archetype pack (doc 22) loosen?
 7. East-side staging from a primary source (FM 100-2-1 located, not read); tilt usage in official scripts (unmeasured); the doc 35
-   population reconciliation (§9.3).
+   population reconciliation (§9.3; DG035).
+8. The Director's name, beside doc 41's Atmosphere Director and the other "Director" features, is an owner decision (DG037; or the
+   design round if the owner delegates pending names, OWQ-08). *Since 2026-09-27 the design round decides it: the owner delegated
+   pending names (OWQ-08 (a); D034 item 3); DG037 stays open until the names table records the choice.*
 
 ## Verification notes
 
@@ -701,17 +711,17 @@ element stays a doc 32 key, cue or clip with its `ShotSpec`, checks and provenan
 - *Doc 32 (§1.2, §6.1, §7):* per-shot `origin` and `pin` requested (doc 32 pins only sequences); dragging a template-backed key bakes first
   (doc 32 §5.1); the storyboard and tempo meter are doc 32 §3.3's; DR checks restating doc 32 lints or MC19 share one finding.
 - *Ease and glass box (§7):* roles arrive pre-filled, so intent → takes is one click; takes differ in kind; a plain-language purpose line
-  opens the inspector, linked to Standing Orders C1; later mission edits mark shots Stale instead of breaking them silently.
+  opens the inspector, linked to Drill lesson C1; later mission edits mark shots Stale instead of breaking them silently.
 - *Doc 41 and AGENTS.md (§1.2, §3, §7):* mood tags, vistas, light, weather and the cue budget come from the Atmosphere Director; engine
   limits go to the engine-requests register.
 
 **Still open.**
 
 - *Names:* "Cutscene Director", doc 41's "Atmosphere Director", doc 33's Drill track "C. Director" and doc 32's "Director's view" crowd one
-  word; clear the UI names through doc 02 §9 (doc 33 principle 9) before any string ships.
+  word; clear the UI names through doc 02 §9 (doc 33 principle 9) before any string ships. (Filed as DG037, owner, open.)
 - *Drill:* doc 33's C1 lesson should become "intent → take → tweak → preview" on the Director once DP3 lands.
 - *1.99-only authors* get sketches, never real frames, and DAT13 previews only on Remastered, so the headline test leaves them out.
-- *§1.2 is not filed yet:* the design-gap index lists it as a candidate; file it once this doc is final.
+- *§1.2 is not filed yet:* the design-gap index lists it as a candidate; file it once this doc is final. (Filed as DG035, open.)
 - *Length:* about 700 lines against the ~550 target; the terrain facts of §4.3 and the AI facts of §5.2 could live in docs 07 and 31, with
   pointers here.
 
@@ -763,6 +773,44 @@ of 2,434 settings; `camSetPos` height median 1.60 m (n = 2,152); 885 moving comm
 - 1.99's camera, lens factors and view-distance behaviour remain (unverified) (doc 32 §2.3; CP8).
 - Scripts are simulated before the camera effect each frame (`World.cpp#L871-L886`), so a cue on a deadline frame should continue a
   sampled move without a hold; frame-exact continuity is (unverified) until a filmstrip measures it.
+
+### Consolidation pass (2026-09-27)
+
+This doc was left out of consolidation part 1 while it was being written. This step checked it against the owner's renames and
+decisions (`docs/decisions/`), the design-gap index (DG001–DG034), the owner questions (OWQ-01–OWQ-23) and the corrections other
+docs made in part 1. No engine fact, corpus figure, check or acceptance test changed.
+
+- **Renames (owner decision, D028).** The doc already said Standing Orders and Drill; the companions line now reads "33 (Standing
+  Orders and Drill)". Two places said "Standing Orders C1", but C1 is a Drill lesson (doc 33 §5.4, track "C. Director"), not a
+  Standing Orders entry: §7's inspector link and the product review's ease bullet now read "Drill lesson C1". The Standing Orders
+  links of §6.2 and §7's tactical overlay stay, because they explain concepts. The doc names no Arma 3 prior art for either feature
+  and had no links to doc 33's file or `skills/standing-orders`.
+- **Design-gap filing.** §1.2 is filed as DG035 (the TL;DR, the §1.2 heading, §9.3, open question 7 and the "Still open" bullet point
+  to it), and the "Names" item as DG037 (owner; new open question 8; owner question OWQ-08 covers pending names in general). §1.2's
+  engine limits now point to their entries in the engine-requests register (`docs/upstream/engine-requests.csv`, created in the same
+  pass: ER-071, ER-073, ER-074, ER-109) and to DG034. New pointers:
+  DG005 (codes header), DG006 (the ≤ 7 intent menu, §8), DG013 (decided, recorded as D024: whether `approve` waits follows autonomy
+  and the run's check-ins, never effort; §8 Take row, replacing "batch runs"), DG001 (a non-aborting launch, §6.3 risks). §1.1
+  already matches DG009's proposed owner of the camera engine facts (doc 32).
+- **Corrections carried in.**
+  - §6.3: the staging citation was inverted. Doc 32 §4.3 is the source of the group-less-Mission recipe, and doc 08 §4.2 was corrected
+    from it in part 1 (doc 08's consolidation note, C32-08).
+  - CA10: doc 41 §2.5 item 2 finds official 1.99 content calling `say [class, 0]`, so the array form very likely works on 1.99 [I],
+    pending doc 41's probe AP3; doc 32 §2.5 still marks it unverified (DG036).
+  - CA01: doc 25 §6.1 (from doc 35 §10) records that `island.places` is empty on Kolgujev and the desert island, so the AO anchor uses
+    the doc 35 rc57 fallback there.
+  - §6.1: doc 43's VY21 (an anchor or camera path missing in some variant) applies to Director shots; the fix is §5.3's fallback shot [I].
+  - §4.3: a pointer to doc 41 §2.3's sight-range table.
+- **Checked, unchanged.** CA11's map insert still waits on CP6 and doc 32 open question 7, which matches doc 31 §6.2's part-1 downgrade
+  of the map track to [U]; "`triGet*` getters register always" matches doc 23's part-1 correction; `exit.sqs` on the mission end path
+  only matches doc 18 §5.
+- **Length.** The file is now about 850 lines, over the ~600-line ceiling. Splitting a research doc was out of scope for this step; the
+  "Length" item above still stands, and DG009 decides where the shared camera facts live.
+
+### Owner answers (2026-09-27)
+
+- OWQ-08 was answered (a): pending names go to the design round's names table (D034 item 3). Open question 8 now says so; the
+  director itself ships in v1.2 (OWQ-14 rung 4 (a); D036 item 5), as the roadmap already had it. Nothing else changed.
 
 ## Sources
 

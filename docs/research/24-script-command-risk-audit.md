@@ -21,7 +21,9 @@ unless a CE citation is given: every audited file was compared between the two t
 > that reaches a harness port) against players of the shipping game, not only against our Preview. Neither source
 > snapshot has a `SECURITY.md` [V]. Before this note is merged into our public repository, the owner should report
 > them privately to the CWR-CE maintainers and to Bohemia Interactive. This note deliberately contains no exploit
-> strings.
+> strings. (Answered 2026-09-27 → [D035](../decisions/D035-outreach-and-security-disclosure.md) item 1, OWQ-09 (a): the
+> owner reports privately through a private channel of each project and records the dates in OWQ-09; no new public
+> detail is added until the reports are acknowledged. Nothing has been sent yet.)
 
 ---
 
@@ -545,6 +547,9 @@ the CSV's dialect column now carries T1, T2 and T4 evidence where §3.9 applied 
 
 All hook points are in CE@b67bf3bd62 and, unless noted, identical in CWR. Each patch needs a regression test and
 adversarial tests in the same change set (AGENTS.md rule, and CE's own style of source-scanning gate tests).
+(Order answered 2026-09-27 → [D035](../decisions/D035-outreach-and-security-disclosure.md) items 1 and 3: these
+patches go upstream, and enter the engine-requests register, only after the Disclosure note's private reports are
+acknowledged. Nothing has been sent yet.)
 
 | # | Patch | Hook points | Tests |
 | --- | --- | --- | --- |
@@ -578,7 +583,9 @@ did the `endGame` part of this work (F5), so BI could adopt it too [I].
    Partly answered by the consolidation pass (2026-09-27): doc 35 §8 settles existence for the observed commands and
    gives string-scan evidence for others (§3.9); semantics and the remaining rows still need a probe.
 9. Will CE accept P2 given that Trident test missions call `tri*` verbs directly? Needs maintainer input [U].
-10. Timing and channel for the private report (Disclosure note) [U].
+10. Timing and channel for the private report (Disclosure note) [U]. (Answered 2026-09-27 →
+    [D035](../decisions/D035-outreach-and-security-disclosure.md) item 1: the owner reports now, through a private
+    channel of each project, and logs the dates in OWQ-09; not sent yet.)
 11. Which `description.ext` dialog attributes hold executable code in this engine, so the linter extracts all code
     sinks [U]?
 12. (Added 2026-09-27.) Which protocols does the shipped non-Windows libcurl enable (`file`, `gopher`, `dict`)? Probe:
@@ -749,3 +756,9 @@ notes ("20 of the 30 names doc 24 marks '1.99: likely' are observed") and, row b
 - No "Field Manual", "Boot camp" or "Academy" reference, and no link to doc 33 or `skills/field-manual`, exists in this
   doc or its CSV, so the feature rename needed no edit here. The working copy's CRLF line endings were normalised to
   LF, matching the index.
+
+### Owner answers (2026-09-27)
+
+- 2026-09-27: folded the owner's answers by pointer to [D035](../decisions/D035-outreach-and-security-disclosure.md)
+  (OWQ-09 (a), OWQ-11 (a)) in the Disclosure note, §6's lead-in and open question 10; no finding, rule, patch or
+  recommendation changed, and nothing has been sent yet.

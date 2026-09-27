@@ -60,7 +60,7 @@ Option C:
 
 ## Affected docs
 
-Docs 09, 19, 21, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 36, 37, 40, 42 (and 39, 41 once final).
+Docs 09, 14, 19, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 39, 40, 41, 42, 43.
 
 ## Decision record
 
@@ -73,3 +73,16 @@ Open.
 - Created from the code headers of docs 34, 36, 37 and 42, doc 34 §5.1 and its verification notes, doc 36 §5, doc 21's header and
   §12.4, doc 40 §4.3, doc 29's CE-extension list, doc 25 §11.1, doc 24's L table, doc 31 §10 and doc 30 §4.1, re-read on 2026-09-27.
   The G, E and L collisions were found by grep in this pass and are not recorded in any research doc yet.
+- *Docs 39, 41 and 43 step (2026-09-27).* The three docs are final. Their families: doc 39 CA01–CA12, DR01–DR22, TP01–TP10, CP1–CP13,
+  DP0–DP4, DAT1–DAT13; doc 41 AH1–AH12, AM01–AM12, SX01–SX08, QP1–QP6, AU01–AU24, AL01–AL17, AP1–AP18, AD0–AD4, AMT1–AMT14; doc 43
+  RP1–RP9, VX01–VX12, VY01–VY24, P-R1–P-R12, RV0–RV4, RAT1–RAT18. A grep of the rest of the repository finds them only where other
+  files cite these docs, so no collision. Found while checking:
+  - **`T0`–`T4`** mean three things: doc 14's model tiers (T0 no model … T3 cloud, used by docs 25 and 43 and by DG025), doc 22's
+    plugin tiers (T0 data packs, T1 WASM, T2 remote) and doc 35 §8.3's command-evidence tiers (T1 proven … T4 absent). Doc 43 uses
+    T0 in both of the first two senses; its header now says which is which.
+  - **Shared findings**: doc 39's DR11–DR13, DR16 and DR18 restate doc 32 lints or doc 28 MC19; doc 43's VY19 (first clause) is
+    doc 41's AL03 and VY08's weather clause is part of AL16. Each pair shares one finding until the registry gives it one id.
+  - **Probe ids** (CP, AP, P-R here; PR in doc 29; PP in doc 37) are our own probes, not upstream tests, so they have no row in
+    `docs/porting/upstream-test-map.csv` (doc 32 §7); the registry is the natural place to list them. Doc 43 §8.1 was corrected to
+    say so; doc 33 §8 still routes its probes to that CSV.
+  - "Affected docs" now lists docs 39, 41 and 43 without the "once final" qualifier, and docs 14, 22 and 35 for the T labels.

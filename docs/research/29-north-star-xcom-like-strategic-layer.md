@@ -217,6 +217,8 @@ pub enum RollSource { StoredLcg { seed: VarId }, CosmeticEngineRandom }
 pub struct RosterModule { commander: CommanderPolicy, soldiers: Vec<Tracked<SoldierDecl>> /* 3..=16 */,
                           reserves: ReservePolicy, lowering: RosterLowering, promotion: PromotionTable, triage: TriageTable }
 /// `EmbodiedSoldier` compiles only for a CwrCe profile with E9; elsewhere player death stays Retry.
+/// Superseded in part by D042 (2026-09-27): the commander design is a campaign setting, `PlotArmour` by default, and the embodied
+/// value is offered on every profile with death = Retry; a routed (permanent) death stays an opt-in CwrCe capability once E9 ships.
 pub enum CommanderPolicy { PlotArmour, EmbodiedSoldier { on_death: OutcomeId } }
 pub enum RosterLowering { SpawnPrologue /* A: createUnit + setIdentity */, SlotUnits /* B: pre-placed, per squad slot */ }
 pub struct SoldierDecl { id: CharacterId, identity: IdentitySpec /* seeded name/face/glasses/speaker/pitch */,
@@ -377,7 +379,7 @@ Rank comes from a static `mission.sqm` rank or from `loadIdentity` of a versione
 | SL08 | warn | Fewer than 2 distinct policies win ≥ 30 % of their runs (a dominant strategy) |
 | SL09 | error | A player-group unit (roster or commander) reaches the briefing with class-default gear while `weaponPool = 1` (duplication), or a finisher does not return survivors' gear (loss) |
 | SL10 | error | Roster data sits in `objects.sav` without versioned keys and a run nonce (doc 18 §8.4) |
-| SL11 | error | Engine `random` or a `presence` probability drives state that is committed or read by a guard |
+| SL11 | error | Engine `random` or a `presence` probability drives state that is committed or read by a guard (2026-09-27: [D040](../decisions/D040-play-seeds-and-memory.md) makes a fresh play seed the default, which needs one engine draw in the bootstrap row that this wording does not yet allow, and allows no re-roll on restart in v1; the rule text is [DG038](../design-gap-requests/DG038-sl11-engine-random-exceptions.md), still open) |
 | SL12 | warn | Expected permanent losses in the first 3 deployments (Standard policy) exceed the preset's target |
 | SL13 | warn | More than 4 deployments without a camp visit, camps back to back, or a camp on a different island from its ops |
 | SL14 | info | Over budget: too many book rows, world inits or landscape loads per playthrough |
@@ -672,12 +674,16 @@ content does not record which `createUnit` form it uses: one official file makes
    links `gear:<id>` (`CWR:UI/Map/UIMapDisplayBriefing.cpp#L216-L218`), which opens that soldier's Equipment page (`#L1062-L1083`), for
    a leading player only (`CWR:UI/Map/UIMapDialogs.cpp#L355`). If 1.99 differs, role kits come from the pool.
 5. **Commander design (product).** Plot armour, or an embodied roster soldier with Retry, on `Cwa199` and `Cwr`: which reads as fairer?
+   (answered 2026-09-27 → [D042](../decisions/D042-strategic-layer-commander-and-triage.md): a campaign setting, plot armour by
+   default; reconfirmed after the first balance-lab runs and playtests)
 6. **Triage transparency (product).** Should the debrief say "survived: gravely wounded (rank)"? Hidden bias may only favour the player,
-   but disclosure may feel better.
+   but disclosure may feel better. (answered 2026-09-27 → [D042](../decisions/D042-strategic-layer-commander-and-triage.md): disclosed
+   in the debrief)
 7. **Card count (playtest).** Is 2–3 visible cards right, or can the radio menu comfortably carry up to 6?
 8. **Localisation [U].** Can the `CfgIdentities` `name` be localised through the campaign stringtable? `setIdentity` reads `name` without
    a `Localize` call (`CWR:Game/Commands/GameStateExtUi.cpp#L220`), so only parse-time `$STR` resolution could do it.
-9. **Upstream appetite.** Will CWR-CE accept E13, E7 and E8? E5 and E6 are the cheap first asks (doc 18 §9).
+9. **Upstream appetite.** Will CWR-CE accept E13, E7 and E8? E5 and E6 are the cheap first asks (doc 18 §9). (Who asks, and in what
+   order, answered 2026-09-27 → [D035](../decisions/D035-outreach-and-security-disclosure.md) item 3; CE's answer stays open.)
 
 ## Sources
 
@@ -756,7 +762,7 @@ Mast no longer hides expiry. AC16 and AC18 now measure the loop, not just one fi
 (1) an attendant's heal zeroes every hitpoint (`CWR:World/Entities/Vehicles/Transport.cpp#L510-L517`, `CWR:AI/VehicleAICombat.cpp#L353-L363`)
 [V]. That squad medics take this path is [I] (PR15). A heal before extraction can therefore erase wounds, so we must choose between end
 damage (XCOM-like: field care shortens recovery) and peak damage. (2) If the commander dies, Retry replays the op and so un-kills
-squadmates. That matches non-Ironman XCOM; claim no stronger stakes. (3) AI squadmates die from AI mistakes the player cannot order away,
+squadmates. That matches non-Ironman XCOM; claim no stronger stakes (adopted 2026-09-27 in D042's consequences). (3) AI squadmates die from AI mistakes the player cannot order away,
 which is the main fairness gap versus XCOM. Only AC16 can see it; the balance lab cannot. (4) Motor Pool carries two rules, while §3.2
 says one per unlock and SL07 only flags zero. (5) One island with 8 side layers limits replay variety. (6) Whether a soldier keeps his
 squad number across ops depends on spawn order [I]; spawn in roster order. (7) The file is now further over its ~650-line target.
@@ -799,3 +805,12 @@ behaviour (§9); whether Retry's `weapons.cfg` references reach re-created `crea
 - **2026-09-27, knock-on edits.** Two TL;DR bullets (the feasibility bullet and the camp-terminal bullet) now separate settled 1.99
   existence from unverified 1.99 behaviour. Sources list doc 35 §2.1 and §8. The "Standing Orders" / "Drill" rename needed no change here: this doc never mentions the
   concept manual, the tutorials or doc 33's file.
+
+### Owner answers (2026-09-27)
+
+- **2026-09-27, folded by pointer:** open questions 5 and 6 point to [D042](../decisions/D042-strategic-layer-commander-and-triage.md)
+  (OWQ-23: commander design a campaign setting with plot armour by default; triage disclosed in the debrief; both reconfirmed after
+  the first balance-lab runs), and the §3.2 `CommanderPolicy` comment gains a "Superseded in part by D042" note (sketch unchanged).
+  SL11 points to [D040](../decisions/D040-play-seeds-and-memory.md) (OWQ-21) and to DG038, which D040 does not decide, so SL11's
+  wording and the `RollSource` comment are unchanged. Open question 9 points to D035 item 3 (OWQ-11); product review note (2) points
+  to D042's consequences. No analysis or recommendation changed.

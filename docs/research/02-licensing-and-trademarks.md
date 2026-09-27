@@ -26,10 +26,15 @@ legal reasoning. **[U]** = unknown or unverified.
   and these terms"), and they cost us nothing to comply with. **[V]**
 - **Add one additional permission of our own (GPLv3 §7):** mission files, scripts and templates that the editor writes
   into user output are not subject to the GPL. Mission makers can then license their missions however they want.
-  **[I]**, precedent: Bison exception, iron-curtain D051.
+  **[I]**, precedent: Bison exception, iron-curtain D051. (Answered 2026-09-27 →
+  [D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 1: the §6.2 draft plus an explicit
+  coverage list, with a legal review before 1.0.)
 - **Optional permissive lane:** a generic LLM-harness crate that contains no game code and no CWR-derived code may be
   `MIT OR Apache-2.0`. Decide **now**, because DCO contributions cannot later be relicensed from GPL without every
-  author's consent. Format and editor crates stay GPL. **[I]**, precedent: iron-curtain D051/D076.
+  author's consent. Format and editor crates stay GPL. **[I]**, precedent: iron-curtain D051/D076. *Superseded by
+  [D001](../decisions/D001-licence-gpl-3-or-later.md) (owner, 2026-09-26; noted 2026-09-27): there is no permissive
+  lane, and the plugin SDK is GPL too ([D031](../decisions/D031-generated-content-permission-and-licence-scope.md)
+  item 3).*
 - **Game data is APL-SA** (NonCommercial, "ArmaOnly", ShareAlike, Attribution). This covers both the Steam demo and the
   full game. **Load it at runtime from the user's install. Never commit, bundle, convert-and-ship or auto-upload it.**
   No evidence was found that the demo data is licensed differently: Bohemia's CWR README points demo and full-game data
@@ -41,14 +46,19 @@ legal reasoning. **[U]** = unknown or unverified.
 - **Model weights are data that sits next to the program ("aggregate"), not derivative works of it.** Default
   downloads should only offer OSI-licensed weights: Apache-2.0 (Qwen3.6, Gemma 4, SmolLM3) or MIT (Phi-4-mini).
   Llama and Gemma ≤3 carry pass-through use restrictions, so users must bring those themselves. Do not bundle weights
-  inside the GPL release archive. **[V]/[I]**
+  inside the GPL release archive. **[V]/[I]** (Answered 2026-09-27 →
+  [D037](../decisions/D037-model-manager-recommended-list.md): the recommended list takes only OSI licences with no
+  field-of-use restriction that passed Plotroom's qualification; everything else installs as "custom".)
 - **Rename the product and repo before any release.** Drop "OFP", "Operation Flashpoint", "Arma" and "Poseidon" from the
   name, crate names, binary, window title and logo. Refer to the game only nominatively, e.g. "a mission editor for
   *Arma: Cold War Assault*", and add Bohemia's disclaimer. "OPERATION FLASHPOINT" is attributed to Electronic Arts;
-  "ARMA" belongs to Bohemia. **[V]/[I]**
+  "ARMA" belongs to Bohemia. **[V]/[I]** (The name is Plotroom, [D002](../decisions/D002-name-and-naming-system.md);
+  descriptor placement, clearance search and rename before the first release answered 2026-09-27 →
+  [D034](../decisions/D034-descriptor-placement-and-names-delegation.md).)
 - **Process:** DCO sign-off (`git commit -s`, as iron-curtain does), SPDX headers plus REUSE 3.3, a `Derived-From:`
   provenance tag on ported files, `license = "GPL-3.0-or-later"` in `[workspace.package]`, a modern-syntax
-  `cargo-deny` allow-list and `cargo-about` notices in releases. **[V]/[I]**
+  `cargo-deny` allow-list and `cargo-about` notices in releases. **[V]/[I]** (DCO answered 2026-09-27 →
+  [D032](../decisions/D032-contribution-terms-dco.md).)
 - **Never copy Bohemia Community Wiki (BIKI) text** into the repo or a shipped RAG corpus. The wiki reportedly restricts
   its content to non-commercial use (unverified: the page returns HTTP 403). Even without that term, no GPL-compatible
   license for BIKI text is known, so copying is not allowed by default. Take command and format facts from the GPL
@@ -271,7 +281,8 @@ Source: <https://www.bohemia.net/en/community/game-content-usage-rules>, "Update
 **How the rules interact with the licenses.** For CWA the specific licenses govern: GPL for code, APL-SA for data.
 Reading GPL-documented formats is not "reverse engineering". Our tool is "original creation" plus GPL-licensed code. It
 reads data from the user's install and never incorporates it. **[I]** Bohemia has not confirmed this reading
-(see Open questions).
+(see Open questions). (How to ask, answered 2026-09-27 →
+[D035](../decisions/D035-outreach-and-security-disclosure.md) item 2: one letter from the owner; not sent yet.)
 
 ### 3.4 Questions and answers for our editor
 
@@ -384,7 +395,9 @@ The costs:
 - One license means no provenance bookkeeping inside the main workspace, and it is the simplest option for LLM coding
   agents to follow. **[I]**
 
-**6.2 Our own §7 additional permission for editor output** (draft, to be reviewed; put it in `NOTICE`):
+**6.2 Our own §7 additional permission for editor output** (draft, to be reviewed; put it in `NOTICE`; answered
+2026-09-27 → [D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 1: this draft with
+"Plotroom" filled in, plus an explicit coverage list, with a legal review before 1.0):
 
 ```
 Additional permission under GNU GPL version 3 section 7 (Generated Content Exception):
@@ -404,7 +417,7 @@ excluded unless Bohemia Interactive grants the same permission.
 - *Constraints:*
   - Templates must be **original**, not ported from CWR, since we cannot grant permissions over Bohemia's code.
   - CONTRIBUTING must say contributions are licensed "GPL-3.0-or-later including the project's §7 additional
-    permissions". **[I]**
+    permissions". **[I]** (Adopted 2026-09-27 → [D032](../decisions/D032-contribution-terms-dco.md) item 2.)
 - Separately, plain program output is not covered by the GPL unless it contains program code. The permission removes
   the remaining doubt. **[I]**
 
@@ -420,6 +433,11 @@ excluded unless Bohemia Interactive grants the same permission.
 - If the owner prefers zero overhead, drop the lane: everything GPL is legally fine. The only cost is that others cannot
   reuse the harness under MIT. **[I]**
 
+*Superseded by [D001](../decisions/D001-licence-gpl-3-or-later.md) (owner, 2026-09-26; noted 2026-09-27): the owner
+dropped the lane, so there is no permissive crate, and the plugin SDK, WIT files and test kit are GPL-3.0-or-later too
+([D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 3). The permissive-lane parts of §5,
+§10.1, §10.3–§10.5 and §11 step 6 lapse with it.*
+
 **6.4 Docs.** Prose under `docs/` may use `CC-BY-SA-4.0`, as iron-curtain's design docs do
 (`iron-curtain-engine/iron-curtain-design-docs@2fda63f5a9:LICENSE-DOCS#L1-L7`; the code repo has no LICENSE-DOCS).
 
@@ -427,6 +445,9 @@ excluded unless Bohemia Interactive grants the same permission.
   (<https://creativecommons.org/share-your-work/licensing-considerations/compatible-licenses/>). **[V]**
 - Quoted CWR code and license text keep their own licenses: mark them, or keep quotes short. **[I]**
 - Alternative: keep docs GPL too, for a single license everywhere.
+
+*Superseded by [D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 2 (2026-09-27,
+OWQ-02 (a)): docs are `GPL-3.0-or-later`, the alternative above; quoted third-party text still keeps its own licence.*
 
 ---
 
@@ -499,13 +520,21 @@ The weights are not "combined … such as to form a larger program". Shipping or
 | LiquidAI LFM2.5 (`LiquidAI/LFM2.5-1.2B-Instruct`) | LFM Open License v1.0 (`lfm1.0`, custom), ungated. Commercial use is not licensed for entities with annual revenue of US$10M or more. **[V]** (HF API, model `LICENSE`) | License copy; mark modified files; keep notices **[V]** | Bring-your-own only |
 | Cloud APIs (OpenAI, Anthropic, DeepSeek …) | Provider terms; the user brings their own key | None for our code | Provider-specific output terms **[U]** |
 
+*Superseded in part by [D037](../decisions/D037-model-manager-recommended-list.md) (2026-09-27, OWQ-19 (a)): "Default-download
+OK" now marks a candidate only; the recommended list also needs Plotroom's qualification, and a model whose use policy may be
+a binding field-of-use limit (the Gemma 4 caveat) is not recommended until that is resolved.*
+
 **Rules for the harness.**
 
 1. The release archive contains **no weights**.
 2. First-run download fetches from the rightsholder's host, pinned by hash, with the license shown and explicitly
    accepted.
-3. The default list contains OSI licenses only.
-4. Anything under custom terms is "bring your own path/URL".
+3. The default list contains OSI licenses only. (Answered 2026-09-27 →
+   [D037](../decisions/D037-model-manager-recommended-list.md) item 1: OSI licences with no field-of-use restriction,
+   and only models that passed Plotroom's qualification.)
+4. Anything under custom terms is "bring your own path/URL". (Answered 2026-09-27 → D037 item 2: everything else,
+   including any Hugging Face file the user names, installs as "custom" with its licence and use policy shown, an
+   explicit acceptance, and an "unqualified" badge until qualified.)
 5. A project fine-tuned model inherits its base's license. Train only on data we can license (§3.4). Publish the data
    provenance manifest, with every dataset pinned by hash. **[I]**
 
@@ -513,7 +542,8 @@ The weights are not "combined … such as to form a larger program". Shipping or
 copyrightable (Part 2 report, published 2025-01-29). **[V]** date; the exact quote was not re-read, since the PDF could
 not be parsed (unverified). Dialogue and briefings the agent writes may therefore be unowned unless a
 human edits them. That matters to authors, not to our license. The Generated Content Exception (§6.2) covers our
-templates. **[I]**
+templates. **[I]** (Its coverage list, answered 2026-09-27 →
+[D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 1, also names AI-written text.)
 
 ---
 
@@ -546,14 +576,19 @@ templates. **[I]**
   "distribute a modification … using … 'OPERATION FLASHPOINT' trademark". **[I]**
 - Community sites have used "OFP" for decades (OFPEC, ofpisnotdead.com) without known enforcement. **[U]** That
   tolerance is not a license, and our GPL distribution is contractually bound by the §7 term.
-- **Rename before the first release.** GitHub keeps redirects after a rename.
+- **Rename before the first release.** GitHub keeps redirects after a rename. (Answered 2026-09-27 →
+  [D034](../decisions/D034-descriptor-placement-and-names-delegation.md) item 2; not done yet.)
 
 **Naming checklist.**
 
 1. The product, repo, crate names, binary, window title, installer and icon contain none of: `Arma`, `ARMA`,
    `OFP`, `Flashpoint`, `Cold War Assault`, `Cold War Crisis`, `Poseidon` (BI's engine codename), `Bohemia`/`BI`, or
    BI island names such as `Everon`, `Malden`, `Kolgujev` and `Nogova` (their status is unknown; avoid them).
-2. Run a clearance search: USPTO, EUIPO, WIPO Global Brand DB, crates.io, GitHub, Steam and ModDB.
+   (Adopted 2026-09-27 → [D034](../decisions/D034-descriptor-placement-and-names-delegation.md) item 1: the descriptor
+   is kept out of the window title, installer, icon, repository, crate and binary names.)
+2. Run a clearance search: USPTO, EUIPO, WIPO Global Brand DB, crates.io, GitHub, Steam and ModDB. (Answered
+   2026-09-27 → D034 item 2: recorded here for Plotroom, Wilco, Plotline, the Tote and Teller before the first
+   release; not done yet. Later user-facing names clear this checklist too, item 3.)
 3. Use an original logo and original UI chrome for the product identity. BI fonts, cursors and textures appear only
    when loaded at runtime from the install.
 4. **Nominative use is fine in body text:** "a standalone mission editor for *Arma: Cold War Assault* (originally
@@ -562,8 +597,10 @@ templates. **[I]**
 5. Do not claim "official", "remastered", "endorsed" or "by Bohemia".
 
 Example names are **unchecked**; they only illustrate the style: *Sitrep*, *Fireteam Studio*, *Waypoint Studio*.
+(The name is now Plotroom: [D002](../decisions/D002-name-and-naming-system.md).)
 
-**Disclaimer.** Put it in the README footer, the About box and the website:
+**Disclaimer.** Put it in the README footer, the About box and the website (placement answered 2026-09-27 →
+[D034](../decisions/D034-descriptor-placement-and-names-delegation.md) item 1; `<Product>` reads "Plotroom", item 2):
 
 ```
 <Product> is an independent, community-made tool. It is not affiliated with, endorsed by, or
@@ -585,10 +622,10 @@ Bohemia Interactive under the APL-SA.
 | File | Content |
 |---|---|
 | `LICENSE` | The **unmodified** GPLv3 text, so GitHub and crates tooling detect "GPL-3.0". |
-| `NOTICE` | Project copyright; "SPDX: GPL-3.0-or-later"; the Generated Content Exception (§6.2); **Bohemia's header and Additional Terms verbatim** (`LICENSE#L1-L3`, `#L682-L721`), with a scope note ("apply to this program, which contains material derived from BohemiaInteractive/CWR"); the trademark disclaimer (§9). |
-| `LICENSES/` (REUSE) | `GPL-3.0-or-later.txt`, `CC-BY-SA-4.0.txt` (docs), `LicenseRef-CWR-Section7-Terms.txt` (the BI terms), and `MIT.txt` + `Apache-2.0.txt` if the permissive lane exists. |
+| `NOTICE` | Project copyright; "SPDX: GPL-3.0-or-later"; the Generated Content Exception (§6.2); **Bohemia's header and Additional Terms verbatim** (`LICENSE#L1-L3`, `#L682-L721`), with a scope note ("apply to this program, which contains material derived from BohemiaInteractive/CWR"); the trademark disclaimer (§9). (The exception's wording, answered 2026-09-27 → [D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 1: the §6.2 draft plus an explicit coverage list.) |
+| `LICENSES/` (REUSE) | `GPL-3.0-or-later.txt`, `CC-BY-SA-4.0.txt` (docs), `LicenseRef-CWR-Section7-Terms.txt` (the BI terms), and `MIT.txt` + `Apache-2.0.txt` if the permissive lane exists. *Superseded in part 2026-09-27: no `CC-BY-SA-4.0.txt`, because docs are GPL-3.0-or-later ([D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 2), and no `MIT.txt` or `Apache-2.0.txt`, because there is no permissive lane ([D001](../decisions/D001-licence-gpl-3-or-later.md)) and the plugin SDK is GPL too (D031 item 3).* |
 | `THIRD_PARTY_NOTICES` | Generated per release by `cargo about generate`, as CWR itself recommends (`THIRD_PARTY_NOTICES.md#L548-L553`). **[V]** |
-| `CONTRIBUTING.md` | DCO, inbound=outbound per crate, provenance rules, AI-assistance policy. |
+| `CONTRIBUTING.md` | DCO, inbound=outbound per crate, provenance rules, AI-assistance policy. (Answered 2026-09-27 → [D032](../decisions/D032-contribution-terms-dco.md): DCO and no CLA; one inbound = outbound licence, GPL-3.0-or-later with the §7 permissions, not per crate; AI assistance allowed with a human sign-off and an optional `Assisted-by:` trailer.) |
 
 ### 10.2 Headers (SPDX + REUSE 3.3)
 
@@ -604,6 +641,10 @@ hold a comment get `.license` sidecars or entries in `REUSE.toml`. `.reuse/dep5`
 
 The last line is needed because we add our own §7 permission (§6.2). Whoever adds §7 terms must put a statement or a
 pointer "in the relevant source files" (#L403-L406). **[V]** text / **[I]** application.
+
+(Answered 2026-09-27: `<Product>` reads "Plotroom" in these headers,
+[D034](../decisions/D034-descriptor-placement-and-names-delegation.md) item 2; files under `docs/` carry
+`GPL-3.0-or-later` headers too, [D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 2.)
 
 Ported file, which also carries the §5(b) notice that the work is under the GPL "and any conditions added under
 section 7" (#L222-L225) and a modification date (GPL §5(a), #L219):
@@ -672,13 +713,18 @@ ignore = false    # also check our own crates' declared licenses
 
 - **DCO 1.1** (<https://developercertificate.org/>, `git commit -s`, enforced by the DCO GitHub App or a CI check).
   iron-curtain already uses it (`CONTRIBUTING.md#L91-L100`). **[V]** It is lightweight and community-friendly.
+  (Answered 2026-09-27 → [D032](../decisions/D032-contribution-terms-dco.md) item 1: DCO 1.1, no CLA.)
 - A **CLA** would buy relicensing flexibility we cannot use anyway, because CWR-derived code is locked to GPL. It would
   also deter the community. **[I]**
 - **Inbound = outbound**, per crate: GPL-3.0-or-later including the project's §7 additional permissions, or
   `MIT OR Apache-2.0` for the permissive lane. This follows CWR-CE's model (`CONTRIBUTING.md#L85-L87`). **[V]**
+  *Superseded in part 2026-09-27: one licence for every contribution, `GPL-3.0-or-later` including the §7
+  permissions ([D032](../decisions/D032-contribution-terms-dco.md) item 2), because there is no permissive lane
+  ([D001](../decisions/D001-licence-gpl-3-or-later.md)).*
 - **AI-assisted work:** the human contributor signs off and is responsible for provenance. Agents never sign off for a
   human. Whether to require an `Assisted-by:` trailer, or to forbid AI trailers as CWR-CE does, is a policy choice
-  (Open questions).
+  (Open questions). (Answered 2026-09-27 → D032 items 3–4: AI assistance is allowed, the human signs off, and the
+  `Assisted-by:` trailer is optional, neither required nor forbidden.)
 
 ### 10.6 Binary releases (GPL §4–6)
 
@@ -694,18 +740,28 @@ ignore = false    # also check our own crates' declared licenses
 
 ## 11. Concrete steps (in order)
 
-1. Pick a new product name (§9 checklist, clearance search) and rename the GitHub repo.
+1. Pick a new product name (§9 checklist, clearance search) and rename the GitHub repo. (The name is Plotroom,
+   [D002](../decisions/D002-name-and-naming-system.md); clearance search and rename before the first release, answered
+   2026-09-27 → [D034](../decisions/D034-descriptor-placement-and-names-delegation.md) item 2; not done yet.)
 2. Add `LICENSE` (pure GPLv3), `NOTICE` (BI terms verbatim + §6.2 exception + disclaimer), `LICENSES/` and `REUSE.toml`.
+   (The §6.2 wording with its coverage list: answered 2026-09-27 →
+   [D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 1.)
 3. Set `[workspace.package] license = "GPL-3.0-or-later"`, and `publish = false` on app crates.
 4. Add `deny.toml` (§10.3), `reuse lint` and the provenance and game-data gates (§10.4) to CI from the first commit.
 5. Write `CONTRIBUTING.md`: DCO, per-crate inbound=outbound, `Derived-From:` rule, "never commit game data or BIKI
-   text", AI policy.
+   text", AI policy. (Answered 2026-09-27 → [D032](../decisions/D032-contribution-terms-dco.md): one inbound =
+   outbound licence, not per crate; `Assisted-by:` optional.)
 6. Decide the permissive lane **before** any harness code lands. If yes: separate repo `MIT OR Apache-2.0` with its own
-   deny config.
+   deny config. (Decided 2026-09-26 → [D001](../decisions/D001-licence-gpl-3-or-later.md): no permissive lane.)
 7. Build a model registry with license metadata and a license-acceptance UI. Default list: OSI licenses only.
+   (Answered 2026-09-27 → [D037](../decisions/D037-model-manager-recommended-list.md): OSI licences with no
+   field-of-use restriction, and qualified; everything else "custom".)
 8. Email Bohemia (and optionally EA) with our name, disclaimer and data policy. Ask for written comfort on nominative use
-   and on using demo data with our editor.
-9. Before 1.0: legal review of `NOTICE`, the exception wording and the name.
+   and on using demo data with our editor. (Answered 2026-09-27 →
+   [D035](../decisions/D035-outreach-and-security-disclosure.md) item 2: one letter from the owner after the name
+   clearance and before the first public release, also asking about 1.99 data, the MIT metadata and extension overlays
+   for Bohemia's campaigns; answers are recorded in this doc. Not sent yet.)
+9. Before 1.0: legal review of `NOTICE`, the exception wording and the name. (Still open: an open part of D031.)
 
 ---
 
@@ -713,20 +769,29 @@ ignore = false    # also check our own crates' declared licenses
 
 - **Bohemia confirmation:** is loading APL-SA data (including the free demo's) in a third-party GPL editor acceptable
   under their reading? Does their "do not reverse engineer" rule have any bearing when the code is GPL? **[U]**
+  (How it is asked, answered 2026-09-27 → [D035](../decisions/D035-outreach-and-security-disclosure.md) item 2: in
+  the owner's one letter to Bohemia; not sent yet.)
 - **Demo EULA:** does the Steam Subscriber Agreement or a demo-specific EULA restrict demo data use outside the demo
-  binary? No EULA link was found in the Steam API data. **[U]**
+  binary? No EULA link was found in the Steam API data. **[U]** (Related: the same letter asks about loading the
+  demo's data in a GPL editor, D035 item 2; not sent yet.)
 - **Pre-remaster data:** is original OFP/CWA 1.99 retail or GOG data also APL-SA? Should the editor support it? **[U]**
+  (The licence part is asked in the same letter, D035 item 2; not sent yet.)
 - **The "OPERATION FLASHPOINT" registration:** exact holder entity, jurisdictions and live status. **[U]**
 - **Trident's MIT metadata vs GPL LICENSE:** should we ask CWR-CE to clarify? This only matters if a permissive crate
-  wants Trident code. **[U]**
+  wants Trident code. **[U]** (Answered 2026-09-27 → [D035](../decisions/D035-outreach-and-security-disclosure.md)
+  item 2: the owner's letter to Bohemia asks about the MIT metadata; not sent yet.)
 - **HEMTT relicensing:** would HEMTT adopt "GPL-2.0-or-later"? That would allow linking its crates. **[U]**
-- **Gemma 4:** does Google's Prohibited Use Policy apply contractually on top of Apache-2.0? **[U]**
+- **Gemma 4:** does Google's Prohibited Use Policy apply contractually on top of Apache-2.0? **[U]** (Until resolved,
+  [D037](../decisions/D037-model-manager-recommended-list.md) keeps such a model off the recommended list.)
 - **BIKI terms:** what is the exact wording of the wiki's content license? The page returns HTTP 403 to automated
   fetches, so a human should read it once. **[U]**
 - **Model trained on GPL CWR code or docs:** what license status do the weights have? This is unsettled law. **[U]**
 - **AI-contribution policy:** do we allow `Assisted-by:` trailers (common in agent-heavy projects) or follow CWR-CE's
-  ban? This is a project decision.
+  ban? This is a project decision. (Answered 2026-09-27 → [D032](../decisions/D032-contribution-terms-dco.md), OWQ-05
+  (a): allowed and optional, neither required nor forbidden.)
 - **Docs license:** CC-BY-SA-4.0 (like iron-curtain) or GPL-only for simplicity? This is a project decision.
+  (Answered 2026-09-27 → [D031](../decisions/D031-generated-content-permission-and-licence-scope.md) item 2, OWQ-02
+  (a): `GPL-3.0-or-later`.)
 
 ---
 
@@ -880,3 +945,9 @@ Adversarial fact-check, 2026-09-26. Primary sources were re-read in local clones
 - The US Copyright Office quote (the PDF was unparseable; only the date was confirmed).
 - EUTMR Art. 14(1)(c) (EUR-Lex returned an empty page).
 - The exact holder of the "OPERATION FLASHPOINT" registration (still [U], as in §9).
+
+**Owner answers folded, 2026-09-27.** Pointers only, no analysis rewritten: the TL;DR, §3.3, §6.2, §8, §9, §10.1,
+§10.2, §10.5, §11 and the open questions now point to D031, D032, D034, D035 and D037 (and to D001 and D002 where the
+permissive lane and the name are concerned). Superseded notes: the permissive lane (TL;DR, §6.3, §10.1, §10.5; D001
+and D031 item 3), the CC-BY-SA docs licence (§6.4, §10.1; D031 item 2) and "Default-download OK" in §8 (D037). Still to
+do: the clearance search, the rename, the Bohemia letter (nothing sent yet) and the legal review before 1.0.
