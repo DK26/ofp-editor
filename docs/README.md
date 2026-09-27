@@ -4,7 +4,7 @@ Design documentation for **Plotroom — Mission & Campaign Editor for Arma: Cold
 
 > **Status:** index, created 2026-09-27. This is the entry point to `docs/` that `AGENTS.md` names under "Design Authority". It
 > decides nothing: it routes each question to the file that owns it. Where a line here summarises a decision, the linked record
-> wins. Research docs 01–48 and 50 are final (docs 49, 51 and 53 are in progress); the architecture and the roadmap are proposals (baseline 2026-09-27).
+> wins. Research docs 01–48, 50 and 51 are final (docs 49, 52–60 are in progress); the architecture and the roadmap are proposals (baseline 2026-09-27).
 > The owner answered all 23 owner questions on 2026-09-27.
 
 ## 1. What Plotroom is
@@ -288,6 +288,8 @@ All 48 docs are final; doc 49 is in progress and gets its row when it lands. Eac
 
 | [50 Free LLM services and cloud-first screening](research/50-free-llm-services-and-cloud-first-screening.md) | Which free LLM services Plotroom can legally offer or preconfigure, how open-source apps offer free models, and what screening local candidates in the cloud first costs | OWQ-24–OWQ-27; screening battery S | Research, not legal advice; nothing run. No Plotroom-owned key or proxy; a "connect a free model" preset on the user's own account is the recommendation (OWQ-24). The screening rule is D044 (owner, 2026-09-27; protocol a proposal) |
 
+| [51 Model-native harnesses](research/51-model-native-harnesses.md) | Which harnesses, tool-call formats, reasoning switches and samplers each candidate model was built and benchmarked with, what eight harnesses' code teaches, and what Plotroom adopts | Lessons H/B/T/M/V/Z/Q/K; profile fields; A/B arms U and N | Research; no model run. Proposes per-endpoint model profiles beneath D048's presets and a pre-registered uniform-vs-native A/B test; 16 design-gap candidates listed, not filed |
+
 Doc 49 (the local shortlist of doc 47 §6, measured) is in progress; its row, and a row for any data file it adds, follow when it lands.
 
 ## 6. Data, skills, prompts and tools
@@ -305,6 +307,7 @@ Doc 49 (the local shortlist of doc 47 §6, measured) is in progress; its row, an
 | [cwa199-observed-commands.csv](research/data/cwa199-observed-commands.csv) | 509 | Script commands observed in official and community content, with 1.99 evidence | Doc 35 §8; catalog evidence tiers (I35-90) |
 | [free-llm-services.csv](research/data/free-llm-services.csv) | 23 | Free LLM services read 2026-09-27: free models, limits, structured output, data use, EU availability, what the terms allow for a third-party app, content policy on military fiction, verdict | Doc 50; OWQ-24 |
 | [local-qualification.csv](research/data/local-qualification.csv) | 748 | Local-model qualification measurements per model, suite and condition | Doc 44; produced with `tools/local-qual/` |
+| [model-profiles.csv](research/data/model-profiles.csv) | 44 | Per-model conventions read 2026-09-28: vendor harness, tool-call format, reasoning control, sampler, template quirks, recommended schema mode, pitfalls, sources | Doc 51; D048 |
 | [runtime-quant-comparison.csv](research/data/runtime-quant-comparison.csv) | 2,814 | llama.cpp vs Ollama and UD-Q4_K_XL vs Q4_K_M: scores, latency, GPU memory, GGUF facts and every paired test | Doc 46; produced with `tools/local-qual/` |
 | [script-command-risk.csv](research/data/script-command-risk.csv) | 111 | Risk category and lint, agent and harness policy per script command and harness verb, with citations | Doc 24 |
 | [slm-candidates.csv](research/data/slm-candidates.csv) | 53 | Small and locally runnable model candidates: repository, parameters, architecture, licence and whether it may be recommended, Q4 GGUF size, llama.cpp support, tool calling, tier, fit per step kind, verdict (doc 44's four models as baselines) | Doc 47 |
