@@ -1,0 +1,203 @@
+idiom,description,occurrences,groups,category,unit
+behaviour_aware,setBehaviour AWARE.,75,legacy_official=54; cwe=21,ai_orders,uses
+behaviour_careless,setBehaviour CARELESS.,290,legacy_official=276; cwe=14,ai_orders,uses
+behaviour_combat,setBehaviour COMBAT.,126,legacy_official=124; cwe=2,ai_orders,uses
+behaviour_safe,setBehaviour SAFE.,487,legacy_official=441; cwe=46,ai_orders,uses
+behaviour_stealth,setBehaviour STEALTH.,4,legacy_official=4,ai_orders,uses
+combat_mode_blue,setCombatMode BLUE.,176,legacy_official=172; cwe=4,ai_orders,uses
+combat_mode_green,setCombatMode GREEN.,1,legacy_official=1,ai_orders,uses
+combat_mode_red,setCombatMode RED.,95,legacy_official=92; cwe=3,ai_orders,uses
+combat_mode_yellow,setCombatMode YELLOW.,12,legacy_official=11; cwe=1,ai_orders,uses
+enum_string_argument,String arguments to setBehaviour/setCombatMode/setSpeedMode/setFormation/setUnitPos.,1650,legacy_official=1550; cwe=100,ai_orders,uses
+speed_mode_full,setSpeedMode FULL.,12,legacy_official=11; cwe=1,ai_orders,uses
+speed_mode_limited,setSpeedMode LIMITED.,28,legacy_official=28,ai_orders,uses
+speed_mode_normal,setSpeedMode NORMAL.,10,legacy_official=10,ai_orders,uses
+unit_pos_auto,setUnitPos AUTO.,21,legacy_official=21,ai_orders,uses
+unit_pos_down,setUnitPos DOWN.,48,legacy_official=48,ai_orders,uses
+unit_pos_up,setUnitPos UP.,254,legacy_official=246; cwe=8,ai_orders,uses
+camcommit_seconds_0,camCommit durations in bin 0 seconds (0 = hard cut).,1857,legacy_official=1754; cwe=67; remastered_templates=36,camera,uses
+camcommit_seconds_15_60,camCommit durations in bin 15_60 seconds (0 = hard cut).,66,legacy_official=59; cwe=7,camera,uses
+camcommit_seconds_1_2,camCommit durations in bin 1_2 seconds (0 = hard cut).,96,legacy_official=78; cwe=10; remastered_templates=8,camera,uses
+camcommit_seconds_2_4,camCommit durations in bin 2_4 seconds (0 = hard cut).,238,legacy_official=197; cwe=23; remastered_templates=18,camera,uses
+camcommit_seconds_4_8,camCommit durations in bin 4_8 seconds (0 = hard cut).,319,legacy_official=295; cwe=10; remastered_templates=14,camera,uses
+camcommit_seconds_8_15,camCommit durations in bin 8_15 seconds (0 = hard cut).,257,legacy_official=241; cwe=16,camera,uses
+camcommit_seconds_ge60,camCommit durations in bin ge60 seconds (0 = hard cut).,4,legacy_official=4,camera,uses
+camcommit_seconds_lt1,camCommit durations in bin lt1 seconds (0 = hard cut).,72,legacy_official=66; cwe=6,camera,uses
+camcreate_class_camera,camCreate used with class camera.,376,legacy_official=302; cwe=44; remastered_templates=30,camera,uses
+camcreate_class_seagull,camCreate used with class seagull.,5,legacy_official=5,camera,uses
+camcreate_class_shell120,camCreate used with class shell120.,7,legacy_official=7,camera,uses
+camcreate_class_shell125,camCreate used with class shell125.,1,cwe=1,camera,uses
+camcreate_class_shell73,camCreate used with class shell73.,3,legacy_official=3,camera,uses
+camcreate_class_smokeshell,camCreate used with class smokeshell.,1,legacy_official=1,camera,uses
+camera_effect_internal,cameraEffect type internal.,376,legacy_official=302; cwe=44; remastered_templates=30,camera,uses
+camera_effect_terminate,cameraEffect type terminate.,347,legacy_official=282; cwe=36; remastered_templates=29,camera,uses
+camera_script_destroys_camera,Cutscene scripts that also destroy their camera.,343,legacy_official=278; cwe=36; remastered_templates=29,camera,files
+camera_script_files,SQS files that create a camera and take over the view (cutscene scripts).,373,legacy_official=299; cwe=44; remastered_templates=30,camera,files
+camera_script_sets_cinema_border,Cutscene scripts that toggle the letterbox border.,8,legacy_official=8,camera,files
+camera_script_without_camDestroy,Cutscene scripts that never destroy the camera they create.,30,legacy_official=21; cwe=8; remastered_templates=1,camera,files
+camera_sqs_timestamp_comment,Comment lines in the timestamp format the free camera writes when a shot is recorded (shots captured in-game and pasted into scripts).,1679,legacy_official=1489; cwe=124; remastered_templates=66,camera,lines
+camera_terminate,cameraEffect with the terminate type (hand the view back).,347,legacy_official=282; cwe=36; remastered_templates=29,camera,statements
+commands_camera_total,"Total uses of the camera command family (camCreate, camDestroy, cameraEffect, camSetTarget, camSetPos, camSetRelPos, camSetFov, camSetFovRange, camSetDive, camSetBank, camSetDir, camCommit, camCommitted, showCinemaBorder, switchCamera).",15553,legacy_official=14224; cwe=844; remastered_templates=485,camera,uses
+exec_dev_camera_sqs,exec of the global camera.sqs free camera (developer shot-finding tool).,61,legacy_official=58; cwe=3,camera,statements
+config_dialog_action_code,Dialog button action code in game resources.,13,legacy_official_configs=13,config,fields
+config_event_handler_code,Event-handler code strings in addon/game configs.,4,cwe_configs=4,config,fields
+config_user_action_code,UserActions condition/statement code in configs (door open/close etc.).,96,legacy_official_configs=32; cwe_configs=64,config,fields
+desc_class_cfgenvsounds,description.ext files declaring CfgEnvSounds.,149,legacy_official=135; cwe=9; remastered_templates=5,description,files
+desc_class_cfgidentities,description.ext files declaring CfgIdentities (named faces/voices).,4,legacy_official=3; cwe=1,description,files
+desc_class_cfgmusic,description.ext files declaring CfgMusic.,2,legacy_official=1; cwe=1,description,files
+desc_class_cfgradio,description.ext files declaring CfgRadio (radio messages).,160,legacy_official=145; cwe=10; remastered_templates=5,description,files
+desc_class_cfgsfx,description.ext files declaring CfgSFX (looping sound effects).,150,legacy_official=136; cwe=9; remastered_templates=5,description,files
+desc_class_cfgsounds,description.ext files declaring CfgSounds (mission voice/sound lines).,202,legacy_official=160; cwe=21; remastered_templates=21,description,files
+desc_class_rsctitles,description.ext files declaring RscTitles (custom title resources).,3,legacy_official=3,description,files
+desc_defines_dialog_or_title_resource,description.ext files defining a resource with an idd.,3,legacy_official=3,description,files
+description_ext_files,description.ext files analysed (missions and campaign roots).,277,legacy_official=206; cwe=35; remastered_templates=36,description,files
+dev_cheat_variable_reference,References to cheat0..cheat9 (set only by developer cheat builds; dead in retail).,271,legacy_official=260; cwe=11,dev,uses
+commands_dialogue_radio_total,"Total uses of the dialogue/radio command family (say, sideRadio, globalRadio, groupRadio, vehicleRadio, sideChat, globalChat, groupChat, vehicleChat, titleText, cutText, titleRsc, cutRsc, titleCut, cutObj, titleObj, hint, hintC, hintCadet, setRadioMsg, enableRadio, setIdentity, setMimic, setFace, playSound, playMusic, fadeMusic, fadeSound, playMove, switchMove).",6873,legacy_official=5622; cwe=656; cwe_configs=3; remastered_templates=592,dialogue,uses
+conversation_script_files,SQS files with 3+ spoken/radio/chat/subtitle lines and 2+ delays (scripted conversations).,137,legacy_official=114; cwe=13; remastered_templates=10,dialogue,files
+dialogue_line_followed_by_wait_condition,Spoken lines followed directly by an @ wait instead of a fixed delay.,80,legacy_official=77; cwe=2; remastered_templates=1,dialogue,lines
+dialogue_pause_seconds_15_60,"Numeric ~ delays directly after a spoken/radio/chat/subtitle line, bin 15-60 seconds.",7,legacy_official=7,dialogue,lines
+dialogue_pause_seconds_1_2,"Numeric ~ delays directly after a spoken/radio/chat/subtitle line, bin 1-2 seconds.",132,legacy_official=103; cwe=3; remastered_templates=26,dialogue,lines
+dialogue_pause_seconds_2_4,"Numeric ~ delays directly after a spoken/radio/chat/subtitle line, bin 2-4 seconds.",259,legacy_official=255; cwe=3; remastered_templates=1,dialogue,lines
+dialogue_pause_seconds_4_8,"Numeric ~ delays directly after a spoken/radio/chat/subtitle line, bin 4-8 seconds.",249,legacy_official=236; cwe=7; remastered_templates=6,dialogue,lines
+dialogue_pause_seconds_8_15,"Numeric ~ delays directly after a spoken/radio/chat/subtitle line, bin 8-15 seconds.",81,legacy_official=80; cwe=1,dialogue,lines
+dialogue_pause_seconds_lt1,"Numeric ~ delays directly after a spoken/radio/chat/subtitle line, bin lt1 seconds.",23,legacy_official=19; cwe=4,dialogue,lines
+command_name_used_as_variable,Binary-operator command names used where a value is expected (an object/variable named like a keyword; parses only because the name sits in operand position).,9,legacy_official=3; cwe=6,lint,uses
+enum_string_not_recognised,Such string arguments that are not a name the engine accepts (silent no-op).,10,legacy_official=10,lint,uses
+nular_name_used_as_mission_variable,Reads of a name the mission assigns or gives to an object that is also a nular command in the reference engine (the variable wins once set; before that the command runs). Not counted as command evidence.,179,legacy_official=95; cwe=24; remastered_templates=60,lint,uses
+script_reference_unresolved,Literal script paths (exec or waypoint/effect script field) not found in the mission folder or the global scripts folder.,19,legacy_official=18; cwe=1,lint,references
+undefined_name_one_edit_from_nular_command,Uses of a never-assigned global one edit away from a nular command (e.g. a misspelt boolean constant).,11,legacy_official=9; cwe=2,lint,uses
+event_script_exit,Mission folders shipping the engine event script exit.sqs.,19,legacy_official=19,mission_structure,files
+event_script_init,Mission folders shipping the engine event script init.sqs.,188,legacy_official=132; cwe=29; remastered_templates=27,mission_structure,files
+event_script_onflare,Mission folders shipping the engine event script onflare.sqs.,1,legacy_official=1,mission_structure,files
+event_script_onplayerkilled,Mission folders shipping the engine event script onplayerkilled.sqs.,1,legacy_official=1,mission_structure,files
+event_script_onplayerrespawnasseagull,Mission folders shipping the engine event script onplayerrespawnasseagull.sqs.,1,legacy_official=1,mission_structure,files
+event_script_onplayerrespawnotherunit,Mission folders shipping the engine event script onplayerrespawnotherunit.sqs.,1,legacy_official=1,mission_structure,files
+script_reference_absolute_or_addon_path,Literal script references with a leading backslash (addon or absolute path).,5,cwe=5,mission_structure,references
+script_reference_resolved_in_mission,Literal script references found in the mission folder.,890,legacy_official=642; cwe=109; remastered_templates=139,mission_structure,references
+script_reference_resolved_in_root_scripts,Literal script references found only in the global scripts folder (engine-shipped scripts such as the free camera).,61,legacy_official=58; cwe=3,mission_structure,references
+commands_mp_total,"Total uses of the mp command family (publicVariable, local, isServer, playersNumber, addScore, score, addRating, rating, flagOwner, setFlagOwner, setFlagSide, setFlagTexture, flag, forceEnd, onPlayerConnected, onPlayerDisconnected, addEventHandler, removeAllEventHandlers, removeEventHandler).",4460,legacy_official=2453; cwe=948; remastered_templates=1059,mp,uses
+event_handler_getin,addEventHandler with event getin.,1,legacy_official=1,mp,uses
+event_handler_killed,addEventHandler with event killed.,2,legacy_official=2,mp,uses
+local_check_on_logic,local checks whose argument is a game logic placed in the mission.,137,legacy_official=73; cwe=22; remastered_templates=42,mp,uses
+local_check_on_other,local checks whose argument is any other object.,630,legacy_official=319; cwe=151; remastered_templates=160,mp,uses
+mp_description_param_slot,Lobby parameter slots declared (titleParam1/titleParam2).,154,legacy_official=78; cwe=34; remastered_templates=42,mp,slots
+mp_description_respawn_delay,description.ext files setting a respawn delay.,78,legacy_official=40; cwe=17; remastered_templates=21,mp,files
+mp_description_respawn_setting,description.ext files setting a respawn mode.,108,legacy_official=55; cwe=22; remastered_templates=31,mp,files
+mp_local_guard_in_sqs_condition,SQS ? conditions using local (run only where an object is local).,139,legacy_official=74; cwe=24; remastered_templates=41,mp,lines
+mp_respawn_mode_3,"description.ext respawn value 3 (BASE) (enum order NONE, BIRD, INSTANT, BASE, GROUP, SIDE; default BIRD).",78,legacy_official=40; cwe=17; remastered_templates=21,mp,uses
+mp_respawn_mode_group,"description.ext respawn value GROUP (enum order NONE, BIRD, INSTANT, BASE, GROUP, SIDE; default BIRD).",30,legacy_official=15; cwe=5; remastered_templates=10,mp,uses
+mp_server_check_via_logic_locality,local <game logic> checks (the server-only guard: game logics are local to the server).,137,legacy_official=73; cwe=22; remastered_templates=42,mp,uses
+self_equality_existence_check,? X == X checks (skip unfilled playable slots whose variable is undefined).,252,legacy_official=136; cwe=50; remastered_templates=66,mp,lines
+campaign_1985_missions_that_save,Campaign persistence (1985): missions that save.,4,legacy_official=4,persistence,count
+campaign_1985_missions_total,Campaign persistence (1985): missions total.,79,legacy_official=79,persistence,count
+campaign_1985_saved_variables,Campaign persistence (1985): saved variables.,10,legacy_official=10,persistence,count
+campaign_1985_saved_vars_read_in_other_missions,Campaign persistence (1985): saved vars read in other missions.,10,legacy_official=10,persistence,count
+campaign_resistance_missions_that_save,Campaign persistence (resistance): missions that save.,16,legacy_official=16,persistence,count
+campaign_resistance_missions_total,Campaign persistence (resistance): missions total.,39,legacy_official=39,persistence,count
+campaign_resistance_saved_variables,Campaign persistence (resistance): saved variables.,113,legacy_official=113,persistence,count
+campaign_resistance_saved_vars_read_in_other_missions,Campaign persistence (resistance): saved vars read in other missions.,91,legacy_official=91,persistence,count
+commands_cargo_total,"Total uses of the cargo command family (addWeaponCargo, addMagazineCargo, clearWeaponCargo, clearMagazineCargo).",4568,legacy_official=2429; cwe=1089; remastered_templates=1050,persistence,uses
+commands_persistence_total,"Total uses of the persistence command family (saveVar, saveStatus, loadStatus, deleteStatus, saveIdentity, loadIdentity, deleteIdentity, saveGame).",372,legacy_official=370; cwe=2,persistence,uses
+commands_weapon_pool_total,"Total uses of the weapon/pool command family (addWeaponPool, addMagazinePool, clearWeaponPool, clearMagazinePool, queryWeaponPool, queryMagazinePool, fillWeaponsFromPool, pickWeaponPool, putWeaponPool).",149,legacy_official=149,persistence,uses
+fade_with_empty_text,titleText/cutText used only as a fade (empty text).,91,legacy_official=73; cwe=10; remastered_templates=8,presentation,uses
+screen_fade_black_faded,Title/cut effects holding a black screen.,21,legacy_official=21,presentation,uses
+screen_fade_black_in,Title/cut effects fading in from black.,639,legacy_official=507; cwe=72; remastered_templates=60,presentation,uses
+screen_fade_black_out,Title/cut effects fading out to black.,446,legacy_official=365; cwe=52; remastered_templates=29,presentation,uses
+screen_fade_white_in,Title/cut effects fading in from white.,26,legacy_official=26,presentation,uses
+screen_fade_white_out,Title/cut effects fading out to white.,14,legacy_official=13; cwe=1,presentation,uses
+title_effect_black_faded,Title/cut effect type BLACK FADED.,21,legacy_official=21,presentation,uses
+title_effect_black_in,Title/cut effect type BLACK IN.,639,legacy_official=507; cwe=72; remastered_templates=60,presentation,uses
+title_effect_black_out,Title/cut effect type BLACK OUT.,446,legacy_official=365; cwe=52; remastered_templates=29,presentation,uses
+title_effect_plain,Title/cut effect type PLAIN.,269,legacy_official=156; cwe=63; remastered_templates=50,presentation,uses
+title_effect_plain_down,Title/cut effect type PLAIN DOWN.,163,legacy_official=118; cwe=23; remastered_templates=22,presentation,uses
+title_effect_white_in,Title/cut effect type WHITE IN.,26,legacy_official=26,presentation,uses
+title_effect_white_out,Title/cut effect type WHITE OUT.,14,legacy_official=13; cwe=1,presentation,uses
+radio_trigger,Triggers activated from the radio menu (ALPHA..JULIET).,81,legacy_official=60; cwe=10; remastered_templates=11,sqm,triggers
+sqm_code_in_intro,Code fields inside the Intro section (intro cutscene world).,1960,legacy_official=1922; cwe=38,sqm,fields
+sqm_code_in_outrowin,Code fields inside the OutroWin section.,6,legacy_official=6,sqm,fields
+sqm_effect_or_waypoint_script_file,Waypoint/effect script-file fields.,8,legacy_official=8,sqm,fields
+sqm_empty_vehicle_init_code,Empty-vehicle/object init fields with code.,1048,legacy_official=601; cwe=205; remastered_templates=242,sqm,fields
+sqm_empty_vehicle_launches_script,Empty-vehicle init fields that exec a script.,7,legacy_official=3; cwe=4,sqm,fields
+sqm_files,mission.sqm files analysed.,280,legacy_official=208; cwe=36; remastered_templates=36,sqm,files
+sqm_trigger_condition_custom,Trigger conditions other than the default and other than true.,5517,legacy_official=4298; cwe=694; remastered_templates=525,sqm,fields
+sqm_trigger_condition_true,Trigger conditions set to true (fire on timer/countdown alone).,766,legacy_official=651; cwe=82; remastered_templates=33,sqm,fields
+sqm_trigger_expactiv_code,Trigger on-activation code fields.,4743,legacy_official=3471; cwe=696; remastered_templates=576,sqm,fields
+sqm_trigger_expdesactiv_code,Trigger on-deactivation code fields.,388,legacy_official=266; cwe=70; remastered_templates=52,sqm,fields
+sqm_trigger_launches_script,Trigger code fields that exec a script.,721,legacy_official=519; cwe=90; remastered_templates=112,sqm,fields
+sqm_unit_init_code,Unit init fields with code.,2374,legacy_official=2028; cwe=286; remastered_templates=60,sqm,fields
+sqm_unit_launches_script,Unit init fields that exec a script.,100,legacy_official=91; cwe=9,sqm,fields
+sqm_unit_presencecondition_code,Unit presence conditions (spawn only if true).,3,legacy_official=3,sqm,fields
+sqm_waypoint_condition_custom,Waypoint conditions other than the default.,646,legacy_official=508; cwe=73; remastered_templates=65,sqm,fields
+sqm_waypoint_expactiv_code,Waypoint on-activation code fields.,962,legacy_official=814; cwe=88; remastered_templates=60,sqm,fields
+sqm_waypoint_launches_script,Waypoint code fields that exec a script.,24,legacy_official=23; cwe=1,sqm,fields
+trigger_activation_alpha,Triggers activated by ALPHA.,66,legacy_official=45; cwe=10; remastered_templates=11,sqm,uses
+trigger_activation_any,Triggers activated by ANY.,194,legacy_official=119; cwe=28; remastered_templates=47,sqm,uses
+trigger_activation_bravo,Triggers activated by BRAVO.,8,legacy_official=8,sqm,uses
+trigger_activation_charlie,Triggers activated by CHARLIE.,4,legacy_official=4,sqm,uses
+trigger_activation_civ,Triggers activated by CIV.,4,legacy_official=4,sqm,uses
+trigger_activation_delta,Triggers activated by DELTA.,1,legacy_official=1,sqm,uses
+trigger_activation_east,Triggers activated by EAST.,411,legacy_official=297; cwe=52; remastered_templates=62,sqm,uses
+trigger_activation_echo,Triggers activated by ECHO.,1,legacy_official=1,sqm,uses
+trigger_activation_foxtrot,Triggers activated by FOXTROT.,1,legacy_official=1,sqm,uses
+trigger_activation_group,Triggers activated by GROUP.,35,legacy_official=32; cwe=3,sqm,uses
+trigger_activation_guer,Triggers activated by GUER.,78,legacy_official=65; cwe=13,sqm,uses
+trigger_activation_leader,Triggers activated by LEADER.,58,legacy_official=51; cwe=7,sqm,uses
+trigger_activation_member,Triggers activated by MEMBER.,90,legacy_official=80; cwe=10,sqm,uses
+trigger_activation_static,Triggers activated by STATIC.,3,legacy_official=2; cwe=1,sqm,uses
+trigger_activation_vehicle,Triggers activated by VEHICLE.,467,legacy_official=423; cwe=44,sqm,uses
+trigger_activation_west,Triggers activated by WEST.,328,legacy_official=213; cwe=57; remastered_templates=58,sqm,uses
+trigger_type_east_g,Triggers of type EAST G.,13,legacy_official=11; cwe=2,sqm,uses
+trigger_type_end1,Triggers of type END1.,320,legacy_official=244; cwe=40; remastered_templates=36,sqm,uses
+trigger_type_end2,Triggers of type END2.,63,legacy_official=50; cwe=12; remastered_templates=1,sqm,uses
+trigger_type_end3,Triggers of type END3.,34,legacy_official=26; cwe=7; remastered_templates=1,sqm,uses
+trigger_type_end4,Triggers of type END4.,14,legacy_official=12; cwe=2,sqm,uses
+trigger_type_end5,Triggers of type END5.,6,legacy_official=4; cwe=2,sqm,uses
+trigger_type_end6,Triggers of type END6.,8,legacy_official=6; cwe=2,sqm,uses
+trigger_type_loose,Triggers of type LOOSE.,24,legacy_official=24,sqm,uses
+trigger_type_switch,Triggers of type SWITCH.,745,legacy_official=505; cwe=106; remastered_templates=134,sqm,uses
+code_in_braces,Code strings written with {} instead of quotes.,29,legacy_official=3; cwe=23; cwe_configs=3,sqs,strings
+engine_variable__pos,Uses of the engine-provided variable _pos.,15,legacy_official=15,sqs,uses
+engine_variable__this,Uses of the engine-provided variable _this.,119,legacy_official=98; cwe=17; cwe_configs=4,sqs,uses
+engine_variable__time,Uses of the engine-provided variable _time.,6,legacy_official=6,sqs,uses
+engine_variable__units,Uses of the engine-provided variable _units.,7,legacy_official=7,sqs,uses
+engine_variable__x,Uses of the engine-provided variable _x.,1414,legacy_official=848; cwe=231; remastered_templates=335,sqs,uses
+engine_variable_param1,Uses of the engine-provided variable param1.,1334,legacy_official=671; cwe=316; remastered_templates=347,sqs,uses
+engine_variable_param2,Uses of the engine-provided variable param2.,179,legacy_official=91; cwe=37; remastered_templates=51,sqs,uses
+engine_variable_this,Uses of the engine-provided variable this.,10774,legacy_official=6948; legacy_official_configs=32; cwe=2261; cwe_configs=64; remastered_templates=1469,sqs,uses
+engine_variable_thislist,Uses of the engine-provided variable thislist.,524,legacy_official=389; cwe=67; remastered_templates=68,sqs,uses
+exec_non_literal_path,exec whose script path is computed.,1,legacy_official=1,sqs,statements
+function_file_load,loadFile / preprocessFile calls (function-file pattern).,5,cwe=5,sqs,statements
+sqs_abs_time_wait_amp,& lines (wait until an absolute time).,4,legacy_official=4,sqs,lines
+sqs_blank_lines,Blank SQS lines.,15721,legacy_official=12565; cwe=1409; remastered_templates=1747,sqs,lines
+sqs_code_lines,"SQS lines that execute something (not blank, comment or label).",36596,legacy_official=31122; cwe=2964; remastered_templates=2510,sqs,lines
+sqs_comment_lines,SQS lines starting with a semicolon (whole-line comments).,4806,legacy_official=4130; cwe=356; remastered_templates=320,sqs,lines
+sqs_conditional_q,?cond : statement lines (one-line conditionals).,2201,legacy_official=1427; cwe=326; remastered_templates=448,sqs,lines
+sqs_delay_computed,~ delay lines whose duration is an expression rather than a number.,24,legacy_official=16; cwe=8,sqs,lines
+sqs_delay_seconds_15_60,Numeric ~ delays in bin 15-60 seconds.,60,legacy_official=54; cwe=5; remastered_templates=1,sqs,lines
+sqs_delay_seconds_1_2,Numeric ~ delays in bin 1-2 seconds.,1010,legacy_official=755; cwe=118; remastered_templates=137,sqs,lines
+sqs_delay_seconds_2_4,Numeric ~ delays in bin 2-4 seconds.,1078,legacy_official=977; cwe=57; remastered_templates=44,sqs,lines
+sqs_delay_seconds_4_8,Numeric ~ delays in bin 4-8 seconds.,689,legacy_official=646; cwe=27; remastered_templates=16,sqs,lines
+sqs_delay_seconds_8_15,Numeric ~ delays in bin 8-15 seconds.,183,legacy_official=174; cwe=9,sqs,lines
+sqs_delay_seconds_ge60,Numeric ~ delays in bin ge60 seconds.,4,legacy_official=3; cwe=1,sqs,lines
+sqs_delay_seconds_lt1,Numeric ~ delays in bin lt1 seconds.,327,legacy_official=295; cwe=26; remastered_templates=6,sqs,lines
+sqs_delay_tilde,~N delay lines (suspend the script N seconds).,3375,legacy_official=2920; cwe=251; remastered_templates=204,sqs,lines
+sqs_exit,exit statements.,467,legacy_official=295; cwe=81; remastered_templates=91,sqs,statements
+sqs_files,SQS script files (line-based scripts started with exec).,982,legacy_official=693; cwe=132; remastered_templates=157,sqs,files
+sqs_goto,goto statements (jump to a label; may sit after a ?cond: prefix or after other statements on the line).,1750,legacy_official=1154; cwe=248; remastered_templates=348,sqs,statements
+sqs_goto_forward,goto that jumps forward (branching / skipping code).,932,legacy_official=626; cwe=132; remastered_templates=174,sqs,statements
+sqs_goto_undefined_label,goto whose literal label is not defined in the same file.,1,legacy_official=1,sqs,statements
+sqs_label_never_targeted,Labels no literal goto in the file jumps to (dead or documentation labels).,58,legacy_official=58,sqs,labels
+sqs_labels,SQS jump labels (#name lines).,1326,legacy_official=919; cwe=177; remastered_templates=230,sqs,lines
+sqs_line_with_multiple_statements,SQS lines holding several ;-separated statements.,439,legacy_official=351; cwe=56; remastered_templates=32,sqs,lines
+sqs_loop_iteration_no_wait,Backward goto loops without any wait but with a conditional exit (counter/array iteration that finishes at once).,184,legacy_official=171; cwe=6; remastered_templates=7,sqs,loops
+sqs_loop_polling_with_wait,Backward goto loops that contain a ~delay or @wait (polling loops).,633,legacy_official=356; cwe=110; remastered_templates=167,sqs,loops
+sqs_wait_at,@cond lines (suspend until the condition is true; re-checked every frame).,3226,legacy_official=2835; cwe=216; remastered_templates=175,sqs,lines
+sqs_wait_on_alive,@ waits involving alive (wait for a death or survival).,141,legacy_official=69; cwe=38; remastered_templates=34,sqs,lines
+sqs_wait_on_camera,@ waits on camCommitted (wait for a camera move to finish).,2750,legacy_official=2553; cwe=129; remastered_templates=68,sqs,lines
+sqs_wait_on_count,@ waits involving count (e.g. wait until a group or list shrinks).,39,legacy_official=20; cwe=11; remastered_templates=8,sqs,lines
+sqs_wait_on_global_flag,@ waits on a single global variable (flag set by a trigger or other script).,142,legacy_official=89; cwe=14; remastered_templates=39,sqs,lines
+sqs_wait_on_local_var,@ waits on script-local variables only.,58,legacy_official=37; cwe=12; remastered_templates=9,sqs,lines
+sqs_wait_on_mission_time,@ waits involving the mission clock (time).,21,legacy_official=11; cwe=4; remastered_templates=6,sqs,lines
+sqs_wait_on_other,@ waits not matching the classes above.,50,legacy_official=31; cwe=8; remastered_templates=11,sqs,lines
+sqs_wait_on_script_time,@ waits involving the script clock (_time).,3,legacy_official=3,sqs,lines
+sqs_wait_on_unitReady,@ waits involving unitReady (wait for an ordered move to finish).,22,legacy_official=22,sqs,lines

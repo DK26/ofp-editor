@@ -1,0 +1,339 @@
+catalog,count,notes
+config.top_level_classes.core,50,core CONFIG.BIN; same in Remastered 3.05
+config.top_level_classes.merged,52,addons add CfgPatches and CfgMovesMCWoman
+config.addon_configs,27,"official AddOns with a config; configs byte-identical in Remastered, which adds one config-less logo addon"
+CfgPatches.units_listed,33,units[] entries across official addon CfgPatches
+CfgPatches.addon_public_vehicles_unlisted,40,of 71 public addon vehicles missing from their own units[]; the engine falls back to class ownership
+CfgVehicles.classes.core,339,core CONFIG.BIN only
+CfgVehicles.classes.merged,502,core + official addons; same in Remastered 3.05
+CfgVehicles.scope0,36,"private (bases, never listed)"
+CfgVehicles.scope1,203,"protected (scriptable, hidden from editor)"
+CfgVehicles.scope2,263,public (editor-listed)
+CfgVehicles.scope2.core,192,public classes in core config
+CfgVehicles.scope2.from_addons,71,public classes added by official addons
+CfgVehicles.scope2.side.Civilian,120,mostly static objects and buildings
+CfgVehicles.scope2.side.West,55,
+CfgVehicles.scope2.side.East,40,
+CfgVehicles.scope2.side.Resistance,26,
+CfgVehicles.scope2.side.side_minus1,21,sound sources and the mine carry side -1
+CfgVehicles.scope2.side.Logic,1,
+CfgVehicles.scope2.men,77,public classes derived from Man
+CfgVehicles.scope2.vehicleClass.Men,77,
+CfgVehicles.scope2.vehicleClass.Objects,61,
+CfgVehicles.scope2.vehicleClass.Car,25,
+CfgVehicles.scope2.vehicleClass.Armored,20,
+CfgVehicles.scope2.vehicleClass.Sounds,20,
+CfgVehicles.scope2.vehicleClass.Air,19,
+CfgVehicles.scope2.vehicleClass.Ammo,14,
+CfgVehicles.scope2.vehicleClass.(none),14,no vehicleClass: never listed by the Unit dialog
+CfgVehicles.scope2.vehicleClass.Support,12,
+CfgVehicles.scope2.vehicleClass.Mines,1,
+CfgVehicles.scope2.simulation.soldier,77,
+CfgVehicles.scope2.simulation.house,55,
+CfgVehicles.scope2.simulation.car,34,
+CfgVehicles.scope2.simulation.thing,23,
+CfgVehicles.scope2.simulation.(none),21,
+CfgVehicles.scope2.simulation.tank,18,
+CfgVehicles.scope2.simulation.helicopter,9,
+CfgVehicles.scope2.simulation.airplane,6,
+CfgVehicles.scope2.simulation.parachute,4,
+CfgVehicles.scope2.simulation.church,4,
+CfgVehicles.scope2.simulation.ship,3,
+CfgVehicles.scope2.simulation.flagcarrier,3,
+CfgVehicles.scope2.simulation.fountain,2,
+CfgVehicles.scope2.simulation.motorcycle,2,
+CfgVehicles.scope2.simulation.invisible,1,
+CfgVehicles.scope2.simulation.fire,1,
+editor.unit_dialog.side_total.West,55,units listed across all Class entries for this Side
+editor.unit_dialog.side_total.East,40,units listed across all Class entries for this Side
+editor.unit_dialog.side_total.Resistance,26,units listed across all Class entries for this Side
+editor.unit_dialog.side_total.Civilian,32,units listed across all Class entries for this Side
+editor.unit_dialog.side_total.Logic,1,units listed across all Class entries for this Side
+editor.unit_dialog.side_total.Empty,171,units listed across all Class entries for this Side
+editor.unit_dialog.list.West.Air,10,
+editor.unit_dialog.list.West.Armored,8,
+editor.unit_dialog.list.West.Car,5,
+editor.unit_dialog.list.West.Men,28,
+editor.unit_dialog.list.West.Support,4,
+editor.unit_dialog.list.East.Air,6,
+editor.unit_dialog.list.East.Armored,8,
+editor.unit_dialog.list.East.Car,3,
+editor.unit_dialog.list.East.Men,19,
+editor.unit_dialog.list.East.Support,4,
+editor.unit_dialog.list.Resistance.Air,1,
+editor.unit_dialog.list.Resistance.Armored,4,
+editor.unit_dialog.list.Resistance.Car,3,
+editor.unit_dialog.list.Resistance.Men,14,
+editor.unit_dialog.list.Resistance.Support,4,
+editor.unit_dialog.list.Civilian.Air,2,
+editor.unit_dialog.list.Civilian.Car,14,
+editor.unit_dialog.list.Civilian.Men,16,
+editor.unit_dialog.list.Logic.Objects,1,
+editor.unit_dialog.list.Empty.Air,19,
+editor.unit_dialog.list.Empty.Ammo,14,
+editor.unit_dialog.list.Empty.Armored,20,
+editor.unit_dialog.list.Empty.Car,25,
+editor.unit_dialog.list.Empty.Mines,1,
+editor.unit_dialog.list.Empty.Objects,60,
+editor.unit_dialog.list.Empty.Sounds,20,
+editor.unit_dialog.list.Empty.Support,12,
+editor.unit_dialog.lists,27,Side x Class lists the Unit dialog can show
+editor.unit_dialog.list_max,60,Empty > Objects
+editor.unit_dialog.list_median,8,
+editor.unit_dialog.lists_over_7,15,lists longer than the doc 25 menu cap (k<=7)
+editor.displayName.dup_groups_same_side,11,display names shared by several public classes of one side
+editor.displayName.dup_classes_same_side,26,
+editor.displayName.dup_groups_any_side,29,
+editor.displayName.dup_classes_any_side,76,
+editor.displayName.stringtable_refs,263,public classes whose displayName is a $STR key (all of them)
+editor.class_name_len.median,9,characters
+editor.class_name_len.max,23,characters
+prompt.tokens_est.public_vehicle_list,1705,one 'class | display name' line per public class at 3.5 bytes/token
+prompt.tokens_est.public_vehicle_list.Logic,5,
+prompt.tokens_est.public_vehicle_list.Civilian,795,
+prompt.tokens_est.public_vehicle_list.West,381,
+prompt.tokens_est.public_vehicle_list.East,254,
+prompt.tokens_est.public_vehicle_list.Resistance,169,
+prompt.tokens_est.public_vehicle_list.side_minus1,100,
+prompt.tokens_est.public_weapon_magazine_list,762,
+prompt.tokens_est.named_places.Eden,142,name + position per place
+prompt.tokens_est.named_places.Abel,111,name + position per place
+prompt.tokens_est.named_places.Cain,0,name + position per place
+prompt.tokens_est.named_places.Noe,227,name + position per place
+prompt.tokens_est.named_places.Intro,0,name + position per place
+CfgVehicles.men.weapons_per_unit_max,5,
+CfgVehicles.men.magazines_per_unit_max,14,
+CfgWeapons.classes.core,80,OFP keeps weapons and magazines in one class list
+CfgWeapons.classes.merged,155,same in Remastered 3.05
+CfgWeapons.public_weapons,80,scopeWeapon=2
+CfgWeapons.public_magazines,92,scopeMagazine=2
+CfgWeapons.public_both,51,classes public as weapon and as magazine
+CfgWeapons.public_weapon_or_magazine,121,
+CfgAmmo.classes.core,82,
+CfgAmmo.classes.merged,114,same in Remastered 3.05
+CfgAmmo.simulation.shotBullet,60,
+CfgAmmo.simulation.shotShell,13,
+CfgAmmo.simulation.shotMissile,12,
+CfgAmmo.simulation.(none),11,
+CfgAmmo.simulation.shotRocket,4,
+CfgAmmo.simulation.shotIlluminating,4,
+CfgAmmo.simulation.shotSmoke,3,
+CfgAmmo.simulation.shotStroke,2,
+CfgAmmo.simulation.shotMine,2,
+CfgAmmo.simulation.shotTimeBomb,1,
+CfgAmmo.simulation.shotPipeBomb,1,
+CfgAmmo.simulation.laserDesignate,1,
+CfgWorldList.worlds,6,"Eden, Abel, Cain, Demo, Intro, Noe"
+CfgWorlds.worlds_with_terrain_in_full_install,5,Demo points at a terrain file the full game does not ship
+CfgWorlds.Eden.named_places,18,
+CfgWorlds.Eden.grid_zoom_levels,2,
+CfgWorlds.Eden.cutscenes,2,main-menu background cutscenes
+CfgWorlds.Abel.named_places,14,
+CfgWorlds.Abel.grid_zoom_levels,2,
+CfgWorlds.Abel.cutscenes,2,main-menu background cutscenes
+CfgWorlds.Cain.named_places,0,no named places in config
+CfgWorlds.Cain.grid_zoom_levels,2,
+CfgWorlds.Cain.cutscenes,2,main-menu background cutscenes
+CfgWorlds.Demo.named_places,14,inherited from Abel
+CfgWorlds.Demo.grid_zoom_levels,2,
+CfgWorlds.Demo.cutscenes,1,main-menu background cutscenes
+CfgWorlds.Intro.named_places,0,no named places in config
+CfgWorlds.Intro.grid_zoom_levels,2,
+CfgWorlds.Intro.cutscenes,1,main-menu background cutscenes
+CfgWorlds.Noe.named_places,30,
+CfgWorlds.Noe.grid_zoom_levels,2,
+CfgWorlds.Noe.cutscenes,1,main-menu background cutscenes
+CfgWorlds.named_places_total,62,excluding Demo's inherited copy
+CfgWorlds.group_name_letters,9,GroupNameList letters[]
+CfgWorlds.group_colors,7,GroupColorList colors[]
+editor.max_groups_per_side,63,letters x colors (Configuration.cpp MaxGroups)
+CfgMarkers.classes,13,icon marker types in the Marker dialog
+CfgMarkerColors.classes,9,includes Default
+CfgMarkerBrushes.classes,8,"area fills, includes Solid"
+CfgSFX.classes,34,trigger sound effects (Effects dialog)
+CfgEnvSounds.classes,7,environment sounds (Effects dialog)
+CfgFaces.classes,64,
+CfgGlasses.classes,3,
+CfgHQIdentities.classes,4,
+CfgNonAIVehicles.classes,225,proxies and non-AI objects
+CfgCutScenes.classes,8,
+CfgSurfaces.classes,42,
+CfgModels.classes,179,
+CfgCloudlets.classes,11,
+CfgMusic.classes,34,tracks for Effects dialog and playMusic; 13 come from the largest official addon (O)
+CfgSounds.classes,66,"config-level sounds (Effects dialog, say/playSound)"
+CfgTitles.classes,3,3D title objects
+CfgCameraEffects.Array.classes,12,camera effects listed in the Effects dialog
+CfgDetectors.objects,1,trigger object types
+CfgVoice.voices,14,
+CfgMovesMC.States.classes,804,animation states (playMove/switchMove targets)
+CfgMovesMC.Actions.classes,57,
+CfgManActions.values,70,
+CfgVehicleActions.values,103,
+CfgGroups.presets,8,Group dialog presets: West and East only
+CfgGroups.West.Armored,2,
+CfgGroups.West.Infantry,2,
+CfgGroups.East.Armored,2,
+CfgGroups.East.Infantry,2,
+CfgGroups.Resistance,0,no presets
+CfgGroups.Civilian,0,no presets
+CfgGroups.units_per_preset_min,4,
+CfgGroups.units_per_preset_max,9,
+CfgFonts.language_classes.legacy,2,"Korean, Czech"
+CfgFonts.language_classes.remastered,3,adds Russian (2 remaps); the only CONFIG.BIN change
+CfgLanguages.languages.remastered,8,from config-extra.cpp; absent in 1.99
+CfgInGameUI.IslandMap.keys,34,map colours and icons in config
+CfgWrapperUI.subclasses,7,"Colors, Background, TitleBar, GroupBox, GroupBox2, Button, Cursors"
+CfgWrapperUI.cursors,4,"Arrow, Track, Move, Scroll"
+CfgRadio.classes.game_config,0,defined only in mission or campaign description.ext
+CfgIdentities.classes.game_config,0,defined only in mission or campaign description.ext
+descext.official/campaigns.files,118,
+descext.official/campaigns.CfgSounds.files,56,
+descext.official/campaigns.CfgSounds.classes_total,769,
+descext.official/campaigns.CfgSounds.classes_max,55,
+descext.official/campaigns.CfgRadio.files,54,
+descext.official/campaigns.CfgRadio.classes_total,198,
+descext.official/campaigns.CfgRadio.classes_max,20,
+descext.official/campaigns.CfgIdentities.files,2,
+descext.official/campaigns.CfgIdentities.classes_total,23,
+descext.official/campaigns.CfgIdentities.classes_max,15,
+descext.official/campaigns.RscTitles.files,3,
+descext.official/campaigns.RscTitles.classes_total,31,
+descext.official/campaigns.RscTitles.classes_max,18,
+descext.official/missions-res.files,6,
+descext.official/missions-res.CfgSounds.files,3,
+descext.official/missions-res.CfgSounds.classes_total,9,
+descext.official/missions-res.CfgSounds.classes_max,9,
+descext.official/missions-res.CfgRadio.files,3,
+descext.official/missions-res.CfgRadio.classes_total,28,
+descext.official/missions-res.CfgRadio.classes_max,13,
+descext.official/mpmissions.files,29,
+descext.official/mpmissions.CfgSounds.files,15,
+descext.official/mpmissions.CfgSounds.classes_total,47,
+descext.official/mpmissions.CfgSounds.classes_max,11,
+descext.official/mpmissions.CfgRadio.files,1,
+descext.official/mpmissions.CfgRadio.classes_total,2,
+descext.official/mpmissions.CfgRadio.classes_max,2,
+descext.official/templates.files,31,
+descext.official/templates.CfgSounds.files,16,
+descext.official/templates.CfgSounds.classes_total,51,
+descext.official/templates.CfgSounds.classes_max,11,
+descext.cwe/mpmissions.files,27,
+descext.cwe/mpmissions.CfgSounds.files,14,
+descext.cwe/mpmissions.CfgSounds.classes_total,46,
+descext.cwe/mpmissions.CfgSounds.classes_max,11,
+descext.cwe/mpmissions.CfgRadio.files,1,
+descext.cwe/mpmissions.CfgRadio.classes_total,2,
+descext.cwe/mpmissions.CfgRadio.classes_max,2,
+resource.top_level_classes,138,RESOURCE.BIN; same in Remastered 3.05
+resource.RscDisplay_classes,70,
+resource.Rsc_templates_and_menus,67,"non-display Rsc classes (control templates, command menus)"
+resource.control_templates_with_type,45,
+resource.RscTitles.classes,42,resource titles (Effects dialog RES); Remastered overlay adds 2
+resource.RscMapControl.icon_classes,18,map object icons incl. Waypoint/WaypointCompleted
+resource.RscMapControl.keys,42,
+resource.RscDisplayInsertMarker.controls,3,IDD 54
+resource.RscDisplayInsertMarker.controls_with_idc,3,
+resource.RscDisplayCustomArcade.controls,8,IDD 25
+resource.RscDisplayCustomArcade.controls_with_idc,5,
+resource.RscDisplayArcadeMap.controls,27,IDD 26
+resource.RscDisplayArcadeMap.controls_with_idc,18,
+resource.RscDisplayArcadeUnit.controls,43,IDD 27
+resource.RscDisplayArcadeUnit.controls_with_idc,22,
+resource.RscDisplayArcadeUnitSimple.controls,25,IDD 27
+resource.RscDisplayArcadeUnitSimple.controls_with_idc,13,
+resource.RscDisplayArcadeGroup.controls,14,IDD 40
+resource.RscDisplayArcadeGroup.controls_with_idc,7,
+resource.RscDisplayArcadeMarker.controls,21,IDD 45
+resource.RscDisplayArcadeMarker.controls_with_idc,13,
+resource.RscDisplayArcadeMarkerSimple.controls,13,IDD 45
+resource.RscDisplayArcadeMarkerSimple.controls_with_idc,8,
+resource.RscDisplayArcadeSensor.controls,39,IDD 41
+resource.RscDisplayArcadeSensor.controls_with_idc,21,
+resource.RscDisplayArcadeSensorSimple.controls,19,IDD 41
+resource.RscDisplayArcadeSensorSimple.controls_with_idc,10,
+resource.RscDisplayArcadeEffects.controls,33,IDD 44
+resource.RscDisplayArcadeEffects.controls_with_idc,16,
+resource.RscDisplayArcadeEffectsSimple.controls,16,IDD 44
+resource.RscDisplayArcadeEffectsSimple.controls_with_idc,7,
+resource.RscDisplayArcadeWaypoint.controls,38,IDD 28
+resource.RscDisplayArcadeWaypoint.controls_with_idc,21,
+resource.RscDisplayArcadeWaypointSimple.controls,17,IDD 28
+resource.RscDisplayArcadeWaypointSimple.controls_with_idc,10,
+resource.RscDisplayTemplateSave.controls,9,IDD 29
+resource.RscDisplayTemplateSave.controls_with_idc,4,
+resource.RscDisplayTemplateLoad.controls,9,IDD 30
+resource.RscDisplayTemplateLoad.controls_with_idc,5,
+resource.RscDisplayIntel.controls,31,IDD 32
+resource.RscDisplayIntel.controls_with_idc,13,
+resource.RscDisplayIntelSimple.controls,29,IDD 32
+resource.RscDisplayIntelSimple.controls_with_idc,11,
+resource.RscDisplayMain.controls,17,IDD 0
+resource.RscDisplayMain.controls_with_idc,10,
+resource.RscDisplayWizardTemplate.controls,9,IDD 67
+resource.RscDisplayWizardTemplate.controls_with_idc,2,
+resource.RscDisplayWizardMap.controls,7,IDD 68
+resource.RscDisplayWizardMap.controls_with_idc,3,
+resource.RscDisplayMainMap.controls,8,IDD 12
+resource.RscDisplayMainMap.controls_with_idc,7,
+resource.RscDisplayGetReady.controls,13,IDD 37
+resource.RscDisplayGetReady.controls_with_idc,9,
+resource.RscDisplayDebriefing.controls,13,IDD 50
+resource.RscDisplayDebriefing.controls_with_idc,7,
+resource.RscDisplaySelectIsland.controls,10,IDD 51
+resource.RscDisplaySelectIsland.controls_with_idc,4,
+resource.RscDisplayMission.controls,2,IDD 46
+resource.RscDisplayMission.controls_with_idc,2,
+resource.RscDisplayLoadMission.controls,2,IDD -1
+resource.RscDisplayLoadMission.controls_with_idc,2,
+resource.easy_mode_omitted_fields.Unit,9,input IDCs in the Advanced dialog that the Simple (Easy) twin drops
+resource.easy_mode_omitted_fields.Marker,5,input IDCs in the Advanced dialog that the Simple (Easy) twin drops
+resource.easy_mode_omitted_fields.Sensor,11,input IDCs in the Advanced dialog that the Simple (Easy) twin drops
+resource.easy_mode_omitted_fields.Effects,9,input IDCs in the Advanced dialog that the Simple (Easy) twin drops
+resource.easy_mode_omitted_fields.Waypoint,11,input IDCs in the Advanced dialog that the Simple (Easy) twin drops
+resource.easy_mode_omitted_fields.Intel,2,input IDCs in the Advanced dialog that the Simple (Easy) twin drops
+resource.displays_controls_array_form,58,displays listing controls[] by name
+resource.displays_controls_class_form,1,
+resource.displays_objects_array,23,
+resource.displays_controlsBackground_array,16,
+resource.expr_values.sizeEx,103,of 169 sizeEx values are arithmetic string expressions
+resource.expr_values.style,90,of 223 style values
+resource.expr_values.x,15,of 1040
+resource.expr_values.w,14,of 1015
+resource.expr_values.h,1,of 657
+resource.idc_literal_IDC_STATIC,13,
+resource.access_locked_top_level,96,top-level classes with access=3 (read-only verified)
+resource.font_name_spellings,11,distinct font strings incl. case and fonts\ prefix variants
+resource.editor_dialogs.controls_total,383,"17 editor dialogs (Arcade*, Intel*, Template*)"
+resource.editor_dialogs.distinct_colorText,9,
+resource.editor_dialogs.distinct_colorBackground,4,
+resource.remastered.changed_values,51,"vs 1.99: 48 in Trigger dialog, 1 in Waypoint dialog, 2 title texts"
+resource.remastered.extra_top_level_unique,44,classes in resource-extra.cpp and its includes
+resource.remastered.extra_new_displays_or_pages,14,"options pages, mods, downloads, main menu, MP players"
+config.remastered.changed_entries,2,CfgFonts Russian remaps only
+fonts.legacy_fxy,21,"DTA Fonts.pbo: Tahoma B 24/36/48, Steelfish B 64/128/64CE, Courier New B 64, Garamond 64, Audreys Hand B/I 48, CZ_ variants"
+fonts.remastered_ttf,5,"all SIL OFL 1.1: Roboto (variable), Oswald, Vollkorn, Caveat, Unuaranga Kuriero (a Courier Prime derivative)"
+stringtable.legacy.languages,6,"English, French, Italian, Spanish, German, Czech"
+stringtable.legacy.keys,2342,
+stringtable.remastered.languages,8,"adds Polish, Russian"
+stringtable.remastered.keys,2342,
+stringtable.remastered.keys_replaced,144,legacy input-key names swapped for 141 SDL scancode names + 3 new keys
+stringtable.remastered.filled.English,2340,
+stringtable.remastered.filled.French,2340,
+stringtable.remastered.filled.Italian,2340,
+stringtable.remastered.filled.Spanish,2340,
+stringtable.remastered.filled.German,2339,
+stringtable.remastered.filled.Czech,2340,
+stringtable.remastered.filled.Polish,2336,
+stringtable.remastered.filled.Russian,2301,
+stringtable.remastered.overlay.CREDITS.keys,26,UTF-8 overlay
+stringtable.remastered.overlay.EDITOR.keys,9,UTF-8 overlay
+stringtable.remastered.overlay.EQUIPMENT.keys,111,UTF-8 overlay
+stringtable.remastered.overlay.MAINMENU.keys,292,UTF-8 overlay
+stringtable.remastered.overlay.MAP.keys,2,UTF-8 overlay
+stringtable.remastered.overlay.UNITNAMES.keys,15,UTF-8 overlay
+stringtable.remastered.overlay.total_keys,455,54 override base keys
+stringtable.editor_class_label_keys.legacy,0,STR_DISP_ARCUNIT_CLASS_*
+stringtable.editor_class_label_keys.remastered,9,one per vehicleClass in the base catalog
+stringtable.addons.files,26,one stringtable.csv per official addon; identical in Remastered
+stringtable.addons.keys,175,6 languages each
