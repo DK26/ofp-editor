@@ -660,6 +660,10 @@ Rules [I]:
 
 ## 6. Test plan
 
+**See also (2026-09-28):** [D044](../decisions/D044-cloud-first-model-screening.md) (owner rule: a model that could run locally is
+screened in the cloud first, and tried locally only if promising) and [doc 50](50-free-llm-services-and-cloud-first-screening.md) §5
+(which rows have a same-weights host, and the proposed battery S, costs and promotion rule; the schedule is OWQ-27).
+
 ### 6.1 Shortlist for the next `tools/local-qual` run
 
 Placement and memory figures are estimates [I] from file sizes, the KV arithmetic in §1.3 and doc 44's measured increases; the run

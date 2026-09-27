@@ -132,6 +132,7 @@ needs that evidence or an owner decision; changing an `accepted` record needs th
 | [D041](D041-moral-choice-suggestion-boundaries.md) | A short boundary list, in Standing Orders, for generated moral-choice suggestions; user content never filtered | owner (OWQ-22) | accepted | 2026-09-27 | 28 FP48, OQ8 |
 | [D042](D042-strategic-layer-commander-and-triage.md) | Strategic layer: commander design a campaign setting (plot armour default); triage disclosed in the debrief | owner (OWQ-23) | accepted | 2026-09-27 | 29 OQ5–OQ6; 36 cv07 |
 | [D043](D043-cross-plugin-chaining-in-workflows.md) | Cross-plugin chains only in first-party and user-authored workflows, with the egress card every time; never exposed externally | owner (OWQ-16 = DG014 B) | accepted | 2026-09-27 | DG014; 22 §3; 38 |
+| [D044](D044-cloud-first-model-screening.md) | Cloud-first screening: a local candidate is first tested on a hosted copy of its weights and tried locally only if promising; the protocol is a proposal (OWQ-26, OWQ-27 open) | owner (direction of 2026-09-27) | accepted | 2026-09-27 | 50 §5; 47 §6; 48 §6.0 |
 
 ### Records refined on 2026-09-27
 
@@ -214,3 +215,10 @@ These proposals from later research docs, aimed at earlier designs, are owned he
   the only header change allowed). D022 and D023 name D037 where they had the placeholder "the OWQ-19 record", and their doc 46
   figures carry doc 46's own qualifiers (one Pascal card; Ollama's backend not logged; the memory saving is measured against
   Ollama's builds with vision parts; spike checks per step kind). No decision changed.
+
+### D044 and OWQ-24 to OWQ-27 (2026-09-28)
+
+- The owner's direction of 2026-09-27 (screen local candidates in the cloud first; try locally only if promising) became D044, with
+  its protocol marked as a proposal from doc 50 §5. Its other direction (a free service Plotroom could preconfigure or offer) is an
+  owner question, OWQ-24, beside OWQ-25 (aggregators, doc 48 OQ10), OWQ-26 (military-use policies, doc 48 OQ9) and OWQ-27 (screening
+  spend and schedule). D021–D023 and D037 were not edited; their pointers are a folding step once the questions are answered.

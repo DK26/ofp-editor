@@ -12,12 +12,13 @@ decides. IDs are `OWQ-nn` (owner question), distinct from research docs' "OQn" o
    DG;
 3. the affected docs are updated in the folding step, as for DGs.
 
-*Last reviewed 2026-09-27. Not legal advice: licensing and trademark entries need the legal review doc 02 asks for before 1.0.*
+*Last reviewed 2026-09-28. Not legal advice: licensing and trademark entries need the legal review doc 02 asks for before 1.0, and so
+do the provider-terms entries (OWQ-24, OWQ-26).*
 
 ## Summary
 
-All 23 questions were answered by the owner on 2026-09-27; the "Answered" column gives the answer and the record that states the
-rule (the dated Answer line under each entry is authoritative).
+OWQ-01 to OWQ-23 were answered by the owner on 2026-09-27; the "Answered" column gives the answer and the record that states the
+rule (the dated Answer line under each entry is authoritative). OWQ-24 to OWQ-27, added on 2026-09-28, are open.
 
 | ID | Question | Recommended (proposal) | Source | Answered (owner, 2026-09-27) |
 | --- | --- | --- | --- | --- |
@@ -44,6 +45,10 @@ rule (the dated Answer line under each entry is authoritative).
 | OWQ-21 | Default play seed, memory across playthroughs, re-roll on restart | Fresh seed; memory opt-in; no re-roll exception in v1 | doc 43 OQ8–9; doc 36 OQ2 | Seed (a), memory (a), re-roll (a) → [D040](D040-play-seeds-and-memory.md) |
 | OWQ-22 | Boundaries for generated moral choices | A documented list for suggestions only; user intent still wins | doc 28 OQ8; D011 | (a) → [D041](D041-moral-choice-suggestion-boundaries.md) |
 | OWQ-23 | Strategic layer: commander design, triage transparency | A campaign setting, plot armour by default; disclose triage in the debrief | doc 29 OQ5–6 | Commander (c), triage (a); to be reconfirmed after the first balance-lab runs → [D042](D042-strategic-layer-commander-and-triage.md) |
+| OWQ-24 | Which free LLM service, if any, Plotroom offers or preconfigures, and how | One-click "connect a free model" on the user's own account (OpenRouter PKCE first); no Plotroom key or proxy; the preset list fixed after a legal review and the providers' written answers | Owner direction 2026-09-27; doc 50 §1–§4 | Open |
+| OWQ-25 | Aggregators (OpenRouter, the HF router) as first-class providers | Yes, with pinned routes, zero data retention and no data collection by default, and the serving host shown per call | doc 48 OQ10, §7.4; doc 50 §4 | Open |
+| OWQ-26 | Testing models, and using services, whose policies ban military uses or violent content | Synthetic tests allowed, never recommended or preset; the NVIDIA trial and Z.ai not used at all | doc 48 OQ9; doc 50 §2.3; D037 | Open |
+| OWQ-27 | Spend and schedule for cloud screening (D044) | Buy 10 OpenRouter credits once, screening key limited to $1 (about $0.22 used); land the cloud backend now | D044; doc 50 §5 | Open |
 
 ## Legal and licensing
 
@@ -354,6 +359,95 @@ rule (the dated Answer line under each entry is authoritative).
 - **Answer (owner, 2026-09-27).** Commander (c), a campaign setting with plot armour as the default; triage (a), disclosed in the debrief.
   Both confirmed again after the first balance-lab runs and playtests.
 
+## Free services, aggregators and model screening (added 2026-09-28)
+
+### OWQ-24: Which free LLM service, if any, Plotroom offers or preconfigures
+
+- **Question.** The owner asked for "a free LLM service that is legal and OK to rely on", so that Plotroom could ship with it
+  configured by default, or at least offer it for free (2026-09-27). Which services may Plotroom offer, and in which form: only listed
+  (the user pastes a key), a one-click "connect a free model" preset on the user's own account, or working out of the box?
+- **Source.** The owner's direction of 2026-09-27; doc 50 §1–§4 and `docs/research/data/free-llm-services.csv`; D004 item 3; D008;
+  D023 decision 1; doc 48 §6.0.
+- **Options.** (a) No presets: providers are listed and the user pastes a key. (b) "Connect a free model" presets on the user's own
+  free account: OpenRouter first, by OAuth PKCE, with a free model resolved from the live catalogue (today `qwen/qwen3.8-27b:free`),
+  `zdr: true`, `data_collection: "deny"` and reasoning off; Cloudflare Workers AI as a guided token setup with Apache-2.0 models only;
+  Groq Free as a user key; Hugging Face sign-in after a spike. Each shows a dated disclosure card (limits, the provider's age rule, the
+  data route, training and retention, a content note, "not legal advice") before any network call. Not offered as presets: Google AI
+  Studio's free tier, Mistral Free, the NVIDIA trial, Z.ai, Cohere's trial and Cerebras. (c) As (b), plus a Plotroom-owned key, a
+  Plotroom proxy or a keyless public endpoint, so that AI works with no sign-up.
+- **Recommended.** (b): build doc 50 §4's flow now and fix the list of preset services at release, after the legal review before 1.0
+  (as D031 plans for the §7 wording) and after written answers the owner requests from the preset providers about fictional military
+  content (Groq's exception route; OpenRouter or Modular on the ModelRun endpoint's use policy; Cloudflare; OVHcloud, if its anonymous
+  tier is ever offered). Wilco stays off by default, nothing is sent before the user connects, and free cloud is presented as a taster
+  beside local models. (c) is not recommended: the terms forbid disclosing or transferring keys and pooling accounts, free quotas belong
+  to one account (a shared OpenRouter key would give all users 50 requests a day together), Google requires paid services for apps used
+  in the EEA, Switzerland and the UK, and a proxy would put a Plotroom server in the data path (D008).
+- **Legal caveats (not legal advice).** OpenRouter, Groq, Google, Ollama and Modular require users to be 18 or older; Google and Groq
+  describe their APIs as "not for consumer use"; most services' policies contain violence wording without a fiction exception (doc 50
+  §2.3); at least five free offers were cut or retired in 2026, so presets must fail visibly (D023 decision 3). OpenRouter's attribution headers
+  stay off.
+- **Also asked.** The wording for 18+ providers in an editor that under-18 modders may use; registering Plotroom as an OAuth app with
+  Hugging Face under a project-owned account.
+- **Blocks.** Doc 50 §4's flow; the free-provider preset data in the provider layer (D021); the Settings → Wilco screen.
+
+### OWQ-25: Aggregators as first-class providers (doc 48 OQ10)
+
+- **Question.** Should Plotroom ship aggregators (OpenRouter, the Hugging Face router) as first-class providers, given that a request
+  then reaches a host the user did not name?
+- **Source.** Doc 48 OQ10, §2.5, §7.1 and §7.4 item 2; D021's amendment note; D008 item 1; doc 50 §4.
+- **Options.** (a) First-class, with safeguards: a pinned provider route per setup (endpoint, precision, `allow_fallbacks: false`,
+  `require_parameters: true`), `zdr: true` and `data_collection: "deny"` by default for user content, the serving host shown per call
+  in the run panel and the decision inspector, a per-key host allow-list and periodic re-probes. (b) Only as a generic
+  OpenAI-compatible endpoint that the user types in, with no route pinning or host display. (c) Not supported.
+- **Recommended.** (a). OpenRouter is the only one-click, no-registration route to a free model with zero-data-retention pinning, and
+  the screening of D044 relies on it; the safeguards make the downstream host visible, which (b) would hide. The user chooses the
+  aggregator, so it is "the model provider the user configured"; the design-gap request that doc 48 §7.4 item 2 proposes should be
+  filed to settle how that wording covers the downstream host.
+- **Blocks.** The aggregator adapter in the provider layer (D021); doc 50 §4 steps 5–7.
+
+### OWQ-26: Models and services whose policies ban military uses (doc 48 OQ9)
+
+- **Question.** May Plotroom's own evaluations test models whose use policy bans military or warfare uses, and may they run on, or may
+  Plotroom preset, hosted services whose usage policy bans military or violent content?
+- **Source.** Doc 48 OQ9 and row O3 (Muse-Glimmer-30B's policy bans "Military, warfare … applications"); D037 (such models are never
+  recommended; testing is left open); doc 50 §2.3 (Mistral's hosted Usage Policy names "military and warfare" content; the NVIDIA trial
+  bans "violent content"; Z.ai bars "military purposes"; Groq, Cloudflare, Modular and Google have violence wording).
+- **Options.** (a) Testing allowed with the synthetic suites only, results labelled and never turned into a recommendation or preset; no
+  runs at all on services whose terms are incompatible (the NVIDIA trial and Z.ai, which drops doc 48 round 0's runs Z13 and Z15);
+  combat-flavoured items never sent to hosts with violent-content clauses; presets follow OWQ-24. (b) No tests on such models or
+  services (drops O3, and Mistral's hosted API unless its scope sentence exempts open-weight models). (c) Test them and allow them as
+  custom presets with a warning.
+- **Recommended.** (a). The suites are editor operations over code-owned menus plus English flavour text, so the risk is low; the two
+  incompatible services are avoided entirely; D037 stays as written for recommendations, and the same principle carries to presets.
+- **Blocks.** Doc 48 runs O3, R01, R14 and round 0 tier 2 (Z13–Z15); D044's list of screening hosts.
+
+### OWQ-27: Spend and schedule for cloud screening (D044)
+
+- **Question.** D044 screens local candidates in the cloud before any local trial. Candidates without a free same-weights endpoint need
+  a paid, pinned endpoint. How much may be spent, and may the cloud backend of `tools/local-qual` land now, before doc 49's run ends, so
+  that screening can start?
+- **Source.** D044; doc 50 §5.3–§5.8 and `docs/research/data/cloud-screening-candidates.csv`; doc 48's status line, §6.0 and §6.1
+  stage 0; doc 47 §6.1–§6.2.
+- **Per-model estimate** (battery S, 256 calls, τ = 1.3, prices of 2026-09-27; two hosts for each offload-class model):
+  Qwen3-30B-A3B-Instruct-2507 $0.027; Gemma 4 26B-A4B $0.025; Qwen3.5-35B-A3B $0.048; Qwen3.6-35B-A3B $0.042; gpt-oss-20b $0.026
+  (reasoning low); Ternary Bonsai 2 27B $0.012 plus its Qwen3.8-27B comparator $0.023; the Ministral 3 3B calibration anchor $0.013;
+  **about $0.22 in all, on 13 OpenRouter endpoints**. Qwen3-4B-Instruct-2507 ($0.0014) and Granite 4.2-3B ($0.0044) fit in Hugging
+  Face's free credits. The Featherless-only models (the default Gemma 4 E4B, Qwen3.5-4B, Qwen3.5-2B, Gemma 4 E2B) need about $0.05 of
+  tokens from Featherless's $50 Developer credits, which do not expire; its $25 Chat plan excludes "app or API traffic, reselling,
+  background automation and benchmarking".
+- **Options.** (a) $0: screen only where a free same-weights route exists (Gemma 4 26B-A4B's no-schema arms, gpt-oss-20b on Groq Free,
+  Qwen3.8-27B, and Qwen3-4B-2507 and Granite 4.2-3B on Hugging Face credits); everything else goes local first as doc 47 planned,
+  which would leave D044's rule unapplied to the offload rows, so choosing (a) also narrows D044. (b) Buy 10 OpenRouter credits once
+  (card fee $0.80; under today's published rule, which counts lifetime purchases, it also lifts the free limit to 1,000 requests a
+  day) and use a screening key limited to $1 for the paid pinned endpoints (estimate $0.22); the rest of the credit stays for round 1.
+  Round 0's free-only key keeps its $0 limit. (c) As (b), plus one $50 Featherless Developer top-up (the $25 Chat plan does not allow
+  a harness) to calibrate the default and screen the Featherless-only models.
+- **Schedule.** Land the cloud backend patch before doc 49's remaining rows, so that the offload and Bonsai rows are screened before
+  their 12–22 GB downloads; round 1 (the uplift ladder and the frontier comparators) stays deferred.
+- **Recommended.** (b), with the schedule above. Only the synthetic suites are sent; the owner creates the account and the key, and
+  agents never handle keys.
+- **Blocks.** D044's protocol; doc 49's offload and Bonsai rows; round 0's one-day option (doc 48 §6.0).
+
 ## Verification notes
 
 ### Consolidation pass (2026-09-27)
@@ -387,3 +481,11 @@ rule (the dated Answer line under each entry is authoritative).
 - Open owner-level items that are **not** in this file: doc 48 OQ9 (may a model whose use policy bans military uses be tested; D037
   only rules that it is never recommended) and doc 48 OQ10 (should aggregators ship as first-class providers; D021's note). If the
   owner is to answer them, they become OWQ-24 and OWQ-25 in a later change.
+
+### New questions (2026-09-28)
+
+- OWQ-24 to OWQ-27 were added from doc 50 and the owner's two directions of 2026-09-27. The second direction (screen in the cloud first)
+  was a rule the owner stated, so it became D044 directly, with its protocol marked as a proposal; OWQ-26 and OWQ-27 are its open parts.
+- The note above expected doc 48 OQ9 and OQ10 to become OWQ-24 and OWQ-25. They are OWQ-26 and OWQ-25, because OWQ-24 carries the
+  owner's own question about free services. No Answer line was changed. The entries quote provider terms read on 2026-09-27 and
+  2026-09-28; they are not legal advice.

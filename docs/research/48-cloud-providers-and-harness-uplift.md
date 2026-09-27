@@ -515,6 +515,11 @@ The owner asked for a safe way to test models over OpenRouter, starting with fre
 variants, sends only the repository's synthetic suites and has no path to spending money. It needs the tool patch and nothing else;
 round 1 (§6.1–§6.6) stays deferred. Nothing below has been run.
 
+**See also (2026-09-28):** [doc 50](50-free-llm-services-and-cloud-first-screening.md) §5 and
+[D044](../decisions/D044-cloud-first-model-screening.md) (the owner's cloud-first screening rule; free routes beyond OpenRouter; a
+proposed battery S at about $0.22 on 13 pinned endpoints, OWQ-27); doc 50 §2.6 flags the Cerebras entries of §2.1 and the CSV as
+stale, and confirms that a harness on Featherless needs the $50 plan (the $25 Chat plan excludes API traffic).
+
 **Free-tier rules** [V, read 2026-09-27; the catalogue figures at 20:06 UTC]:
 
 - A free variant is its own catalogue entry, `<author>/<slug>:free`. `openrouter/auto:free` is a router that can bill paid models, so
