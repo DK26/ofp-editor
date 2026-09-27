@@ -290,6 +290,8 @@ All 48 docs are final; doc 49 is in progress and gets its row when it lands. Eac
 
 | [51 Model-native harnesses](research/51-model-native-harnesses.md) | Which harnesses, tool-call formats, reasoning switches and samplers each candidate model was built and benchmarked with, what eight harnesses' code teaches, and what Plotroom adopts | Lessons H/B/T/M/V/Z/Q/K; profile fields; A/B arms U and N | Research; no model run. Proposes per-endpoint model profiles beneath D048's presets and a pre-registered uniform-vs-native A/B test; 16 design-gap candidates listed, not filed |
 
+| [53 How small can we go?](research/53-how-small-can-we-go.md) | How small a model each step kind can use when the harness is built around small models: step floors, the sub-4B frontier incl. the Granite 4.x family, one-pass option scoring, confidence cascades, extraction and retrieval | Step floors; stages and decision rules of its experiment plan | **Draft, experiments pending.** Nothing under 3B run yet; cascades only as a visible, user-set binding (D023, DG022); proposes a D044 exception (≤2B models and encoders screened locally) for the owner to confirm |
+
 Doc 49 (the local shortlist of doc 47 §6, measured) is in progress; its row, and a row for any data file it adds, follow when it lands.
 
 ## 6. Data, skills, prompts and tools
