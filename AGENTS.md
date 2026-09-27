@@ -128,6 +128,15 @@ making faster, more useful, and more fun.
   campaigns always run on the targeted game version.
 - **Fun is a requirement.** Prefer interactive choices, previews, variations,
   and surprises over long silent generation runs; the user stays the director.
+- **Realism and common sense are defaults, never walls.** Generators,
+  templates, and the agent default to grounded, plausible, era-appropriate
+  content and common-sense logistics, because that is part of what made the
+  original missions work. The user's explicit creative intent always wins:
+  the tool never refuses, silently "corrects", or nags about a creative
+  choice. Plausibility checks are advisory and dismissible ("intentional");
+  only what the engine or target profile cannot run is an error. How strongly
+  realism is applied is an explicit, visible per-mission / per-campaign
+  setting, not a hidden policy.
 - **Partial regeneration never clobbers human work.** Human-edited or pinned
   content is preserved unless the user explicitly asks to regenerate it.
 - **Nothing the AI makes is a black box.** Every generated element (units,
