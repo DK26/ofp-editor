@@ -1,0 +1,680 @@
+# Token economy: making Wilco cheap to run
+
+Research doc 40 for Plotroom (`ofp-editor`). Research date: 2026-09-27. Audience: contributors and LLM coding agents; it is meant to be read alone.
+Question answered: Wilco users pay for their own model calls (BYO cloud keys) or their own hardware (local models). Which provider mechanics
+and harness techniques cut that bill the most without weakening the weak-model-first harness, and what must Plotroom change to get them?
+
+**Status.** Proposal-only. **Epistemic legend.** **[V]** verified on 2026-09-27: provider facts against the providers' live pages (the four
+main price pages were re-read while writing this doc), code against the pinned clones, papers against their arXiv pages; repo docs by
+section. **[I]** our inference or arithmetic. **Every dollar figure in §1 and §5 is [I]: output of our cost model, not a measurement.**
+**[U]** unknown.
+**Prices** are USD per million tokens (MTok), standard tier, short context, **as of 2026-09-27** unless another date is given. They move
+monthly (GPT-6 Sol and Luna launched on 2026-09-22; Sonnet 5's scheduled rise to $3/$15 was cancelled; Gemini 3.8 Flash doubles on
+2027-01-01), so the editor reads them from a dated data file (R1), never from this doc or from code.
+**Citation aliases.** `CX:` = `openai/codex@e72da2b538:`, `OC:` = `anomalyco/opencode@b65de4d694:`, `PI:` = `earendil-works/pi@2b0a123de9:`
+(as in docs 10, 11 and 38). **ACG** = Anthropic's guide "Optimizing for cost and intelligence" (live page, fetched 2026-09-27).
+**Relation to sibling docs.** Builds on doc 12 §5 (query-don't-dump, RefStore, reducers, byte-stable prefix, ledger, effort routing),
+doc 13 (local inference, constrained decoding), doc 14 (tiers, roles, presets), doc 21 §7–§8 (effort as a budget, capsules), doc 25
+(campaign stages, step shapes, K and R), doc 30 (cards and primer) and doc 38 (journal, ledger, plan card, fan-out) without repeating them.
+It answers doc 12 §5.5's "[U] other providers" and, for OpenAI, doc 12 §5.7's [U]; Gemini stays [U].
+**Data.** `docs/research/data/cost-model.csv`: 5 workflows × 8 strategies × 13 models, 520 rows (`workflow, strategy, tier_model,
+input_tokens, output_tokens, usd, prices_as_of`). §5 shows three models in full; the CSV has all thirteen.
+**Hygiene.** All text is our own. Provider docs and pinned code are cited, not copied.
+
+## TL;DR
+
+- **For Wilco the biggest cost is hidden thinking, not context.** Capsules are small (1–4K tokens), so on Sonnet 5 at Standard effort
+  thinking is ~51% of a campaign run's bill before caching and ~66% after. The S7 text slots (176 of 273 decisions) are ~70% of the
+  spend [I, model]. A naive chat agent is the opposite: re-sent context is 58–78% of its bill.
+- **Typed capsules are already 3–13x cheaper than a naive chat agent for interactive work.** A 30-minute session on Sonnet 5 costs $1.78
+  naive, $0.54 with designed caching and $0.16 with local Pick/Fill; populate-town is 8–32x cheaper [I].
+- **A whole campaign at today's Standard budgets costs more than an optimistic naive agent**: $8.88 vs $6.99 on Sonnet 5, $7.33 vs $3.55
+  on gpt-6-sol. Standard makes ~650 calls for 273 decisions (K = 3 per Pick, 2 per text slot) at the provider's default thinking [I].
+  With every lever (strategy G) it is $3.52 on Sonnet 5, $5.95 on Opus 5.5, $2.29 on gpt-6-sol and $0.15 on gpt-6-luna: 2.4–3.2x below
+  that baseline. A naive agent that uses Anthropic automatic caching costs $3.91 on Sonnet 5, so on cost alone G only just wins; the
+  typed harness is justified by validity and editability, and the levers keep it from costing more.
+- **Lever ranking on the campaign (Sonnet 5)** [I]: thinking 2.9x · candidates K 1.9x · batch for bulk text 1.37x · local Pick/Fill 1.34x ·
+  designed caching 1.29x (1.41x on Opus 5.5 and gpt-6-sol) · cheap router model 1.14–1.26x. Caching saves nothing on Haiku 4.5 and
+  Gemini 3.x, whose 4,096-token cache minimum is above a typical capsule.
+- **Rule: pin effort per step shape at the lowest level that passes its eval, and escalate once, on the same model, only when a
+  validator rejects** (R6). ACG measured this pattern on Opus 5.5: ~97% solved at ~$0.17 per task, against 95.3% at $0.29 with every
+  task at `high` [V].
+- **Rule: on cloud keys K is money.** Pick votes stop at decisive agreement, correctness-only Fills stop at the first admitted answer,
+  and a fixed K remains only where the user is shown the alternatives (R7). Doc 25 §5.2's "K costs only local time" does not hold on
+  BYO cloud keys.
+- **Rule: a cache-stable capsule.** Frozen stage prefix (doctrine, core and lens, cards, frozen exemplars, schema text) → breakpoint →
+  request → digest → breakpoint → permuted menu. Keep one model, effort, schema and tool set per (stage, DecisionKind), and no timestamps
+  or ids above a breakpoint (R2–R5). In ACG's example, one 25-token status line at the front of a system prompt raised a run from $0.59
+  to $4.24 [V].
+- **Provider traps** [V unless marked]: Haiku 4.5 and Gemini 3.x cache only prefixes of 4,096 tokens or more; Gemini 3.5 Flash-Lite has
+  no caching; Mistral caches only with `prompt_cache_key`; OpenAI GPT-5.6+ implicit mode can bill a unique prompt at the 1.25x write rate
+  [I], so use explicit breakpoints; a dependency bump can silently drop the cache field. One `CachePolicy` per provider, each with wire
+  tests (R10).
+- **Batch/Flex is 50% off** at Anthropic, OpenAI, Google and Mistral; DeepSeek's off-peak hours are half price. Offer this as an explicit
+  "Economy" mode for bulk text (S7 slots, translations, radio lines), never silently (R12).
+- **Prices are dated data, and the UI shows them.** `models.toml` carries a dated price table with scheduled changes. The plan card
+  shows "≈ $0.22 with gpt-6-sol (prices as of …)"; the run panel shows a live meter with "cache saved $Y"; per-run, session and monthly
+  caps end in a resumable `BudgetLimited`; the no-AI path is always offered at $0 (R1, §6).
+- **Measure cost per admitted decision** from provider-reported usage in a per-attempt ledger. CI replays recorded runs and fails on
+  token-budget or prefix-stability regressions (§7).
+- **We will not** use semantic caching, token-dropping prompt compression, model-written summaries of facts, learned routers, a paid judge
+  by default, or silent model switching (§8).
+
+## 1. Where the money goes
+
+### 1.1 Anatomy of one decision [I]
+
+Each Wilco call is one capsule (doc 21 §8.1) with a small typed answer. Its bill has four parts: the shared stage prefix, the per-decision
+part, the visible answer and hidden thinking. Thinking is billed as output on every provider [V], and output costs 3–8.3x input: 5x on
+Anthropic, GPT-6 and Gemini 3.8 Flash; 6x on Gemini 3.1 Pro; ~8.3x on Gemini 3.5 Flash-Lite; 4x on deepseek-flash; 3x on deepseek-v4-pro;
+3–5x on the three Mistral models in §2.1 [V]. One S3 beat-Pick sample on Sonnet 5, using the cost model's sizes:
+
+| Part of the call | Tokens | Rate on Sonnet 5 | USD |
+| --- | --- | --- | --- |
+| Stage prefix (system text, lens, cards, exemplars, schema), read from cache | 1,230 | $0.20 | 0.00025 |
+| Digest, menu and restated schema, uncached | 1,190 | $2.00 | 0.00238 |
+| Visible answer (`why` + letter) | 45 | $10.00 | 0.00045 |
+| Thinking at Sonnet 5's default `high` | ~480 [U] | $10.00 | 0.00480 |
+| Thinking at `low` instead | ~105 [U] | $10.00 | 0.00105 |
+
+At the default effort one sample costs ≈ $0.0079, 61% of it thinking, and doc 25's Standard K = 3 makes that ≈ $0.024 per Pick. At `low`
+effort with an adaptive K averaging 2.2 it is ≈ $0.009, and with thinking off ≈ $0.007 [I].
+
+### 1.2 By workflow [I]
+
+Sonnet 5; B = Plotroom's typed harness at doc 25/21 Standard budgets with no cache design; C = B with designed caching; A = a naive chat
+agent (§5.1). Shares are of that run's total.
+
+| Workflow | Decisions | Calls (B) | B total | B: input / visible / thinking | C total | C: input / visible / thinking | A total | A: input / thinking |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| campaign-from-brief (8 missions) | 273 | 650 | $8.88 | 42% / 7% / 51% | $6.88 | 26% / 9% / 66% | $6.99 | 74% / 13% |
+| populate-town | 2 | 4.2 | $0.046 | 46% / 6% / 48% | $0.038 | 36% / 7% / 57% | $0.365 | 64% / 26% |
+| write-briefing (11 slots) | 11 | 25 | $0.385 | 42% / 6% / 52% | $0.294 | 24% / 8% / 68% | $0.263 | 61% / 27% |
+| cutscene-director (30 s intro) | 13 | 27 | $0.354 | 37% / 6% / 57% | $0.301 | 26% / 7% / 67% | $0.394 | 58% / 24% |
+| 30-minute session (12 requests) | 35 | 60 | $0.665 | 38% / 8% / 55% | $0.544 | 24% / 9% / 67% | $1.78 | 69% / 27% |
+
+Inside the campaign (Sonnet 5, C), the S7 text slots are 61% of calls and ~70% of cost, the S5 concept Picks ~17%, and all other stages
+~13%. The pattern is the same on gpt-6-luna and Opus 5.5 (S7 69–70%).
+
+### 1.3 Consequences [I]
+
+- **Pin effort before tuning context.** Once the prefix is cached (C), thinking is the largest cost category in every modelled run on all
+  three reference tiers (46–68%); before caching (B) it is 34–57%, and already the largest on Sonnet 5, whose default effort is `high`.
+- **K and repairs multiply calls.** B makes 2.4 calls per campaign decision, and each extra sample repeats its thinking, which no cache
+  reduces.
+- **Caching is worth doing, but the saving is capped.** Once the stage prefix is cached, most of the remaining input spend is per-decision
+  digests written for K samples: cache writes are two thirds of C's remaining input cost on Sonnet 5.
+- **Text dominates, so bulk text is where batch pricing and low effort pay.** A single Pick is cheap enough that its accuracy matters
+  more than its price.
+
+## 2. Provider mechanics that matter
+
+### 2.1 Price table, as of 2026-09-27 [V]
+
+Standard tier, short context, USD per MTok; doc 14 §6 T3 roles (or the cost model's tier) in brackets. Rows are a snapshot; the editor
+loads them from data (R1).
+
+| Provider | Model [role] | Input | Cache read | Cache write | Output | Batch in / out | Min. cached prefix | Thinking control |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Anthropic | claude-haiku-4-5 [cheap] | 1.00 | 0.10 | 1.25 (5 min) / 2.00 (1 h) | 5.00 | 0.50 / 2.50 | 4,096 | no effort parameter; `budget_tokens` ≥ 1,024 or none |
+| Anthropic | claude-sonnet-5 [writer] | 2.00 | 0.20 | 2.50 / 4.00 | 10.00 | 1.00 / 5.00 | 1,024 | effort `low`–`max`, default `high`; can be disabled |
+| Anthropic | claude-opus-5-5 [planner] | 4.00 | 0.20 (0.05x) | 5.00 / 8.00 | 20.00 | 2.00 / 10.00 | 512 | default `medium`; cannot be disabled |
+| Anthropic | claude-opus-5 | 5.00 | 0.50 | 6.25 / 10.00 | 25.00 | 2.50 / 12.50 | 512 | default `high` |
+| Anthropic | claude-fable-5-1 [max] | 10.00 | 0.25 (0.025x) | 12.50 / 20.00 | 50.00 | 5.00 / 25.00 | 512 | always on |
+| OpenAI | gpt-6-luna [router] | 0.10 | 0.01 | 0.125 | 0.50 | 0.05 / 0.25 (also Flex) | 1,024 | `none`…`max`, default `medium` |
+| OpenAI | gpt-6-sol [planner] | 2.00 | 0.20 | 2.50 | 10.00 | 1.00 / 5.00 (also Flex) | 1,024 | `none`…`max`, default `medium` |
+| OpenAI | gpt-6-astra [max] | 10.00 | 1.00 | 12.50 | 50.00 | 5.00 / 25.00 (Flex [U]) | 1,024 | rejects `none` |
+| Google | gemini-3.5-flash-lite [router] | 0.30 | not available | — | 2.50 | 0.15 / 1.25 | no caching | `minimal` default; cannot be disabled |
+| Google | gemini-3.8-flash [planner] | 0.75 → 1.50 on 2027-01-01 | 0.075 → 0.15 (+ 0.50 → 1.00 per MTok-hour storage, explicit caches) | none (implicit) | 3.75 → 7.50 | 0.375 / 1.875 (both double on 2027-01-01) | 4,096 | `medium` default |
+| Google | gemini-3.1-pro-preview | 2.00 (≤ 200K prompt) | 0.20 (+ 4.50 per MTok-hour) | none (implicit) | 12.00 | 1.00 / 6.00 | 4,096 | `high` default; lowest `low` (no `minimal`) |
+| DeepSeek | deepseek-flash [budget] | 0.30 peak / 0.15 off-peak | 0.006 / 0.003 | none | 1.20 / 0.60 | no batch tier; off-peak | unstated [U] | thinking on by default; non-thinking mode available |
+| DeepSeek | deepseek-v4-pro | 1.32 / 0.66 | 0.044 / 0.022 | none | 3.96 / 1.98 | no batch tier; off-peak | unstated [U] | thinking on by default; non-thinking mode available |
+| Mistral | mistral-small-4 | 0.15 | 0.015 | none stated | 0.60 | half price | 64-token blocks, key required | — |
+| Mistral | mistral-large-3 / mistral-medium-3.5 | 0.50 / 1.50 | 10% of input | none stated | 1.50 / 7.50 | half price | 64-token blocks, key required | — |
+
+- Anthropic cache multipliers stack with the Batch discount and with the 1.1x `inference_geo: "us"` multiplier. Claude 4.7 and later
+  (Opus 5.5, Fable 5.1, Sonnet 5) produce ~30% more tokens for the same text than Claude 4.6 and earlier, so per-token prices do not
+  compare across generations.
+- OpenAI GPT-5.6+ cache writes are "not an additive fee": the 1.25x rate replaces the input rate. GPT-6 long context doubles input and
+  cache rates and raises output 1.5x for the whole request once a prompt exceeds 272K input tokens (stated on the gpt-6-sol and gpt-6-luna
+  model pages, not on the pricing page). Our 2026-09-27 re-read listed gpt-6-astra under Flex at Batch rates, but two earlier readings that
+  day disagreed, so it stays [U].
+- Gemini implicit caching has no write fee and "no cost saving guarantee"; explicit caches bill storage per MTok-hour until deleted.
+  Gemini 3.5 Flash-Lite lists context caching as "Not available" (re-read 2026-09-27; an earlier reading listed $0.03).
+- Mistral cached input is "billed at 10% of the standard input token price" (prompt-caching docs, re-read 2026-09-27).
+
+### 2.2 Caching, provider by provider [V]
+
+| Provider | How it is switched on | Read / write | Lifetime | Invalidated by | Usage fields |
+| --- | --- | --- | --- | --- | --- |
+| Anthropic | `cache_control` on blocks (≤ 4 breakpoints, each looking back ≤ 20 blocks) or top-level automatic caching (uses one slot) | 0.1x (Opus 5.5 0.05x, Fable 5.1 0.025x) / 1.25x (5 min) or 2x (1 h) | 5 min or 1 h from the *start* of the writing or reading request; each read refreshes it free | tools or model: everything; speed, web search, citations: system and messages; `tool_choice`, images: messages; thinking config or top-level effort: messages (tools and system on some models); a changed `output_config.format`: the prompt cache | `cache_creation_input_tokens` (split 5 min / 1 h in `usage.cache_creation`), `cache_read_input_tokens`; `input_tokens` is the uncached remainder only |
+| OpenAI GPT-5.6+ and GPT-6 | automatic; explicit mode `prompt_cache_options.mode: "explicit"` plus `prompt_cache_breakpoint` on input content blocks (≤ 4 writes, not in top-level instructions); `prompt_cache_key` optional | 0.1x / 1.25x (replacing the input rate) | 30 min after the last write or reuse | model, tools, `parallel_tool_calls`, `text.format`, `reasoning.effort` (unless changed with GPT-6's `configuration_update` item), `text.verbosity`, `context_management` | `input_tokens_details.cached_tokens`, `cache_write_tokens`; cached tokens count toward the TPM limit |
+| OpenAI before 5.6 | automatic; routing hashes the first tokens plus `prompt_cache_key` | model-specific / no write fee | in memory ~5–10 min idle (≤ 1 h), or `24h` on listed models | as above; > ~15 requests/min per key overflow to other machines | as above |
+| Gemini 3.x | implicit on by default; explicit caches through `generateContent` only | 0.1x / none; explicit adds storage | explicit: TTL, default 1 h; implicit [U] | effect of `thinking_level` [U] | cached count in `usage_metadata` (`generateContent`); `usage.total_cached_tokens` (Interactions API) |
+| DeepSeek | automatic disk cache, best effort; a hit needs a whole "cache prefix unit" | ~2% (flash), ~3.3% (v4-pro) / none | "a few hours to a few days" | building a unit "takes seconds", so an instant fan-out misses | `prompt_cache_hit_tokens`, `prompt_cache_miss_tokens` |
+| Mistral | only when `prompt_cache_key` is set; 64-token blocks; a key "doesn't guarantee" a hit | 10% / none stated | [U] | — | `prompt_tokens_details.cached_tokens` |
+| OpenRouter | passes provider caching through; Anthropic models still need `cache_control`; sticky routing after a cached request; `session_id` (≤ 256 chars) overrides routing; sessions expire after 10 min idle | the underlying provider's rates (its own multiplier table is stale for OpenAI, Gemini, DeepSeek and Claude 5.x [I]) | per provider | fallback or price-sorted routing to another host | `cached_tokens`, `cache_write_tokens`, `cache_discount` |
+
+### 2.3 How caches break without an error [V unless marked]
+
+- **Below the minimum.** A prefix shorter than the model's minimum is never cached, and nothing reports it: 512 tokens (Opus 5.5, Opus 5,
+  Fable 5.1), 1,024 (Sonnet 5, GPT-5.6+), 4,096 (Haiku 4.5, Gemini 3.5–3.8 Flash, 3.1 Pro). Doc 25 §4.4's ≤ 2K / ≤ 4K budgets are for
+  local tiers, but a cloud capsule of that size never caches on Haiku 4.5 or Gemini 3.x [I].
+- **One changed byte above a breakpoint.** ACG's triage run cost $4.24 instead of $0.59 because of a 25-token status line at the front
+  of the system prompt, more than with caching off.
+- **Simultaneous siblings.** On Anthropic a new entry becomes readable only once the first response starts streaming, so N parallel
+  identical requests all pay full price. DeepSeek needs seconds to build a unit. OpenAI before 5.6 spreads > ~15 requests/min per key.
+- **Changed request settings.** Schema (`output_config.format`, `text.format`), tool list, `tool_choice`, model, top-level effort or
+  thinking. Caches are model-scoped, so a model cascade forfeits them.
+- **OpenAI implicit mode** places the breakpoint at "the end of the latest eligible message", so a unique per-decision prompt may be
+  written at 1.25x and never read [I from the docs; Open question 4].
+- **Dependency drift.** opencode issue #50748 (open, 2026-09-22): `@ai-sdk/mistral` 3.x silently dropped `promptCacheKey`; it was found
+  only because `cached_tokens` stayed 0. After the fix a repeat request showed 640 of 751 prompt tokens cached.
+- **Edited history** (chat only): on Opus 5.5 and Fable 5.1 it also invalidates preserved thinking.
+- **Isolation.** Caches are per workspace (Anthropic; per organisation on Bedrock and Google Cloud) and never shared across OpenAI
+  organisations or regions, so one user's runs never warm another's.
+
+### 2.4 Discount tiers [V]
+
+- **Anthropic Message Batches:** 50% off input and output, stacking with cache multipliers. Up to 100,000 requests or 256 MB per batch;
+  most finish within 1 hour; batches expire after 24 hours. Cache hits inside a batch are best effort (typically 30–98%), so the 1-hour
+  TTL is suggested; `stream`, `speed` and `max_tokens: 0` are not batchable.
+- **OpenAI Batch and Flex:** 50% off, including cached input and cache writes. Flex is beta, slower, and may answer 429 "Resource
+  Unavailable", which is not charged. EU data residency for GPT-6 Sol and Luna is Standard-only.
+- **Gemini Batch and Flex:** input and output halved; cached input is not uniformly halved (3.1 Pro: "same as Standard").
+- **Mistral Batch:** "half price". **DeepSeek:** no batch tier [I]; off-peak is half of peak (peak is 01:00–04:00 and 06:00–10:00 UTC,
+  Monday to Friday, excluding Chinese public holidays).
+
+### 2.5 Thinking and effort [V]
+
+| Provider | Parameter and levels | Default | Can it be off? | Changing it | Cache-preserving change |
+| --- | --- | --- | --- | --- | --- |
+| Anthropic | `output_config.effort`: `low`, `medium`, `high`, `xhigh`, `max`; a behavioural signal, not a hard budget | `high`; Opus 5.5 `medium` | Sonnet 5, Opus 4.8/4.7: yes; Opus 5 only at ≤ `high`; Opus 5.5, Fable 5/5.1: no; Haiku 4.5: `budget_tokens` or none | top level invalidates the messages cache | per-message effort (beta `mid-conversation-output-config-2026-07-01`; Fable 5.1, Mythos 5.1, Opus 5.5, Opus 5) |
+| OpenAI | `reasoning.effort`: model-dependent; GPT-6 Sol and Luna `none`, `low`, `medium`, `high`, `xhigh`, `max` (no `minimal`); Astra `low`–`max` | `medium` (GPT-5.6, GPT-6) | `none` on Sol and Luna; Astra returns 400 | part of the cached prefix | `configuration_update` input item (GPT-6 family, standard single-agent mode; not with automatic compaction or truncation) |
+| Gemini 3.x | `thinking_level`: `minimal`, `low`, `medium`, `high` (3.1 Pro: `low`–`high` only) | 3.8 Flash `medium`, 3.5 Flash-Lite `minimal`, 3.1 Pro `high` | no | [U] | [U] |
+| DeepSeek | thinking or non-thinking mode | thinking (both models) | yes (non-thinking mode) | [U] | — |
+
+- `max_tokens` (Anthropic) and `max_output_tokens` (OpenAI) cap thinking plus text; a cap stop is `stop_reason: "max_tokens"` or
+  `incomplete`. ACG: a 16,384-token cap ended ~25% of Opus 5.5 attempts, yet cost per solved task barely moved, so caps are backstops,
+  not savers.
+- ACG, SWE-bench Pro on Opus 5.5: `low` solved 87.4% at $0.12 per solved task, `medium` 92.8% at ~$0.22, `high` 95.3% at $0.29; running
+  at `low` and re-running failures at `high` reached ~97% at ~$0.17 (starting at `medium`: ~97% at ~$0.24).
+- `temperature`, `top_p` and `top_k` return 400 on Opus 5.5, Opus 5, Opus 4.8/4.7, Sonnet 5 and Fable 5/5.1 (allowed on Haiku 4.5, Sonnet
+  4.6, Opus 4.6). Forced `tool_choice` `any`/`tool` returns 400 on Opus 5.5 and Fable 5.1 [V per the claude-api skill, bundled 2.1.283].
+
+### 2.6 Hidden overheads, counting and tokenizers [V]
+
+- **Tool overhead.** Sending any tool adds a hidden tool-use system prompt: 286 tokens (Opus 5.5, Opus 5), 354 (Sonnet 5), 496 (Haiku
+  4.5); forced choice adds 120 more (92 on Haiku 4.5).
+- **Structured outputs** inject a format system prompt of unpublished size [U] and compile the grammar on first use (cached 24 h from
+  last use; cleared when the schema structure changes). Unsupported: recursive schemas, numeric and length limits, `pattern`,
+  `minItems` other than 0 or 1. The Python, TypeScript, Ruby and PHP SDKs strip these and validate client-side; there is no official Rust
+  SDK, so Plotroom validates them in code.
+- **`count_tokens`** is free, with its own limits (5,000 / 10,000 / 20,000 requests per minute on Start / Build / Scale); it returns an
+  estimate, ignores caching and rejects server tools. Use it to calibrate new models, not on the hot path.
+
+### 2.7 Premium modifiers and aggregators [V]
+
+- **Fast mode ≈ 2x:** Anthropic Opus 5.5 $8 / $40 (Claude API only, not batchable); OpenAI renamed Priority to Fast mode on 2026-07-30
+  (gpt-6-sol $4 / $20). **Gemini Priority 1.8x** (3.8 Flash $1.35 / $6.75 through 2026-12-31).
+- **Residency +10%:** Anthropic `inference_geo: "us"` (Claude 4.6+, every token category); OpenAI regional endpoints (eligible models
+  released on or after 2026-03-05); Mistral regional endpoints; Claude on Bedrock or Google Cloud regional endpoints over global.
+- **Long context:** Gemini 3.1 Pro above 200K costs $4 / $18; GPT-6 above 272K input tokens 2x input and cache rates and 1.5x output;
+  Anthropic prices 1M flat (Claude 4.6 and later).
+- **OpenRouter:** provider prices "without any markup"; buying credits costs 5.5% by card (minimum $0.80) or 5% in crypto; BYOK costs 5%
+  of list price beyond $25,000 a month on pay-as-you-go.
+
+## 3. Techniques ranked by savings × fit
+
+Ranked by expected saving on Wilco's workloads times fit with the weak-model invariants (AGENTS.md; doc 25 §3). "In design" says whether
+a sibling doc already has it. Model factors are Sonnet 5 on the campaign unless stated.
+
+| # | Technique | Saving: evidence | Fit for Wilco | In design | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Effort floor per step shape; escalate once on validator failure, same model | ACG low-then-high ≈ 97% at $0.17 vs 95.3% at $0.29 [V]; thinking is 34–68% of B/C bills; lever 2.9x [I] | Needs a cheap failure signal; our validators are one | Partly: doc 21 §7.1 Standard = "provider default" | Adopt (R6); gaps G2, G4 |
+| 2 | Adaptive K: stop Pick votes at decisive agreement; stop correctness-only Fills at the first admitted answer | Adaptive-Consistency up to 7.9x fewer samples at < 0.1% accuracy loss; ESC −34% to −84% samples [V]; K 3/2 → 1/1 = 1.9x [I] | Keeps weak-model gains; diversity stays where the user sees it | No: doc 25 §5.2 fixed K | Adopt (R7); gap G3 |
+| 3 | Cache-stable stage prefix with explicit breakpoints, scheduled by prefix | ACG: agent loops 2.7–5.3x cheaper, median harness reads 84% of input from cache [V]; "Don't Break the Cache" −41% to −80% [V]; ours 1.29–1.41x [I] | High on Anthropic, OpenAI, DeepSeek, Mistral; nil on Haiku 4.5 and Gemini 3.x below 4,096; none on Flash-Lite | Partly (doc 12 §5.5); capsule order puts exemplars after the digest | Adopt (R2–R4, R9–R11); gaps G1, G7 |
+| 4 | Code as retriever: computed menus, query-don't-dump, code-picked cards | Whole vehicle list ~1,705 tokens vs ~100-token menu; ×250 decisions ≈ 426K vs 25K tokens [I]; Self-Route −39% to −65% vs long context [V] | The core weak-model mechanism; portable to models without caching | Yes (doc 25 §6, doc 12 §5.2, doc 30 §4.2) | Keep |
+| 5 | A fresh capsule per decision instead of a growing chat | Session 3–13x and populate-town 8–32x cheaper than naive chat [I]; observation masking halves cost vs a raw agent (2508.21433) [V] | It is also the correctness design | Yes (doc 21 §8.1) | Keep |
+| 6 | Batch, Flex and off-peak for bulk independent text | 50% list discount [V]; 1.37x on the campaign [I] | Minutes to 24 h of latency: opt-in only | No | Adopt as Economy (R12) |
+| 7 | Local model for Pick/Fill (hybrid) | MinionS 5.7x cheaper at 97.9% of remote quality [V]; ours 1.34x campaign, 3.4x session [I] | Needs a qualified T1 pack; time is the cost | Yes as tiers (doc 14 §6) | Adopt (R14) |
+| 8 | Short typed answers; `max_tokens` per shape as a backstop | ACG: one-line format −39% output tokens at equal accuracy; caps do not save [V] | Already the shape design | Yes (doc 25 §4.3–§4.4) | Keep; add the cap table (R8) |
+| 9 | One frozen schema per step kind: letters, not per-decision enums; no tools in Pick/Fill | 286–496 tool-prompt tokens per call [V]; a schema change invalidates the cache and recompiles the grammar [V] | Local grammars may keep dynamic enums | Mostly (letter menus); doc 30 §4.5 dynamic enums | Adopt (R5); gap G6 |
+| 10 | Warm first, then fan out | Saves (N − 1) × prefix × (1 − read rate) per fan-out [I]; Claude Code holds matching fan-out agents up to 5 s for this [V] | Costs one time-to-first-token | Doc 38 §4.5 marks prefix reuse [U] | Adopt (R9); gap G9 |
+| 11 | One cache adapter per provider, with wire tests | Guards against a silent ~10x input regression (~40x on Fable 5.1); opencode #50748 [V] | Cheap insurance | No | Adopt (R10) |
+| 12 | Cheap router model for Pick/Fill | 1.14x (Haiku 4.5), 1.26x (cross-provider gpt-6-luna) [I]; ACG advises measuring the stronger model at lower effort first [V] | Explicit role binding; a Haiku 4.5 router ($6.04) is no cheaper than Sonnet 5 with thinking off ($5.98) | Yes as roles (doc 14 §6, doc 21 §7.2) | Adopt as a binding; measure |
+| 13 | Journal replay and exact-hash memoization | Resume and unchanged regeneration cost $0 [V, doc 38 §4.2 design]; hit rate [U] | Exact and glass-box | Yes (doc 38) | Keep; extend to explain answers (R13) |
+| 14 | Prompt audit per model generation | ACG: dropping "verify twice" cut cost per ticket by a third; audits −14% at equal or better accuracy [V] | Cheap | Partly (doc 21 §12) | Adopt as a CI lint |
+| 15 | TTL and keep-alive chosen by expected value | ACG, keep-alive vs the 1-hour TTL: Opus 5.5 8–13% cheaper (10–18% at `high`) when 1–2 turns in 20 pause 6–32 min, 4–6% dearer with a 6-min pause before every turn, over 50% dearer at 45-min pauses; Fable 5.1 13–20% cheaper whenever pauses last minutes; on Sonnet 5 and Opus 5 ACG prefers the 1-hour TTL [V]; our session: 1 h TTL gains nothing [I] | Editor users pause often | No | Adopt narrowly (R11) |
+| 16 | Grow the shared stage pack past 4,096 tokens on Haiku 4.5 and Gemini 3.x | 1.26–1.36x on those models [I] | Only when the growth replaces per-capsule text | No | Conditional |
+| 17 | Deferred plugin tools (tool search) | −85% definition tokens; a 502-tool run $1.02 → $0.56 [V] | Only past ~10 tools or 10K definition tokens | No (doc 22) | Adopt for plugin catalogs |
+| 18 | Premium modifiers off by default | fast ~2x, priority 1.8x, residency +10% [V] | Pure defaults | No | Adopt (R15) |
+| 19 | Local prefix KV reuse (llama.cpp `cache_prompt`, slots) | Latency, not dollars [U] | Local only; not bit-deterministic | Doc 13 | Adopt; replay from the journal |
+| 20 | Compact line tables in digests | TOON vendor benchmark −42.6% tokens [V, vendor]; its "prompt tax" (2603.03306) [V] | Small models are format-sensitive | Line format already used | Qualify per tier |
+| 21 | Observation masking in Ask chat | Halves cost vs a raw agent [V] | Chat only | Yes (doc 21 §8.1) | Keep; prune at phase boundaries |
+| 22 | Speculative decoding (local) | 2–3x (T5), EAGLE-3 up to 6.5x, latency only [V] | Long local text only | No | Qualify per pack |
+
+## 4. Design rules for Plotroom
+
+### 4.1 The cache-stable capsule [I]
+
+The runtime, not the author, fixes the layout (doc 38 §3.3). Proposed order, static first:
+
+```text
+tools        none for Pick, Fill and text slots (structured output instead); a fixed, name-sorted set per chat mode
+system       frozen per (stage x DecisionKind x pack version x model setup):
+             Wilco doctrine -> design-sensibility core + one lens -> primer sections and code-picked cards for this DecisionKind
+             -> qualified exemplars in a fixed order -> shape rules -> answer-schema text
+  == BP1     stage prefix: Anthropic cache_control (5 min, or 1 h when measured); OpenAI explicit prompt_cache_breakpoint
+run          the verbatim user request (stable for the whole run)
+  == BP2     only when the prefix up to here is long and later decisions re-read it
+decision     code-built digest: selection, touched entities, pinned and human-edited constraints, last check summary (quoted, untrusted)
+  == BP3     only when K >= 2 samples or a repair is likely: they re-read everything above
+sample       menu in this sample's permutation, or the slot spec -> variant note ("variant 2; differ from: ...") -> schema restated
+format       output_config.format / text.format: one frozen schema per DecisionKind (Pick: letters A-Z plus the X and Q escapes)
+```
+
+Anthropic allows 4 breakpoints and OpenAI's explicit mode 4 writes, so one slot stays free. The minimum applies to the whole prefix up to a
+breakpoint, so BP1 on Sonnet 5 needs ~1,024 tokens of frozen text, which the core, lens, cards and schema already reach.
+
+### 4.2 Rules [I]
+
+- **R1 Prices are data.** `models.toml` (doc 14 §7) gains a `[[price]]` table keyed by (provider, model, mode: standard, batch, flex,
+  off-peak, fast, regional, effective_from) with `as_of` and `source` per row, plus each model's cache minimum, read and write
+  multipliers and TTL. Scheduled changes are rows with a future `effective_from` (Gemini 3.8 Flash on 2027-01-01). The UI prints the date;
+  a table older than 60 days shows a "prices may be out of date" chip. No price appears in Rust code. The editor never fetches pricing
+  pages: outbound traffic goes only to the configured provider and enabled plugins (AGENTS.md), so updates ship with releases or as a
+  user edit.
+- **R2 Static first.** Follow §4.1. A golden test renders every DecisionKind's prefix from synthetic fixtures and asserts it is
+  byte-identical across decisions, runs and machines.
+- **R3 Nothing volatile above a breakpoint.** No timestamps, run or decision ids, seeds, user names, selection, costs or "N decisions
+  left" lines. Serialise deterministically: sorted keys, entity tokens instead of display names (doc 25 §8.3), fixed number formats.
+  Exemplars are frozen per pack version; variety comes from menu seeds and permutations below the breakpoints (doc 25 §10.3). Rotating
+  exemplars after the digest adds 6% to C on the campaign [I].
+- **R4 One cache namespace per (stage, DecisionKind).** Model, effort, schema and tool set stay fixed inside it and change only at stage
+  boundaries or through cache-preserving mechanisms (Anthropic per-message effort on Fable 5.1, Opus 5.5 and Opus 5, not Sonnet 5 or
+  Haiku 4.5; GPT-6 `configuration_update`). The scheduler runs a
+  namespace's decisions back to back within the provider TTL. Key the namespace into the journal so replays and ledgers group by it.
+- **R5 Schemas and tools.** Picks answer with a letter; the menu text lives in the capsule; code maps letters and checks membership,
+  length and codepage. Per-decision enums of real ids appear only in local grammars (doc 13; doc 30 §4.5), never in cloud schemas. Use
+  structured output, not forced `tool_choice` (400 on Opus 5.5 and Fable 5.1). Chat modes get a fixed, name-sorted tool set; out-of-step
+  calls are refused by admission with a typed error rather than removed from the list (doc 12 §3.1's per-turn `active_tools` is gap G5).
+  Where supported, mode switches use Anthropic's `tool_addition` / `tool_removal` beta (not Sonnet 5). Plugin tools are declared with
+  `defer_loading` once a catalog passes ~10 tools or 10K tokens.
+- **R6 Effort floors per shape, one visible escalation.** Placeholders until the E-series measures them:
+
+  | Shape | Anthropic | OpenAI GPT-6 | Gemini 3.x | Local |
+  | --- | --- | --- | --- | --- |
+  | Pick, enum Fill, extraction | Sonnet 5: thinking off; Opus 5.5, Fable 5.1: `low`; Haiku 4.5: none | `none` (Astra `low`) | `minimal` (3.1 Pro: `low`) | thinking off |
+  | Text slot (Fill with prose) | `low` | `low` | `low` | off |
+  | Compose | `medium` | `medium` | `medium` | per pack |
+  | Draft | as qualified | as qualified | as qualified | — |
+
+  When a validator still rejects after the R repairs, or the model answers `none_fit`, re-run that decision once at the effort preset's
+  provider-reasoning ceiling (doc 21 §7.1), on the same model, never above the ceiling. The run panel shows it ("re-ran at `medium`:
+  finding V-text/length"). Where supported, the re-run changes effort per message or with `configuration_update`; elsewhere it pays one
+  cache miss. A different model is only ever a button with its cost (doc 25 §10.2; doc 38 §4.4). An automatic, pre-bound escalation
+  target, even one shown on the plan card, is a mechanism doc 21 §1.4 rejects until our own instruments justify it, so it stays
+  `proposal-only` under G4. This needs gaps G2 and G4 resolved.
+- **R7 K is money on cloud setups.** Pick K becomes "max K": stop when two samples from differently permuted menus agree and, where
+  option probabilities exist (local engines), the margin is not low (Adaptive-Consistency style; threshold [U]). Correctness-only Fills stop at the first admitted candidate.
+  Creative K stays fixed only where the user sees the alternatives (interactive modes); Economy and batch modes use K = 1. The plan card
+  prices K. Current Claude models reject `temperature`, so sample diversity comes from permutations and variant notes below BP3 (gap G8).
+- **R8 Output caps per (shape × effort)** from a table, leaving thinking headroom. A cap stop is a failed attempt, never executed (doc 21
+  §8.2) and never retried at the same cap.
+- **R9 Warm first, fan out second.** Group parallel decisions that share a prefix; send one; release the siblings on its first streamed
+  token, with bounded concurrency; admit in key order (doc 38 §4.5). K samples of one decision follow the same rule.
+- **R10 A `CachePolicy` per provider, with wire tests.** Anthropic explicit breakpoints (§4.1); OpenAI GPT-5.6+ explicit mode; Mistral
+  always sends `prompt_cache_key`; OpenRouter sends `session_id` and `cache_control` for Claude. The key is a hash of the workflow-run id,
+  never the user's identity; pi clamps OpenAI keys to 64 characters (`PI:packages/ai/src/api/openai-prompt-cache.ts#L1-L8`). Cassette
+  tests assert the field reaches the wire (§7).
+- **R11 Know the minimum and the clock.** The ledger checks that each prefix clears the model's minimum. Below it (Haiku 4.5, Gemini 3.x
+  at 4,096; Flash-Lite never) expect no saving; grow the shared pack only when the growth replaces per-capsule text. TTL: 5 minutes by
+  default; 1 hour only where measured pauses justify it. Keep-alive only by expected value, only on 0.05x/0.025x-read models, and only
+  while a proposal card is open: pi refreshes at min(0.9 × TTL, TTL − 10 s), only when the expected saving is ≥ $0.05, and stops 60
+  minutes after the request that started it (30 minutes for idle warming) (`PI:packages/coding-agent/src/core/cache-warmer.ts#L15-L32`)
+  [V]. Delete Gemini explicit caches when the stage ends.
+- **R12 Economy mode** for bulk independent text: S7 slots once the skeleton is fixed, translations, stringtable rows, radio lines,
+  regeneration after a bible edit, and eval sweeps. It is an explicit user choice with a stated latency ("results in minutes to hours"),
+  runs the dependency graph level by level, uses the 1-hour TTL inside Anthropic batches, and offers off-peak scheduling to DeepSeek users.
+  The interactive Pick loop stays synchronous.
+- **R13 Memoize exactly, replay from the journal.** The key is a hash of the capsule bytes, model setup, effort, schema, candidate index
+  and the read-set revision (doc 25 §4.2). Resume, undo/redo and regeneration with unchanged inputs reuse settled answers (doc 38 §4.3);
+  "Try another" always bypasses the cache; similarity matching is never used (§8).
+- **R14 Local first for Pick/Fill** when a qualified pack exists (doc 14 T1): llama.cpp `cache_prompt` on, one slot per busy
+  DecisionKind, replays from the journal (logits are not bit-identical across batch sizes). Local failures keep the default; cloud help is a
+  button (doc 25 §10.2).
+- **R15 No premium modifiers by default.** Fast mode, priority, residency and long-context tiers are off and show their multiplier next to
+  the toggle; the ledger (doc 12 §5.6) keeps capsules far below long-context thresholds.
+- **R16 Ask-chat discipline.** Append-only history, a fixed session tool set, Anthropic automatic caching on, observation masking only at
+  phase boundaries (one cold miss per prune), no server-side context editing or compaction, digests regenerated by code (doc 21 §8.1).
+- **R17 Aggregators.** On OpenRouter set `session_id` to the run key, avoid price-sorted routing and cross-host fallback inside a cached
+  stage, compute cost from the underlying provider's rates, and show the credit fee in the cost readout.
+
+### 4.3 Design-gap candidates [I]
+
+AGENTS.md routes these to `docs/design-gap-requests/`; they are filed in a follow-up change. Until then the rules that depend on them are
+`proposal-only`.
+
+| Gap | Current text | Proposed resolution |
+| --- | --- | --- |
+| G1 | Doc 25 §4.4 and `prompts/design-sensibility/README.md`: task line and digest before core and lens; rotated exemplars. Doc 21 §8.1: exemplars after the digest | Static-first layout (§4.1): core, lens (doc 38 §3.3 already allows the system position) and frozen exemplars above BP1. Measure first whether weak models need exemplars next to the question |
+| G2 | Doc 21 §7.1 Standard: "provider default" reasoning; doc 25 §4.4: thinking only where measured to help; doc 14 §8: `low`–`medium`. Doc 12 §3.3's "Off" row maps Anthropic to `low` and Gemini to `thinking_budget: Some(0)`, but Sonnet 5 can disable thinking and Gemini 3.x cannot (§2.5) | One table of measured levels per (shape, provider), as in R6; refresh doc 12 §3.3's "Off" row per model |
+| G3 | Doc 25 §5.2: "K costs only local time" | On cloud setups K multiplies cost; adaptive K (R7); the plan card prices K |
+| G4 | Doc 25 principle 5 "Degrade downward, never upward", §10.2 "never silently retry with a larger model"; doc 21 §1.4 rejects "automatic escalation to a larger or remote model" and §6.2 rule 3 offers a stronger model only as a button | Same-model effort escalation up to the preset's ceiling is allowed and visible (doc 12 §5.7 already runs validation failures at full effort); cross-model stays a button. The D, E and G strategies' automatic 15% router → bound-model escalation (§5.1) is priced as if allowed; under current doctrine those decisions keep the default or wait for the button |
+| G5 | Doc 12 §3.1: per-turn `RequestPatch.active_tools` | Fixed tool set per mode; admission refuses out-of-step calls; local grammars mask |
+| G6 | Doc 30 §4.5: dynamic enums rebuilt per request | Local grammars only; cloud schemas stay fixed per DecisionKind |
+| G7 | Doc 25 §4.4: cloud (T3) prompt budget not fixed | State the provider cache minimum as an input to the T3 budget; record when a model will not cache |
+| G8 | Doc 21 §7.1 and doc 25 §7.3 assume sampled candidates | Diversity from permuted menus and variant notes, because current Claude models reject `temperature` |
+| G9 | Doc 38 §4.5: "local reuse is [U]" for prefix sharing | Warm-first fan-out (R9) for cloud; slot-per-kind for llama.cpp |
+
+## 5. The cost model [I]
+
+### 5.1 What it models
+
+- **Workflows.** *campaign-from-brief*: 273 decisions for 8 missions following doc 25 §4.1 and §4.5 (S0 5 intake Fills; S1 3 premise
+  cards; S2 10 bible rows and 5 Picks; S3 1 shape Pick, 8 beat Picks and 1 names Fill; S4 4 Picks and 4 guard Fills; S5 48 Picks and 8
+  enum Fills; S7 176 text slots, 22 per mission; S6 and S8 are deterministic; S9 is excluded). *populate-town*: an IntentFill and one
+  composition Pick (doc 38 §8.2). *write-briefing*: 11 slots (doc 38 §8.3; corpus medians of 3 objectives and 6 debrief sections).
+  *cutscene-director*: 13 decisions for the 30-second intro of doc 32 §5.3. *session-30min*: 12 requests (4 explain, 5 small edits, 3
+  lint fixes with 2 findings each), 35 decisions.
+- **Strategies.** **A** naive chat agent: 6,000-token system and tool prompt plus the provider's tool overhead; the whole mission
+  re-attached each turn (19.2K tokens, the median official single-player mission from `corpus-structure-stats.csv`; p90 30.8K);
+  append-only history compacted by the model at 150K; provider-default caching. A is optimistic: 6K-token generated missions, one fix
+  turn per mission, no verification. **B** Plotroom at Standard: K = 3 permuted Picks, K = 2 per creative decision, R ≤ 2, provider-default
+  thinking, doc 25 §4.4 order, no cache design. **C** = B + designed caching (§4.1; second breakpoint after the digest when K ≥ 2; OpenAI
+  explicit mode). **C+eff** = C + Pick/Fill at the model's lowest effort, 10% re-run at the default. **D** = C + Pick/Fill on the same
+  provider's cheap model at its lowest effort (Haiku 4.5, gpt-6-luna, 3.5 Flash-Lite, deepseek-flash, Small 4), 15% escalated to the bound
+  model (modelled as automatic, which doc 21 §1.4 currently rejects; read it as ~15% of router decisions re-run by the user's button, G4).
+  **E** = D + batch (DeepSeek: off-peak) for bulk text only (S7, briefing slots). **F** = C with Pick/Fill on a local model at $0
+  (hardware, energy and time excluded; local failures keep defaults). **G** = D + E + text slots at `low` and Compose/explain at ≤
+  `medium`, 10% re-run at the default.
+- **Tokens.** The repo's 3.5 bytes/token convention, not tokenizer counts: design-sensibility core ~480 and one lens ~310; a card 200;
+  the Field Manual reference ~1,150; primer sections 1,000; exemplars 120–350; shape rules and schema 200–400; digest 300–1,000; menu 200;
+  slot spec 150; repair finding 150. A Pick capsule is ~2.3K tokens and a text-slot capsule ~3.1K.
+- **Thinking [U].** Tokens per call at `medium`: Pick 300, Fill 400, text slot 500, Compose 1,500, explain 600, naive chat turn 1,500;
+  multipliers `none` 0, `minimal` 0.1, `low` 0.35, `high` 1.6. Defaults: Sonnet 5 `high`; Opus 5.5 `medium` (lowest `low`); GPT-6
+  `medium`; Gemini 3.8 Flash `medium`, 3.1 Pro `high`; Haiku 4.5 none; DeepSeek non-thinking. DeepSeek's API default is thinking mode
+  [V, 2026-09-27], so its rows assume the adapter selects non-thinking mode; with thinking at the `medium` placeholder, campaign B would be
+  $0.87 (deepseek-flash) and $3.40 (deepseek-v4-pro) instead of $0.53 and $2.28 [I].
+- **Repairs [U].** Probability that a sample needs one: Pick 0.03, enum Fill 0.08, extraction 0.10, text 0.12, Compose 0.25, explain 0.05.
+- **Cache hits.** 0.9 for the stage prefix within a run, 0.95 for calls seconds apart, 0.3 for B's parallel samples [U], 0.6 inside
+  batches. Sessions compare the gaps between requests with the TTL (Anthropic 5 min, OpenAI 30 min, DeepSeek hours, Gemini 600 s [U]).
+  OpenAI implicit mode is assumed to write changing content at 1.25x [I]. DeepSeek caches automatically with no write fee.
+- **Prices** as §2.1: DeepSeek at peak, Gemini at 2026 prices, Anthropic batch cache prices at half the standard cache prices (the pricing
+  page says cache multipliers stack with the Batch discount [V]), Gemini
+  3.1 Pro batch cached input at $0.10 (the page says "same as Standard", $0.20, so its E and G rows are slightly low).
+
+### 5.2 Results for the three reference tiers (USD per run, prices as of 2026-09-27)
+
+Cheapest per row in bold. Token counts per row are in the CSV.
+
+| Workflow | Tier: model | A naive | B baseline | C cache | C+eff | D route | E batch | F local | G all |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| campaign-from-brief | cheap: gpt-6-luna | 0.178 | 0.366 | 0.259 | 0.233 | 0.236 | 0.162 | 0.192 | **0.146** |
+| campaign-from-brief | mid: claude-sonnet-5 | 6.99 | 8.88 | 6.88 | 5.98 | 6.04 | 4.41 | 5.13 | **3.52** |
+| campaign-from-brief | frontier: claude-opus-5-5 | 13.26 | 14.37 | 10.13 | 9.53 | 8.58 | 6.62 | 7.52 | **5.95** |
+| populate-town | cheap: gpt-6-luna | 0.0165 | 0.0020 | 0.0015 | 0.0010 | 0.0010 | 0.0010 | **0** | 0.0010 |
+| populate-town | mid: claude-sonnet-5 | 0.365 | 0.046 | 0.038 | 0.020 | 0.018 | 0.018 | **0** | 0.018 |
+| populate-town | frontier: claude-opus-5-5 | 0.656 | 0.075 | 0.059 | 0.047 | 0.021 | 0.021 | **0** | 0.021 |
+| write-briefing | cheap: gpt-6-luna | 0.0123 | 0.0159 | 0.0110 | 0.0110 | 0.0110 | 0.0066 | 0.0110 | **0.0058** |
+| write-briefing | mid: claude-sonnet-5 | 0.263 | 0.385 | 0.294 | 0.294 | 0.294 | 0.197 | 0.294 | **0.152** |
+| write-briefing | frontier: claude-opus-5-5 | 0.472 | 0.621 | 0.427 | 0.427 | 0.427 | 0.316 | 0.427 | **0.285** |
+| cutscene-director | cheap: gpt-6-luna | 0.0181 | 0.0144 | 0.0113 | 0.0086 | 0.0090 | 0.0090 | **0.0047** | 0.0087 |
+| cutscene-director | mid: claude-sonnet-5 | 0.394 | 0.354 | 0.301 | 0.211 | 0.209 | 0.209 | **0.128** | 0.180 |
+| cutscene-director | frontier: claude-opus-5-5 | 0.715 | 0.559 | 0.445 | 0.385 | 0.282 | 0.282 | **0.186** | 0.271 |
+| session-30min | cheap: gpt-6-luna | 0.0735 | 0.0279 | 0.0193 | 0.0127 | 0.0135 | 0.0135 | **0.0057** | 0.0135 |
+| session-30min | mid: claude-sonnet-5 | 1.78 | 0.665 | 0.544 | 0.324 | 0.334 | 0.334 | **0.160** | 0.314 |
+| session-30min | frontier: claude-opus-5-5 | 3.20 | 1.06 | 0.801 | 0.652 | 0.448 | 0.448 | **0.242** | 0.448 |
+
+Calls per run under B: campaign 650, populate-town 4.2, write-briefing 25, cutscene-director 27, session 60; naive turns 39, 4, 3, 4, 20.
+F rows exclude local tokens; D, E and G sum the router's and the bound model's tokens.
+
+### 5.3 All thirteen models: campaign and session (USD)
+
+| Model (tier) | Campaign A | Campaign B | Campaign C | Campaign G | Session A | Session C | Session F | Session G |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| gpt-6-luna (cheap) | 0.178 | 0.366 | 0.259 | 0.146 | 0.0735 | 0.0193 | 0.0057 | 0.0135 |
+| deepseek-flash, peak (cheap) | 0.322 | 0.534 | 0.272 | 0.235 | 0.137 | 0.0189 | 0.0066 | 0.0219 |
+| claude-haiku-4-5 (cheap) | 3.03 | 2.18 | 2.18 | 1.55 | 0.654 | 0.151 | 0.0407 | 0.167 |
+| gemini-3.5-flash-lite (cheap) | 1.01 | 0.784 | 0.784 | 0.551 | 0.208 | 0.056 | 0.0156 | 0.0621 |
+| mistral-small-4 (cheap) | 0.438 | 0.318 | 0.151 | 0.127 | 0.0955 | 0.0118 | 0.0040 | 0.0134 |
+| claude-sonnet-5 (mid) | 6.99 | 8.88 | 6.88 | 3.52 | 1.78 | 0.544 | 0.160 | 0.314 |
+| gpt-6-sol (mid) | 3.55 | 7.33 | 5.19 | 2.29 | 1.47 | 0.386 | 0.115 | 0.169 |
+| gemini-3.8-flash (mid) | 1.21 | 2.69 | 2.69 | 1.29 | 0.472 | 0.198 | 0.0542 | 0.116 |
+| deepseek-v4-pro, peak (mid) | 1.33 | 2.28 | 1.14 | 0.746 | 0.597 | 0.0779 | 0.0269 | 0.0521 |
+| claude-opus-5-5 (frontier) | 13.26 | 14.37 | 10.13 | 5.95 | 3.20 | 0.801 | 0.242 | 0.448 |
+| gpt-6-astra (frontier) | 17.77 | 36.63 | 25.94 | 11.33 | 7.35 | 1.93 | 0.573 | 0.821 |
+| claude-fable-5-1 (frontier) | 34.91 | 44.39 | 33.49 | 14.77 | 8.90 | 2.67 | 0.792 | 1.12 |
+| gemini-3.1-pro-preview (frontier) | 3.94 | 9.90 | 9.90 | 3.52 | 1.55 | 0.748 | 0.206 | 0.303 |
+
+Readings [I]: B equals C on Haiku 4.5 and Gemini (no cache below 4,096, none on Flash-Lite). On gemini-3.8-flash the optimistic naive
+campaign ($1.21) is cheaper than G ($1.29), and B on OpenAI costs about twice A because of the assumed implicit-mode write premium (Open
+question 4). For sessions the typed harness wins on every model. DeepSeek rows are non-thinking (§5.1); at the API's default thinking
+mode their B and C figures are low.
+
+### 5.4 Levers and sensitivity
+
+| Lever (campaign, Sonnet 5) | From → to | Factor |
+| --- | --- | --- |
+| Thinking tokens to zero (C) | $6.88 → $2.36 | 2.9x |
+| K 3/2 → 1/1 (C) | $6.88 → $3.55 | 1.9x (adaptive K ≈ 2.2/2: $6.51) |
+| Batch for bulk text (D → E) | $6.04 → $4.41 | 1.37x |
+| Local Pick/Fill (C → F) | $6.88 → $5.13 | 1.34x (session: 3.4x) |
+| Designed caching (B → C) | $8.88 → $6.88 | 1.29x (Opus 5.5 and gpt-6-sol 1.41x; Haiku 4.5 and Gemini 1.0x) |
+| Pick/Fill at lowest effort (C → C+eff) | $6.88 → $5.98 | 1.15x |
+| Router model for Pick/Fill (C → D) | $6.88 → $6.04 | 1.14x with Haiku 4.5; 1.26x with a gpt-6-luna router ($5.45) |
+| All levers (B → G) | $8.88 → $3.52 | 2.5x |
+
+| Knob | Result |
+| --- | --- |
+| Stage cache hit rate 0.5 / 0.7 / 0.9 / 0.98 | Opus 5.5 C $12.77 / $11.45 / $10.13 / $9.60 |
+| Repair rate ×0 / ×1 / ×2 / ×3 | Sonnet 5 C $6.25 / $6.88 / $7.64 / $8.53 (+24% at ×3) |
+| Escalation 5% / 15% / 40% (D) | campaign $5.85 / $6.04 / $6.49 (+7%); session $0.29 / $0.33 / $0.43 (+30%; Opus 5.5 +32%) |
+| Visible output ×0.5 / ×2 | C $6.58 / $7.49; naive A $4.73 / $8.90 |
+| Claude 4.7+ tokenizer, +30% tokens | A +26%; C +10% (Sonnet 5), +13% (Opus 5.5) |
+| Exemplars rotated after the digest | C +6% ($6.88 → $7.32) |
+| G text-slot effort `none` / `low` / `medium` | $3.12 / $3.52 / $4.26 |
+| Pad the stage prefix to the 4,096 minimum | Haiku 4.5 C $2.18 → $1.61 (1.36x); Gemini 3.8 Flash $2.69 → $2.14 (1.26x) |
+| 1-hour TTL in the session (Anthropic) | no gain ($0.544 → $0.546) |
+| 20% of local failures escalated to cloud (F) | $5.13 → $5.50 |
+| Naive: mission size 0.5x / median / p90 (session) | $1.40 / $1.78 / $2.25 |
+| Naive: 3 fix turns per mission instead of 1 | $6.99 → $11.52 (+65%) |
+| Naive with Anthropic automatic caching | campaign $6.99 → $3.91 (Opus 5.5 $13.26 → $6.74); session $1.78 → $1.65 |
+
+### 5.5 Limits
+
+- Everything is [I]. The biggest lever (thinking per call) rests on an unmeasured assumption [U]; so do the repair rates and B's
+  parallel hit rate. Token sizes are 3.5 bytes/token estimates.
+- The model prices tokens, not quality. It does not show that `low` effort, K = 1 or a router keeps admit rates; the E-series must
+  (§7). The naive agent A is optimistic; its cost per *valid* campaign is unmeasured [U].
+- Not modelled: latency; local hardware and energy; OpenRouter fees; residency and fast mode; the Gemini 2027 price step; non-English
+  tokenisation (CP1250/1251 text) [U].
+- The generating script (Python, ~700 lines) is not in the repo; §5.1 lists its inputs so the CSV can be reproduced (Open question 12).
+  The CSV holds totals only: the cache read/write split, thinking tokens and calls per row stay in the script's JSON output, and D, E and
+  G rows mix two models under one `tier_model`, so C–G rows cannot be re-priced from the CSV alone.
+
+## 6. UX: make cost visible and bounded [I]
+
+- **Estimate before every run that calls a cloud model** (doc 38 §5.2 plan card). It comes from the plan's decision counts, per-shape
+  token sizes, the per-model calibration EMA (doc 12 §5.6) and the dated price table. It shows a range (median to p90 from the ledger
+  history), the price date, and the worst case the budget reserves (K candidates plus R repairs per decision, doc 38 §4.5), which is
+  the default run cap:
+
+  ```text
+  Write briefing · 11 slots · Standard                                       prices as of 2026-09-27
+    ≈ $0.22 with gpt-6-sol   (≈ $0.011 with gpt-6-luna · ≈ $0.29 with claude-sonnet-5)      cap $0.60 [change]
+    Cheaper: text at low effort + Economy (minutes to hours) ≈ $0.12 · template text without AI $0
+    [Run] [Edit] [Cancel]
+  ```
+
+  The figures are the model's D and G rows [I]; the cap is illustrative. The card lists only the two or three savings that apply to this
+  run, computed rather than generic.
+- **Live spend meter** in the run panel (doc 38 §5.3): "$0.21 so far (cache saved $0.34) · 118 / 273 decisions", per stage, with drill-in.
+  Each decision's inspector shows its tokens, cache reads and cost (glass-box rule); the run report totals what the AI wrote and what it
+  cost.
+- **Caps.** Per run (from the plan card), per session and per calendar month, per provider key, stored locally. Warn at 80%; at the cap
+  the run ends `BudgetLimited`, resumable, never an error (doc 38 §3.4). Caps only tighten (doc 38 §3.4); nothing raises them silently.
+- **"Cheapest good" presets per provider** [I, placeholders until E-series measures cost per admitted decision]:
+
+  | Key | Pick / Fill | Text slots | Compose and explain | Campaign G | Notes |
+  | --- | --- | --- | --- | --- | --- |
+  | Anthropic | Sonnet 5, thinking off | Sonnet 5 `low`, Economy for S7 | Sonnet 5 `medium` | ~$3.5 | G's row uses a Haiku 4.5 router; Sonnet 5 at thinking off modelled slightly cheaper (C+eff $5.98 vs D $6.04), as Haiku's 4,096 minimum stops caching |
+  | OpenAI | gpt-6-luna `none` | gpt-6-sol `low` | gpt-6-sol `medium` | ~$2.3 | explicit cache mode |
+  | Google | 3.5 Flash-Lite `minimal` | 3.8 Flash `low` | 3.8 Flash `medium` | ~$1.3 until 2026-12-31 | doubles on 2027-01-01 |
+  | DeepSeek | deepseek-flash, non-thinking | deepseek-v4-pro, off-peak | deepseek-v4-pro | ~$0.75 | best-effort cache; figure assumes non-thinking mode (API default is thinking) |
+  | Local + cloud | T1 local pack | cloud writer | cloud | F rows | time is the cost |
+
+- **Economy toggle** with its latency stated (R12); **premium multipliers** printed beside their toggles (R15); OpenRouter's credit fee
+  in the meter (R17).
+- **The no-AI path is always one click away**: every workflow can run on seeded defaults at $0 (doc 25 §10.1; doc 14 T0), and the plan
+  card says so.
+- **Honest numbers.** When reported usage differs from the estimate by more than 25%, the calibration updates and the next card says the
+  estimate changed. Currency is USD, as providers bill.
+
+## 7. Measurement [I]
+
+- **Ledger per attempt** (doc 38 §4.6, nested run → stage → step → attempt): provider, model setup, effort, schema id, cache namespace,
+  raw usage JSON, normalised counts (uncached, cache write 5 min / 1 h, cache read, visible output, reasoning), price-table version, USD,
+  cap stop. Parse usage defensively: pi reads six spellings of Mistral's cached-token field
+  (`PI:packages/ai/src/api/mistral-conversations.ts#L536-L554`) [V].
+- **Metrics:** cost per *admitted* decision (repairs, escalations and defaults included), cost per completed run, cache-read share per
+  namespace, thinking share, cap stops, first-pass admit rate. Report per (DecisionKind, model setup, effort, K policy), never pooled
+  (doc 25 §11.2), and price the tail: in ACG's WideSearch runs 2 of 20 problems carried 43% of the spend [V].
+- **New instrument E12** (doc 25 §11.1): each workflow × preset on synthetic fixtures, sweeping effort (`none`/`low`/`medium`) and K
+  (fixed vs adaptive) per shape; report pass^k and $ per admitted decision. It settles R6 and R7 and replaces §5's [U] thinking numbers.
+- **CI, offline, synthetic fixtures, recorded replies (cassettes keyed by capsule hash, doc 38 §6.4):**
+  - golden prefix bytes per DecisionKind, volatile fields normalised (Codex keeps readable context snapshots,
+    `CX:codex-rs/core/tests/common/context_snapshot.rs#L1-L5`) [V];
+  - prefix stability: consecutive requests of one namespace share the bytes up to BP1, as Codex asserts across setting overrides
+    (`CX:codex-rs/core/tests/suite/prompt_caching.rs#L479-L602`) [V];
+  - token budgets: each capsule's estimate stays within its shape budget + 5%; a replayed campaign stays within ±5% of its recorded
+    calls and tokens; resume after a crash makes zero model calls for settled entries (doc 38 AT-W3);
+  - cache fields on the wire for every provider adapter (opencode records the same check,
+    `OC:packages/llm/test/fixtures/recordings/anthropic-messages-cache/writes-then-reads-cache-control-on-identical-second-call.json`) [V];
+  - a prompt lint for cost-inflating phrases ("verify twice", "be maximally thorough") and for volatile tokens above a breakpoint.
+- **Opt-in live probes**, gated by an environment variable and never in CI: a second identical request must report cached tokens > 0
+  (Anthropic says the costliest caching failure is silent [V]); `count_tokens` calibration for new models and tokenizers.
+- **Price-table checks:** every model in `models.toml` has a dated price and cache metadata; scheduled rows parse; the UI shows the date.
+
+## 8. What we will not do
+
+| Technique | Why not | Evidence |
+| --- | --- | --- |
+| Semantic (embedding-similarity) response caching | Capsules that differ by one menu option, pinned field or campaign state look alike but need different answers; breaks provenance | vCache: static thresholds "do not give formal correctness guarantees" (2502.03771) [V]; caching was detected on 8 of 17 audited API providers and shared across users on 7 (2502.07776) [V] |
+| Model-written summaries of facts; provider auto-compaction or context editing in workflows | Lossy, costs a call, breaks the cache; the document is the memory (doc 21 §8.1) | ACG: context editing added 74% on a short run [V]; summaries "fluctuate substantially from run to run" (2605.23296) [V] |
+| Token-dropping compression (LLMLingua, Selective Context) | Built for 10K+ prose; drops identifiers; content-dependent output breaks the prefix; compressing cached tokens saves ≤ 1.25–5% of base price [I] | LLMLingua up to 20x on prose (2310.05736) [V]; token pruning "often lag[s] behind" extractive methods (2407.08892) [V] |
+| Soft-prompt or gist compression | Impossible over BYO cloud text APIs; tied to exact weights | Gist tokens need training (2304.08467) [V] |
+| Learned routers (RouteLLM style) | Opaque, trained on chat preferences, stale per release; the step type is known before the call | LLMRouterBench: several routers "fail to reliably outperform a simple baseline" (2601.07206) [V] |
+| A paid LLM judge picking best-of-N by default | Multiplies output, the dearest tokens; judge biases (doc 25 §2.5) | ACG: an advisor gained 1.7 points for 2.1x cost and can fall below the executor alone [V] |
+| Silent model switching or silent upward escalation | Violates doc 21 §7.2 and doc 25 §10.2; loses the model-scoped cache | — |
+| Orchestrator or advisor multi-model patterns by default | Every decision fits one small context; code orchestrates | ACG: a coordinator with 25 workers cost 47–55% less but scored 10–12 points lower [V] |
+| Batch as a hidden default | Breaks "the user directs" (doc 25 §3 principle 7) | Up to 24 h latency [V] |
+| Hard-coded prices, or the agent fetching pricing pages | Stale within weeks; adds outbound traffic AGENTS.md forbids | Prices changed within the last week (§2.1) |
+| Keep-alive pings by default | Spends money while the user is away | ACG, Opus 5.5: over 50% dearer than the 1-hour TTL when every turn waited 45 min [V] |
+| Per-decision JSON-schema enums on cloud APIs | New schema per call: grammar compile and cache miss | Anthropic structured-outputs docs [V] |
+| Whole-document rewrites | Output is the dearest token; typed diffs only (doc 25 §4.3) | Aider: whole-file edits "slow and costly" [V] |
+
+## Open questions
+
+1. **Thinking per shape [U].** How many thinking tokens do Pick, Fill and text-slot capsules actually use at each level on Sonnet 5,
+   Opus 5.5, GPT-6 and Gemini 3.x? It is the largest lever and the least known number (E12).
+2. **Does `none` / `low` hurt?** Pick accuracy at thinking off on T3 models; text-slot quality at `low` in blind ratings (E7).
+3. **Adaptive K.** Stopping threshold for Pick votes; does asking for K candidates in one call (array schema; `minItems` must be enforced
+   in code) reduce diversity compared with K separate samples?
+4. **OpenAI implicit-mode writes [I].** Is a unique prompt billed at the 1.25x write rate in implicit mode, as the model assumes? A
+   live probe settles it and changes OpenAI's B rows.
+5. **Gemini [U]:** the effect of `thinking_level` on caching and the implicit-cache lifetime. (3.1 Pro's lowest level is `low` [V,
+   thinking docs, 2026-09-27].)
+6. **DeepSeek [U]:** the smallest cacheable prefix, and whether non-thinking mode holds Pick/Fill admit rates. (Thinking is the API default
+   [V, pricing page, 2026-09-27].)
+7. **Structured-output overhead [U]:** the size of Anthropic's injected format prompt, compared with a single strict tool.
+8. **Second breakpoint.** At what K and repair rate does BP3's 1.25x write pay off, per provider?
+9. **Naive baseline [U].** What does a naive agent spend per *valid* campaign once verification and fixes are counted?
+10. **Tokenisation of CP1250/1251 text** (Czech, Polish, Russian briefings) per provider [U].
+11. **Caps across keys.** Where do monthly caps live when a user has several keys, and should the editor show provider-side spend limits?
+12. **Reproducibility.** Commit the cost-model script under `tools/` with the CSV, or keep only the CSV and §5.1? Either way the E12
+    measurements should replace its [U] inputs.
+13. **Price updates.** Release cadence versus a user-editable file; the staleness threshold (60 days proposed).
+14. **gpt-6-astra Flex [U].** Readings of the pricing page disagreed on 2026-09-27 (five readings: two listed it, three did not); the
+    Flex guide's code sample names gpt-6-astra.
+
+## Sources
+
+**Provider pages (fetched 2026-09-27).**
+Anthropic: <https://platform.claude.com/docs/en/about-claude/pricing> (re-read while writing) ·
+<https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence> (ACG) ·
+<https://platform.claude.com/docs/en/build-with-claude/prompt-caching> · <https://platform.claude.com/docs/en/build-with-claude/batch-processing>
+· <https://platform.claude.com/docs/en/build-with-claude/effort> · <https://platform.claude.com/docs/en/build-with-claude/structured-outputs> ·
+<https://platform.claude.com/docs/en/build-with-claude/token-counting> · <https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool>
+· <https://platform.claude.com/docs/en/build-with-claude/context-editing> · <https://code.claude.com/docs/en/workflows> · the claude-api skill
+(bundled 2.1.283; model table cached 2026-06-24; the live pages win where they differ).
+OpenAI: <https://developers.openai.com/api/docs/pricing> (re-read while writing) · <https://developers.openai.com/api/docs/guides/prompt-caching>
+· <https://developers.openai.com/api/docs/guides/reasoning> · <https://developers.openai.com/api/docs/guides/flex-processing> ·
+<https://developers.openai.com/api/docs/models/gpt-6-sol> · <https://developers.openai.com/api/docs/models/gpt-6-luna>.
+Google: <https://ai.google.dev/gemini-api/docs/pricing> (page updated 2026-09-24; re-read while writing) ·
+<https://ai.google.dev/gemini-api/docs/caching> (now the Interactions API page; the `generateContent` text moved to
+<https://ai.google.dev/gemini-api/docs/generate-content/caching>) · <https://ai.google.dev/gemini-api/docs/thinking>.
+DeepSeek: <https://api-docs.deepseek.com/quick_start/pricing> (re-read while writing) · <https://api-docs.deepseek.com/guides/kv_cache>.
+Mistral: <https://mistral.ai/pricing/api/> · <https://docs.mistral.ai/studio-api/conversations/advanced/prompt-caching>.
+OpenRouter: <https://openrouter.ai/docs/features/prompt-caching> · <https://openrouter.ai/docs/faq> · <https://openrouter.ai/docs/use-cases/byok>.
+llama.cpp: <https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md>.
+
+**Code (pinned, re-read 2026-09-27).** `CX:codex-rs/core/src/client.rs#L575-L597` (prompt_cache_key per session) ·
+`CX:codex-rs/core/tests/suite/prompt_caching.rs#L479-L602`, `#L752-L880` (prefix and key stay constant) ·
+`CX:codex-rs/core/tests/common/context_snapshot.rs#L1-L5` · `CX:codex-rs/ext/guardian-v2/src/async_scorer/sampler.rs#L247` ·
+`OC:packages/llm/src/cache-policy.ts#L5-L42` (default breakpoints) · `OC:packages/opencode/src/provider/transform.ts#L358-L383` ·
+`OC:packages/llm/test/fixtures/recordings/anthropic-messages-cache/writes-then-reads-cache-control-on-identical-second-call.json` ·
+`PI:packages/coding-agent/src/core/cache-warmer.ts#L15-L32`, `#L333-L336`, `#L386-L399` (expected-value keep-alive; `maxTokens: 1`
+replay) · `PI:packages/ai/src/api/mistral-conversations.ts#L527-L554` · `PI:packages/ai/src/api/openai-prompt-cache.ts#L1-L8` ·
+`PI:packages/ai/test/openrouter-cache-write-repro.test.ts`.
+Issues: <https://github.com/anomalyco/opencode/issues/50748> (open) · <https://github.com/earendil-works/pi/issues/5854> (closed).
+
+**Papers and posts.** Don't Break the Cache (arXiv 2601.06007) · Keeping the Cache Warm Pays (2607.19214) · The Complexity Trap
+(2508.21433) · Adaptive-Consistency (2305.11860) · Early-Stopping Self-Consistency (2401.10480) · CISC (2502.06233) · Minions
+(2502.15964) · RAG vs long context, Self-Route (2407.16833) · vCache (2502.03771) · Auditing Prompt Caching (2502.07776) · LLMRouterBench
+(2601.07206) · LLMLingua (2310.05736) · Characterizing prompt compression (2407.08892) · Gist tokens (2304.08467) · Parallel Context
+Compaction (2605.23296) · TOON vs JSON (2603.03306) · Overthinking in o1-like models (2412.21187) · Speculative decoding (2211.17192) ·
+EAGLE-3 (2503.01840) · <https://cursor.com/blog/improved-token-efficiency> (2026-09-23) ·
+<https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus> (2025-07-18) ·
+<https://github.com/toon-format/toon> (vendor benchmark) · <https://aider.chat/docs/more/edit-formats.html>.
+
+**Repo.** Docs 10, 11, 12 (§3.1, §3.3, §5.2–§5.7), 13, 14 (§6–§9), 21 (§1.4, §6.2, §7.1, §8.1–§8.2), 22, 25 (§3, §4.1–§4.6, §5.1–§5.2, §7.3, §10, §11),
+30 (§4.2–§4.6), 32 (§5.3), 38 (§3.3–§3.4, §4.2–§4.6, §5.2–§5.3, §6.4, §8) · `prompts/design-sensibility/README.md` ·
+`docs/research/data/catalog-sizes.csv` (rows 91–103), `corpus-structure-stats.csv`, `cost-model.csv`.
+
+## Verification notes
+
+- The Anthropic, OpenAI, Google and DeepSeek price pages were re-read on 2026-09-27 while writing, and every price in §2.1 matched. The
+  re-read confirmed that Gemini 3.5 Flash-Lite context caching is "Not available", resolving a conflict between two earlier readings,
+  and that Gemini 3.1 Pro's batch caching price is "same as Standard" (the cost model's $0.10 is noted in §5.1).
+- The pi keep-alive constants (60 min, 30 min idle, $0.05, 0.15, 0.9 × TTL) were re-read at `PI:` `cache-warmer.ts`; the other pinned files
+  cited above exist at the listed commits.
+- The CSV was generated from the cost model's JSON output (520 rows); the 120 rows for gpt-6-luna, claude-sonnet-5 and claude-opus-5-5
+  match §5.2.
+
+**Independent review, 2026-09-27.** A second pass re-read the live provider pages, re-ran the cost model and checked the rules against
+AGENTS.md and docs 12, 21, 25 and 38.
+
+- **Prices re-confirmed [V].** Anthropic pricing, prompt-caching, batch, effort, structured-outputs, token-counting and tool-search pages;
+  OpenAI pricing, prompt-caching, reasoning, Flex and the gpt-6-sol and gpt-6-luna model pages; Gemini pricing (updated 2026-09-24),
+  thinking and caching pages; DeepSeek pricing and KV-cache pages; Mistral pricing and prompt-caching pages; OpenRouter prompt-caching
+  and FAQ pages. Every §2.1 price and cache multiplier matched, as did the minimums (Opus 5.5 512, Sonnet 5 1,024, Haiku 4.5 and Gemini
+  3.x 4,096), tool-prompt overheads, batch limits and ACG figures.
+- **Corrected in place.** GPT-6 long-context threshold (> 272K input tokens, from the model pages; was [U]); GPT-6 effort levels (no
+  `minimal`); `configuration_update` needs standard single-agent mode (was [I]); Gemini 3.1 Pro's lowest thinking level is `low` (R6 and
+  §2.5); Gemini 3.8 Flash cached-input and storage prices also double on 2027-01-01; DeepSeek's default is thinking mode (was [U]; the
+  cost model assumes non-thinking, noted in §5.1, §5.3 and §6); Mistral's 10% cached rate is stated by Mistral (was [I]); output/input
+  ratio 3–8.3x (Mistral 3–5x, not 1–5x); ESC's range is −34% to −84%; ACG's keep-alive figures split by model; pi's idle-warming horizon
+  is 30 minutes; the Gemini caching page for `generateContent` moved.
+- **Doctrine.** The D, E and G strategies escalate 15% of router decisions to the bound model automatically. Doc 21 §1.4 lists
+  "automatic escalation to a larger or remote model" as a rejected mechanism, and doc 25 §10.2 and doc 38 §4.4 offer a stronger model
+  only as a button. R6 and G4 now say so; the dollar figures stand if read as user-initiated re-runs at a similar rate (at 5% the
+  campaign D row is $5.85 instead of $6.04, §5.4). Same-model effort escalation within the preset's ceiling agrees with doc 12 §5.7.
+  Effort changes and caching: R4 now says Sonnet 5 and Haiku 4.5 have no per-message effort, so R6's re-run on those models pays the
+  messages-cache miss the rule already names.
+- **Arithmetic.** The model script was re-run: all 520 CSV rows reproduce exactly (tokens and USD). An independent re-pricing from each
+  row's token split matched the CSV for single-model rows (B, C, C+eff, A) on Sonnet 5, Opus 5.5, gpt-6-luna, gpt-6-sol, deepseek-flash,
+  Gemini 3.8 Flash and Mistral Small 4. §1.1's sample decision, every share in §1.2 and §1.3, the TL;DR ratios, the lever table and every
+  sensitivity row in §5.4 were recomputed and match to the stated rounding.
+- **Public rule.** No private or unpublished project, path or coined term appears in this doc or the CSV.
