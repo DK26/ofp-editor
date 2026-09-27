@@ -4,7 +4,8 @@
 > **Scope:** the order in which candidate models are evaluated before a local trial. Qualification and badges are unchanged (D022
 > item 4, D037). **Related:** D008, D021, D022, D023, D026, D037.
 > **Open parts:** the protocol below (proposal, doc 50 §5); how the rule applies to doc 49's rows already under way; OWQ-26 (models and
-> services whose policies ban military uses); OWQ-27 (spend and schedule, including when the cloud backend of `tools/local-qual` lands).
+> services whose policies ban military uses; answered 2026-09-28 → D047); OWQ-27 (spend and schedule, including when the cloud backend
+> of `tools/local-qual` lands; answered 2026-09-28 → the amendment note).
 
 ## Context
 
@@ -67,3 +68,28 @@ if it yields promising results in benchmarks do we try it locally as well. The i
 
 Owner direction of 2026-09-27; doc 50 (§5, §2.3); doc 47 (§6.1–§6.3); doc 48 (§1.2, §4, §6.0, §6.5, §6.6, §7.4); doc 46 (§2.4–§2.5);
 D021 (amendment note of 2026-09-27); D022; D037.
+
+## Amendment notes
+
+### 2026-09-28: owner answers to OWQ-26 and OWQ-27
+
+A note under lifecycle item 5 (`docs/decisions/README.md`): it fills in this record's open parts and reverses nothing; the text above
+stays as written, and the header's **Open parts** gained pointers. OWQ-27 is a one-off spend and schedule decision, so it is recorded
+here rather than as a record of its own.
+
+- **OWQ-26 (a) → [D047](D047-military-use-policy-models-and-services.md).** The interim practice under Consequences is now the owner's
+  rule: such models and services are tested with the synthetic suites only and never recommended or preset; the NVIDIA trial and Z.ai
+  are not used at all; combat-flavoured items never go to hosts with violent-content clauses.
+- **OWQ-27 (b), spend.** The owner buys 10 OpenRouter credits once (card fee $0.80, OpenRouter's minimum); a separate screening key is capped at $1
+  (estimate: about $0.22 on 13 endpoints); the tool's hard cap applies on every run; round 0's free-only key keeps its $0 limit. No
+  Featherless top-up (option (c) was not chosen), so P5's Featherless-only models go local directly. Purchase and key: not yet done
+  (owner action); agents never create accounts or handle keys. The answer funds P2's paid, pinned endpoints; P1–P5 stay proposals.
+- **OWQ-27, schedule.** The cloud backend lands in `tools/local-qual` "once the doc 49 run releases it" (the Answer line), that is
+  after doc 49's run, not before its remaining rows as OWQ-27's recommendation proposed. Round 1 (the uplift ladder and the frontier
+  comparators) stays deferred, which confirms the reading under Consequences. How the rule applies to doc 49's rows still under way
+  stays open.
+- **To reconcile, not decided here:** doc 48 §6.0 runs round 0 on a dedicated account with no payment method, while bought credits
+  lift the free limit only on the account that buys them; which account the credits go on is for the runbook that lands with the tool
+  patch (`tools/local-qual/cloud/README.md`).
+- **Badges.** "A cloud result is never shown to users as a badge" covers screens. D045's per-step-kind qualification of a free cloud
+  setup is that setup's own qualification (D022 item 4), not a screen of a local candidate.

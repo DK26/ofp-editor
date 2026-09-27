@@ -18,9 +18,10 @@ do the provider-terms entries (OWQ-24, OWQ-26).*
 ## Summary
 
 OWQ-01 to OWQ-23 were answered by the owner on 2026-09-27; the "Answered" column gives the answer and the record that states the
-rule (the dated Answer line under each entry is authoritative). OWQ-24 to OWQ-27, added on 2026-09-28, are open.
+rule (the dated Answer line under each entry is authoritative). OWQ-24 to OWQ-27, added on 2026-09-28, were answered by the owner the
+same day.
 
-| ID | Question | Recommended (proposal) | Source | Answered (owner, 2026-09-27) |
+| ID | Question | Recommended (proposal) | Source | Answered (owner; 2026-09-27 unless marked) |
 | --- | --- | --- | --- | --- |
 | OWQ-01 | Wording of the generated-content §7 permission | Doc 02 draft plus an explicit coverage list; legal review before 1.0 | doc 02 §6.2; D001 | (b) as recommended → [D031](D031-generated-content-permission-and-licence-scope.md) |
 | OWQ-02 | Licence of `docs/` prose | GPL-3.0-or-later, like everything else | doc 02 OQ; D001 | (a) GPL-3.0-or-later → [D031](D031-generated-content-permission-and-licence-scope.md) |
@@ -45,10 +46,10 @@ rule (the dated Answer line under each entry is authoritative). OWQ-24 to OWQ-27
 | OWQ-21 | Default play seed, memory across playthroughs, re-roll on restart | Fresh seed; memory opt-in; no re-roll exception in v1 | doc 43 OQ8–9; doc 36 OQ2 | Seed (a), memory (a), re-roll (a) → [D040](D040-play-seeds-and-memory.md) |
 | OWQ-22 | Boundaries for generated moral choices | A documented list for suggestions only; user intent still wins | doc 28 OQ8; D011 | (a) → [D041](D041-moral-choice-suggestion-boundaries.md) |
 | OWQ-23 | Strategic layer: commander design, triage transparency | A campaign setting, plot armour by default; disclose triage in the debrief | doc 29 OQ5–6 | Commander (c), triage (a); to be reconfirmed after the first balance-lab runs → [D042](D042-strategic-layer-commander-and-triage.md) |
-| OWQ-24 | Which free LLM service, if any, Plotroom offers or preconfigures, and how | One-click "connect a free model" on the user's own account (OpenRouter PKCE first); no Plotroom key or proxy; the preset list fixed after a legal review and the providers' written answers | Owner direction 2026-09-27; doc 50 §1–§4 | Open |
-| OWQ-25 | Aggregators (OpenRouter, the HF router) as first-class providers | Yes, with pinned routes, zero data retention and no data collection by default, and the serving host shown per call | doc 48 OQ10, §7.4; doc 50 §4 | Open |
-| OWQ-26 | Testing models, and using services, whose policies ban military uses or violent content | Synthetic tests allowed, never recommended or preset; the NVIDIA trial and Z.ai not used at all | doc 48 OQ9; doc 50 §2.3; D037 | Open |
-| OWQ-27 | Spend and schedule for cloud screening (D044) | Buy 10 OpenRouter credits once, screening key limited to $1 (about $0.22 used); land the cloud backend now | D044; doc 50 §5 | Open |
+| OWQ-24 | Which free LLM service, if any, Plotroom offers or preconfigures, and how | One-click "connect a free model" on the user's own account (OpenRouter PKCE first); no Plotroom key or proxy; the preset list fixed after a legal review and the providers' written answers | Owner direction 2026-09-27; doc 50 §1–§4 | 2026-09-28: (b); only free models whose terms allow the offer and that pass qualification for a step kind are offered for it, dated and re-qualified → [D045](D045-free-model-offer-policy.md) |
+| OWQ-25 | Aggregators (OpenRouter, the HF router) as first-class providers | Yes, with pinned routes, zero data retention and no data collection by default, and the serving host shown per call | doc 48 OQ10, §7.4; doc 50 §4 | 2026-09-28: (a) with the safeguards; downstream hosts filed as [DG039](../design-gap-requests/DG039-downstream-hosts-behind-aggregators.md) → [D046](D046-aggregators-as-first-class-providers.md) |
+| OWQ-26 | Testing models, and using services, whose policies ban military uses or violent content | Synthetic tests allowed, never recommended or preset; the NVIDIA trial and Z.ai not used at all | doc 48 OQ9; doc 50 §2.3; D037 | 2026-09-28: (a); the NVIDIA trial and Z.ai not used; no combat-flavoured items to hosts with violent-content clauses → [D047](D047-military-use-policy-models-and-services.md) |
+| OWQ-27 | Spend and schedule for cloud screening (D044) | Buy 10 OpenRouter credits once, screening key limited to $1 (about $0.22 used); land the cloud backend now | D044; doc 50 §5 | 2026-09-28: (b); the cloud backend lands after doc 49's run; round 1 stays deferred → [D044](D044-cloud-first-model-screening.md)'s amendment note (a one-off spend decision, no record of its own) |
 
 ## Legal and licensing
 
@@ -503,3 +504,19 @@ rule (the dated Answer line under each entry is authoritative). OWQ-24 to OWQ-27
 - The note above expected doc 48 OQ9 and OQ10 to become OWQ-24 and OWQ-25. They are OWQ-26 and OWQ-25, because OWQ-24 carries the
   owner's own question about free services. No Answer line was changed. The entries quote provider terms read on 2026-09-27 and
   2026-09-28; they are not legal advice.
+
+### Owner answers to OWQ-24 to OWQ-27 (2026-09-28)
+
+- The owner answered all four on 2026-09-28, each with its recommended option: OWQ-24 (b), OWQ-25 (a), OWQ-26 (a), OWQ-27 (b). The
+  Answer lines were written before this step and were not changed by it. The Summary's "Answered" column now names the records.
+- Records: [D045](D045-free-model-offer-policy.md) (OWQ-24, with the owner's direction of 2026-09-27 to offer only free models that
+  work with the harness: allowed by their provider's terms, qualified per step kind, dated, re-qualified, with a clean fallback);
+  [D046](D046-aggregators-as-first-class-providers.md) (OWQ-25); [D047](D047-military-use-policy-models-and-services.md) (OWQ-26,
+  a new record rather than a D037 note, because it adds rules for tests and services that D037's scope does not cover). OWQ-27 is a
+  one-off spend and schedule decision, recorded as [D044](D044-cloud-first-model-screening.md)'s amendment note.
+- The design-gap request OWQ-25's answer asked for is
+  [DG039](../design-gap-requests/DG039-downstream-hosts-behind-aggregators.md) (open, owner). OWQ-27's schedule differs from its
+  recommendation: the cloud backend lands after doc 49's run, not before its remaining rows.
+- Still to do, tracked in the records' **Open parts**: the preset list and the providers' written answers (D045); DG039 (D046);
+  the per-item and per-host flags (D047); OWQ-24's "Also asked" items (18+ wording, a Hugging Face OAuth app); the OpenRouter
+  purchase and screening key (owner action, not yet done).

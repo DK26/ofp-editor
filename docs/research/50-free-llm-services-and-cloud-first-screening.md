@@ -13,7 +13,9 @@ no money was spent. The only network calls were page reads and keyless catalogue
 `/endpoints`, `/endpoints/zdr` and `/providers`; the Hugging Face router's `/v1/models` and model provider mappings; Featherless,
 OVHcloud, NVIDIA and Vercel `/v1/models`). The owner's rule for direction 2 is recorded in
 [D044](../decisions/D044-cloud-first-model-screening.md); the protocol in §5 is a proposal. The owner questions this doc raises are
-OWQ-24 to OWQ-27 in [`OWNER-QUESTIONS.md`](../decisions/OWNER-QUESTIONS.md).
+OWQ-24 to OWQ-27 in [`OWNER-QUESTIONS.md`](../decisions/OWNER-QUESTIONS.md); the owner answered them on 2026-09-28 →
+[D045](../decisions/D045-free-model-offer-policy.md), [D046](../decisions/D046-aggregators-as-first-class-providers.md),
+[D047](../decisions/D047-military-use-policy-models-and-services.md) and D044's amendment note (DG039 filed).
 **Not legal advice.** Every reading of a provider's terms here is ours and may be wrong. The quotes are there so that the owner, and
 counsel before any release, can check them; terms change, so re-read them before relying on any.
 **Epistemic legend.** **[V]** verified on 2026-09-27 or 2026-09-28 against the cited primary source (a provider's terms, policy, pricing
@@ -58,7 +60,8 @@ content. No private project, local path or user name appears here.
   end use), Cohere's trial, Cerebras (now card-gated: $5 that expires in 30 days) and GitHub Models (retired 2026-07-30).
 - **Content policies matter for a war-game editor** (§2.3). Most services have violence wording; few have a fiction exception (Google's
   "artistic considerations"; Groq's exception process). Two are incompatible (NVIDIA trial, Z.ai). Proposal: apply D037's logic to
-  services, so no preset ships before a legal review and, where the wording is ambiguous, the provider's written answer (OWQ-24, OWQ-26).
+  services, so no preset ships before a legal review and, where the wording is ambiguous, the provider's written answer (OWQ-24, OWQ-26;
+  answered 2026-09-28 → D045, D047).
 - **Capacity honesty** [I]: a Standard campaign run (about 650 calls, doc 40) takes about 13 days on OpenRouter's 50 free requests a
   day. Free cloud is a taster and a screening path; local models (D022) are the only free path with no expiry, and a paid key the
   everyday cloud path.
@@ -371,7 +374,8 @@ counter-attack is none of these on a plain reading, but "exploits violence", "mi
 qualified by any of those words. Hosted safety filters may also refuse combat text, so the runner and the product must record a
 content-filter finish reason as its own outcome, never as a model error (§5.9). Proposal: the D037 principle extended to services. A
 service whose policy is incompatible is never a preset and never used for screening; an ambiguous one is a preset only after the legal
-review and, where the wording is unqualified, the provider's written answer (OWQ-24, OWQ-26).
+review and, where the wording is unqualified, the provider's written answer (OWQ-24, OWQ-26). *(Answered 2026-09-28 →
+[D045](../decisions/D045-free-model-offer-policy.md) item 7 and [D047](../decisions/D047-military-use-policy-models-and-services.md).)*
 
 ### 2.4 Age, audience and region [V; I]
 
@@ -459,8 +463,11 @@ never offers such a sign-in.
 ## 4. Recommended flow: "Connect a model" (proposal)
 
 **Status: implementation placeholder.** It depends on OWQ-24 (which services) and OWQ-25 (aggregators as first-class providers), and
-needs a design-gap request before code (doc 48 §7.4 items 1–2 are its nearest candidates). Wilco stays off by default (D004), nothing
-touches the network before the user picks, and Wilco can never start the flow or change its settings (`AGENTS.md`; D008 item 2).
+needs a design-gap request before code (doc 48 §7.4 items 1–2 are its nearest candidates). *(2026-09-28: OWQ-24 answered →
+[D045](../decisions/D045-free-model-offer-policy.md), OWQ-25 → [D046](../decisions/D046-aggregators-as-first-class-providers.md);
+item 2 filed as [DG039](../design-gap-requests/DG039-downstream-hosts-behind-aggregators.md), open, which steps 1 and 5–7 wait
+on.)* Wilco stays off by default (D004), nothing touches the network before the user picks, and Wilco can never start the flow or
+change its settings (`AGENTS.md`; D008 item 2).
 
 0. **Entry.** Settings → Wilco → "Connect a model" shows three equal cards: "On this PC (free, offline)" through the Model Manager
    (D022, D037); "Free cloud model with your own account"; "Your own key or endpoint". Nothing is preselected.
@@ -630,9 +637,11 @@ whole-record pass^3 9/12; explanations passing both samples 6/10.
 - A local drop of 3 or more menus in both conditions is a quantisation or engine gap: apply doc 48 §4.3 (a Q8 GGUF on the same engine)
   before rejecting, and consider a larger quant where memory allows.
 - Badges come only from local qualification (doc 21's bar; D022 item 4; D037). A cloud screen never sets a user-facing badge.
+  *(2026-09-28: this covers screens of local candidates; a free cloud setup offered under
+  [D045](../decisions/D045-free-model-offer-policy.md) is qualified on that setup itself, per step kind; see D044's amendment note.)*
 - Calibrate first with one anchor measured on both sides: Ministral 3 3B (`mistral/zdr`, $0.013; its local `pick-hard` arm must run
   first) or Qwen3-4B-2507 (nscale, $0.0014; after its doc 49 run). Featherless is the only way to calibrate the default itself (a $50
-  Developer top-up, OWQ-27).
+  Developer top-up, OWQ-27). *(Answered 2026-09-28: OWQ-27 (b), without the top-up; D044's amendment note.)*
 
 ### 5.8 Order, time saved and conflicts with recorded plans [I on V]
 
@@ -649,6 +658,8 @@ whole-record pass^3 9/12; explanations passing both samples 6/10.
 - **Conflicts to settle, not settled here:** doc 48's status line defers round 1 until doc 49 and lands the cloud backend only after
   doc 49's local run; doc 47 §6.1–§6.2 put local runs first. D044 applies the owner's rule to models not yet run locally; the schedule
   change for the tool patch and any spend are OWQ-27. Round 1 proper (the uplift ladder and frontier comparators) stays deferred.
+  *(Answered 2026-09-28 → D044's amendment note: the patch lands after doc 49's run, not before its remaining rows; the spend is
+  option (b); round 1 stays deferred.)*
 
 ### 5.9 Terms that bear on screening [V quotes; not legal advice]
 
@@ -665,34 +676,43 @@ whole-record pass^3 9/12; explanations passing both samples 6/10.
   injection items; a future suite testing resistance to untrusted mission text must not run through OpenRouter without that approval.
 - **Content filters:** the runner records a content-filter finish reason as its own category, never as a wrong answer or an error.
 - **Services whose terms are incompatible** (NVIDIA trial, Z.ai) are not used for screening; combat-flavoured suites (text, knowledge,
-  briefing items) never go to them (OWQ-26).
+  briefing items) never go to them (OWQ-26). *(Answered 2026-09-28 → D047: those two services are not used at all, and
+  combat-flavoured items never go to any host with a violent-content clause.)*
 
 ## 6. Implications for D021, D022, D023, D037 and the Model Manager [I]
 
 - **D021 (provider layer).** Add free-provider presets as dated, curated data (endpoint, pinned free id resolved live, privacy flags,
   age rule, data facts, policy links, first-seen and last-seen); OAuth PKCE on loopback; keys in the OS keychain; the free-only guard;
   the serving host shown per call; reasoning sent explicitly; content-filter outcomes as their own category. These extend the
-  proposals in D021's amendment note.
+  proposals in D021's amendment note. *(2026-09-28: the presets, offered per step kind only where qualified, are
+  [D045](../decisions/D045-free-model-offer-policy.md); the route, privacy flags and serving host per call are
+  [D046](../decisions/D046-aggregators-as-first-class-providers.md); the other items stay proposals.)*
 - **D022 (Model Manager).** "Check this model" gains a cloud counterpart that shares the harness with §5; a cloud screen is recorded
   per (endpoint, precision, date) and never shown as a badge. The Manager's catalogue could carry a "screened in the cloud" note beside
   licence and use-policy flags.
 - **D023 (model strategy).** No change to the three paths. Free cloud is a taster; local is the only free path with no expiry; free
   tiers are volatile, so every failure is a visible choice (decision 3). The owner's direction (1) is answered by L1, not L2.
 - **D037 (recommended list).** Its use-policy rule is about local files. Proposal: the same principle for services (§2.3), decided by
-  the owner in OWQ-24 and OWQ-26.
+  the owner in OWQ-24 and OWQ-26. *(Answered 2026-09-28 → D045, D047.)*
 - **D044 (new).** Records the cloud-first rule; the protocol of §5 stays a proposal until the owner adopts it.
 - **Design-gap candidates** (to be filed in `docs/design-gap-requests/`): free-provider preset data and its refresh (who curates it,
   how often, what happens when a free id disappears); a "screened, not qualified" state in the model catalogue; doc 48 §7.4 items 1
-  (cloud artifact identity) and 2 (aggregators and the outbound-traffic invariant), which OWQ-25 would settle.
+  (cloud artifact identity) and 2 (aggregators and the outbound-traffic invariant), which OWQ-25 would settle. *(2026-09-28: OWQ-25
+  answered → D046; item 2 filed as DG039; the other candidates are not filed yet.)*
 - **Folding steps** for later: doc 48 §2.1 and `cloud-candidates.csv` (Cerebras, §2.6); a row for this doc and its two data files in
   `docs/README.md`.
 
 ## Open questions
 
-1. Which free services, if any, Plotroom presets, and how (OWQ-24).
-2. Aggregators as first-class providers (doc 48 OQ10 → OWQ-25).
-3. Testing models or services whose policies ban military uses or violent content (doc 48 OQ9 → OWQ-26).
-4. Spend and schedule for screening candidates with no free endpoint (OWQ-27).
+1. Which free services, if any, Plotroom presets, and how (OWQ-24). *(Answered 2026-09-28 →
+   [D045](../decisions/D045-free-model-offer-policy.md).)*
+2. Aggregators as first-class providers (doc 48 OQ10 → OWQ-25). *(Answered 2026-09-28 →
+   [D046](../decisions/D046-aggregators-as-first-class-providers.md); DG039 filed.)*
+3. Testing models or services whose policies ban military uses or violent content (doc 48 OQ9 → OWQ-26). *(Answered 2026-09-28 →
+   [D047](../decisions/D047-military-use-policy-models-and-services.md).)*
+4. Spend and schedule for screening candidates with no free endpoint (OWQ-27). *(Answered 2026-09-28 →
+   [D044](../decisions/D044-cloud-first-model-screening.md)'s amendment note: 10 credits once, a $1 screening key, the backend after
+   doc 49's run.)*
 5. Does Modular's AUP govern the ModelRun endpoint that serves `qwen/qwen3.8-27b:free` [U]? Ask OpenRouter or Modular.
 6. Does OpenRouter accept a `127.0.0.1` callback (RFC 8252 §8.3) as well as `localhost` [U]? A spike.
 7. Does Hugging Face's token endpoint accept public PKCE clients despite its OpenID metadata [U]? A spike.
@@ -859,3 +879,16 @@ LibreChat: <https://www.librechat.ai/docs/configuration/librechat_yaml/object_st
   Both CSVs parse with Python's `csv` module: 23 rows by 13 columns and 47 rows by 11 columns, no ragged rows, numeric price cells.
 - **Not re-checked:** the Thinking Machines PDF, Mistral's Commercial Terms, Cerebras's age rule, Hugging Face's age rule and ToS
   password clause, OVHcloud's Gravelines location, and the other-apps table (§3).
+
+### 2026-09-28, owner answers (pointers)
+
+- The owner answered OWQ-24 to OWQ-27 on 2026-09-28 with the recommended options, and directed on 2026-09-27 that only free models
+  that work with the harness are offered: allowed by their provider's terms, qualified per step kind, dated, re-qualified, with a
+  clean fallback. Records: D045 (OWQ-24 and that direction), D046 (OWQ-25), D047 (OWQ-26), D044's amendment note (OWQ-27); DG039
+  filed (downstream hosts behind an aggregator, open).
+- Dated pointers were added to the status block, TL;DR, §2.3, §4's status line, §5.8, §5.9, §6 and open questions 1–4. The text,
+  figures and proposals above are unchanged; where they differ from a record, the record governs (for example, the tool patch lands
+  after doc 49's run, not first as §5.8's suggested order proposed).
+- Verification (2026-09-28): §5.7 gained two pointers (its badge sentence covers screens of local candidates, not D045's qualified
+  free cloud setups; the Featherless top-up was not chosen), and §6's D021 bullet gained a pointer to D045 and D046. §4's status line
+  was re-wrapped. No text, figure or proposal changed.

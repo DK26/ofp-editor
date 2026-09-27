@@ -116,6 +116,7 @@ and the folding steps that move the request to `folded`.>
 | [DG036](DG036-atmosphere-sibling-corrections.md) | Atmosphere and audio corrections to docs 32, 34, 35 and the catalog | technical | open | 41 §2.5, §5.2; 34 ed12; 35 rc08, rc43 |
 | [DG037](DG037-director-feature-names.md) | One word, six features: names for the "Director" features | design round (OWQ-08 answered: the owner delegated pending names and reviews the names table) | open | 39 review "Names"; 41 §3; 32 §3.3; 33 §5.4; 34 ed18 |
 | [DG038](DG038-sl11-engine-random-exceptions.md) | Engine `random` and SL11: the play-seed bootstrap and opt-in re-roll on restart | technical (OWQ-21 answered: re-roll (a), no exception in v1) | open | 43 §3.2, §2.5, OQ2–OQ3; 29 SL11; 36 OQ2 |
+| [DG039](DG039-downstream-hosts-behind-aggregators.md) | Downstream hosts behind an aggregator: what "the model provider the user configured" covers | **owner** (network boundary) | open | 48 §7.4 item 2, §7.1, §2.6, OQ2; 50 §4; D008; D046 |
 
 ## Candidates noticed but not filed in this pass
 
@@ -173,3 +174,12 @@ and the folding steps that move the request to `folded`.>
   notes point to the new records). Each still waits for its research-doc folds, so none is `folded`.
 - DG037 and DG038 no longer carry the conditional wording from before OWQ-08 and OWQ-21 were answered: DG037's decider is the design
   round (D034 item 3), and DG038's precondition is met (D040). Both stay open.
+
+### Owner answers to OWQ-24 to OWQ-27 (2026-09-28)
+
+- Filed **DG039** (owner; network boundary) from doc 48 §7.4 item 2, as the owner's answer to OWQ-25 asked when it made aggregators
+  first-class providers ([D046](../decisions/D046-aggregators-as-first-class-providers.md)). D046 lists DG039 as an open part and does
+  not decide it.
+- Not filed in this step, and still candidates: doc 48 §7.4 item 1 (cloud artifact identity) and items 3–5, and doc 50 §6's two
+  (free-provider preset data and its refresh; a "screened, not qualified" state in the model catalogue). D045 and D046 list the
+  cloud artifact identity, and D045 the preset data's refresh, as open parts.

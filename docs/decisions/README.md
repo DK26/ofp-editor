@@ -60,7 +60,7 @@ needs that evidence or an owner decision; changing an `accepted` record needs th
 | A DG is decided and the decision sets a durable, project-level rule | The DG's "Decision record" section records the choice; a `Dnnn` states the rule going forward and cites the DG (DG013 → D024, DG028 → D008, DG033 items 3–4 → D029, DG002 → D034, DG029 → D035, DG030 → D038, DG014 → D043) |
 | A DG is decided and the answer is a local detail (a name, a threshold, one doc's wording) | The DG alone records it; no `Dnnn` is needed |
 | A DG is still open | Records that depend on it list it under **Open parts**; dependent work stays `proposal-only` or `blocked on DGnnn` |
-| An owner question is answered | The answer is dated in `OWNER-QUESTIONS.md`; it becomes a new `Dnnn` or a DG decision as above, and the Summary table's "Answered" column names the record (the answers of 2026-09-27 became D031–D043) |
+| An owner question is answered | The answer is dated in `OWNER-QUESTIONS.md`; it becomes a new `Dnnn` or a DG decision as above, and the Summary table's "Answered" column names the record (the answers of 2026-09-27 became D031–D043; those of 2026-09-28 became D045–D047 and D044's amendment note) |
 
 ## Numbering and labels
 
@@ -132,7 +132,11 @@ needs that evidence or an owner decision; changing an `accepted` record needs th
 | [D041](D041-moral-choice-suggestion-boundaries.md) | A short boundary list, in Standing Orders, for generated moral-choice suggestions; user content never filtered | owner (OWQ-22) | accepted | 2026-09-27 | 28 FP48, OQ8 |
 | [D042](D042-strategic-layer-commander-and-triage.md) | Strategic layer: commander design a campaign setting (plot armour default); triage disclosed in the debrief | owner (OWQ-23) | accepted | 2026-09-27 | 29 OQ5–OQ6; 36 cv07 |
 | [D043](D043-cross-plugin-chaining-in-workflows.md) | Cross-plugin chains only in first-party and user-authored workflows, with the egress card every time; never exposed externally | owner (OWQ-16 = DG014 B) | accepted | 2026-09-27 | DG014; 22 §3; 38 |
-| [D044](D044-cloud-first-model-screening.md) | Cloud-first screening: a local candidate is first tested on a hosted copy of its weights and tried locally only if promising; the protocol is a proposal (OWQ-26, OWQ-27 open) | owner (direction of 2026-09-27) | accepted | 2026-09-27 | 50 §5; 47 §6; 48 §6.0 |
+| [D044](D044-cloud-first-model-screening.md) | Cloud-first screening: a local candidate is first tested on a hosted copy of its weights and tried locally only if promising; the protocol is a proposal; spend and schedule (OWQ-27) in its amendment note (2026-09-28) | owner (direction of 2026-09-27; OWQ-27 b) | accepted | 2026-09-27 | 50 §5; 47 §6; 48 §6.0 |
+| [D045](D045-free-model-offer-policy.md) | Free models: "connect a free model" presets on the user's own account (OpenRouter PKCE first); no Plotroom key, proxy or keyless default; offered only where terms allow and qualified per step kind, dated and re-qualified, with a clean fallback; preset list fixed at release | owner (OWQ-24 b; direction of 2026-09-27) | accepted | 2026-09-28 | 50 §1–§4, §6; 48 §7.4 |
+| [D046](D046-aggregators-as-first-class-providers.md) | Aggregators are first-class providers: pinned route, ZDR and no data collection by default, serving host shown per call, per-key host allow-list, re-probes; DG039 open | owner (OWQ-25 a) | accepted | 2026-09-28 | 48 §2.5–§2.6, §7.1, §7.4, OQ10; 50 §4 |
+| [D047](D047-military-use-policy-models-and-services.md) | Models and services whose policies ban military uses or violent content: synthetic tests only, never recommended or preset; the NVIDIA trial and Z.ai not used; no combat-flavoured items to hosts with violent-content clauses | owner (OWQ-26 a) | accepted | 2026-09-28 | 48 OQ9, O3; 50 §2.3, §5.9 |
+| [D048](D048-per-model-harness-presets.md) | Per-model harness presets: the harness adapts to each model per step kind (how Wilco asks, never what code owns); no fine-tuning; tuned on a tuning split, accepted on held-out; bound to model file, runtime and template; badges per preset and step kind; visible and overridable; a general fallback preset | owner (direction of 2026-09-28) | accepted | 2026-09-28 | 44, 46, 49, 51, 53, 55 |
 
 ### Records refined on 2026-09-27
 
@@ -153,6 +157,16 @@ needs that evidence or an owner decision; changing an `accepted` record needs th
 | D030 | D033, D035, D038 (and D030's amendment note) | OWQ-06, DG029, DG030 and OWQ-18 |
 
 Each earlier record above carries the pointers in its header's **Open parts** and a dated note at its end (lifecycle item 5).
+
+### Records refined on 2026-09-28
+
+| Earlier record | Refined by | What the refinement settles |
+| --- | --- | --- |
+| D021 | D045, D046 | Free-model presets as provider data (OWQ-24); aggregators as first-class providers with safeguards (OWQ-25, doc 48 OQ10) |
+| D037 | D047 (D045 related) | Whether Plotroom's own evaluations may test models whose policies ban military uses (doc 48 OQ9 = OWQ-26); the same principle for services and presets |
+| D044 | D047 and D044's amendment note | OWQ-26; OWQ-27's spend and schedule |
+
+D021 and D037 had no open part to mark, so each carries only a dated note at its end; D044's header **Open parts** gained pointers.
 
 ## Integration items this folder owns
 
@@ -222,3 +236,34 @@ These proposals from later research docs, aimed at earlier designs, are owned he
   its protocol marked as a proposal from doc 50 §5. Its other direction (a free service Plotroom could preconfigure or offer) is an
   owner question, OWQ-24, beside OWQ-25 (aggregators, doc 48 OQ10), OWQ-26 (military-use policies, doc 48 OQ9) and OWQ-27 (screening
   spend and schedule). D021–D023 and D037 were not edited; their pointers are a folding step once the questions are answered.
+
+### Owner answers to OWQ-24 to OWQ-27 (2026-09-28)
+
+- The owner answered OWQ-24 to OWQ-27 on 2026-09-28, each with its recommended option, and gave a further direction dated
+  2026-09-27: "offer the user the free models that work perfectly with our harness". The records were written from the Answer lines,
+  the questions' option texts, that direction, docs 48 and 50, and D008, D021–D023, D037 and D044, re-read on 2026-09-28.
+- D045 (OWQ-24 with the direction), D046 (OWQ-25) and D047 (OWQ-26) are new records, because each answer adds rules of its own
+  (lifecycle item 5). OWQ-26 became a record rather than a D037 note: D037 covers local files only, and the answer adds rules for
+  tests, hosted services and item routing. OWQ-27 is a one-off spend and schedule decision, so it is D044's amendment note.
+- Pointers: D021 and D037 gained dated notes (they had no open part to mark); D044 gained header pointers and its note;
+  `OWNER-QUESTIONS.md`'s Summary names the records; docs 48 and 50 gained dated pointers beside their open questions and
+  recommendations. D022 and D023 are related, not refined, and were not edited. DG039 (downstream hosts behind an aggregator) was
+  filed as OWQ-25's answer asked; D046 lists it as open and does not decide it.
+- Plotroom's D047 is unrelated to Iron Curtain's decision D047, which docs 12, 13, 14, 17 and 34 cite by path or as "D047" in
+  context ("Numbering and labels").
+- Not legal advice. No provider was contacted, no account or key was created, and nothing was bought.
+
+### Verification of the OWQ-24 to OWQ-27 fold (2026-09-28)
+
+- Checked each Answer line against `OWNER-QUESTIONS.md`'s Summary, D044's note, D045–D047, DG039 and its index row, and the pointers
+  in D021, D037 and docs 47, 48 and 50. No answer is contradicted and no decision changed.
+- Places where a record stated a proposal as settled were reworded: D045 item 5 and D046's Consequences no longer fix the identity
+  tuple of a cloud setup or the probe's contents, which stay proposals and open parts (doc 48 §7.4 items 1 and 3); D045 no longer
+  cites D047 for qualification in general, and its "attribution headers off" line joined the listed proposals. D045's open parts
+  now separate the re-qualification cadence (doc 48 OQ11) from its triggers (DG012). D044's note gives the card fee as $0.80 (the
+  minimum), as OWQ-27 does. DG039 no longer says the owner declined OWQ-25's reading (the Answer line is silent on it), and its
+  "Blocks" no longer covers the pinned route's serving host, which every option names and D045's card shows.
+- Pointers added where the fold had missed them: doc 48 §3.2 (Muse-Glimmer row) and §7.1; doc 50 §5.7 and §6's D021 bullet; doc 47
+  §6's "See also" (OWQ-27 answered). Each doc's verification notes say so.
+- Relative links in this folder, `docs/design-gap-requests/` and docs 48 and 50 resolve (179 checked). `docs/README.md` still lists
+  D001–D043, DG001–DG038 and OWQ-01–OWQ-23; updating it is left to the change that maintains that file.

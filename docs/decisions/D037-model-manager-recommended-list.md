@@ -51,3 +51,18 @@
 
 Doc 02 (TL;DR, §8); doc 14 §6; doc 46 (TL;DR, §4.1); doc 47 (TL;DR, §2.7, §5, OQ6); doc 48 (row O3, OQ9); D022 (with its amendment of
 2026-09-27); D023 (with its amendment of 2026-09-27); `OWNER-QUESTIONS.md` OWQ-19.
+
+## Amendment notes
+
+### 2026-09-28: refined by D047; related D045 (pointers)
+
+A note under lifecycle item 5 (`docs/decisions/README.md`). The decisions above are unchanged, and the header has no open part to mark.
+
+- **Testing → [D047](D047-military-use-policy-models-and-services.md)** (OWQ-26 (a), owner, 2026-09-28). The question the Consequences
+  leave as "a separate call" (doc 48 OQ9) was filed as OWQ-26 and answered: Plotroom's own evaluations may test a model whose use
+  policy bans military or warfare uses with the synthetic suites only, and the result never becomes a recommendation or a preset.
+  D047 carries the same principle to hosted services: the NVIDIA trial and Z.ai are not used, and combat-flavoured items never go to
+  hosts with violent-content clauses.
+- **Free cloud presets → [D045](D045-free-model-offer-policy.md)** (OWQ-24 (b) and the owner's direction of 2026-09-27). Cloud
+  endpoints stay outside this record's scope; D045 follows the same idea as decision 1 for them: a free model is offered for a step
+  kind only if its provider's terms allow it and it passed Plotroom's qualification for that step kind.

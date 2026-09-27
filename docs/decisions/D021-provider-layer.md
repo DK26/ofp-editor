@@ -72,3 +72,18 @@ changes a decision above.
   §5.3).
 - **Usage accounting:** provider-reported cost and cached, cache-write and reasoning token counts feed the ledger; a key-limit HTTP 402
   maps to `BudgetLimited`; an error object inside an HTTP 200 is an error (doc 48 §7.1).
+
+### 2026-09-28: refined by D045 and D046 (pointers)
+
+A note under lifecycle item 5 (`docs/decisions/README.md`). Nothing above changes, and this record stays a research baseline for the
+seam and the adapter choice; the header has no open part to mark.
+
+- **Aggregators → [D046](D046-aggregators-as-first-class-providers.md)** (OWQ-25 (a), owner, 2026-09-28). Doc 48 OQ10, called "an owner
+  question not yet filed" above, was filed as OWQ-25 and answered: aggregators are first-class providers. The note's proposals for
+  them (a pinned provider route; `zdr: true` and `data_collection: "deny"` by default for user content; the serving host shown per
+  call) are now owner rules, with a per-key host allow-list and periodic re-probes. How "the model provider the user configured"
+  covers the downstream host is [DG039](../design-gap-requests/DG039-downstream-hosts-behind-aggregators.md), open.
+- **Free-model presets → [D045](D045-free-model-offer-policy.md)** (OWQ-24 (b) and the owner's direction of 2026-09-27). The provider
+  layer carries "connect a free model" presets on the user's own account as dated data, and a free model is offered for a step kind
+  only if its provider's terms allow it and it passed Plotroom's qualification for that step kind.
+- The deferral of round 1 above stands (OWQ-27; [D044](D044-cloud-first-model-screening.md)'s amendment note).

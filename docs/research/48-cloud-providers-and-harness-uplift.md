@@ -302,7 +302,7 @@ better). Our suites decide [V for the numbers; I for the use].
 | GLM-5.3 @ `morph/fp8` | 0.36 / 1.14 promo (list 1.19 / 3.74; Z.ai 1.40 / 4.40) | 2075.0 (#6, above Opus 5.5's 2050.1) | Forced thinking; licence "other" | R22 |
 | Qwen3.8-27B @ `deepinfra/bf16` | 0.15 / 1.875 promo (list 0.20 / 2.50) | 1671.3 | Doc 14's T2b all-rounder; Apache-2.0 | R23 |
 | Kimi K3 @ `morph/fp8` | 0.99 / 5.53 promo (list 2.50 / 14.00) | 2082.3 | Optional reference | O2 |
-| Muse-Glimmer-30B @ `deepinfra/bf16` | 0.30 / 1.20 | 1798.3 | Blocked: its Usage Policy prohibits "Military, warfare … applications"; owner decision | O3 |
+| Muse-Glimmer-30B @ `deepinfra/bf16` | 0.30 / 1.20 | 1798.3 | Blocked: its Usage Policy prohibits "Military, warfare … applications"; owner decision (answered 2026-09-28 → [D047](../decisions/D047-military-use-policy-models-and-services.md): synthetic suites only, never recommended) | O3 |
 | claude-sonnet-5 | 2.00 / 10.00 | 1794.0 | Writer reference inside R20 | R20 |
 | Hy-MT2-7B / 30B-A3B / 1.8B (Tencent) | 0.074 / 0.295 (1.8B: 0.044 / 0.177) | n/a | Translation specialist; 8K context; Apache-2.0 at the current revision; needs a translation suite | — |
 | Bielik-11B-v3.0 (Public AI via HF) | 0.40 / 0.40 | n/a | Polish specialist; single host; host warns EU/UK users; needs a suite | — |
@@ -520,6 +520,10 @@ round 1 (§6.1–§6.6) stays deferred. Nothing below has been run.
 proposed battery S at about $0.22 on 13 pinned endpoints, OWQ-27); doc 50 §2.6 flags the Cerebras entries of §2.1 and the CSV as
 stale, and confirms that a harness on Featherless needs the $50 plan (the $25 Chat plan excludes API traffic).
 
+**Owner answers (2026-09-28):** runs Z13 and Z15 (NVIDIA-served `:free` endpoints) are dropped, and combat-flavoured items never go
+to hosts with violent-content clauses ([D047](../decisions/D047-military-use-policy-models-and-services.md)); buying 10 credits once,
+a separate $1 screening key and the tool patch's landing after doc 49's run are recorded in D044's amendment note (OWQ-27 b).
+
 **Free-tier rules** [V, read 2026-09-27; the catalogue figures at 20:06 UTC]:
 
 - A free variant is its own catalogue entry, `<author>/<slug>:free`. `openrouter/auto:free` is a router that can bill paid models, so
@@ -595,7 +599,8 @@ skips calls already recorded, so preflight items are not sent twice and a run st
 
 The core (Z00–Z09) is 204 requests (213 if every Fill item needs its repair call) over 6 days; all of round 0 is 558 (576) over about
 16 days. Buying 10 credits once would raise the free limit to 1,000 a day for good and fit round 0 into one day at k = 1. That is a
-spend decision for the owner, and it leaves the $0 key limit as the only barrier.
+spend decision for the owner, and it leaves the $0 key limit as the only barrier. *(Answered 2026-09-28: OWQ-27 (b), in
+[D044](../decisions/D044-cloud-first-model-screening.md)'s amendment note.)*
 At 30 menus and k = 1 only effects of about 30 points are clear (§4.4); ten-point effects need round 1's k = 3 or the 100-menu
 instrument. Each free model is one host at 4-bit or undisclosed precision and may serve differently from paid hosts, so round 0 screens
 and qualifies nothing. It cannot stand in for the frontier comparators, the pinned precision rungs, doc 44's small models or Bonsai 2
@@ -686,7 +691,7 @@ at `low`; 480 for Sonnet 5 and 300 for GPT-6 Sol at their default efforts. The F
 | R23 | qwen3.8-27b @ `deepinfra/bf16` | bf16 | none | W | 60 | 0.009 | Writer probe (promo price) |
 | O1 | claude-opus-5.5 @ `google-vertex/global` | n/a | bare: default, then low; full: low | F | 849 | 7.859 | Optional third frontier reference |
 | O2 | kimi-k3 @ `morph/fp8` | fp8 | low | W | 60 | 0.134 | Optional writer reference (promo price) |
-| O3 | muse-glimmer-30b @ `deepinfra/bf16` | bf16 | low (mandatory) | W | 60 | 0.030 | Blocked on the owner's Usage Policy decision |
+| O3 | muse-glimmer-30b @ `deepinfra/bf16` | bf16 | low (mandatory) | W | 60 | 0.030 | Blocked on the owner's Usage Policy decision (answered 2026-09-28 → D047: synthetic suites only, never recommended) |
 | O4 | granite-4.2-3b @ `deepinfra` (HF router) | undisclosed | none | B | 484 | 0.008 | Only if the preflight shows the schema is enforced |
 | O5 | minimax-m3 @ `together` | undisclosed | none | B | 484 | 0.075 | Optional: best abstention among cheap models |
 | O6 | nemotron-3.5-lightning @ `coreweave/bf16` | bf16 | none | B | 484 | 0.016 | Optional (added in review): cheapest 3B-active MoE with two same-precision ZDR hosts (replicate `deepinfra/bf16`, $0.018) |
@@ -801,7 +806,10 @@ chat template (`xhigh`, `medium`, `low`); whether a reasoning-off request is hon
   DeepInfra direct and local servers), but an aggregator needs more than a model id. The adapter should carry a **provider route**
   (endpoint tag, precision, `allow_fallbacks: false`, `require_parameters: true`) and, for user content, send `zdr: true` and
   `data_collection: "deny"` by default. The run panel and each decision's inspector show which host served the call (the glass-box
-  rule), because an aggregator forwards data beyond "the model provider the user configured" (AGENTS.md).
+  rule), because an aggregator forwards data beyond "the model provider the user configured" (AGENTS.md). *(2026-09-28: the route,
+  the privacy flags and the host shown per call are owner rules in
+  [D046](../decisions/D046-aggregators-as-first-class-providers.md); how that wording covers the downstream host is
+  [DG039](../design-gap-requests/DG039-downstream-hosts-behind-aggregators.md), open.)*
 - **The capability probe tests behaviour, not flags**: one real strict-schema request per (endpoint, model, route, precision, reasoning
   setting), a reasoning-off check, and the served provider. Flags were wrong in at least six cases (§2.3).
 - **Reasoning is always explicit.** Defaults vary from off to `max` (GLM-5.3-Flash `max`, Qwen3.8-27B `xhigh`, DeepSeek V4.1 Flash
@@ -858,7 +866,9 @@ qualify it.
    identity is (aggregator, model, endpoint tag, precision, reasoning setting, date). Doc 14 §5's exact-artifact rule degrades to that
    tuple for cloud rows, and badges need periodic re-probing.
 2. **Aggregators and the outbound-traffic invariant.** With OpenRouter configured, requests reach hosts the user did not name. Proposed:
-   ZDR and no-data-collection by default, the host shown per call, and a per-key allow-list of hosts.
+   ZDR and no-data-collection by default, the host shown per call, and a per-key allow-list of hosts. *(2026-09-28: the safeguards are
+   adopted in [D046](../decisions/D046-aggregators-as-first-class-providers.md); the wording question is filed as
+   [DG039](../design-gap-requests/DG039-downstream-hosts-behind-aggregators.md), open.)*
 3. **Probe by behaviour.** D021 decision 4's capability probe must send a real strict-schema request, a reasoning-off request and
    check the served provider (§2.3).
 4. **"Check this endpoint".** The Model Manager's "check this model on my machine" (doc 44 §5.3) has a cloud counterpart: the same suites
@@ -881,8 +891,11 @@ qualify it.
 8. A translation and non-English DRAFT instrument with Czech, Polish and Russian items and native reviewers is missing (doc 14 §9 item 4);
    Hy-MT2, Bielik and the writer choice wait on it.
 9. Owner decision: may Muse-Glimmer-30B be tested or recommended under its Usage Policy's "military, warfare" clause (doc 14 TL;DR
-   and open questions)?
+   and open questions)? *(Answered 2026-09-28 (OWQ-26 a) → [D047](../decisions/D047-military-use-policy-models-and-services.md):
+   tested with the synthetic suites only, never recommended or preset.)*
 10. Should Plotroom ship aggregators (OpenRouter, the HF router) as first-class providers, given design-gap candidate 2 (§7.4)?
+    *(Answered 2026-09-28 (OWQ-25 a) → [D046](../decisions/D046-aggregators-as-first-class-providers.md); candidate 2 filed as
+    [DG039](../design-gap-requests/DG039-downstream-hosts-behind-aggregators.md).)*
 11. Re-run cadence: the cost of reaching a fixed benchmark level falls about 5–10x a year (arXiv 2511.23455) and several candidates are
     days old (gpt-6-luna 2026-09-22, MiMo-V2.6-Flash 2026-09-21). Proposed: a quarterly sweep plus a monthly 20-item canary per endpoint.
 
@@ -1100,3 +1113,14 @@ total is $8.121.
   against the daily quota.
 - **Hygiene.** §6.0 and the six new CSV rows name no private project, local path, user name or e-mail address. The key path is given
   by its environment variable only.
+
+### 2026-09-28, owner answers (pointers)
+
+- OQ9 → D047 (OWQ-26 a) and OQ10 → D046 (OWQ-25 a); §7.4 item 2 is filed as DG039 (open). Row O3 and §6.0 gained dated pointers:
+  Z13 and Z15 are dropped (D047 item 2), and the credit purchase and the tool patch's schedule are in D044's amendment note (OWQ-27
+  b: the patch lands after doc 49's run; round 1 stays deferred). No plan, cap or number in this doc was changed. Under D047's
+  cautious reading of item 3 (not an owner decision), round 0's knowledge and text arms on the ModelRun endpoint wait for the
+  per-item and per-host flags that D047 describes. Round 0's dedicated no-payment account (§6.0) and the one-time credit purchase
+  are to be reconciled in the runbook (D044's note).
+- Verification (2026-09-28): the §3.2 Muse-Glimmer row (which still read "owner decision") and §7.1's first bullet (the aggregator
+  safeguards) gained the same dated pointers to D047, D046 and DG039.
