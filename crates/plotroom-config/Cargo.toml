@@ -1,0 +1,31 @@
+[package]
+name = "plotroom-config"
+description = "Lossless config-text CST (mission.sqm, description.ext, config.cpp): parse, render, span patches and the engine's canonical writer rules"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+# None: layer L1 (crate-map §4) and std only. The green tree is written in house because the green-tree crates store
+# token text as UTF-8 `&str`, while config files carry raw code-page bytes (D017 item 5; src/cst/green.rs).
+
+[dev-dependencies]
+# Seeded, bounded property tests (testing-strategy §2, §5). Default features are off: no fork/timeout machinery, and
+# no regression files written into the source tree (the tests also set `failure_persistence: None`).
+proptest = { version = "1.9", default-features = false, features = ["std"] }
+# Negative compile tests for the witness and guard types (AGENTS.md "Negative Compile Tests"); see tests/ui.rs.
+trybuild = "1.0"
+
+[features]
+# Runs the trybuild UI tests (tests/ui.rs). Off by default because compiler output changes between releases: only the
+# `ui` CI job, on the pinned toolchain, enables it (AGENTS.md "Negative Compile Tests"; .github/workflows/ci.yml).
+ui-tests = []
+
+[[test]]
+name = "ui"
+path = "tests/ui.rs"
+required-features = ["ui-tests"]
+
+[lints]
+workspace = true

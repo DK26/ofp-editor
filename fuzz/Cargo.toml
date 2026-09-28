@@ -1,0 +1,35 @@
+# Fuzz targets for Plotroom's parsers (D017; testing-strategy §3), run nightly by .github/workflows/fuzz.yml:
+#     cargo +nightly fuzz run <target>
+#
+# A separate workspace (the [workspace] table below; the root Cargo.toml excludes fuzz/): cargo-fuzz builds with
+# nightly-only sanitizer flags, so these targets never join the stable workspace's fmt, clippy and test gates.
+# Targets mirror the upstream libFuzzer harnesses as the parsers land (testing-strategy §3): one [[bin]] per target,
+# named after the parser, never after a third-party mark (xtask hygiene walks fuzz/fuzz_targets).
+#
+# Lints: the workspace's `unsafe_code = "forbid"` cannot apply here, because `fuzz_target!` expands to the
+# `extern "C"` entry point libFuzzer calls. fuzz/Cargo.lock is committed so the nightly build is reproducible; the root
+# deny.toml does not cover this workspace (libfuzzer-sys is "(MIT OR Apache-2.0) AND NCSA", which is GPL-compatible).
+
+[package]
+name = "plotroom-fuzz"
+version = "0.0.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4.13"
+# The parser under test (SP-09). Its own dev-dependencies (proptest, trybuild) are not built here.
+plotroom-config = { path = "../crates/plotroom-config" }
+
+[[bin]]
+name = "config_parse"
+path = "fuzz_targets/config_parse.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]

@@ -1,0 +1,88 @@
+Plotroom
+Copyright (C) 2026 Plotroom contributors
+SPDX-License-Identifier: GPL-3.0-or-later
+
+Plotroom is free software, licensed under the GNU General Public License version 3 or (at your option) any later
+version. The licence text is in LICENSE.
+
+
+Material derived from the Arma: Cold War Assault source code
+============================================================
+
+Parts of this program are derived from the source code that Bohemia Interactive released as
+BohemiaInteractive/CWR, and from its community continuation ofpisnotdead-com/CWR-CE, both under
+GPL-3.0-or-later with additional terms per section 7 of the GNU GPL. Each such file carries a
+"Derived-From:" line naming the upstream repository, the pinned commit and the upstream path, and a
+"Modified:" line with the date it was translated and changed.
+
+The following copyright notice and additional terms, reproduced verbatim from
+BohemiaInteractive/CWR@ffc61838b7:LICENSE (lines 1-3 and 682-721; the same file is in
+ofpisnotdead-com/CWR-CE@b67bf3bd62), apply to this program, which contains material derived from
+BohemiaInteractive/CWR and ofpisnotdead-com/CWR-CE.
+
+-----8<----- begin of the notice and terms reproduced verbatim -----8<-----
+Bohemia Interactive has released ARMA: Cold War Assault Source Code 
+under the GNU General Public License v3.0 or later below, with additional terms
+per Section 7 thereof applied (see the bottom of this document).
+ADDITIONAL TERMS per Section 7 of GNU GPL
+
+Any propagation or conveyance of this program must include this copyright 
+notice and these terms.
+
+No trademark or publicity rights are granted. This license does not grant you
+any right, title or interest in "ARMA", any other Bohemia Interactive 
+trademark, or "OPERATION FLASHPOINT" trademark. You may not distribute 
+any modification of this program using any Bohemia Interactive trademark or 
+"OPERATION FLASHPOINT" trademark. You may not claim any affiliation or association 
+with Bohemia Interactive or its affiliates, representatives and employees.
+
+You may not misrepresent the origins of this program; any modified versions of
+the program must be marked as such and not identified as the original program.
+
+If you convey this program (or any modifications thereof) and assume
+contractual liability for the program to its recipients, you agree to
+indemnify Bohemia Interactive for any liability that those contractual
+assumptions impose on Bohemia Interactive, and any other liability arising 
+from or related to your assumptions of liability.
+
+The following disclaimer supplements the disclaimers in the Section 15 of GNU GPL:
+TO THE MAXIMUM EXTENT PERMISSIBLE UNDER APPLICABLE LAW, THIS PROGRAM IS 
+PROVIDED TO YOU "AS IS," WITHOUT WARRANTY OF ANY KIND, AND YOUR USE IS AT YOUR SOLE RISK. 
+THE ENTIRE RISK OF SATISFACTORY QUALITY AND PERFORMANCE RESIDES WITH YOU. 
+BOHEMIA INTERACTIVE DISCLAIMS ANY AND ALL EXPRESS, IMPLIED OR STATUTORY WARRANTIES, 
+INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR ANY PURPOSE, 
+NONINFRINGEMENT OF THIRD PARTY RIGHTS, AND WARRANTIES (IF ANY) ARISING FROM A
+COURSE OF DEALING, USAGE, OR TRADE PRACTICES. BOHEMIA INTERACTIVE DOES NOT WARRANT 
+AGAINST INTERFERENCE WITH YOUR ENJOYMENT OF THE PROGRAM; THAT THE PROGRAM WILL 
+MEET YOUR REQUIREMENTS; THAT OPERATION OF THE PROGRAM WILL BE UNINTERRUPTED OR 
+ERROR-FREE, OR THAT THE PROGRAM WILL BE COMPATIBLE WITH THIRD PARTY SOFTWARE 
+OR THAT ANY ERRORS IN THE PROGRAM WILL BE CORRECTED. NO ADVICE OR COMMUNICATION 
+MADE BY BOHEMIA INTERACTIVE, ITS AFFILIATES, REPRESENTATIVES OR EMPLOYEES SHALL CREATE A 
+WARRANTY. SOME JURISDICTIONS MAY NOT ALLOW THE EXCLUSION OF OR LIMITATIONS ON 
+IMPLIED WARRANTIES OR THE LIMITATIONS ON THE APPLICABLE STATUTORY RIGHTS OF A 
+CONSUMER, THEREFORE SOME OR ALL OF THE ABOVE EXCLUSIONS AND LIMITATIONS MAY NOT APPLY 
+TO YOU.
+
+[END OF ADDITIONAL TERMS]
+-----8<----- end of the notice and terms reproduced verbatim -----8<-----
+
+
+Trademarks
+==========
+
+Plotroom is an independent, community-made tool. It is not affiliated with, endorsed by, or
+authorized by Bohemia Interactive a.s. or Electronic Arts Inc. ARMA and Bohemia Interactive are
+trademarks or registered trademarks of Bohemia Interactive a.s. OPERATION FLASHPOINT is a
+registered trademark of Electronic Arts Inc. These names are used only to identify the game this
+tool is designed to work with. Plotroom contains code derived from the Arma: Cold War Assault
+source code released by Bohemia Interactive under GPL-3.0-or-later with additional terms; this is
+a modified version and is not the original program. Game data is not included and is licensed by
+Bohemia Interactive under the APL-SA.
+
+
+Content Plotroom writes for its users
+=====================================
+
+Plotroom's own additional permission under section 7 of the GNU GPL for the missions, campaigns
+and other content it writes for its users (decision D031, item 1) is not part of this file yet;
+until it is, README.md states the intent (decision D001, item 4).

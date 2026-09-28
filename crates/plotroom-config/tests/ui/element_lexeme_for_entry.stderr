@@ -1,0 +1,13 @@
+error[E0308]: mismatched types
+ --> tests/ui/element_lexeme_for_entry.rs:9:52
+  |
+9 |     let _patched = cst.replace_entry_value(target, ElementValueLexeme::int(2));
+  |                        -------------------         ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `EntryValueLexeme`, found `ElementValueLexeme`
+  |                        |
+  |                        arguments to this method are incorrect
+  |
+note: method defined here
+ --> src/cst/patch.rs
+  |
+  |     pub fn replace_entry_value(
+  |            ^^^^^^^^^^^^^^^^^^^

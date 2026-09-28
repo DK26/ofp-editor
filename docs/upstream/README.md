@@ -36,7 +36,7 @@ source, the benefit and a status.
 | --- | --- | --- |
 | `id` | `ER-###` | Three digits, assigned in filing order by this register. Never reused and never renumbered; a withdrawn or superseded entry keeps its row |
 | `title` | A short name for the limitation | Names the problem, not the fix |
-| `area` | `launch`, `harness`, `security`, `campaign`, `scripting`, `camera`, `atmosphere`, `random-mp`, `mission-format`, `mods` or `ai` | One per entry; a new area needs an edit of this list |
+| `area` | `launch`, `harness`, `security`, `campaign`, `scripting`, `camera`, `atmosphere`, `random-mp`, `mission-format`, `mods`, `ai` or `config-text` | One per entry; a new area needs an edit of this list |
 | `limitation` | What the engine does | Carries the source doc's evidence tags: **[V]** read in the pinned source, **[I]** inferred, **[U]** unverified |
 | `current_workaround` | What Plotroom does today | Must hold on every target profile, because no core feature may wait for an entry |
 | `proposed_feature` | The engine change | Starts with a kind tag (next section). A design that no source doc proposes is marked as this register's proposal [I] |

@@ -75,6 +75,19 @@ only if its transport can be routed through `plotroom-net`; otherwise its URL sc
 through the user's own Ollama is a loopback request that makes another process download; `plotroom-net` treats it as egress to the
 source it names (enabled source, offline refusal, user-started; [agent-runtime.md §13](agent-runtime.md)).
 
+**Process exit, threads and job spawns** (D059; `AGENTS.md` "Panics, Aborts and Concurrency"), in every crate: `std::process::exit`
+is never called (`main` returns `ExitCode`; exit runs no destructors); threads are built with `std::thread::Builder` (or its
+`spawn_scoped`), a name and an explicit stack size, never `std::thread::spawn` or `std::thread::Scope::spawn`, and are joined; no
+rayon `spawn`, `spawn_fifo` or `spawn_broadcast`, free or on a `ThreadPool`: jobs go through the workspace job-spawn wrapper, which
+runs the closure under `catch_unwind` and reports a job-failed finding, because rayon's default panic handler aborts the process,
+and the global pool is built once with a `panic_handler` that does the same for spawns inside dependencies; tokio jobs are
+collected in a `JoinSet` and checked with `JoinError::is_panic`. **D059 follow-up, not in `clippy.toml` yet:** bans on
+`std::process::exit`, both thread spawns, the six rayon spawn paths and `tokio::spawn` / `tokio::task::spawn` (reason: collect jobs
+in a `JoinSet`), each with an instruction as `reason`; in a review probe clippy 0.1.98 raised nothing for an entry naming a crate
+outside the graph, so they need not wait for rayon or tokio (recheck when applying). Where
+the wrapper and the one pool builder live (doc 68 names `plotroom-session`) and the stack sizes are proposals (doc 68's 68-G1,
+68-G2), to be filed as design-gap requests before the first crate that spawns jobs or pools; that work is `blocked on` them.
+
 ### 2.4 Workspace lints (`AGENTS.md`, enforced mechanically)
 
 ```toml
@@ -94,24 +107,60 @@ todo = "deny"
 unimplemented = "deny"
 let_underscore_must_use = "deny"            # `let _ =` cannot discard a witness
 allow_attributes_without_reason = "deny"    # every suppression says why
+disallowed_methods = "deny"                 # the clippy.toml bans (§2.3) reach errors-only feeds only at deny
+disallowed_types = "deny"
 ```
 
-- Every crate sets `lints.workspace = true`; format crates add `arithmetic_side_effects = "deny"` so untrusted-offset arithmetic uses
-  `checked_*`/`saturating_*` (`AGENTS.md` integer overflow rule).
+- Every crate sets `lints.workspace = true`. Cargo does not let a crate add lints to an inherited table ("cannot override
+  `workspace.lints` in `lints`", cargo#13157), so per-crate sets are `#![deny(...)]` attributes in `lib.rs`, as the M0 skeleton
+  does:
+
+  | Crates | Crate-level `#![deny(...)]` | Status |
+  | --- | --- | --- |
+  | L1 format crates, `plotroom-bytes` | `clippy::arithmetic_side_effects` (values from input use `checked_*` returning a structured error; a bounded cursor may saturate and engine-defined wrap-around wraps, each commented) | Decided (`AGENTS.md` "Integer Overflow Safety"); in `plotroom-config` today |
+  | L1 format crates, `plotroom-bytes` | `clippy::cast_possible_truncation`, `clippy::cast_sign_loss`, `clippy::cast_possible_wrap` (an integer `as` never narrows or changes the sign of input, `TryFrom` instead; float narrowing that mirrors the engine keeps `as` under `#[expect(clippy::cast_possible_truncation, reason = "<upstream file and line>")]`) | D059 follow-up, not in the workspace yet: lands with `#[expect]`s on `plotroom-config`'s float narrowings (`scalar.rs`, `emit/float.rs`); `clippy::as_conversions` in their place is the stricter option (proposal) |
+  | L1 format crates, `plotroom-bytes` | `clippy::large_stack_arrays` | Proposal (doc 68's 68-P2) |
+  | Domain crates (`plotroom-commands`, `-validate`, `-session`, `-workflow`, `-decide`) | `clippy::wildcard_enum_match_arm` | Proposal (68-P20; its noise on foreign `#[non_exhaustive]` enums is 68 OQ 10) |
+  | L7 edge crates with async | `clippy::await_holding_lock` | Already enforced: it is in clippy's default `suspicious` group (warn) and the gates fail on warnings; `deny` only for errors-only feeds (proposal) |
+  | L7 edge crates with async | `clippy::large_futures`; `clippy::significant_drop_in_scrutinee` (nursery) after a quiet local trial | Proposal (68-P8, 68-P18) |
+  | Workspace (`[workspace.lints.clippy]`) | `print_stdout`, `print_stderr`, `dbg_macro`; binaries opt out with `#[expect(..., reason = "…")]` | Proposal (doc 68 §4.3) |
+
+  An `xtask` check that every crate of a layer or role carries its set (from `xtask/layers.toml`) keeps a new crate from missing it
+  (D059 follow-up, with the cast lints).
+- The release profile (D059; the last two lines are a D059 follow-up: the workspace `Cargo.toml` has only `lto` and
+  `codegen-units` until it lands):
+
+  ```toml
+  [profile.release]
+  lto = true              # AGENTS.md heap allocation rule 7
+  codegen-units = 1
+  panic = "unwind"        # catch_unwind job boundaries need unwinding; tests always unwind, so abort would ship untested behaviour
+  overflow-checks = true  # every crate Cargo compiles (the prebuilt std keeps its own); no [profile.release.package."*"] override
+  ```
+
+  Overflow checks reach the whole dependency graph (image and zlib decoders, egui, wgpu): a dependency's release-only wrap becomes a
+  panic, contained only under a job boundary. The run-time cost is measured on the M2 parser and draw-list benchmarks (68 OQ 13) and
+  reported to the owner; it is not switched off locally. Dev-profile debuginfo cuts, a `debugging` and a `profiling` profile, and
+  dependency `opt-level` stay proposals until measured (68-P12, 68 OQ 12).
 - The guidance lints (`unused_must_use`, `deprecated`, `let_underscore_must_use`, `allow_attributes_without_reason`) follow
   `AGENTS.md` "Diagnostics as Guidance". CI already fails on warnings, so they change what an agent sees while editing, not what can
   merge (doc 62 §4.3).
 - Suppressions are `#[expect(lint, reason = "…")]`; `#[allow(lint, reason = "…")]` only where a lint fires on some targets or feature
   sets. Capability lints are silenced only inside the crates §2.3 names.
-- Test code is exempt through clippy's test allowances where a configuration key exists (for example `allow-unwrap-in-tests`,
-  `allow-expect-in-tests`) and `#[cfg_attr(test, allow(lint, reason = "…"))]` elsewhere.
+- Test code (`#[test]` functions and `#[cfg(test)]` modules) is exempt only through clippy's test allowances (`allow-unwrap-in-tests`,
+  `allow-expect-in-tests`, `allow-indexing-slicing-in-tests`, `allow-panic-in-tests`); every other lint applies there, a test that
+  needs an exception uses `#[expect(lint, reason = "…")]`, and helpers outside those items (top-level functions in `tests/*.rs`,
+  `plotroom-testkit`) get no allowance (`AGENTS.md` "Panics, Aborts and Concurrency").
 - `indexing_slicing` does **not** flag `Index` on maps: it flagged `v[0]` on a `Vec` but not `m[k]` on a `HashMap<String, u32>`,
   because clippy lints an indexed type only when its inherent `get` returns `Option` of the index type or a type parameter (doc 62
   §3.2, probe at clippy `57785c2b`) [V]. `AGENTS.md`'s "any type" rule for maps therefore needs a small custom check (an `xtask`
   check or a dylint lint; which one is [U]); until it exists, review greps for `[&` on map-typed values.
-- Per-crate `clippy.toml` `disallowed-methods` and `disallowed-types` implement §2.3. Each entry's `reason` is an instruction that
-  names the sanctioned API, and it has no `replacement` unless the call shape is identical: clippy turns a `replacement` into a spanned
-  help, which errors-only agent feeds drop, while a bare `reason` stays a note on the error (doc 62 §3.1–§3.2). For example:
+- One root `clippy.toml` holds the `disallowed-methods` and `disallowed-types` that implement §2.3 and, once D059's follow-up lands,
+  the exit, thread and spawn bans above: clippy uses the first file it finds walking up from a crate and never merges files, so a crate-level copy would silently
+  drop entries. A crate §2.3 allows a capability silences only the confining module or function with
+  `#[expect(clippy::disallowed_methods, reason = "…")]`. Each entry's `reason` is an instruction that names the sanctioned API, and
+  it has no `replacement` unless the call shape is identical: clippy turns a `replacement` into a spanned help, which errors-only
+  agent feeds drop, while a bare `reason` stays a note on the error (doc 62 §3.1–§3.2). For example:
 
   ```toml
   disallowed-methods = [
@@ -131,6 +180,22 @@ allow_attributes_without_reason = "deny"    # every suppression says why
 - `cargo-deny` bans, per layer, the runtime and I/O features of tokio, HTTP clients, egui, wgpu, wasmtime and rmcp below the layers that
   may use them, with wrapper allowlists so a transitive helper crate cannot bypass the clippy bans (doc 21 §1.3). Its licence allowlist
   accepts GPL-3.0-compatible licences only and bans GPL-2.0-only crates (D001; doc 07).
+- **Build scripts and proc macros** (D059; a D059 follow-up, not in `deny.toml` or `xtask` yet). `deny.toml`'s `[bans.build]
+  allow-build-scripts` names the only crates allowed a build script (an empty list allows none), seeded from `Cargo.lock` (12 crates
+  on 2026-09-28) and re-checked whenever it changes; `executables` stays at its default (deny) and `include-workspace` at its default
+  (false), so our own build scripts are reviewed as code. `allow-build-scripts` does not cover proc macros, so an `xtask` check over
+  `cargo metadata` fails on any proc-macro crate outside its own list (`serde_derive`, `zerocopy-derive` today). Each list has a
+  planted fixture that must fail, like the GPL-2.0-only one. Both are partial by nature: unsafe emitted by a macro defined in any
+  other crate, a dependency or one of our own workspace crates, is invisible to them and to `forbid(unsafe_code)`. No workspace
+  crate defines a macro that emits `unsafe` (an `xtask` scan for `unsafe` tokens in workspace sources, outside an approved list, is
+  a D059 follow-up), and a dependency's macros are part of its review.
+- **A person reviews every new dependency** before merge, including crates a bump or a feature brings in; coding agents propose
+  dependencies and never add them on their own initiative (D059; `AGENTS.md` "Local Repo-Specific Rules"). cargo-vet is revisited
+  before outside contributions are accepted.
+- **Proposals, not decided** (doc 68's 68-P10 and 68-P27): advisories non-blocking on pull requests and blocking in a daily scheduled
+  job; `wildcards = "deny"` with `allow-wildcard-paths = true` and `publish = false` on every member; `unmaintained = "workspace"`;
+  feature bans on serde_json's `preserve_order` and `arbitrary_precision`; a 7-day publish-age cooldown once the pinned Cargo is 1.100
+  or later; third-party actions pinned by commit SHA and CI tools installed at exact versions; `cargo auditable` release builds.
 
 ## 3. L0 Foundation
 
@@ -336,3 +401,17 @@ marks and island names in crate, module, format, sidecar and generated-header na
 - §2.4 follows `AGENTS.md`'s amendment of 2026-09-28 ("Diagnostics as Guidance", "Negative Compile Tests", applied under the
   owner's go-ahead): four guidance lints at deny, reasons on suppressions and `clippy.toml` entries, the map-indexing answer from doc 62
   §3.2, and trybuild UI tests in guard crates. No crate, layer or capability changed.
+
+### Rust build and safety policy folded (2026-09-28)
+
+- §2.3 gained the exit and thread bans, §2.4 the crate-level lint table, the release profile and the one-root-`clippy.toml` wording,
+  §2.5 the build-script and proc-macro allowlists and the dependency review, from D059 and doc 68 (§4.2–§4.3, findings for sibling
+  docs). Items D059 decides are marked "D059"; the rest are marked as proposals. Three statements were brought in line with the M0
+  skeleton: per-crate lints are `lib.rs` attributes (cargo#13157), `clippy.toml` is one root file, and the lint block lists
+  `disallowed_methods` and `disallowed_types` at deny. No crate, layer or capability changed.
+- Review of the fold (2026-09-29): settings and checks D059 decides but the workspace does not have yet (the release profile's
+  last two lines, the exit, thread and spawn bans, the cast lints, both allowlists, the `unsafe`-token scan) are marked "D059
+  follow-up"; the rayon bans cover all six spawn paths and add the tokio spawns, and need not wait for those crates (a review
+  probe); the cast row is scoped to integers, with engine-faithful float narrowing under `#[expect]`; §2.5 now says that a macro
+  from any other crate, a sibling workspace crate included, can emit `unsafe` that `forbid` accepts; the test-code bullet names
+  the four clippy allowances and what they leave out. No crate, layer or capability changed.

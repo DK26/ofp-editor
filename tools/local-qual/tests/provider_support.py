@@ -12,12 +12,18 @@ What it owns
 * The argument builders (``groq_args``, ``cf_args``) and runners (``run_groq``, ``run_cf``) that put the dummies in
   the child's environment only, as cloud/run-cloud.ps1 does.
 * The mock states (``groq_state``, ``cf_state``) and the provider-shaped error bodies (``groq_429``, ``cf_error``).
+* The per-user quota journals (``journal_path``, ``reset_journals``): every provider run also writes its quota rows to
+  ``<LOCALAPPDATA>/plotroom-dev/<provider>-quota.jsonl``, so the day's count is shared across ledgers. The tests point
+  LOCALAPPDATA into the module's work folder, and each case starts with empty journals (``setUp``), so one case's calls
+  never count in another's.
+* ``first_json``: the first JSON value a dry run printed (the request body).
 
 Each provider test module star-imports this module (which star-imports cloud_support) and starts its own mock with
 ``cloud_support.start``; the helpers read ``cloud_support.URL`` when they run, after that start.
 
 Nothing here contacts a real endpoint: every URL is the in-process mock on 127.0.0.1.
 """
+import json
 import os
 import secrets
 import string
@@ -49,11 +55,17 @@ CF_ENV = "PROVQUAL_CF_TOKEN"
 ACCT_ENV = "PROVQUAL_CF_ACCOUNT"
 GROQ_MODEL = "openai/gpt-oss-20b"
 CF_MODEL = "@cf/google/gemma-4-26b-a4b-it"
+# gpt-oss always reasons, and on Groq the reasoning shares the output cap, so a Groq run at an effort needs an output
+# cap of at least providers.REASONING_MIN_OUTPUT (512) tokens; the suites' own caps (64 for pick) are refused.
+GROQ_NUM_PREDICT = "512"
+# The variable cloud/run-cloud.ps1 sets to the provider whose key it decrypted (run.py refuses another --provider).
+LAUNCH_ENV = "PLOTROOM_LAUNCH_PROVIDER"
 
 __all__ = list(cloud_support.__all__) + [
     "GROQ_KEY", "CF_TOKEN", "CF_USER_TOKEN", "ACCOUNT_ID", "ORG_ID", "PROVIDER_SECRETS", "GROQ_ENV", "CF_ENV",
-    "ACCT_ENV", "GROQ_MODEL", "CF_MODEL", "cf_root", "groq_args", "cf_args", "run_groq", "run_cf", "groq_state",
-    "cf_state", "groq_429", "cf_error", "provider_clean", "quota_rows", "chat_requests"]
+    "ACCT_ENV", "GROQ_MODEL", "CF_MODEL", "GROQ_NUM_PREDICT", "LAUNCH_ENV", "cf_root", "groq_args", "cf_args",
+    "run_groq", "run_cf", "groq_state", "cf_state", "groq_429", "cf_error", "provider_clean", "quota_rows",
+    "chat_requests", "journal_path", "reset_journals", "first_json"]
 
 
 def cf_root():
@@ -62,10 +74,11 @@ def cf_root():
 
 
 def groq_args(ledger, model=GROQ_MODEL, reasoning="low"):
-    """run.py arguments for a Groq run at the mock with the shared ledger `ledger` (in the work folder)."""
+    """run.py arguments for a Groq run at the mock with the shared ledger `ledger` (in the work folder); the output
+    cap is GROQ_NUM_PREDICT, which a model that reasons needs."""
     return ["--provider", "groq", "--backend", "openai", "--model", model, "--base-url", cloud_support.URL,
-            "--api-key-env", GROQ_ENV, "--reasoning", reasoning, "--retry-base-s", "0.01", "--retry-cap-s", "0.05",
-            "--ledger", out(ledger)]
+            "--api-key-env", GROQ_ENV, "--reasoning", reasoning, "--num-predict", GROQ_NUM_PREDICT,
+            "--retry-base-s", "0.01", "--retry-cap-s", "0.05", "--ledger", out(ledger)]
 
 
 def cf_args(ledger, model=CF_MODEL, reasoning="none"):
@@ -133,3 +146,22 @@ def quota_rows(path, event="quota"):
 def chat_requests():
     """The chat completion requests the mock received (path, headers, body)."""
     return [r for r in STATE.requests if r["path"].endswith("/chat/completions")]
+
+
+def journal_path(provider):
+    """The per-user quota journal the runner's children write for `provider` (LOCALAPPDATA points into the work
+    folder, see cloud_support.start)."""
+    return os.path.join(out("appdata"), "plotroom-dev", f"{provider}-quota.jsonl")
+
+
+def reset_journals():
+    """Delete both providers' journals, so a case counts only its own calls (each case's setUp calls it)."""
+    for p in ("groq", "cloudflare"):
+        if os.path.exists(journal_path(p)):
+            os.remove(journal_path(p))
+
+
+def first_json(text):
+    """The first JSON value in `text` (a dry run prints the request body first, then more JSON and notes)."""
+    start = text.index("{")
+    return json.JSONDecoder().raw_decode(text[start:])[0]

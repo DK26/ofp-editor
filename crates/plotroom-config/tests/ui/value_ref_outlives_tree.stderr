@@ -1,0 +1,11 @@
+error[E0597]: `cst` does not live long enough
+  --> tests/ui/value_ref_outlives_tree.rs:9:9
+   |
+ 7 |     let target: EntryValueRef<'_> = {
+   |         ------ borrow later stored here
+ 8 |         let cst = parse(b"x = 1;").unwrap();
+   |             --- binding `cst` declared here
+ 9 |         cst.entry_value(&[b"x"]).unwrap()
+   |         ^^^ borrowed value does not live long enough
+10 |     };
+   |     - `cst` dropped here while still borrowed

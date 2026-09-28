@@ -1,0 +1,24 @@
+error[E0599]: no associated function or constant named `default` found for struct `ElementValueLexeme` in the current scope
+ --> tests/ui/lexeme_default.rs:7:39
+  |
+7 |     let _lexeme = ElementValueLexeme::default();
+  |                                       ^^^^^^^ associated function or constant not found in `ElementValueLexeme`
+  |
+note: if you're trying to build a new `ElementValueLexeme` consider using one of the following associated functions:
+      ElementValueLexeme::quoted
+      ElementValueLexeme::int
+      ElementValueLexeme::float
+      ElementValueLexeme::bare
+ --> src/cst/lexeme.rs
+  |
+  |     pub fn quoted(content: &[u8]) -> Result<Self, Error> {
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+  |     pub fn int(value: i32) -> Self {
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+  |     pub fn float(value: f32, profile: WriterProfile) -> Result<Self, Error> {
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+  |     pub fn bare(text: &[u8]) -> Result<Self, Error> {
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

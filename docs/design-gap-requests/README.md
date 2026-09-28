@@ -139,6 +139,8 @@ and the folding steps that move the request to `folded`.>
 | [DG056](DG056-model-facing-result-envelope.md) | One envelope, sanitiser and diagnostic contract for model-facing tool output | technical | open | 57 TE-G9, TM1–TM3; 61 §6 item 2; 62 §10 item 4 |
 | [DG057](DG057-component-bindings-and-visibility.md) | Bindings, badges and kill switches for non-generative components | **owner** | decided 2026-09-28 (owner's delegation: option B; D057) | 58 §4.11 items 1, 5, OQ3; D024 item 4 |
 | [DG058](DG058-endpoint-verification.md) | Endpoint verification: behavioural probes, "Check this endpoint" and "last verified" | technical | open | 51 §6.1 item 10, K1–K4, K20, OQ12; 48 §7.4 items 3–4; 50 §6; D045 item 5 |
+| [DG059](DG059-config-patch-witness-surface.md) | The witness surface of config span patches (lexemes, value references, `Patched`, `ByteEdit`) | technical | open | core-document-model §3.1, §4, §12; 04 §12.3; SP-09 |
+| [DG060](DG060-generated-content-permission-text.md) | The exact text of the generated-content permission in `NOTICE` | **owner** | open | D001 item 4; D031 item 1; 02 §6.2, §10.1 |
 
 ## Candidates noticed but not filed in this pass
 

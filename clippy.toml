@@ -1,0 +1,79 @@
+# Clippy configuration for the Plotroom workspace (docs/architecture/crate-map.md §2.3-§2.4; AGENTS.md).
+#
+# What it holds: the test allowances for the panic-family lints the workspace denies, and the capability bans of
+# crate-map §2.3 (files, child processes, network, environment variables). The bans are errors because the root
+# Cargo.toml sets `disallowed_methods` and `disallowed_types` to deny.
+#
+# Why one file, at the root: clippy reads the nearest clippy.toml above a crate's Cargo.toml and never merges files,
+# so a crate-level clippy.toml would silently drop every entry it forgot to copy. A crate that §2.3 allows a
+# capability (plotroom-io for files, plotroom-preview for processes, plotroom-net for the network; xtask and
+# plotroom-testkit as tooling and test code) keeps this file and marks the one confining module or function with
+#     #[expect(clippy::disallowed_methods, reason = "<the §2.3 row that allows it>")]
+# (and `clippy::disallowed_types` where a banned type is named). Clippy has one lint for all entries, so a crate-wide
+# exemption would also lift the bans that crate is NOT allowed; a narrow `expect` keeps them, shows every exemption
+# in review, and fails as an unfulfilled expectation once the call is gone.
+#
+# Every `reason` is an instruction that names the sanctioned API, and no entry has a `replacement`: clippy turns a
+# replacement into a spanned `help`, which errors-only agent feeds drop, while a bare reason stays a note on the
+# error (crate-map §2.4; doc 62 §3.1; AGENTS.md "Diagnostics as Guidance").
+#
+# Reach: clippy also finds this file from tools/rust-weak-models (a separate research workspace); that folder pins
+# its own clippy.toml when an experiment arm needs different settings (its README, "Standalone workspace").
+
+# ── Test allowances (keys checked against clippy 0.1.98) ──────────────────────────────────────────────────────────
+# `string_slice`, `unreachable`, `todo` and `unimplemented` have no such key; tests that need them use
+# `#[expect(lint, reason = "...")]` on the test.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-indexing-slicing-in-tests = true
+allow-panic-in-tests = true
+
+# ── Capability bans (crate-map §2.3) ──────────────────────────────────────────────────────────────────────────────
+disallowed-methods = [
+  # Files: every read and write of project, game or app data goes through plotroom-io.
+  { path = "std::fs::read", reason = "Files are read only in plotroom-io (crate-map §2.3): take the bytes, or a ReadOnlySource, as a parameter instead" },
+  { path = "std::fs::read_to_string", reason = "Files are read only in plotroom-io (crate-map §2.3): take the text, or a ReadOnlySource, as a parameter instead" },
+  { path = "std::fs::read_dir", reason = "Folders are listed only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::fs::metadata", reason = "File metadata is read only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::fs::symlink_metadata", reason = "File metadata is read only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::fs::exists", reason = "The file system is queried only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::fs::canonicalize", reason = "Paths are resolved only in plotroom-io and plotroom-vfs (crate-map §2.3): take a resolved path or a ReadOnlySource instead" },
+  { path = "std::fs::read_link", reason = "Links are read only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::fs::write", reason = "Files are written only by plotroom-io's atomic save (crate-map §2.3): return the bytes and let plotroom-io save them" },
+  { path = "std::fs::create_dir", reason = "Folders are created only in plotroom-io (crate-map §2.3): return a plan and let plotroom-io apply it" },
+  { path = "std::fs::create_dir_all", reason = "Folders are created only in plotroom-io (crate-map §2.3): return a plan and let plotroom-io apply it" },
+  { path = "std::fs::remove_file", reason = "Files are removed only in plotroom-io (crate-map §2.3): return a plan and let plotroom-io apply it" },
+  { path = "std::fs::remove_dir", reason = "Folders are removed only in plotroom-io (crate-map §2.3): return a plan and let plotroom-io apply it" },
+  { path = "std::fs::remove_dir_all", reason = "Folders are removed only in plotroom-io (crate-map §2.3): return a plan and let plotroom-io apply it" },
+  { path = "std::fs::rename", reason = "Files are renamed only by plotroom-io's atomic save (crate-map §2.3): return a plan and let plotroom-io apply it" },
+  { path = "std::fs::copy", reason = "Files are copied only in plotroom-io (crate-map §2.3): return a plan and let plotroom-io apply it" },
+  { path = "std::fs::hard_link", reason = "Links are created only in plotroom-io (crate-map §2.3): return a plan and let plotroom-io apply it" },
+  { path = "std::fs::set_permissions", reason = "Permissions are changed only in plotroom-io (crate-map §2.3): return a plan and let plotroom-io apply it" },
+  { path = "std::path::Path::exists", reason = "The file system is queried only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::path::Path::try_exists", reason = "The file system is queried only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::path::Path::is_file", reason = "The file system is queried only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::path::Path::is_dir", reason = "The file system is queried only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::path::Path::is_symlink", reason = "The file system is queried only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::path::Path::metadata", reason = "File metadata is read only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::path::Path::symlink_metadata", reason = "File metadata is read only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::path::Path::canonicalize", reason = "Paths are resolved only in plotroom-io and plotroom-vfs (crate-map §2.3): take a resolved path or a ReadOnlySource instead" },
+  { path = "std::path::Path::read_link", reason = "Links are read only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  { path = "std::path::Path::read_dir", reason = "Folders are listed only in plotroom-io (crate-map §2.3): take a ReadOnlySource as a parameter instead" },
+  # Environment variables: no hidden inputs in libraries.
+  { path = "std::env::var", reason = "Environment variables are read only by plotroom-app, plotroom-cli and test code (crate-map §2.3): take the value as a parameter; tests use plotroom_testkit::OptInRoot" },
+  { path = "std::env::var_os", reason = "Environment variables are read only by plotroom-app, plotroom-cli and test code (crate-map §2.3): take the value as a parameter; tests use plotroom_testkit::OptInRoot" },
+  { path = "std::env::vars", reason = "Environment variables are read only by plotroom-app, plotroom-cli and test code (crate-map §2.3): take the values as parameters instead" },
+  { path = "std::env::vars_os", reason = "Environment variables are read only by plotroom-app, plotroom-cli and test code (crate-map §2.3): take the values as parameters instead" },
+  # Network: name resolution is egress too.
+  { path = "std::net::ToSocketAddrs::to_socket_addrs", reason = "Network access goes only through plotroom-net (EgressGrant, offline mode; crate-map §2.3): call plotroom-net's client API instead" },
+]
+
+disallowed-types = [
+  { path = "std::fs::File", reason = "Files are opened only in plotroom-io (crate-map §2.3): take the bytes or a ReadOnlySource as a parameter, and let plotroom-io save results" },
+  { path = "std::fs::OpenOptions", reason = "Files are opened only in plotroom-io (crate-map §2.3): return the bytes and let plotroom-io's atomic save write them" },
+  { path = "std::fs::DirBuilder", reason = "Folders are created only in plotroom-io (crate-map §2.3): return a plan and let plotroom-io apply it" },
+  { path = "std::process::Command", reason = "Child processes are started only by plotroom-preview (the game, as a user action) and plotroom-model-manager (crate-map §2.3): ask the user to launch Preview through plotroom-preview instead" },
+  { path = "std::net::TcpStream", reason = "Sockets live only in plotroom-net, plotroom-gamelink and plotroom-mcp (crate-map §2.3): call plotroom-net's client API instead" },
+  { path = "std::net::TcpListener", reason = "Listening sockets live only in plotroom-mcp and plotroom-gamelink (crate-map §2.3): expose the feature through plotroom-mcp's loopback server instead" },
+  { path = "std::net::UdpSocket", reason = "Sockets live only in plotroom-net, plotroom-gamelink and plotroom-mcp (crate-map §2.3): call plotroom-net's client API instead" },
+]

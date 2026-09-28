@@ -296,31 +296,23 @@ They are not optional style preferences.
   workarounds, safety guards, and domain-specific choices. Comments should
   explain *why this code is written this way*, not merely restate syntax.
 - When code depends on an external framework, engine subsystem, or specialized
-  library that a capable Rust reader may not already know, comments must teach
-  the local mental model instead of assuming prior familiarity.
-- For UI, rendering, async, and LLM-provider code in particular, explain the
-  role of the framework concepts in use (for example: what a render pass,
-  surface, bind group, widget tree, event loop, task, stream, or tool schema is
-  doing in this specific file) and what behavior the code is trying to achieve
-  with it.
-- Write framework-facing comments as onboarding notes for a maintainer learning
-  the framework while reading the code. The standard is: the reader should be
-  able to understand both **what this framework or library code does** and
-  **why this project uses that mechanism here** without consulting outside
-  material.
-- Apply the same teaching standard to tests and setup code when they use
-  framework-specific APIs, fixtures, lifecycle hooks, or builder patterns that
-  would otherwise be opaque to a reader.
-- Do not turn comments into line-by-line paraphrases of syntax. Focus on
-  concepts, runtime behavior, ownership boundaries, data flow, and the reason a
-  given framework feature was chosen over simpler or more direct alternatives.
-- Constants and magic numbers must be documented with their origin and meaning
-  when that meaning is not self-evident.
+  library that a capable Rust reader may not already know, comments are
+  onboarding notes that teach the local mental model: the reader should
+  understand both **what this framework or library code does** and **why
+  this project uses that mechanism here** without consulting outside
+  material. For UI, rendering, async, and LLM-provider code in particular,
+  explain the role of the framework concepts in use (for example what a
+  render pass, surface, bind group, widget tree, event loop, task, stream, or
+  tool schema is doing in this file). Tests and setup code that use
+  framework-specific APIs, fixtures, lifecycle hooks, or builder patterns get
+  the same standard.
+- Do not paraphrase syntax line by line or state the obvious ("increment
+  counter"). Spend comments on concepts, runtime behavior, ownership
+  boundaries, data flow, constraints, and why a framework feature was chosen
+  over simpler or more direct alternatives.
 - Temporary workarounds, placeholders, and deferred behavior must be marked
   explicitly with the reason, scope limit, and blocker or later phase where
   they should be revisited.
-- Avoid obvious comments like "increment counter". The code already says that.
-  Spend comments on context, rationale, and constraints.
 
 ### Error Design
 
@@ -342,14 +334,25 @@ They are not optional style preferences.
 
 ### Integer Overflow Safety
 
-- Use `saturating_add` (or `checked_add` where recovery is needed) at **every
-  arithmetic boundary** where untrusted input influences the operands —
-  especially `header_size + payload_size`, `offset + size`, and decompression
-  output length calculations.
-- This applies to both parsing paths and lookup/retrieval paths (e.g.
-  lookups by name hash or entry index).
-- Never rely on Rust's debug-mode overflow panics as the safety mechanism;
-  the code must be correct in release mode.
+- Values read from input, and sums and products of them (sizes, offsets,
+  counts, `header_size + payload_size`, `offset + size`, decompressed
+  lengths, lookups by name hash or entry index), use `checked_*` arithmetic
+  that returns a structured `Error`: a saturated or wrapped size is wrong
+  but plausible and can pass later checks. `saturating_*` is only for an
+  intended clamp (a UI clamp, or engine behaviour being matched, said in a
+  comment) or a cursor stepping within a buffer whose length already passed
+  a named cap, with a comment naming the cap. `wrapping_*` is only for
+  wrap-around the format or the engine defines (hashes, checksums, engine
+  accumulators), citing the upstream source.
+- An integer `as` cast never narrows or changes the sign of a value from
+  input; use `TryFrom` and map the failure to an `Error`. Float narrowing
+  that mirrors the engine keeps `as` and cites the upstream line (in the
+  `#[expect]` reason where a cast lint is on); a float-to-integer
+  conversion from input checks `is_finite` and the range first. Crates in
+  layer L1 of `xtask/layers.toml`, and `plotroom-bytes`, start `lib.rs`
+  with `#![deny(clippy::arithmetic_side_effects)]`.
+- The code must be correct in release mode: never rely on overflow panics
+  as the safety mechanism.
 
 ### Safe Indexing — No Direct Indexing in Production Code
 
@@ -407,17 +410,65 @@ Even though `str::find()` returns valid UTF-8-aligned indices, the rule
 is absolute — no reviewer should ever need to *reason* about whether an
 index is safe.  If it compiles without `.get()`, it's wrong.
 
-**Test code** (`#[cfg(test)]` blocks) may use direct indexing when the test
-controls the input and panic-on-bug is acceptable.
+**Test code** (`#[test]` functions and `#[cfg(test)]` modules) may use direct
+indexing when the test controls the input and panic-on-bug is acceptable.
 
-### No `.unwrap()` in Production Code
+### Panics, Aborts and Concurrency
 
-Production code must **never** call `.unwrap()`, `.expect()`, or any method
-that panics on `None`/`Err`. Use `?`, `.ok_or()`, `.map_err()`, or
-`.unwrap_or()` instead.
+A panic on the UI or main thread is a crash unless a job boundary contains
+it; elsewhere it ends its thread or task and is lost unless something joins
+it. Some failures abort, skipping every destructor and `catch_unwind`: a
+stack overflow and an allocation failure also skip the panic hook, and a
+panic in `Drop` during unwinding aborts right after the hook.
+`std::process::exit` runs no destructors either.
 
-**Test code** may use `.unwrap()` freely — a panic in a test is an acceptable
-failure mode.
+- **No panicking calls in production code:** never `.unwrap()`, `.expect()`
+  or any method that panics on `None`/`Err`; use `?`, `.ok_or()`,
+  `.map_err()` or `.unwrap_or()`. Workspace lints deny the panic family but
+  miss std methods documented under `# Panics` (`split_at`, `Vec::remove`,
+  integer `/`): use the checked form (`split_at_checked`, `checked_div`,
+  `get`) or establish and comment the precondition just before the call.
+  `assert!` panics too; `debug_assert!` may check an invariant that release
+  code also handles.
+- **Test code** (`#[test]` functions and `#[cfg(test)]` modules) gets
+  `clippy.toml`'s relaxations for unwrap, expect, indexing and panic only;
+  every other lint still applies (an exception takes
+  `#[expect(lint, reason = "…")]`), and helpers outside those items
+  (top-level functions in `tests/*.rs`, `plotroom-testkit`) get none.
+- **Contain panics at job boundaries only** (release builds unwind; Heap
+  Allocation Policy rule 7). In production code `catch_unwind` wraps a whole job (a
+  generation step, an import, a validation shard, a plugin or model call),
+  never one call as a try/catch. The job works on an immutable snapshot and
+  a private draft, which a caught panic drops uncommitted, turning the panic
+  into a typed internal-error finding with no payload or host path.
+  `AssertUnwindSafe` wraps only state that is then discarded.
+- **No fire-and-forget jobs.** Never call rayon's `spawn`, `spawn_fifo` or
+  `spawn_broadcast`, free or on a `ThreadPool` (rayon's default panic
+  handler aborts the process): use the workspace job-spawn wrapper, which
+  runs the closure under `catch_unwind` and reports a job-failed finding;
+  the global pool is built once with a `panic_handler` that does the same
+  for spawns inside dependencies. Never drop a `JoinHandle`: join std
+  threads; collect tokio jobs in a `JoinSet` and check
+  `JoinError::is_panic`. Where the wrapper or the pool builder does not
+  exist yet, the first change that needs one records a design-gap request
+  and stays `blocked on` it.
+- **Durability never depends on `Drop`, and `Drop` never panics.** Journals
+  and saves are flushed explicitly. `main` returns `ExitCode` (or a
+  `Result`); `std::process::exit` is never called.
+- **Threads are named and sized.** Every thread and pool the workspace
+  creates is built with a name and an explicit stack size
+  (`std::thread::Builder`, never `std::thread::spawn` or `Scope::spawn`;
+  rayon's and tokio's builders), pools are built in one place, and opening,
+  importing and parsing files run off the UI thread, whose stack size Rust
+  does not set (the Windows MSVC linker's default is 1 MB).
+- **One owner per piece of state; locks only at the edge.** State moves by
+  message. Bind a lock guard with `let`; never take one in a `match`,
+  `if let` or `while let` scrutinee (it lives through the arms, the
+  then-block or every iteration), and never hold a std or `parking_lot`
+  guard across `.await` (a lock that must span one is a design decision).
+  Inside `select!` use only cancel-safe calls. The tokio runtime and its I/O
+  features stay in the edge and presentation layers; lower crates use at
+  most its sync and cancellation types.
 
 ### Type Safety — Make Invalid States Unrepresentable
 
@@ -448,6 +499,11 @@ prose for rationale and for conventions no tool can check.
   indices, hashes) would benefit from newtype wrapping. Apply newtypes where
   misuse could cause silent data corruption or security issues — not for every
   integer.
+- **Secrets are not identifier newtypes.** Provider keys, plugin tokens and
+  other secrets live in types with a hand-written redacting `Debug` and no
+  `Display`, `Serialize` or derived `Debug`, so they never reach a log, a
+  panic message, a prompt or a crash report; negative compile tests prove
+  the missing impls, and a unit test proves `Debug` prints no secret.
 - **Typestate at in-process seams, enums in storage.** When an API has a
   mandatory call sequence (build → configure → finalize), encode each step
   as a distinct type so callers cannot skip or reorder steps. Where a
@@ -490,7 +546,12 @@ prose for rationale and for conventions no tool can check.
   an unchecked use is visible in review.
 - **Exhaustive matching.** Prefer `match` over `if let` when handling enums
   so that adding a new variant produces a compile error at every site that
-  must handle it, rather than silently falling through.
+  must handle it, rather than silently falling through. Mark an enum
+  `#[non_exhaustive]` only when crates outside the workspace compile against
+  it (the plugin SDK): on a workspace enum it forces a wildcard arm in every
+  other crate, which silences exactly that compile error. Wire enums stay
+  exhaustive and take unknown values through serde (`#[serde(other)]` or an
+  `Unknown(raw)` variant).
 
 #### Diagnostics as Guidance
 
@@ -537,20 +598,17 @@ notes, so guidance is written to survive that feed.
 
 ### Lifetime Naming
 
-- Lifetime parameter names must be meaningful: name the lifetime after the
-  item whose lifetime it represents (for example `'input` for an input
-  slice, `'buf` for a buffer, `'archive` for a borrowed archive, `'config`
-  for a borrowed config tree). Avoid vague single-letter names like `'a` in
-  public APIs; single-letter lifetimes may be acceptable in very small local
-  scopes or short-lived closures.
-- Prefer descriptive lifetime names in structs and function signatures so
-  reviewers and automated tools can immediately identify what is being
-  borrowed and why. This improves readability and reduces confusion when
-  multiple lifetimes are present.
+Name each lifetime after what it borrows (`'input` for an input slice,
+`'buf` for a buffer, `'archive` for a borrowed archive, `'config` for a
+borrowed config tree), in structs and signatures alike, so a reviewer sees
+what is borrowed and why. No single-letter lifetimes like `'a` in public
+APIs; they are acceptable only in very small local scopes or short closures.
 
 ### Parser Design Philosophy
 
-- **Parsers are pure functions** of their input (`&[u8]`). No hidden state,
+- **Parsers are pure functions** of their input (`&[u8]`, the primary
+  interface; large container formats also offer a reader-based streaming
+  API where that materially cuts whole-file memory use). No hidden state,
   no side effects, no filesystem access. Calling a parser twice on the same
   input must yield identical results.
 - **Permissive on unknown values.** Parsers accept unrecognised enum values
@@ -559,19 +617,35 @@ notes, so guidance is written to survive that feed.
   game files.
 - **Strict on structural integrity.** Offsets, sizes, and counts must be
   validated against actual buffer lengths before any slice operation.
+- **Bounded recursion.** Every recursive parser, evaluator or tree walk over
+  untrusted or model-produced input has a named depth limit, accepts
+  nesting up to it and returns a structured error one past it (such as
+  `NestingTooDeep { offset, depth, cap }`). Size each limit against the
+  smallest stack any walker of the tree runs on, derived `Debug`, `Clone`
+  and serde impls and drop glue included (deep trees get an iterative
+  `Drop`), and test both sides on a thread built with `std::thread::Builder`
+  and a named stack-size constant no larger than that stack.
 
-### `std` and Allocation
+### Determinism
 
-- The crates use `std`. Use standard library types (`Vec`, `String`, `HashMap`)
-  as appropriate.
-- The `&[u8]` parsing API remains the primary interface (callers provide bytes).
-  Large container formats should also expose reader-based streaming APIs when
-  they materially reduce whole-file memory use.
+Seeded, hashed and journaled output comes out identical on every run, OS
+and toolchain. Iterate a `BTreeMap` or an insertion-ordered map, never
+`HashMap` order. Persisted or compared hashes use a pinned algorithm over an
+explicit canonical byte encoding (fixed width, little-endian, float bits
+canonicalised), never std's `Hash` or `DefaultHasher`. In seeded and hashed
+paths keep float reductions sequential and call no `algebraic_*` method and
+no float function whose std docs call its precision non-deterministic
+(`sin`, `exp`, `ln`, `powf`, `powi` and others); engine-faithful parsing
+that needs one cites the upstream line and stays out of those paths. Use a
+pinned, portable RNG algorithm behind a newtype, never `StdRng`, `SmallRng`
+or an OS-seeded RNG (`rand::rng()`, formerly `thread_rng`). A crate that
+takes an RNG seed carries a run-twice test and a committed golden output
+asserted by a test, which the three-OS matrix runs.
 
 ### Heap Allocation Policy
 
-Format and rendering code processes game assets in interactive contexts.
-Minimise heap allocation to reduce allocator overhead and memory
+Format and rendering code processes game assets in interactive contexts:
+minimise heap allocation to reduce allocator overhead and memory
 fragmentation.
 
 **Rules (in priority order):**
@@ -588,11 +662,20 @@ fragmentation.
    entries borrowing their data section from the input).
 
 3. **Fixed-size scratch buffers belong on the stack.** When the maximum size is
-   bounded and small (≤ ~4 KB), use a `[T; N]` array instead of `Vec<T>`.
+   bounded and small (≤ ~4 KB), use a `[T; N]` array instead of `Vec<T>`;
+   larger buffers go on the heap (`vec![0; n]`), never in a large stack
+   array or `Box::new([0; N])`, which can build the array on the stack first.
 
-4. **`Vec::with_capacity` for necessary allocations.** When a heap allocation
-   is unavoidable (variable-length output like decompressed pixel data), always
-   use `Vec::with_capacity(known_size)` to avoid reallocation.
+4. **Cap, then allocate once.** When a heap allocation is unavoidable
+   (variable-length output like decompressed pixel data), use
+   `Vec::with_capacity(known_size)` to avoid reallocation. When the size
+   comes from input, first cap its byte size
+   (`count.checked_mul(size_of::<T>())`) against a named limit, reject a
+   count the remaining bytes cannot encode, and preallocate at most
+   `remaining / min_encoded_size` elements (an element with no minimum
+   encoded size gets its own count cap); `try_reserve` is a second line
+   only. `with_capacity` panics above `isize::MAX` bytes and allocation
+   failure aborts, so a hostile count must become an `Error` first.
 
 5. **Prefer bulk operations over per-element loops.**
    - `Vec::extend_from_slice` over N × `push` for literal copies (memcpy).
@@ -603,12 +686,15 @@ fragmentation.
 
 6. **`#[inline]` on small hot functions.** Trivial accessors
    (`from_raw`/`to_raw`), hash computation, binary-search lookups, and the
-   safe-read helpers must carry `#[inline]` to guarantee inlining across crate
-   boundaries.
+   safe-read helpers carry `#[inline]`. It is a hint that matters only for
+   optimised builds without LTO: opt-level 0 inlines nothing, and release
+   builds inline across crates through LTO (rule 7).
 
-7. **Release profile optimisation.** The workspace `Cargo.toml` specifies
-   `lto = true` and `codegen-units = 1` for release builds, enabling
-   cross-crate inlining and whole-program dead-code elimination.
+7. **Release profile.** The workspace `Cargo.toml` sets `lto = true` and
+   `codegen-units = 1` for release builds (cross-crate inlining,
+   whole-program dead-code elimination). Release builds unwind on panic
+   (Cargo's default); never set `panic = "abort"`: tests always unwind, and
+   job boundaries need unwinding.
 
 Document each format module's allocation profile (parse-time allocations,
 runtime allocations, what borrows the input) in its module docs.
@@ -646,10 +732,8 @@ Specific guidance:
   doesn't recognise (unknown compression IDs, unknown config keys), comment
   that the permissiveness is deliberate and why.
 
-This standard applies equally to production code and test helpers (e.g.
-fixture builders).  The same what/why/how structure used for `#[test]`
-doc comments (see Testing Standards below) applies to implementation code via
-`///` doc comments on public items and `//` inline comments on internal logic.
+This standard applies equally to test helpers such as fixture builders, and
+matches the what/why/how of `#[test]` doc comments (see Testing Standards).
 
 ### 3. Testing Standards
 
@@ -694,9 +778,14 @@ does not compile, and that the compiler says the right thing, with
   snapshot. Every guard property has a case, so a change that weakens a
   guard fails CI; for a new guard API, write its misuse cases first.
 - The snapshot is part of the contract: a change to guidance text is
-  reviewed like an API change. UI tests run on one CI job with a pinned
-  toolchain, because compiler output changes between releases; snapshots
-  change only with a toolchain bump or a reviewed guidance change.
+  reviewed like an API change. UI tests sit behind each guard crate's
+  `ui-tests` feature and run in one CI job on the pinned toolchain, because
+  compiler output changes between releases:
+  `cargo +<pin> test -p <crate> --locked --features ui-tests --test ui`.
+  Re-bless (`TRYBUILD=overwrite` on that command) only as part of a
+  toolchain bump or an intended guidance change, on the pin with `rust-src`
+  installed, after reading the `.stderr` diff; never re-bless to clear a
+  diff the change did not intend.
 
 #### Test Organisation
 
@@ -723,41 +812,34 @@ Every parser module must include tests for:
 - **Boundary:** test both sides of every limit (exactly at cap succeeds,
   one past cap fails; minimum valid input succeeds, one byte short fails).
 - **Overflow safety:** craft inputs with `u32::MAX` or near-max values to
-  exercise `saturating_add` / bounds-check paths; assert no panic and
-  correct error return.
+  exercise the checked-arithmetic and bounds-check paths; assert no panic
+  and the correct structured error.
 
 #### Parser Security Testing
 
 Every parser module must include **adversarial** tests that exercise its
-safety invariants (bounds checks, size caps, decompression ratio limits,
-forward progress) with crafted malicious inputs.  These tests ensure that
-future changes do not regress the security guarantees. Missions, archives and
-addons are downloaded from the internet and must be treated as untrusted
-input.
+safety invariants (bounds checks, size and allocation caps, nesting depth,
+decompression ratio limits, forward progress) with crafted malicious inputs.
+These tests ensure that future changes do not regress the security
+guarantees. Missions, archives and addons are downloaded from the internet
+and must be treated as untrusted input.
 
 #### Test Fixture Legality and CI Portability
 
 - Never commit proprietary, copyrighted, or otherwise redistribution-restricted
-  game assets to this repository unless there is a clearly documented license
-  that explicitly allows public redistribution in git.
-- Do not assume that "modding is allowed" means "raw assets may be checked into
-  source control." Code, mods, and owned-install import workflows are separate
-  questions from public asset redistribution.
-- CI-required tests must be self-contained and legally redistributable. The
-  default solution is:
-  - generate tiny synthetic fixtures inline
-  - build minimal valid binary payloads with local test helpers
-  - use authored/open assets owned by this project
-  - assert metadata, decode behavior, round-trips, and invariants without
-    shipping original game payloads
-- When real installed assets are useful for extra validation, keep that path
-  opt-in and local-only:
-  - gate it behind explicit environment variables or ignored/manual tests
-  - never make GitHub Actions depend on proprietary local installs
-  - document the source expectation and ownership requirement in the test docs
-- Prefer generated fixtures over opaque checked-in binaries. Generated fixtures
-  keep the legal status clearer, the test intent more readable, and the CI
-  story portable across fresh runners.
+  game assets unless a clearly documented license explicitly allows public
+  redistribution in git. "Modding is allowed" does not mean "raw assets may
+  be checked in": code, mods, owned-install imports and public asset
+  redistribution are separate questions.
+- CI-required tests are self-contained and legally redistributable: tiny
+  synthetic fixtures generated inline, minimal valid binary payloads built by
+  test helpers, or authored assets this project owns, asserting metadata,
+  decoding, round trips and invariants without shipping original game
+  payloads. Prefer generated fixtures over opaque checked-in binaries: their
+  legal status, intent and CI portability stay clear.
+- Validation against real installed assets is opt-in and local-only: gated
+  behind explicit environment variables or ignored tests, never required by
+  GitHub Actions, with the source and ownership expectation in the test docs.
 
 ### 4. RAG / LLM-Friendly Project Tree
 
@@ -782,18 +864,15 @@ input.
 
 ## Local Repo-Specific Rules
 
-- **Language:** Rust (2024 edition)
-- **Build:** `cargo build --workspace --locked`
-- **Test:** `cargo test --workspace --locked`
-- **Lint:** `cargo clippy --workspace --all-targets --locked -- -D warnings`
-- **Format:** `cargo fmt --all --check`
-- **Build/run rule:** Agents must **not** use `cargo build`, `cargo run`, or equivalent binary/example launch commands for this repo unless the user explicitly requests them. Let the user build and run the project in their own environment.
-- **Why this rule exists:** The agent environment may not match the user's local graphics, windowing, driver, audio, or platform setup. Pure build/run attempts can waste time while proving less than the same compile work done through targeted tests or lint checks.
-- **Allowed verification paths:** `cargo clippy`, `cargo test`, `cargo check`, `cargo fmt --check`, and other non-run validation commands are allowed. Once a repo CI dispatcher exists (for example `./ci` / `ci.ps1`), prefer it first, then direct cargo commands when a narrower probe is enough.
-- **Fast inner loop, full gates at the end:** while changing code, validate the unit you are working on, not the whole workspace: `cargo clippy -p <crate> --all-targets -- -D warnings` for compile errors and lints together (no code generation; the workspace's guidance lints reach you only through clippy; `cargo check -p <crate>` is the lighter fallback), then that crate's unit tests filtered to the module under change (`cargo test -p <crate> <module_or_test_name>`), written test first. Run the full workspace gates (test, clippy, fmt) once before finishing the change. Keep units small enough that this loop stays in seconds: a module with its own `#[cfg(test)]` tests, a crate boundary where a change would otherwise recompile unrelated code.
+- **Language:** Rust (2024 edition), on the pinned stable toolchain (see "Toolchain").
+- **Scope:** the Rust coding rules and gates cover the root workspace (`crates/`, `xtask/`); fuzz targets under `fuzz/` count as test code; each folder under `tools/` says in its README how these rules apply to it; hygiene, friction, evidence and dependency review apply everywhere.
+- **Gates** (for any change to Rust code, manifests, lint or CI configuration; CI runs them on Windows, Ubuntu and macOS and fails on compiler and clippy warnings, linker warnings excepted): `cargo fmt --all --check`; `cargo clippy --workspace --all-targets --locked -- -D warnings`; `cargo test --workspace --locked`, which includes doctests and the `xtask` layer and naming checks (alone: `cargo test -p xtask --locked`; never `cargo run -p xtask`). CI also runs cargo-deny and the UI tests. Keep `-- -D warnings`; do not substitute `CARGO_BUILD_WARNINGS=deny` (testing-strategy §14).
+- **Build and run are the user's:** agents never run `cargo build`, `cargo run` or other binary or example launches unless the user asks, since the agent's environment may not match the user's graphics, drivers or platform, and clippy and tests prove more for the same compile work. Once a repo CI dispatcher exists (for example `./ci` / `ci.ps1`), prefer it. Where a task would end with "run the app locally", give the user the exact command (the full build is `cargo build --workspace --locked`).
+- **Fast inner loop, full gates at the end:** while changing code, validate the unit you are working on, not the whole workspace: `cargo clippy -p <crate> --all-targets --locked -- -D warnings` for compile errors and lints together (no code generation; clippy-only lints such as the panic family and the bans reach you only through clippy; `cargo check -p <crate> --locked` is the lighter fallback), then that crate's tests filtered to the module under change (`cargo test -p <crate> --locked <module_or_test_name>`), written test first. Run the full gates once before finishing (see "Toolchain"). Keep units small enough that this loop stays in seconds: a module with its own `#[cfg(test)]` tests, a crate boundary where a change would otherwise recompile unrelated code.
+- **Toolchain:** one exact stable, `RUST_TOOLCHAIN` in `.github/workflows/ci.yml`, equal to `rust-version` in the root `Cargo.toml` (the MSRV is the pin). Do not add a root `rust-toolchain.toml` or `.cargo/config.toml`: both would reach `tools/rust-weak-models`, and a toolchain file starts a download when the pin is missing. Run the final gates on the pin (`cargo +<pin> …`); if it is not installed, run them on the installed stable and name that version in the evidence, and install the pin (with `clippy`, `rustfmt` and `rust-src`) only when the user agrees. Stable N is adopted, on its latest point release, once N+1 ships; a security fix is taken within a week by moving to the latest stable, ahead of that schedule; the pin never moves backwards. Each bump is its own change set: both values move together, the full three-OS gates pass, and snapshots are re-blessed as "Negative Compile Tests" says.
+- **Dependencies:** `Cargo.lock` is committed, and every cargo command that resolves dependencies (`check`, `clippy`, `test`, `tree`, `metadata`) takes `--locked`; a change that adds a workspace crate or an approved dependency updates the lock once (`cargo update --workspace` for a new member) and its `Cargo.lock` diff is reviewed. A person reviews and approves every new dependency before merge, including crates that a version bump or a feature brings in. Coding agents never add, bump or re-feature a dependency on their own initiative: they propose it to the user, not in a commit, with its purpose, licence, build script, proc macros and the crates it pulls in, gathered with `cargo info` and its published manifest or in a scratch copy outside the repository. cargo-deny checks licences (GPL-3.0-compatible only) and sources (crates.io only). No product feature, plugin or Wilco tool adds or changes dependencies.
 - **Host-native validation rule:** `cfg(target_os)` and other platform-gated native code is only considered validated when linted on that host OS or by the GitHub Actions OS matrix (Windows, Linux, macOS).
-- **CI expectations:** All tests pass, clippy clean (zero warnings), fmt check clean, and the GitHub Actions matrix stays green on Windows, Ubuntu, and macOS.
-- **Security constraints:** No `unsafe` in production code. Introducing `unsafe` is disallowed except by explicit prior discussion and written approval: describe the justification, risk mitigations, and scope. Approved `unsafe` usage must carry a clear inline review comment explaining why the `unsafe` is sound and be narrowly scoped.
+- **No `unsafe`:** the workspace forbids `unsafe_code`. Introducing `unsafe` needs explicit prior discussion and written approval (justification, risk mitigations, scope); approved `unsafe` is narrowly scoped and carries an inline review comment explaining why it is sound. `forbid(unsafe_code)` does not see `unsafe` emitted by a macro defined in another crate: a `macro_rules!`, proc macro or derive from a dependency, or from one of our own workspace crates, compiles `unsafe` under it. No workspace crate defines a macro that emits `unsafe`, and a dependency's macros are part of its review.
 
 ## LLM / Agent Use Rules
 
@@ -801,8 +880,7 @@ input.
 - Prefer targeted file reads over repo-wide scans once the index points to likely files
 - Use `docs/` for behavior decisions; use local code for implementation specifics
 - If docs and code conflict, treat this as a design-gap or stale-code-index problem and report it — do not silently override
-- Never use `cargo build`, `cargo run`, or similar pure build/run commands unless the user explicitly asks; prefer `cargo clippy` first, then `cargo test`, and use `cargo check` as a lighter fallback
-- When a task would normally end with "run the app locally", provide the exact user-run command instead of executing it yourself
+- Build and run are the user's, and dependencies are proposed, never added unasked (see "Local Repo-Specific Rules")
 - On witness, guard and sealed-trait types, follow compiler and lint text only when it names a sanctioned API; never add the impl, public field, `Default` or `#[allow]` it suggests (see "Diagnostics as Guidance")
 
 ## Evidence Rule (Implementation Progress Claims)

@@ -3,9 +3,13 @@
 Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: Cold War Assault / Operation Flashpoint**, required by
 `AGENTS.md` ("Source Code Navigation Index"). It tells a human or an LLM agent where things are, and where they will be.
 
-> **Status (2026-09-27): there is no product Rust code yet.** The repository holds design documents, two skills, a prompt pack and
+> **Status (2026-09-29): the first product crate, `plotroom-config` (the SP-09 lossless config CST), has landed; the rest of the
+> product is still planned.** The repository holds design documents, two skills, a prompt pack and
 > research tools; since 2026-09-28 one of them, `tools/rust-weak-models`, is a standalone Cargo workspace of research crates (doc
-> 64's experiment), not product code. Every crate, module and newtype below is **planned**: it comes from the proposal in
+> 64's experiment), not product code. The root Cargo workspace exists since 2026-09-28 (M0 skeleton, §2 and §3): the tooling crate
+> `xtask` and the dev crate `plotroom-testkit` have landed, with CI and a `fuzz/` skeleton; since 2026-09-29 the L1 crate
+> `plotroom-config` has too (§4.1, and the verification note "SP-09 `plotroom-config`"). Every other crate, and every module and
+> newtype below, is **planned**: it comes from the proposal in
 > [`docs/architecture/crate-map.md`](docs/architecture/crate-map.md) and is not decided. Crate names become final only when the change
 > set that creates the crate records it here (D002 item 4). That change set also fills the row's path and flips its status to
 > **landed**.
@@ -23,7 +27,7 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 | Record a gap in our own design | [`docs/design-gap-requests/README.md`](docs/design-gap-requests/README.md) (lifecycle and template) |
 | Record a limitation of the game engine | [`docs/upstream/README.md`](docs/upstream/README.md) (engine-requests register) |
 | Look up editor concepts and engine facts | [`skills/standing-orders/`](skills/standing-orders/SKILL.md), [`skills/mission-primer/`](skills/mission-primer/SKILL.md), docs 03, 04 and 18 |
-| Measure a local or cloud model (free OpenRouter models included), the harness's uplift, reasoning scaffolds, a harness preset, a small-to-large cascade, or model cost | [`tools/local-qual/`](tools/local-qual/README.md), [`tools/cost-model/`](tools/cost-model/cost_model.py) |
+| Measure a local or cloud model (free OpenRouter, Groq and Cloudflare Workers AI models included), the harness's uplift, reasoning scaffolds, a harness preset, a small-to-large cascade, or model cost | [`tools/local-qual/`](tools/local-qual/README.md), [`tools/cost-model/`](tools/cost-model/cost_model.py) |
 | Simulate free-tier rate limits and upstream 429s over a user day | [`tools/quota-sim/`](tools/quota-sim/README.md) |
 | Re-run doc 64's experiment (PLAIN vs GUIDED Rust APIs for small models: harness, tasks, pilot driver, analyses) | [`tools/rust-weak-models/`](tools/rust-weak-models/README.md) |
 
@@ -36,21 +40,43 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 ├── CODE-INDEX.md          this file
 ├── README.md              what Plotroom is, what you need, licence, disclaimer
 ├── LICENSE                GPL-3.0-or-later
+├── NOTICE                 project copyright; Bohemia's section 7 notice and terms verbatim (they apply because files marked
+│                          `Derived-From:` translate CWR/CWR-CE code); trademark disclaimer (doc 02 §10.1; D001 item 2)
 ├── .gitignore             /private/, /target/, tool outputs, Python caches
+├── Cargo.toml             root Cargo workspace (M0): members crates/* and xtask; excludes tools/rust-weak-models, fuzz and
+│                          xtask/fixtures; shared package fields, workspace lints (§3), release profile; Cargo.lock beside it
+├── clippy.toml            test allowances; capability bans of crate-map §2.3 (files, processes, network, environment)
+├── deny.toml              cargo-deny: advisories, GPL-3.0-compatible licence allowlist, bans, crates.io-only sources
+├── .github/workflows/     ci.yml (fmt, clippy, tests on Windows, Ubuntu, macOS; trybuild UI job; xtask; cargo-deny),
+│                          fuzz.yml (nightly)
+├── crates/                product and dev crates, one folder per crate, named as in the crate map
+│   ├── plotroom-config/   L1 (§4.1): lossless config CST (SP-09). src/: lib, error, limits, text (offset newtypes), scalar
+│   │                      (engine typing), cst/{mod, kinds, green, builder, preproc (preprocessor view), stream, words,
+│   │                      parser, cursor, entries (the game's view), issues (lint_syntax), lexeme, patch}, emit/{mod,
+│   │                      float} (canonical writer); unit tests in cst/tests*.rs and emit/tests_writer_rules.rs; tests/
+│   │                      (prop_identity, prop_patch, support/, upstream_{parsing,realworld,save,regressions,fixtures},
+│   │                      fixtures/upstream-config/, ui.rs + ui/ trybuild cases behind the `ui-tests` feature)
+│   └── plotroom-testkit/  dev (§4.4): fixture roots, BlobBuilder, VirtualClock, SeededIds; src/{lib,error,fixtures,blob,
+│                          clock,ids}.rs
+├── xtask/                 tooling (§4.4): layers.toml (the declared layer table); src/ (main, cli, error, metadata,
+│                          layers/{table,check,tests,tests_table}.rs, hygiene/{mod,tests}.rs, sys.rs: its only I/O);
+│                          tests/live_workspace.rs (both checks on the real workspace); fixtures/cargo-deny/ (licence gate)
+├── fuzz/                  separate cargo-fuzz workspace: fuzz_targets/config_parse.rs (plotroom-config parse, round trip and
+│                          patch checks), Cargo.lock
 ├── docs/
 │   ├── README.md          entry point: organisation, reading orders, topic index, research index
-│   ├── research/          research docs 01–48 (final; designs proposal-only unless adopted); doc 49 in progress
+│   ├── research/          research docs from 01 (status of each in docs/README.md §5; designs proposal-only unless adopted)
 │   │   └── data/          10 CSVs (corpus, catalog sizes, costs, command risk, local qualification, runtime and quant
 │   │                      comparison, small-model and cloud candidates)
-│   ├── design-gap-requests/  DG001–DG038 and the index README (lifecycle, template)
+│   ├── design-gap-requests/  DG001–DG060 and the index README (lifecycle, template)
 │   ├── decisions/         D001–D043, OWNER-QUESTIONS.md (OWQ-01–OWQ-23, all answered 2026-09-27), index README
 │   ├── architecture/      README (thesis, layers, conflicts, Appendix A) + crate-map, core-document-model,
 │   │                      commands-undo-history, validation-and-lints, agent-runtime, ui-shell, game-integration,
 │   │                      extensibility, testing-strategy
 │   ├── roadmap.md         milestones at a glance, lanes, definition of done, deferrals, risks
 │   ├── roadmap/           m0-m3, m4-v1, v1x-and-v2, spikes-and-probes, integration-owners
-│   ├── upstream/          engine-requests register: README, engine-requests.md, engine-requests.csv (ER-001–ER-109)
-│   └── porting/           upstream-test-map.csv (636 upstream test rows)
+│   ├── upstream/          engine-requests register: README, engine-requests.md, engine-requests.csv (ER-001–ER-113)
+│   └── porting/           upstream-test-map.csv (642 upstream test rows; `target_module` column since SP-09)
 ├── skills/                product skills in the standard SKILL.md format (D019)
 │   ├── mission-primer/    SKILL.md + references/ (idioms, file-skeletons, sources)
 │   └── standing-orders/   SKILL.md + references/ (32 concept entries; formerly skills/field-manual/)
@@ -61,13 +87,17 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 │   │                      refusals), run_records.py and run_preset.py (--preset: a harness preset's knobs to flags);
 │   │                      presets/ (harness-preset schema, draft presets, lint.py checker; D048, doc 55 §3);
 │   │                      prompts.py; backends.py (Ollama and llama-server clients);
-│   │                      cloud_backend.py, cloud_guard.py, cloud_run.py, budget.py (OpenAI-compatible endpoints under a
-│   │                      hard budget); free_mode.py, free_key.py, rate_gate.py (--free-only: OpenRouter :free models at
-│   │                      zero spend); key_status.py (--key-status: the key record at no quota);
+│   │                      cloud_backend.py, cloud_reply.py, cloud_guard.py, cloud_run.py, cloud_flags.py, budget.py
+│   │                      (OpenAI-compatible endpoints under a hard budget); free_mode.py, free_key.py, rate_gate.py
+│   │                      (--free-only: OpenRouter :free models at zero spend); providers.py, provider_gate.py,
+│   │                      provider_reply.py, provider_backend.py (--provider groq|cloudflare: their free tiers at zero
+│   │                      spend); key_status.py,
+│   │                      provider_status.py (--key-status: the key's record at no quota);
 │   │                      logprob_pick.py, logprob_dist.py (--pick-mode logprob); scaffolds.py,
 │   │                      scaffold_algos.py, scaffold_run.py, scaffold_stats.py, control_suite.py (reasoning scaffolds,
 │   │                      doc 59); score.py, score_checks.py, grade_open.py, uplift.py, cascade.py, cascade_numbers.py;
-│   │                      cloud/ (owner runbook, Windows DPAPI key scripts); suites/ (pick, pick-hard, fill, explain,
+│   │                      cloud/ (owner runbook, Windows DPAPI key scripts per provider, the dated Groq free-plan and
+│   │                      Cloudflare neuron tables); suites/ (pick, pick-hard, fill, explain,
 │   │                      text, knowledge .json + the open-arm sidecar); tests/ (unittest suite: mock servers, fixtures,
 │   │                      goldens; run python -m unittest discover -s tools/local-qual/tests); results/ is git-ignored
 │   ├── cost-model/        cost_model.py (its JSON output is git-ignored; feeds docs/research/data/cost-model.csv)
@@ -77,39 +107,58 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 │   └── rust-weak-models/  doc 64's experiment, a standalone Cargo workspace (never a member of a root workspace, §3):
 │                          README.md; crates/ (mb-spec, mb-core, mb-plain, mb-guided, mb-oracle); tasks/ (T01-T30) and
 │                          pilot/ (P01-P04) sources; prompts/; design.json (pre-registration draft); runner.py with rwm/
-│                          (harness, cargo runner, listing, hygiene checks); test_rwm.py; power_sim.py; diag-probe/;
+│                          (harness, cargo runner, listing, static scan, loopback model client, hygiene checks);
+│                          test_rwm.py and test_rwm_guards.py; clippy.toml (empty) and rustfmt.toml (formatting off), pinned
+│                          so no root config reaches the stimuli; power_sim.py; diag-probe/;
 │                          live/ (llama-server pilot driver, arms.json); analysis/ (pilot analyses); the generated task
 │                          crates, Cargo.lock, target/ and results/ are git-ignored (python runner.py scaffold rebuilds them)
 └── private/               git-ignored local notes; never cite, link or copy from it
 ```
 
-**Verification commands** (`AGENTS.md`, "Local Repo-Specific Rules"), once a Cargo workspace exists:
+**Verification commands** (`AGENTS.md`, "Local Repo-Specific Rules"), at the repository root:
 `cargo test --workspace --locked`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `cargo fmt --all --check`,
-`cargo check`. Agents never run `cargo build` or `cargo run` unless the user asks. There is no root `Cargo.toml` yet;
-`tools/rust-weak-models/Cargo.toml` is the research workspace's own manifest, verified with the commands in its README.
+`cargo check`. Agents never run `cargo build` or `cargo run` unless the user asks; `cargo test -p xtask` already runs the layer
+and naming checks on the real workspace (`xtask/tests/live_workspace.rs`), and CI runs them as `cargo run -p xtask -- layers` and
+`cargo run -p xtask -- hygiene`. `tools/rust-weak-models/Cargo.toml` is the research workspace's own manifest, verified with the
+commands in its README; `fuzz/` builds only with `cargo +nightly fuzz` (nightly CI).
 
-## 3. Planned workspace rules (from the architecture, proposal)
+## 3. Workspace rules (from the architecture; enforced since the M0 skeleton, 2026-09-28)
 
 - **Layers L0–L8**, edges pointing downward only; allowed same-layer edges are listed in [crate-map §2.2](docs/architecture/crate-map.md)
-  and checked by `xtask layers` against `cargo metadata`.
+  and checked by `xtask layers` against `cargo metadata`. The table is `xtask/layers.toml`: it lists every planned crate (roles
+  `L0`–`L8`, `dev`, `tooling`), the §2.2 edges crate by crate, the forbidden edges to `plotroom-session` and the confined third-party
+  crates (egui, HTTP clients, WebAssembly runtimes, rmcp, wgpu). A workspace member missing from it fails; dev crates are
+  dev-dependencies only; nothing depends on `xtask`.
 - **Side effects live at the edge** ([crate-map §2.3](docs/architecture/crate-map.md)): file writes only in `plotroom-io`; child
   processes only in `plotroom-preview` and `plotroom-model-manager`; outbound HTTP only in `plotroom-net`; loopback sockets in
   `plotroom-gamelink`, `plotroom-mcp` and `plotroom-net`; egui only in `plotroom-ui` and `plotroom-app`; wgpu only in `plotroom-gpu`;
   wasmtime and rmcp only in `plotroom-plugin-host` (rmcp also `plotroom-mcp`); environment variables only in the binaries and tests;
-  `UserIntent` minted only in `plotroom-session::intent`.
-- **Workspace lints** (`AGENTS.md`, enforced mechanically): `unsafe_code = "forbid"`; clippy `indexing_slicing`, `string_slice`,
-  `unwrap_used`, `expect_used`, `panic`, `unreachable`, `todo`, `unimplemented` denied; format crates also deny
-  `arithmetic_side_effects`. Release profile `lto = true`, `codegen-units = 1`.
+  `UserIntent` minted only in `plotroom-session::intent`. The root `clippy.toml` bans `std::fs`, `Path` file-system queries,
+  `std::process::Command`, `std::net` sockets and `std::env::var`/`var_os`/`vars` everywhere, each with an instruction as `reason`.
+  A crate §2.3 allows a capability silences only the confining module or function with
+  `#[expect(clippy::disallowed_methods, reason = "…")]` (today `xtask/src/sys.rs` and `plotroom_testkit::OptInRoot::read`),
+  never with a crate-level `clippy.toml`: clippy does not merge those files, and one lint covers every ban.
+- **Workspace lints** (`AGENTS.md`, enforced mechanically; root `Cargo.toml`): `unsafe_code = "forbid"`, `unused_must_use` and
+  `deprecated` denied; clippy `indexing_slicing`, `string_slice`, `unwrap_used`, `expect_used`, `panic`, `unreachable`, `todo`,
+  `unimplemented`, `let_underscore_must_use`, `allow_attributes_without_reason`, and `disallowed_methods`/`disallowed_types` (so the
+  capability bans' reasons reach an errors-only feed, doc 62 §3.1) denied; tests get clippy's unwrap, expect, indexing and panic
+  allowances. Format crates add `#![deny(clippy::arithmetic_side_effects)]` in `lib.rs` (Cargo cannot combine
+  `lints.workspace = true` with per-crate lints). Release profile `lto = true`, `codegen-units = 1`.
 - **One `Error` enum per crate** in `src/error.rs`; format crates keep a thin `src/read.rs` over `plotroom-bytes`' cursor.
-- **Directory layout** of the workspace (for example whether crates live under `crates/`) is not decided; the M0 change that creates
-  the workspace sets it and records it here.
+- **Directory layout** (decided by the M0 skeleton): product and dev crates in `crates/<crate-name>/`; `xtask/` and `fuzz/` at the
+  root (the usual places for both tools). Every crate inherits `version`, `edition`, `rust-version` and `license` from
+  `[workspace.package]` and sets `[lints] workspace = true`.
+- **Toolchain and formatting.** No root `rust-toolchain.toml`, `.cargo/config.toml` or `rustfmt.toml`. The first two would also
+  reach `tools/rust-weak-models` (below); a root `clippy.toml` or `rustfmt.toml` no longer does, because that folder pins its own. `rust-version = "1.98.1"` in the root `Cargo.toml` and `RUST_TOOLCHAIN` in
+  `.github/workflows/ci.yml` pin the compiler (bump both together); formatting is rustfmt's default style.
 - **Research workspaces stay out.** `tools/rust-weak-models` is a standalone Cargo workspace (doc 64). The root `Cargo.toml` must
   carry `exclude = ["tools/rust-weak-models"]` and never name a path below it as a member: with cargo 1.98.1 a glob that matches the
   folder fails loudly, but a member path that reaches a crate inside it is adopted silently (root lock file, profiles and lints),
   and an explicit path wins over `exclude`. A root `rust-toolchain.toml` or `.cargo/config.toml` reaches it too.
-  `tools/rust-weak-models/test_rwm.py` (`EnclosingWorkspace`) fails, naming the fix, when any of these appears.
+  `tools/rust-weak-models/test_rwm.py` (`EnclosingWorkspace`) fails, naming the fix, when any of these appears, and its
+  `python -m rwm.hygiene` also reports a `clippy.toml` or `rustfmt.toml` above it that its own pinned files would not shadow.
 
-## 4. Crate map (all planned)
+## 4. Crate map (planned unless the Path cell is filled)
 
 "Lands" is the architecture's milestone ([crate-map "Lands"](docs/architecture/crate-map.md)); the
 [roadmap](docs/roadmap.md) may refine it. "Blocked on" lists design-gap requests or owner questions the crate's dependent part waits
@@ -128,7 +177,7 @@ are stated in D031–D043 ([`OWNER-QUESTIONS.md`](docs/decisions/OWNER-QUESTIONS
 | `plotroom-diag` | L0 | The generated `DiagCode` enum and code metadata from the code registry | M1 | DG005 | — |
 | `plotroom-pbo` | L1 | PBO reader (borrowed entries, streaming) and writer | M1 | — | — |
 | `plotroom-preproc` | L1 | Preprocessor directives, `IncludeResolver`, source maps | M1 | — | — |
-| `plotroom-config` | L1 | Lossless green-tree CST, resolved view with inheritance, raP read (v2–4) and write (v4), `ConfigOrigin` | M1 (CST spike in M0) | — | — |
+| `plotroom-config` | L1 | Lossless green-tree CST, resolved view with inheritance, raP read (v2–4) and write (v4), `ConfigOrigin`. Landed (SP-09): the CST (`parse`, `render`), the game's view (`entries`, `find`), `lint_syntax`, span patches with checked lexemes, the canonical writer (`write_entries`, `WriterProfile`); resolved view, raP and `ConfigOrigin` still planned | M1 (CST spike in M0) | — | `crates/plotroom-config/` |
 | `plotroom-stringtable` | L1 | Stringtable CST, per-language columns, legacy and UTF-8 files | M1 | — | — |
 | `plotroom-briefing` | L1 | CST of the engine's briefing HTML subset | M2 | — | — |
 | `plotroom-script` | L1 | Lossless lexer, SQS line model, SQF AST, `check_field`, `lint` | M2 | — | — |
@@ -201,10 +250,10 @@ are stated in D031–D043 ([`OWNER-QUESTIONS.md`](docs/decisions/OWNER-QUESTIONS
 | `plotroom-ui` | L8 | egui panels (Plotline, the Tote, Standing Orders, Drill, Wilco, inspector) | M1 | — | — |
 | `plotroom-app` | L8 | The `plotroom` binary: GUI by default; forwards `check`, `export`, `stage`, `workflow test`, `pack check`, `qualify` | M1 | — | — |
 | `plotroom-cli` | L8 | Headless subcommands over `Session` (v1 ships the minimal CLI: OWQ-14 (a), D036) | M1 | — | — |
-| `xtask` | tooling | `layers`, `codes`, `catalog`, `skills`, `provenance`, `defs` | M0 | DG005 (for `codes`) | — |
-| `plotroom-testkit` | dev | `EditorHarness`, synthetic SQM, PBO, WRP and raP builders, synthetic island and catalog, faux model, cassettes, virtual clock, seeded ids | M0 skeleton | — | — |
+| `xtask` | tooling | `layers` and `hygiene` (landed); `codes`, `catalog`, `skills`, `provenance`, `defs` (planned) | M0 | DG005 (for `codes`) | `xtask/` |
+| `plotroom-testkit` | dev | Landed: fixture roots (`fixture_root!`, `OptInRoot`), `BlobBuilder`, `VirtualClock`, `SeededIds`. Planned: `EditorHarness`, synthetic SQM, PBO, WRP and raP builders, synthetic island and catalog, faux model, cassettes | M0 skeleton | — | `crates/plotroom-testkit/` |
 | `plotroom-script-oracle` | dev | Transliterated evaluator used only as a test oracle (doc 23 §13.2) | M2 (roadmap) | — | — |
-| `fuzz/` | dev | Separate nightly cargo-fuzz workspace | M0 skeleton | — | — |
+| `fuzz/` | dev | Separate nightly cargo-fuzz workspace (`plotroom-fuzz`); target `config_parse` (the `plotroom-config` text parser: round trip, lint, patches; mirrors CWR's `fuzz_paramfile.cpp`) | M0 skeleton | — | `fuzz/` |
 
 Later crates: `plotroom-plugin-sdk` and `plotroom-plugin-testkit` (v1.x; GPL-3.0-or-later for now, D031); the cutscene-director and
 atmosphere crates (v1.x; names from the design round's names table, DG037 and D034).
@@ -215,6 +264,21 @@ atmosphere crates (v1.x; names from the design round's names table, DG037 and D0
 allows, provides `from_raw` and `to_raw`, and implements `Display` in a human-readable form; `plotroom-ids` provides the macro. The rows
 below are **planned** (named in `docs/architecture/`); "not set" means the architecture does not fix the inner type yet. A row flips to
 **landed** with its real module path when the type is created.
+
+**Landed newtypes** (moved here from the planned table, or added, by the change set that creates each type):
+
+| Type | Inner | Crate / module | Purpose | Landed |
+| --- | --- | --- | --- | --- |
+| `TextOffset` | `u32` | `plotroom-config::text` | A byte position in a config text; computed by cursors from green-tree widths, never stored in the tree | 2026-09-29 (SP-09) |
+| `TextWidth` | `u32` | `plotroom-config::text` | A byte length (token, node, inserted patch text); kept apart from `TextOffset` so a width is never used as a position | 2026-09-29 (SP-09) |
+
+Not newtypes, but guard types of the same change set (private fields, checked constructors, trybuild cases in
+`crates/plotroom-config/tests/ui/`): `TextSpan` (`start <= end`), `EntryValueLexeme` and `ElementValueLexeme` (bytes proven to
+read back as one value), `EntryValueRef` and `ElementValueRef` (bound to one tree revision), `Patched` and `ByteEdit`. The M0
+skeleton (`xtask`, `plotroom-testkit`) defines no newtype; `SeededIds` mints raw `u128` values until `plotroom-ids` (M1) brings
+`EntityId` and its siblings.
+
+**Planned newtypes:**
 
 | Type | Inner | Crate / module | Purpose | Status | Source |
 | --- | --- | --- | --- | --- | --- |
@@ -281,9 +345,10 @@ Not newtypes: `DiagCode` is a generated enum (`plotroom-diag`, from the DG005 re
 1. **Order:** `AGENTS.md` → this file → [`docs/README.md`](docs/README.md) §4 → one decision record, one architecture file, the cited
    research sections. Do not load whole research docs (30–127 KB each): read the header and TL;DR, list the `##` headings, read the
    cited sections.
-2. **No product code yet.** The only `.rs` files and `Cargo.toml` files are in `tools/rust-weak-models/`, doc 64's research
-   experiment, whose crates are stimuli, not product code. Questions about "how the code does X" are answered by
-   `docs/architecture/`, marked proposal.
+2. **One product crate so far.** The Rust in the repository is the M0 skeleton (`xtask/`, `crates/plotroom-testkit/`, `fuzz/`:
+   tooling and test support), `crates/plotroom-config/` (the SP-09 config CST, the first product crate), and
+   `tools/rust-weak-models/`, doc 64's research experiment, whose crates are stimuli, not product code. Questions about "how the
+   product code does X" for anything else are answered by `docs/architecture/`, marked proposal.
 3. **Names in this file are the planned names.** Research docs use working names (`ofp-*`, `ofpe-*`, `.ofpeditor/`); the mapping to
    `plotroom-*` is [crate-map §15](docs/architecture/crate-map.md). Never invent a crate name; add or change one only through the
    crate map and this file.
@@ -296,7 +361,8 @@ Not newtypes: `DiagCode` is a generated enum (`plotroom-diag`, from the DG005 re
 6. **Label collisions:** `D9` (lint) vs `D009` (decision); `T0`–`T4` (model, plugin or evidence tiers); `P0`–`P4` (Preview phases
    vs doc 19 phases); `AT1` in docs 31–33. See [`docs/README.md`](docs/README.md) §2.2.
 7. **Naming and hygiene:** no third-party marks or island names in crate, module, format, sidecar or generated-header names (profile
-   ids `Cwa199`, `Cwr`, `Ce` are data values, D003); no private project names anywhere; nothing from `/private/`.
+   ids `Cwa199`, `Cwr`, `Ce` are data values, D003); no private project names anywhere; nothing from `/private/`. `xtask hygiene`
+   enforces the names part from one list, `xtask::hygiene::MARKS`.
 8. **Opt-in local tests** use `PLOTROOM_CORPUS_DIR` and `PLOTROOM_GAME_DIR` (planned; [testing-strategy §15](docs/architecture/testing-strategy.md));
    CI never depends on a game install or proprietary data.
 9. **Tools** in `tools/` are research harnesses in Python's standard library; `tools/rust-weak-models` adds a standalone research
@@ -404,6 +470,20 @@ Not newtypes: `DiagCode` is a generated enum (`plotroom-diag`, from the DG005 re
   fields reached a free run's console and records (`free_key.key_summary`, t75 in `tests/test_free_mode_review.py`).
 - No crate, module boundary of the planned workspace or newtype changed.
 
+### `tools/local-qual`: Groq and Cloudflare Workers AI (`--provider`, 2026-09-28)
+
+- `run.py --provider groq|cloudflare` (D058 item 3) runs the suites on Groq's free plan or on Cloudflare Workers AI's daily free
+  allocation, at zero spend: `providers.py` (presets, flags, offline checks, D047's suite rule), `provider_gate.py` (Groq's
+  requests and tokens per minute and per 24 hours with its `x-ratelimit-*` headers and free-plan check; Cloudflare's neurons per
+  UTC day from the dated `cloud/cloudflare-neurons.json`; its parsers in `provider_reply.py`), `provider_backend.py` (each
+  provider's request shape and redaction, the account id included) and `provider_status.py` (`--key-status` for both). `cloud/run-cloud.ps1 --provider <name>` decrypts
+  that provider's key (and Cloudflare's account id) into run.py's environment only; `cloud/set-provider-key.ps1` and
+  `remove-provider-key.ps1` call the per-provider store and remove scripts. To stay under the ~600-line ceiling,
+  `cloud_backend.py`'s reply helpers moved to `cloud_reply.py` and `cloud_run.py`'s flags to `cloud_flags.py`, every name
+  re-exported. Tests g01–g08, w01–w08 and k01–k05 (`tests/test_provider_*.py`), steps 16–22 of `tests/dpapi_round_trip.ps1`
+  (t53) and a third tracing mode in t58. §2 lists the new files.
+- No crate, module boundary of the planned workspace or newtype changed.
+
 ### `tools/rust-weak-models` (2026-09-28)
 
 - Doc 64's experiment harness moved into the repository from a scratch folder (friction register FR-C-013): the five research
@@ -415,3 +495,40 @@ Not newtypes: `DiagCode` is a generated enum (`plotroom-diag`, from the DG005 re
   1.98.1 on a nested copy. Its crates are not planned product crates: §4 and §5 do not list them (the `GUIDED` ids are experiment
   stimuli, not project newtypes).
 - Evidence and the changes made in the move are in its README. No crate, module boundary of the planned workspace or newtype changed.
+
+### M0 workspace skeleton (2026-09-28)
+
+- The root Cargo workspace landed (roadmap M0 "Workspace", D058 item 1): `Cargo.toml` (resolver 3, members `crates/*` and `xtask`,
+  excludes `tools/rust-weak-models`, `fuzz` and `xtask/fixtures`), `Cargo.lock`, `clippy.toml`, `deny.toml`,
+  `.github/workflows/ci.yml` and `fuzz.yml`, and the crates `xtask` (tooling) and `plotroom-testkit` (dev), plus the `fuzz/`
+  skeleton. §2, §3, §4.4 (Path cells), §5 (an empty landed-newtype table) and tip 2 follow; the status line names them.
+- Evidence: `cargo fmt --all --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings` and
+  `cargo test --workspace --locked` pass on Windows with rustc 1.98.1 (testkit 24 unit tests and 2 doctests; xtask 63 unit tests,
+  2 live-workspace tests and 1 doctest), after a recorded red run against stub bodies. The committed negative tests of M0 exit
+  evidence item 2 are `planted_l6_edge_to_session_fails` (xtask `layers/tests.rs`), `planted_mark_in_crate_name_fails`
+  (`hygiene/tests.rs`) and the CI `deny` job's planted GPL-2.0-only fixture with its MIT control. A manual run that planted a
+  dev-dependency on `xtask` and a fixture file named after an island made both live-workspace tests fail, then was reverted.
+- `tools/rust-weak-models/test_rwm.py`'s `EnclosingWorkspace` still passes with the new root manifest, and `cargo metadata` from its
+  crates still reports `tools/rust-weak-models` as their workspace root.
+- Not verified locally: cargo-deny (the installed 0.14.3 predates the `[graph]` table and panics on cargo 1.98's metadata; CI runs the
+  current release through the action; every locked dependency's declared licence was checked against the allowlist by hand), the
+  workflow files (first CI run), and fuzzing itself (needs nightly and cargo-fuzz; the target passes `cargo check` on stable).
+- Friction: adds FR-C-033 (root-level toolchain, cargo and rustfmt config is off-limits while the research workspace sits below the
+  root) and FR-C-034 (an older local cargo-deny fails without naming the version it needs) to `docs/friction/register.csv`.
+
+### SP-09 `plotroom-config` (2026-09-29)
+
+- The first product crate landed: `crates/plotroom-config` (layer L1, std only; dev-dependencies proptest 1.11 and
+  trybuild 1.0, both MIT OR Apache-2.0). §2, §4.1 (Path cell), §4.4 (`fuzz/`), §5 (landed newtypes `TextOffset` and
+  `TextWidth`, and the guard types) and tip 2 follow; the status line names it. Design choices are in the crate's module docs:
+  an in-house green tree over raw bytes (core-document-model §13 item 4), a port of the engine's reader over a preprocessed
+  view, never failing on syntax (only the caps), issues derived by `lint_syntax`, patches verified by re-parsing.
+- Files translated from CWR/CWR-CE carry `Derived-From:` headers; `NOTICE` (new, root) reproduces Bohemia's notice and
+  section 7 terms verbatim; the generated-content permission waits for its wording (DG060). The patch API's witness surface
+  is DG059. The porting CSV gained a `target_module` column and six `#fragment` rows (642 rows); `.github/workflows/ci.yml`
+  gained the `ui` job; the engine-requests register gained ER-110 to ER-113; the friction register FR-C-035 and FR-C-036.
+- Evidence: red then green with `cargo test -p plotroom-config` (key bodies stubbed for the red run), then
+  `cargo fmt --all --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings` and
+  `cargo test --workspace --locked` pass on Windows with rustc 1.98.1; `cargo test -p plotroom-config --features ui-tests
+  --test ui` passes (9 trybuild cases); `cargo check --manifest-path fuzz/Cargo.toml --locked` passes (fuzzing itself needs
+  nightly and was not run).

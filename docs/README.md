@@ -4,7 +4,7 @@ Design documentation for **Plotroom — Mission & Campaign Editor for Arma: Cold
 
 > **Status:** index, created 2026-09-27. This is the entry point to `docs/` that `AGENTS.md` names under "Design Authority". It
 > decides nothing: it routes each question to the file that owns it. Where a line here summarises a decision, the linked record
-> wins. Research docs 01–52, 54, 56–58, 60–63, 65 and 66 are final; docs 53, 55 and 59 are drafts with experiments pending; doc 64 is in progress; the architecture and the roadmap are proposals (baseline 2026-09-27).
+> wins. Research docs 01–52, 54, 56–58, 60–63, 65 and 66 are final; docs 53, 55, 59 and 64 are drafts with experiments pending (doc 64's next iteration is deferred under D058); the architecture and the roadmap are proposals (baseline 2026-09-27).
 > The owner answered all 23 owner questions on 2026-09-27.
 
 ## 1. What Plotroom is
@@ -34,12 +34,12 @@ the planned crates. The rules for contributors and coding agents are in [`AGENTS
 | --- | --- | --- | --- |
 | [`research/`](research/) | 58 standalone research docs (01–53, 55, 56 and 58–60): evidence (engine source, corpus, prior art, measurements) and design proposals. Epistemic tags: **[V]** verified, **[I]** inferred, **[U]** unknown (some docs add variants such as `[V-search]`) | Final, except those the status line lists as in progress. Designs stay proposal-only unless a decision record adopts them | §5 below |
 | [`research/data/`](research/data/) | Measured data behind the docs (CSV) | Measurements, dated in the owning doc | §6.1 |
-| [`design-gap-requests/`](design-gap-requests/README.md) | DG001–DG038: gaps and contradictions in **Plotroom's own design**, with options and a recommendation | `open` → `decided` → `folded`; `withdrawn`, `superseded by` | Its README (index, lifecycle, template) |
+| [`design-gap-requests/`](design-gap-requests/README.md) | DG001–DG060: gaps and contradictions in **Plotroom's own design**, with options and a recommendation | `open` → `decided` → `folded`; `withdrawn`, `superseded by` | Its README (index, lifecycle, template) |
 | [`decisions/`](decisions/README.md) | D001–D043 decision records, and [`OWNER-QUESTIONS.md`](decisions/OWNER-QUESTIONS.md) (OWQ-01–OWQ-23, all answered by the owner on 2026-09-27 in dated "Answer" lines, each folded into a record or a DG by its own change set) | `accepted`, `baseline`, `superseded by`, `withdrawn` | Its README (index, precedence) |
 | [`architecture/`](architecture/README.md) | Implementation architecture: crate map, document model, commands and undo, validation, agent runtime, UI shell, game integration, extensibility, testing. Appendix A: integration-item owners | Proposal (baseline 2026-09-27) | Its README (thesis, layers, conflicts resolved) |
 | [`roadmap.md`](roadmap.md) and [`roadmap/`](roadmap/) | Milestones M0–M6, v1.0, v1.1–v1.4, v2; lanes A–G; spikes SP-01–SP-16 and probe suites; integration-item owners by milestone | Proposal (baseline 2026-09-27); exit-gated, not date-gated | `roadmap.md` §4 |
-| [`upstream/`](upstream/README.md) | The engine-requests register, ER-001–ER-109: **game-engine** limitations, Plotroom's workaround, the proposed engine change and its hook points | `not filed` → `proposed` → `accepted` → `shipped`; `declined`, `won't file` | Its README, then [`engine-requests.md`](upstream/engine-requests.md) |
-| [`porting/upstream-test-map.csv`](porting/upstream-test-map.csv) | Every test in the released engine source (636 rows): subject, target area, status and reason | `todo` 142, `reference` 102, `probe` 20, `not-applicable` 372, `ported`/`adapted` 0 (counts of 2026-09-27) | Doc 20 |
+| [`upstream/`](upstream/README.md) | The engine-requests register, ER-001–ER-113: **game-engine** limitations, Plotroom's workaround, the proposed engine change and its hook points | `not filed` → `proposed` → `accepted` → `shipped`; `declined`, `won't file` | Its README, then [`engine-requests.md`](upstream/engine-requests.md) |
+| [`porting/upstream-test-map.csv`](porting/upstream-test-map.csv) | Every test in the released engine source (642 rows; files ported in part are split into `#fragment` rows): subject, target area, status, reason and, for ported rows, the target crate and module | `todo` 140, `reference` 102, `probe` 20, `not-applicable` 374, `ported` 3, `adapted` 3 (counts of 2026-09-29, after SP-09) | Doc 20 |
 
 Outside `docs/`: [`skills/`](../skills/), [`prompts/`](../prompts/) and [`tools/`](../tools/) (§6), the root
 [`README.md`](../README.md) and [`LICENSE`](../LICENSE). `/private/` is git-ignored local material: never cite it or copy from it
@@ -96,6 +96,8 @@ in `upstream/`, not DGs.
 1. [`AGENTS.md`](../AGENTS.md) in full: coding rules, testing standards, invariants, allowed verification commands (never
    `cargo build` or `cargo run` unless the user asks).
 2. [`CODE-INDEX.md`](../CODE-INDEX.md): planned crates, layers, landing milestones, the newtype table.
+   The Cargo workspace is the root [`Cargo.toml`](../Cargo.toml) (crates in `crates/`, checks in `xtask/`, layer table
+   `xtask/layers.toml`, CI in `.github/workflows/`); CODE-INDEX §2–§3 describe it.
 3. The roadmap file for the current milestone ([M0–M3](roadmap/m0-m3-foundations-to-preview.md),
    [M4–v1.0](roadmap/m4-v1-power-campaigns-wilco.md), [v1.x–v2](roadmap/v1x-and-v2.md)) and the spikes that gate it
    ([spikes-and-probes.md](roadmap/spikes-and-probes.md)).
@@ -154,7 +156,7 @@ names the record for each OWQ). DG002, DG014, DG029 and DG030 are decided (§2.1
 | --- | --- | --- | --- |
 | What v1 is | D004, D036 | [roadmap §7](roadmap.md); [M4–v1.0](roadmap/m4-v1-power-campaigns-wilco.md) | Docs 09 §8, 34 OQ6; OWQ-13, OWQ-14 |
 | Names, persona, naming system | D002, D034 | [crate-map §15](architecture/crate-map.md) | Doc 02 §9; DG002, DG037; OWQ-07, OWQ-08 |
-| Licence, `NOTICE`, provenance headers | D001, D031, D032 | [crate-map §14](architecture/crate-map.md); [extensibility §11](architecture/extensibility.md) | Doc 02; DG018; OWQ-01–OWQ-05 |
+| Licence, `NOTICE`, provenance headers | D001, D031, D032 | [crate-map §14](architecture/crate-map.md); [extensibility §11](architecture/extensibility.md) | Doc 02; DG018; DG060; OWQ-01–OWQ-05; [`NOTICE`](../NOTICE) |
 | Upstream alignment, target profiles, "Requires" badge | D003 | [validation-and-lints §8](architecture/validation-and-lints.md) | Docs 01, 23 §13, 35 §8.3 |
 | North star (Operation Grey Heron) | D005, D036, D042 | [v1.x–v2](roadmap/v1x-and-v2.md) (v1.1) | Doc 29; OWQ-13, OWQ-23 |
 | Product-scoped agent, reach and safety | D006 | [agent-runtime §2, §14](architecture/agent-runtime.md); [crate-map §2.3](architecture/crate-map.md) | Docs 21, 24 |
@@ -168,7 +170,7 @@ names the record for each OWQ). DG002, DG014, DG029 and DG030 are decided (§2.1
 | Public-repository hygiene | D014 | [testing-strategy §14](architecture/testing-strategy.md) (hygiene grep) | `AGENTS.md` |
 | No-code ladder: attributes, modules, rules | D015 | [core §9](architecture/core-document-model.md); `plotroom-modules`, `plotroom-lower` | Docs 31, 37; DG003, DG004, DG008 |
 | UI stack and classic renderer | D016 | [ui-shell §1–§4](architecture/ui-shell.md) | Docs 05, 06; SP-01–SP-05 |
-| Formats and the lossless CST | D017 | [core §3–§4, §12](architecture/core-document-model.md); [crate-map §4](architecture/crate-map.md) | Docs 04, 07; SP-09 |
+| Formats and the lossless CST | D017 | [core §3–§4, §12](architecture/core-document-model.md); [crate-map §4](architecture/crate-map.md) | Docs 04, 07; SP-09 (code: `crates/plotroom-config`; DG059) |
 | Preview | D018 | [game-integration §5–§9](architecture/game-integration.md) | Doc 08; DG001; SP-06, SP-07 |
 | Skills | D019 | [extensibility §5](architecture/extensibility.md); [agent-runtime §8](architecture/agent-runtime.md) | Doc 30; [`skills/`](../skills/) |
 | Templating | D020 | `plotroom-template` in [crate-map §8](architecture/crate-map.md) | Docs 22 §2.1, 31 |
@@ -204,7 +206,7 @@ names the record for each OWQ). DG002, DG014, DG029 and DG030 are decided (§2.1
 | Accessibility, locales, windows | D036 (English first) | [ui-shell §12](architecture/ui-shell.md) | Docs 06, 34 (ed21, mo23); OWQ-14 |
 | Outreach (Bohemia, CWR-CE, mod channels) | D035 | [upstream README](upstream/README.md) ("Filing") | Docs 01, 02 §11; OWQ-10–OWQ-12; DG029 |
 
-## 5. Research docs 01–60
+## 5. Research docs
 
 Rows cover docs 01–53 and 60; docs 55, 56, 58 and 59 are in the tree without rows yet, and numbers 54 and 57 are unused so far.
 Docs 01–51 are final; the status line lists the docs still in progress. Each stands alone and ends with verification notes. "Codes" lists the doc's own provisional families
@@ -272,7 +274,7 @@ Docs 01–51 are final; the status line lists the docs still in progress. Each s
 | [36 Lessons from Civilization V](research/36-lessons-from-civilization-v.md) | What made Civilization V good and "one more turn", what went wrong, and which lessons shape Plotroom | Rows cv01–cv44; SL26–SL31, CF26–CF27, MC30–MC31, TX07 | Study and proposal. OWQ-20, OWQ-21 answered 2026-09-27; DG005 (a pattern number) |
 | [37 Power tools for classic workarounds](research/37-power-tools-for-classic-workarounds.md) | First-class replacements for hand-edited files and init-line workarounds | WA01–WA47, G1–G8, PL01–PL14, PP1–PP12, PT0–PT4, PAT1–PAT16 | Proposal. Adopted: D015. Open: DG003 |
 
-### 5.6 Workflows, cost, the v1.x features, models and measurements (38–60)
+### 5.6 Workflows, cost, the v1.x features, models and measurements (38 onward)
 
 | Doc | Question it answers | Codes | Status, adoption, follow-ups |
 | --- | --- | --- | --- |
@@ -302,6 +304,7 @@ Docs 01–51 are final; the status line lists the docs still in progress. Each s
 | [61 The language service for the LLM](research/61-language-service-for-the-llm.md) | What coding agents' language-server integrations teach about serving a model, and how Teller serves Wilco | Teller levels TS0–TS3; tests TT-01–TT-20 | Proposal: diagnostics pushed after each edit help weak models more than navigation tools; seven Teller refinements; pull tools only for qualified setups (doc 63); 14 design-gap candidates, not filed |
 | [62 Type-driven guidance](research/62-type-driven-guidance.md) | How types, compiler diagnostics and lints guide coding agents and Wilco; what the owner's public crate strict-path contributes | Witness/guard rules; ShapeGrant | Proposal under the owner's principle "the API leads the user into correct usage": strict-path inside `plotroom-io` for filesystem paths; its `AGENTS.md` amendment was applied 2026-09-28 under the owner's go-ahead (crate-map §2.4 and testing-strategy §14 folded) |
 | [63 Capability ladder](research/63-capability-ladder.md) | How "knowledge in the harness, freedom by capability" becomes concrete: freedom levels, grants and limits | Freedom levels FR0–FR8 | Proposal: raise the ceiling, never lower the floor; the level is the lowest of product ceiling, qualification, effort and the user's cap; accepted as D051 (2026-09-28, owner go-ahead); FR8 (a plan as data) after v1 |
+| [64 Rust and weak models](research/64-rust-and-weak-models.md) | Can Rust with guiding APIs (typestate, witnesses, fix-naming diagnostics) and the compiler in the loop make weak models code better, and what does a controlled experiment show | P64-A1–A3, P64-S1–S6, P64-W1–W5; H1–H7; DR1–DR14b; arms A–F | Draft, experiments pending: literature review, a PLAIN vs GUIDED Rust harness (`tools/rust-weak-models`) and a local pilot that sat on the floor (2/102 each at R≤3; a shared spec slip); next iteration (spec fix, unit-sized shape, lint arm) deferred under D058, cloud-first when it resumes; `AGENTS.md` fast-loop rule adopted on the owner's suggestion; friction FR-M-028–FR-M-031 |
 | [65 Strict SQF through Teller](research/65-strict-sqf-via-teller.md) | Can a language service give mission scripts a Rust-like experience, and where must enforcement live | Levels Off/Advisory/Strict; tests ST-01–ST-23; design-gap and engine-request candidates | Proposal: guidance through Teller, enforcement through a gate witness in the build path; one typed core with three front-ends (no-code IR/CXL, strict SQF with erasable declarations, raw SQF as a marked escape hatch); all Wilco, generator and plugin output must pass Strict; user files stay user-chosen (D011); contract errors in user Strict regions decided as D052 (option (b): gate with a visible exception) |
 | [66 Friction audit](research/66-friction-audit.md) | Where the current design creates friction for people, models and contributors, and how to remove it (D049) | Register ids FR-P/FR-M/FR-C (not the FR0–FR8 freedom levels) | Audit of the design before code: 138 verified entries in [`friction/register.csv`](friction/register.csv) with method and review checklist in [`friction/README.md`](friction/README.md); top 20, quick wins and owner questions listed |
 | [67 Lessons from SkillOpt](research/67-lessons-from-skillopt.md) | Could SkillOpt (validation-gated skill optimisation for frozen models) improve or inspire the harness | Recommendations 67-R1–67-R26; experiments 67-X1–67-X9; design-gap candidates 67-G1–67-G12 | Proposal: not as a tool or training loop (its one-sample strict gate accepts 31–45% of null changes at our suite sizes); adopt its cheap evaluation practices (tried-arms ledger, underpowered/unverified verdicts, fail-closed typed text edits, fact lint, failure digest); text is the last fix kind after code; nothing in the product for v1; run 67-X1 (gate-noise calibration, no model calls) first |
@@ -362,11 +365,12 @@ Row counts are data rows (header excluded), counted with a CSV parser on 2026-09
 - [`quota-sim`](../tools/quota-sim/README.md): a seeded discrete-event replay of Wilco user days against free-tier limits (requests,
   tokens, neurons, credits), upstream 429 congestion and routing strategies S0–S6; Python standard library only, no network, no keys;
   31 unit tests; results are written only where the caller points and are not committed. Doc 52.
-- [`rust-weak-models`](../tools/rust-weak-models/README.md): doc 64's experiment, PLAIN vs GUIDED Rust APIs for small coding
-  models: a standalone research Cargo workspace (five crates, 34 tasks with reference solutions in both variants), a
-  standard-library Python runner for OpenAI-compatible endpoints, the llama-server pilot driver and the pilot analyses. Run records
-  are git-ignored. From its folder: `python -m unittest test_rwm`, then `python runner.py scaffold`, `python runner.py verify --tasks
-  all` and `cargo test --workspace --offline --locked`.
+- [`rust-weak-models`](../tools/rust-weak-models/README.md): [doc 64](research/64-rust-and-weak-models.md)'s experiment, PLAIN
+  vs GUIDED Rust APIs for small coding models: a standalone research Cargo workspace (five crates, 34 tasks with reference solutions
+  in both variants; its own pinned `clippy.toml` and `rustfmt.toml`), a standard-library Python runner for loopback
+  OpenAI-compatible endpoints, the llama-server pilot driver and the pilot analyses. Run records are git-ignored. From its folder:
+  `python -m unittest test_rwm`, then `python runner.py scaffold`, `python runner.py verify --tasks all` and `cargo test
+  --workspace --offline --locked`.
 
 ## 7. Integration items: ownership check
 

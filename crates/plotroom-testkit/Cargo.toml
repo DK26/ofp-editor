@@ -1,0 +1,16 @@
+[package]
+name = "plotroom-testkit"
+description = "Test support for Plotroom crates: fixture roots, a byte-blob builder, a virtual clock and seeded ids (dev-dependency only)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+# Test support is never published; product crates take it under [dev-dependencies] only (xtask layers checks it).
+publish = false
+
+[dependencies]
+# None: the skeleton is std-only. Later builders (SqmBuilder, synthetic PBO/WRP/raP, faux model, cassettes) add the
+# product crates they build fixtures for (crate-map §12).
+
+[lints]
+workspace = true

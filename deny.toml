@@ -1,0 +1,67 @@
+# cargo-deny configuration (docs/architecture/crate-map.md §2.5, §14; D001; testing-strategy §14).
+#
+# CI runs `cargo deny check` (advisories, bans, licenses, sources) through EmbarkStudios/cargo-deny-action, which
+# ships a current cargo-deny. The file uses only keys current cargo-deny accepts: the per-severity advisory and
+# licence keys of older releases (`vulnerability`, `unlicensed`, `copyleft`, `default`, `deny` under [licenses]) were
+# removed upstream and are left out on purpose.
+#
+# Evidence that the licence gate works: CI also runs cargo-deny on xtask/fixtures/cargo-deny/planted-gpl2 (a
+# GPL-2.0-only dev-dependency, which must be rejected) and on xtask/fixtures/cargo-deny/control (the same shape
+# under MIT, which must pass), both with this file (M0 exit evidence item 2).
+
+[graph]
+# Check optional dependencies too, so a feature cannot smuggle in a crate the default build never sees.
+all-features = true
+
+[advisories]
+# The RustSec advisory database; a crate with a vulnerability advisory fails the check.
+yanked = "deny"
+# Each ignored advisory needs an id, a reason and a review date; there are none yet.
+ignore = []
+
+[licenses]
+# GPL-3.0-compatible licences only (D001). Anything not listed is rejected, which is how GPL-2.0-only (and
+# GPL-2.0-or-later without another option, AGPL, SSPL, proprietary and unlicensed crates) is banned: a crate
+# offering "GPL-2.0-only OR MIT" passes through MIT. GPL-3.0-only is not listed either: it would drop the project's
+# "or later" and needs the owner's sign-off first (crate-map §14; OWQ-04).
+allow = [
+  "GPL-3.0-or-later",                # Plotroom's own crates
+  "MIT",
+  "MIT-0",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "0BSD",
+  "ISC",
+  "Zlib",
+  "Unicode-3.0",
+  "Unicode-DFS-2016",
+  "MPL-2.0",
+  "BSL-1.0",
+  "CC0-1.0",
+]
+# How sure the licence-text matcher must be before it accepts a licence file it had to read itself.
+confidence-threshold = 0.93
+# Listing licences no crate uses yet is expected in a skeleton; do not warn about them.
+unused-allowed-license = "allow"
+
+[licenses.private]
+# Check unpublished workspace crates as well: xtask, plotroom-testkit and the fixtures are `publish = false` or
+# local, and the planted GPL-2.0-only fixture must be seen.
+ignore = false
+
+[bans]
+# Several versions of one crate cost compile time; warn now, tighten once the workspace has real dependencies.
+multiple-versions = "warn"
+# Per-layer bans on tokio's runtime features, HTTP clients, egui, wgpu, wasmtime and rmcp (crate-map §2.5) land with
+# the first crate that needs one of them; `cargo run -p xtask -- layers` already refuses direct dependencies on the
+# confined crates outside the crates allowed to use them.
+deny = []
+
+[sources]
+# crates.io only: no git dependencies and no other registries (a git or registry source is a reviewed decision).
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

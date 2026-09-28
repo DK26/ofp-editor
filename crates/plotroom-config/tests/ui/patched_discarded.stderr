@@ -1,0 +1,16 @@
+error: unused `Patched` that must be used
+  --> tests/ui/patched_discarded.rs:10:5
+   |
+10 |     cst.replace_entry_value(target, EntryValueLexeme::int(2)).unwrap();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: a patch builds a new tree and leaves the old one unchanged: keep the result with Patched::into_parts
+note: the lint level is defined here
+  --> tests/ui/patched_discarded.rs:4:9
+   |
+ 4 | #![deny(unused_must_use)]
+   |         ^^^^^^^^^^^^^^^
+help: use `let _ = ...` to ignore the resulting value
+   |
+10 |     let _ = cst.replace_entry_value(target, EntryValueLexeme::int(2)).unwrap();
+   |     +++++++

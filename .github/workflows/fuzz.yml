@@ -1,0 +1,41 @@
+# Nightly fuzzing of the parsers (D017; docs/architecture/testing-strategy.md §2, §3).
+#
+# fuzz/ is a separate cargo-fuzz workspace (excluded from the root one) that needs a nightly toolchain. Each target
+# runs for ten minutes; crashing inputs are uploaded as artifacts. Targets are added to the matrix as their parsers
+# land (the config parser first, SP-09; later PBO, raP, WRP, PAA, FXY and our own sidecar and definition formats).
+
+name: fuzz
+
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fuzz:
+    name: fuzz ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [config_parse]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install nightly and cargo-fuzz
+        run: |
+          rustup toolchain install nightly --profile minimal
+          cargo install cargo-fuzz --locked
+      - name: Fuzz for ten minutes
+        run: cargo +nightly fuzz run ${{ matrix.target }} -- -max_total_time=600
+      - name: Keep crashing inputs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-artifacts-${{ matrix.target }}
+          path: fuzz/artifacts/

@@ -1,0 +1,7 @@
+# The control crate: declares MIT, which deny.toml must accept (test data; see ../Cargo.toml).
+[package]
+name = "mit-leaf"
+version = "0.0.0"
+edition = "2024"
+license = "MIT"
+publish = false

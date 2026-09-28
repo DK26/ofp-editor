@@ -27,8 +27,10 @@ response's ``model`` (model substitution). ``price_in``/``price_out`` 0 make ``u
 Scripting
 ---------
 ``state.queue`` holds scripted responses consumed first-in first-out by chat calls: dicts with ``status``,
-``body`` (a dict, or a string sent raw) and ``headers``. The special body string ``"ECHO_AUTH"`` returns the
-request's Authorization header inside the error message (to prove the client redacts it). Other switches:
+``body`` (a dict, or a string sent raw) and ``headers``, or ``{"drop": True}``, which closes the connection
+without any answer (a dropped connection: the request may have been processed). The special body string
+``"ECHO_AUTH"`` returns the request's Authorization header inside the error message (to prove the client redacts
+it). Other switches:
 ``reject_schema`` (400 when response_format is present), ``cost_mode`` ("provider": usage.cost; "tokens":
 usage without cost; "none": no usage at all), ``cost_details`` (None, the default: no ``cost_details`` and no
 ``is_byok``; "mirror": OpenRouter's shape on a request paid with OpenRouter credits, ``is_byok`` false and
@@ -43,7 +45,8 @@ for the concurrency test). Every request (path, headers, parsed body) is appende
 Groq and Cloudflare Workers AI (``run.py --provider``)
 ------------------------------------------------------
 Both speak the same chat completions shape, so the chat route above serves them too (``cost_mode = "tokens"``: usage
-without a cost field, as both send). ``groq_limits`` ({"rpd", "tpm"}) makes every answered chat carry Groq's
+without a cost field, as both send). A ``response_format`` in Workers AI's own JSON-mode shape (``json_schema`` holding
+the schema itself, not OpenAI's ``{name, strict, schema}``) is answered from that schema too. ``groq_limits`` ({"rpd", "tpm"}) makes every answered chat carry Groq's
 ``x-ratelimit-*`` headers (requests per day and tokens per minute, remaining counts and Go-style reset durations);
 ``groq_models`` (a list of model objects) makes ``GET <prefix>/models`` answer Groq's model list instead of the
 OpenRouter catalogue. For Cloudflare, ``GET .../tokens/verify`` answers ``cf_verify`` (default: an active token) and
@@ -291,6 +294,11 @@ class Handler(BaseHTTPRequestHandler):
             time.sleep(STATE.delay_s)
         if not self.path.endswith("/chat/completions") or not isinstance(body, dict):
             return self._send(404, {"error": {"code": 404, "message": "not found"}})
+        if scripted is not None and scripted.get("drop"):
+            # No status line at all: the handler returns and the server closes the socket, so the client sees the
+            # connection end without an answer (http.client's RemoteDisconnected).
+            self.close_connection = True
+            return None
         if scripted is not None:
             out = scripted.get("body")
             if out == "ECHO_AUTH":
@@ -330,7 +338,9 @@ class Handler(BaseHTTPRequestHandler):
         if STATE.answer_fn is not None:
             content = STATE.answer_fn(body)
         elif isinstance(rf, dict) and rf.get("type") == "json_schema":
-            content = json.dumps(value_for(rf["json_schema"]["schema"]))
+            # OpenAI's wrapper {name, strict, schema}, or Workers AI's JSON mode, where json_schema is the schema.
+            js = rf.get("json_schema") or {}
+            content = json.dumps(value_for(js["schema"] if isinstance(js.get("schema"), dict) else js))
         else:
             content = STATE.text_answer
         nbytes = sum(len(str(m.get("content") or "").encode("utf-8")) for m in body.get("messages", []))

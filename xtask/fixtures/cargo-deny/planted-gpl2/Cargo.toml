@@ -1,0 +1,20 @@
+# Negative fixture for deny.toml (M0 exit evidence item 2): a GPL-2.0-only crate planted as a dev-dependency.
+#
+# CI runs cargo-deny's licence check on this workspace with the repository's deny.toml and requires it to FAIL;
+# ../control is the same shape under MIT and must PASS, so the only difference between a pass and a fail is the
+# planted licence. The `license` fields below are test data describing these fixture crates to cargo-deny; the
+# files themselves are part of Plotroom (GPL-3.0-or-later).
+#
+# A standalone workspace (the [workspace] table below), also excluded from the root workspace.
+
+[package]
+name = "deny-fixture-planted"
+version = "0.0.0"
+edition = "2024"
+license = "MIT"
+publish = false
+
+[dev-dependencies]
+gpl2-only-leaf = { path = "gpl2-only-leaf" }
+
+[workspace]

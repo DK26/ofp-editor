@@ -1,0 +1,117 @@
+# Plotroom CI (docs/architecture/testing-strategy.md §14; docs/roadmap/m0-m3-foundations-to-preview.md, M0 "CI").
+#
+# Gates on every push to main and every pull request:
+# - fmt, clippy (warnings are errors) and tests, doctests included, on Windows, Ubuntu and macOS;
+# - ui: the trybuild negative compile tests of the guard types, on the pinned toolchain only;
+# - xtask: the layer table against `cargo metadata`, and the naming hygiene check;
+# - cargo-deny: advisories, bans, licences (GPL-3.0-compatible allowlist) and sources, plus the committed negative
+#   test that a planted GPL-2.0-only dev-dependency is rejected (M0 exit evidence item 2).
+# The research tools' Python suites under tools/ are not part of this workflow. Fuzzing runs nightly (fuzz.yml).
+#
+# Toolchain: pinned here rather than in a root rust-toolchain.toml, which would also reach the standalone research
+# workspace under tools/ (CODE-INDEX.md §3). Bump RUST_TOOLCHAIN together with `rust-version` in Cargo.toml.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RUST_TOOLCHAIN: "1.98.1"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: fmt, clippy, test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned toolchain
+        shell: bash
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --component rustfmt,clippy
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Clippy (warnings are errors)
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Tests and doctests
+        run: cargo test --workspace --locked
+
+  ui:
+    # Negative compile tests (trybuild) for the witness and guard types (AGENTS.md "Negative Compile Tests"). Compiler
+    # output changes between releases, so these run in this one job on the pinned toolchain; the `ui-tests` feature
+    # keeps them out of the matrix job above. Snapshots change only with a toolchain bump or a reviewed guidance change.
+    name: trybuild UI tests (pinned toolchain)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned toolchain (with rust-src, as when the snapshots are blessed)
+        shell: bash
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --component rust-src
+          rustup default "$RUST_TOOLCHAIN"
+      - name: plotroom-config guard types
+        run: cargo test -p plotroom-config --features ui-tests --test ui --locked
+
+  xtask:
+    name: xtask layers and hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned toolchain
+        shell: bash
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Layer table against cargo metadata (crate-map §2.5)
+        run: cargo run -p xtask --locked -- layers
+      - name: No third-party marks or island names in names (AGENTS.md "Naming and Trademarks")
+        run: cargo run -p xtask --locked -- hygiene
+
+  deny:
+    name: cargo-deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Advisories, bans, licences and sources
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check advisories bans licenses sources
+      # The licence fixtures are standalone workspaces; give each the repository's deny.toml next to its manifest,
+      # where cargo-deny looks first, so both runs use exactly the config under test.
+      - name: Give the licence fixtures the repository's deny.toml
+        run: |
+          cp deny.toml xtask/fixtures/cargo-deny/control/deny.toml
+          cp deny.toml xtask/fixtures/cargo-deny/planted-gpl2/deny.toml
+      - name: Control fixture (an MIT dev-dependency) passes
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: xtask/fixtures/cargo-deny/control/Cargo.toml
+          command: check licenses
+      - name: Planted GPL-2.0-only dev-dependency (must be rejected)
+        id: planted
+        continue-on-error: true
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: xtask/fixtures/cargo-deny/planted-gpl2/Cargo.toml
+          command: check licenses
+      - name: Fail if the planted licence was accepted
+        if: steps.planted.outcome != 'failure'
+        run: |
+          echo "::error::cargo-deny accepted a GPL-2.0-only dependency: deny.toml's licence allowlist no longer bans it (D001)"
+          exit 1

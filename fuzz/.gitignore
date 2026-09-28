@@ -1,0 +1,6 @@
+# cargo-fuzz output: build products, the growing corpus, crash artifacts and coverage data stay local
+# (CI uploads crashing inputs as workflow artifacts instead).
+target/
+corpus/
+artifacts/
+coverage/

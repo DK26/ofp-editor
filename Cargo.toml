@@ -1,0 +1,72 @@
+# Plotroom workspace (M0 skeleton: docs/roadmap/m0-m3-foundations-to-preview.md, "Workspace").
+#
+# Layout (recorded in CODE-INDEX.md §2-§4):
+# - crates/<name>/   product and dev crates, one folder per crate, named as in docs/architecture/crate-map.md;
+# - xtask/           the repository checks (`layers`, `hygiene`); never shipped;
+# - fuzz/            the nightly cargo-fuzz targets, a separate workspace (D017; testing-strategy §3).
+# The layer of every member is declared in xtask/layers.toml and checked by `cargo run -p xtask -- layers`.
+#
+# Excluded on purpose:
+# - tools/rust-weak-models is a standalone research workspace (doc 64). cargo lets an explicit member path win over
+#   `exclude`, so never name a path below it in `members` (CODE-INDEX.md §3).
+# - fuzz/ builds only with cargo-fuzz on a nightly toolchain (.github/workflows/fuzz.yml).
+# - xtask/fixtures/ holds tiny standalone workspaces that CI feeds to cargo-deny (the planted GPL-2.0-only test).
+#
+# There is deliberately no rust-toolchain.toml and no .cargo/config.toml at the root: both would also reach
+# tools/rust-weak-models (CODE-INDEX.md §3; its test_rwm.EnclosingWorkspace fails on them), and a pin that names a
+# version rustup has not installed under that exact name starts a download. CI pins the toolchain instead
+# (RUST_TOOLCHAIN in .github/workflows/ci.yml), and `rust-version` below rejects older compilers locally.
+
+[workspace]
+resolver = "3"
+members = ["crates/*", "xtask"]
+exclude = ["tools/rust-weak-models", "fuzz", "xtask/fixtures"]
+
+[workspace.package]
+# 0.0.0 until the first milestone release (M1 is 0.1 in docs/roadmap.md).
+version = "0.0.0"
+edition = "2024"
+# The stable toolchain this skeleton was verified with; bump it together with RUST_TOOLCHAIN in CI.
+rust-version = "1.98.1"
+# D001: GPL-3.0-or-later everywhere; dependencies must be GPL-3.0-compatible (deny.toml enforces the allowlist).
+license = "GPL-3.0-or-later"
+
+[workspace.dependencies]
+# Used by xtask only today (reading `cargo metadata` JSON and xtask/layers.toml). All MIT OR Apache-2.0.
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+toml = "1.1.6"
+# Dev-only test support; product crates list it under [dev-dependencies] only (xtask layers enforces that).
+plotroom-testkit = { path = "crates/plotroom-testkit" }
+
+# Workspace lints (docs/architecture/crate-map.md §2.4; AGENTS.md). Every member sets `[lints] workspace = true`.
+# Format crates add `#![deny(clippy::arithmetic_side_effects)]` in their lib.rs, because Cargo does not let a crate
+# combine `workspace = true` with extra lints of its own.
+[workspace.lints.rust]
+unsafe_code = "forbid"
+# A discarded witness is an error, not a warning an errors-only agent never sees.
+unused_must_use = "deny"
+deprecated = "deny"
+
+[workspace.lints.clippy]
+indexing_slicing = "deny"
+string_slice = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+unreachable = "deny"
+todo = "deny"
+unimplemented = "deny"
+# `let _ =` cannot discard a witness.
+let_underscore_must_use = "deny"
+# Every suppression says why.
+allow_attributes_without_reason = "deny"
+# The capability bans in clippy.toml (crate-map §2.3) are warn-level lints by default; doc 62 §3.1 records that their
+# `reason` reaches an errors-only feed only "at deny". CI fails on warnings either way.
+disallowed_methods = "deny"
+disallowed_types = "deny"
+
+# AGENTS.md heap allocation policy, rule 7: cross-crate inlining and whole-program dead-code elimination.
+[profile.release]
+lto = true
+codegen-units = 1

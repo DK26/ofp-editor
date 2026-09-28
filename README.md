@@ -47,8 +47,8 @@ runtime and never ships or redistributes it.
 
 Plotroom is free software under the **GNU General Public License v3.0 or later**; see
 [`LICENSE`](LICENSE). Code derived from Bohemia Interactive's released Arma: Cold War Assault
-source will carry Bohemia's GPLv3 section 7 additional terms, which will be reproduced in a
-`NOTICE` file when such code is added. Missions and campaigns you make with Plotroom are meant to
+source carries Bohemia's GPLv3 section 7 additional terms, which are reproduced in
+[`NOTICE`](NOTICE). Missions and campaigns you make with Plotroom are meant to
 be yours under terms of your choice; a GPLv3 section 7 permission to that effect is being drafted.
 
 ## Disclaimer
@@ -57,7 +57,7 @@ Plotroom is an independent, community-made tool. It is not affiliated with, endo
 authorized by Bohemia Interactive a.s. or Electronic Arts Inc. ARMA and Bohemia Interactive are
 trademarks or registered trademarks of Bohemia Interactive a.s. OPERATION FLASHPOINT is a
 registered trademark of Electronic Arts Inc. These names are used only to identify the game this
-tool is designed to work with. Plotroom is being built with reference to, and will include code
-derived from, the Arma: Cold War Assault source code that Bohemia Interactive released under
-GPL-3.0-or-later with additional terms; such a modified version is not the original program.
+tool is designed to work with. Plotroom contains code derived from the Arma: Cold War Assault
+source code released by Bohemia Interactive under GPL-3.0-or-later with additional terms; this is
+a modified version and is not the original program.
 Game data is not included and is licensed by Bohemia Interactive under the APL-SA.

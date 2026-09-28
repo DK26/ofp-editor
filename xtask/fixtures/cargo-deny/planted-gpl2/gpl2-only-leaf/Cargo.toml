@@ -1,0 +1,7 @@
+# The planted crate: declares GPL-2.0-only, which deny.toml must reject (test data; see ../Cargo.toml).
+[package]
+name = "gpl2-only-leaf"
+version = "0.0.0"
+edition = "2024"
+license = "GPL-2.0-only"
+publish = false

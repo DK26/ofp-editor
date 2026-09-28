@@ -1,0 +1,15 @@
+error[E0423]: cannot initialize a tuple struct which contains private fields
+ --> tests/ui/lexeme_tuple_constructor.rs:8:19
+  |
+8 |     let _lexeme = EntryValueLexeme(Default::default());
+  |                   ^^^^^^^^^^^^^^^^
+  |
+note: constructor is not visible here due to private fields
+ --> src/cst/lexeme.rs
+  |
+  | pub struct EntryValueLexeme(Lexeme);
+  |                             ^^^^^^ private field
+help: you might have meant to use the `int` associated function
+  |
+8 |     let _lexeme = EntryValueLexeme::int(Default::default());
+  |                                   +++++

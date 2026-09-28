@@ -51,9 +51,10 @@
 | [Mission files and the in-game editor](#mission-files-and-the-in-game-editor) (ER-097 to ER-102) | 6 | 1 | 3 | 1 | 1 |
 | [Mods and addons](#mods-and-addons) (ER-103 to ER-108) | 6 | 1 | 4 | 1 | 0 |
 | [AI and staging](#ai-and-staging) (ER-109) | 1 | 0 | 0 | 1 | 0 |
-| **All** | **109** | **29** | **44** | **32** | **4** |
+| [Config text reader](#config-text-reader) (ER-110 to ER-113) | 4 | 2 | 1 | 1 | 0 |
+| **All** | **113** | **31** | **45** | **33** | **4** |
 
-**Status.** 95 not filed (of which 7 wait for a private report); 9 proposed through issues that others opened on the community engine project (ER-002, ER-008, ER-009, ER-099, ER-101, ER-103, ER-104, ER-106, ER-107); 1 shipped on the community engine but not in the official build (ER-023); 4 won't file (ER-039, ER-045, ER-061, ER-102).
+**Status.** 99 not filed (of which 7 wait for a private report); 9 proposed through issues that others opened on the community engine project (ER-002, ER-008, ER-009, ER-099, ER-101, ER-103, ER-104, ER-106, ER-107); 1 shipped on the community engine but not in the official build (ER-023); 4 won't file (ER-039, ER-045, ER-061, ER-102).
 
 ## Filing plan (proposal)
 
@@ -242,6 +243,17 @@ project"). Each wave files one issue per entry; unrelated asks are never bundled
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ER-109 | **No formation-spacing control.** No script command sets formation spacing: slots come from fixed tables scaled by `formationX/Z`; SAFE and CARELESS units ignore their slots and follow the previous unit in ID order; LIMITED caps the leader at 22 % outside COMBAT. | The staging planner computes predicted files and spacing; one group per vehicle for an open column. | [command] A spacing (formation scale) setter per group. *Profiles:* Ce opt-in capability. | `P:AI/AISubgroup.cpp#L53-L159`, `#L494-L501`, `#L2041-L2110`, `#L2113-L2305`; `P:AI/VehicleAIPilot.cpp#L286-L310`, `#L618-L780`; `P:AI/AIUnit.cpp#L1546-L1621` | Convoys and patrols that keep believable intervals. | P3 (B1×F2) | not filed | 39 TL;DR, §1.2, §5.2; 31 §4.6 row 9; DG035 |
 
+### Config text reader
+
+Found by the SP-09 spike, which ports the engine's config reader into `plotroom-config`. Findings of the same work that bear on security are not listed here: they go to the private reports first (D035 item 1).
+
+| ID | Engine limitation | Plotroom today | Proposed change | Hook points | Benefit | P | Status | Sources |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ER-110 | **A quoted value followed by whitespace before `;` is dropped, with the rest of its class.** After a quoted value the next byte must be `;` or a line break, so `x = "a" ;` drops the entry, and the reader leaves the enclosing class: its remaining entries are read as part of the parent class [V]. Hand-edited `description.ext` and `config.cpp` files hit this with only a log line. | `plotroom-config`'s `lint_syntax` reports it (TriviaAfterQuotedValue, with the class it abandons); Plotroom's writer never emits it and its span patches refuse to create it. | [fix] Skip spaces and tabs between a quoted value and its terminator. Existing files may then read entries they used to lose. *Profiles:* Cwr and Ce; Cwa199 [U] until a probe. | `P:IO/ParamFile/ParamFile.cpp#L1796-L1803`; `P:IO/ParamFile/ParamFilePrivate.inc#L39-L46` | Hand-edited configs keep every entry they appear to have. | P2 (B2×F2) | not filed | 04 §2.1; SP-09 (`crates/plotroom-config`, `cst/tests_engine.rs`) |
+| ER-111 | **After a syntax error, the rest of a class is read into its parent.** Every statement error returns from the class being read, and the parent carries on from the same position: the rest of the broken class lands in the parent, and a `}` meant for the broken class closes the parent [V]. The file loads with entries in the wrong classes and only a log line. | `lint_syntax` reports each stop with its effect (ClassAbandoned, RootStops); the tree shows where the game resumes. | [fix] On an error, skip to the end of the broken statement (the next `;` at the same brace depth) and continue in the same class, or refuse the file with a message naming the line. *Profiles:* Cwr and Ce; Cwa199 [U] until a probe. | `P:IO/ParamFile/ParamFile.cpp#L1571-L1872`; `P:IO/ParamFile/ParamFileParse.cpp#L893-L909` | A typo breaks one entry, not the structure of the rest of the file. | P3 (B2×F1) | not filed | SP-09 (`crates/plotroom-config`, `cst/tests_engine.rs`) |
+| ER-112 | **A UTF-8 byte-order mark makes a config file define nothing.** The preprocessor passes a leading UTF-8 byte-order mark through; the reader then sees an empty name followed by the byte 0xEF and stops at the top level, so the file defines nothing [V code path; I runtime]. Editors that save UTF-8 with a byte-order mark produce such files. | `lint_syntax` reports Utf8Bom; Plotroom's writers never write a byte-order mark. | [fix] Skip a UTF-8 byte-order mark at the start of a config file and of an included file. *Profiles:* Cwr and Ce; Cwa199 [U] until a probe. | `P:IO/ParamFile/ParamFileParse.cpp#L279-L323`; `P:IO/PreprocC/Preproc.cpp#L240-L256` | Files saved by common editors load. | P1 (B2×F3) | not filed | SP-09 (`crates/plotroom-config`, `cst/tests_engine.rs`) |
+| ER-113 | **An enum item with a value ends the enum with an error.** After `A = 5` the enum loop tests the value's first byte instead of the byte after the value, so `enum {A = 5, B}` stops at the value with an error and the parent reads on from there; items without values work [V code; I runtime]. | `lint_syntax` reports the stop (ExpectedEnumSeparator). | [fix] Read the byte after the value before testing for `,` and `}`. *Profiles:* Cwr and Ce; Cwa199 [U] until a probe (the old engine may not share the defect). | `P:IO/ParamFile/ParamFile.cpp#L1663-L1701` | Text configs with explicit enum values (common in addon `config.cpp`) load. | P1 (B2×F3) | not filed | SP-09 (`crates/plotroom-config`, `cst/tests_engine.rs`) |
+
 ## Cross-reference: source series to register entries
 
 | Source series | Register entries |
@@ -266,6 +278,7 @@ project"). Each wave files one issue per entry; unrelated asks are never bundled
 | Doc 37 (engine traps) | ER-097, ER-098, ER-100, ER-102; ER-050, ER-051 |
 | Doc 09 pain points | P2 ER-099; P4 ER-098, ER-103; P6 ER-100; P7 ER-101; P9 ER-002, ER-009 |
 | Doc 35 | awards ER-040; `EndGame` name hazard ER-023; load-time code ER-021; `respawn = SIDE` ER-053 |
+| SP-09 (`crates/plotroom-config`, the ported config reader) | ER-110 to ER-113 |
 | Part-1 integration items | I29-08 (engine side) ER-007; I42-08 (engine side) ER-022 |
 
 ## Pointers the source docs should gain
@@ -314,3 +327,12 @@ a dated verification note in the edited doc:
 - Doc 29's profile name `CwrCe` is written `Ce` here, as in docs 31, 41 and 43.
 - 2026-09-27: the security rows ER-010 and ER-014 to ER-025 are cut to their titles, priority, status and sources in this
   file and in `engine-requests.csv` until the private reports are acknowledged (D035 item 1); their details return then.
+
+### Config text reader (2026-09-29)
+
+- ER-110 to ER-113 come from the SP-09 spike, which ported the engine's config reader into `crates/plotroom-config`; each
+  line range was read at the pinned `CWR@ffc61838b7` for this change, and each behaviour has a test in
+  `crates/plotroom-config/src/cst/tests_engine.rs` (tagged unverified-1.99 where the old engine cannot be read). The
+  proposed changes are this register's own [I].
+- Security-relevant findings of the same work are not recorded here, not even as titles: they wait for the owner's private
+  reports (D035 item 1).

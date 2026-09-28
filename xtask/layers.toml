@@ -1,0 +1,205 @@
+# The declared layer table checked by `cargo run -p xtask -- layers` against `cargo metadata`
+# (docs/architecture/crate-map.md §2.1-§2.5). Compiled into xtask with include_str!, so a malformed table fails the
+# xtask unit tests before it can fail CI.
+#
+# Roles. "L0".."L8" are the layers of crate-map §2.1: a crate may depend on lower layers, and on its own layer only
+# through an edge listed under [same-layer] (L8 "may use everything", so edges inside L8 are free). "dev" (test
+# support, test oracles) and "tooling" (xtask) sit outside the order: they may depend on anything; a layered crate
+# may take a dev crate only under [dev-dependencies]; nothing depends on tooling.
+#
+# Coverage. Every crate the crate map plans is listed, landed or not, so a crate only has to be created to be
+# checked. A workspace member missing from [crates] fails the check.
+#
+# Changes. Adding a crate, moving one to another layer, or adding a same-layer edge, a forbidden edge or a confined
+# dependency is a reviewed design change: crate-map.md first, then this file, in the same change set as
+# CODE-INDEX.md §4 (crate-map §2.2: "never an incidental Cargo.toml edit").
+#
+# Not covered here: per-layer *feature* bans (tokio's runtime and I/O features) and transitive paths to the confined
+# crates are cargo-deny's job with wrapper allowlists (crate-map §2.5); this table checks direct dependencies.
+
+[crates]
+# L0 Foundation (crate-map §3)
+plotroom-bytes = "L0"
+plotroom-ids = "L0"
+plotroom-encoding = "L0"
+plotroom-profile = "L0"
+plotroom-diag = "L0"
+# L1 Formats (crate-map §4)
+plotroom-pbo = "L1"
+plotroom-preproc = "L1"
+plotroom-config = "L1"
+plotroom-stringtable = "L1"
+plotroom-briefing = "L1"
+plotroom-script = "L1"
+plotroom-script-catalog = "L1"
+plotroom-wrp = "L1"
+plotroom-p3d = "L1"
+plotroom-paa = "L1"
+plotroom-fxy = "L1"
+plotroom-rsc = "L1"
+plotroom-audio = "L1"
+# L2 World facts (crate-map §5)
+plotroom-vfs = "L2"
+plotroom-install = "L2"
+plotroom-catalog = "L2"
+plotroom-terrain = "L2"
+# L3 Kernel and document models (crate-map §6)
+plotroom-doc = "L3"
+plotroom-mission = "L3"
+plotroom-sidecar = "L3"
+plotroom-modules = "L3"
+plotroom-cxl = "L3"
+plotroom-campaign = "L3"
+plotroom-cine = "L3"
+# L4 Core (crate-map §7)
+plotroom-project = "L4"
+plotroom-commands = "L4"
+plotroom-validate = "L4"
+plotroom-view = "L4"
+# L5 Domain engines and assembly (crate-map §8)
+plotroom-template = "L5"
+plotroom-lower = "L5"
+plotroom-teller = "L5"
+plotroom-knowledge = "L5"
+plotroom-drill = "L5"
+plotroom-generate = "L5"
+plotroom-campaign-compile = "L5"
+plotroom-campaign-sim = "L5"
+plotroom-export = "L5"
+plotroom-packs = "L5"
+plotroom-session = "L5"
+# L6 Harness, no I/O (crate-map §9)
+plotroom-provider = "L6"
+plotroom-workflow = "L6"
+plotroom-decide = "L6"
+plotroom-workflow-runtime = "L6"
+plotroom-campaign-flow = "L6"
+plotroom-wilco = "L6"
+plotroom-evals = "L6"
+# L7 Edge (crate-map §10)
+plotroom-io = "L7"
+plotroom-net = "L7"
+plotroom-provider-http = "L7"
+plotroom-model-manager = "L7"
+plotroom-preview = "L7"
+plotroom-gamelink = "L7"
+plotroom-mcp = "L7"
+plotroom-plugin-host = "L7"
+plotroom-registry = "L7"
+# L8 Presentation and binaries (crate-map §11)
+plotroom-draw2d = "L8"
+plotroom-gpu = "L8"
+plotroom-fonts = "L8"
+plotroom-ui-classic = "L8"
+plotroom-map2d = "L8"
+plotroom-ui = "L8"
+plotroom-app = "L8"
+plotroom-cli = "L8"
+# Tooling and dev crates (crate-map §12)
+xtask = "tooling"
+plotroom-testkit = "dev"
+plotroom-script-oracle = "dev"
+
+# Allowed same-layer edges, "from" = ["to", ...] (crate-map §2.2, verbatim; the rules it states for a group are
+# spelled out crate by crate so a reviewer sees each edge).
+[same-layer]
+# L0
+plotroom-profile = ["plotroom-ids"]
+# L1
+plotroom-config = ["plotroom-preproc"]
+plotroom-script = ["plotroom-script-catalog"]
+plotroom-rsc = ["plotroom-config"]
+# L2
+plotroom-catalog = ["plotroom-vfs"]
+plotroom-terrain = ["plotroom-vfs"]
+plotroom-install = ["plotroom-vfs"]
+# L3: "every model crate -> plotroom-doc" (the document models: mission, modules, campaign, cine; the condition
+# language plotroom-cxl is not a document model); campaign and modules -> cxl; sidecar -> doc.
+plotroom-mission = ["plotroom-doc"]
+plotroom-modules = ["plotroom-doc", "plotroom-cxl"]
+plotroom-campaign = ["plotroom-doc", "plotroom-cxl"]
+plotroom-cine = ["plotroom-doc"]
+plotroom-sidecar = ["plotroom-doc"]
+# L4
+plotroom-commands = ["plotroom-project"]
+plotroom-validate = ["plotroom-project"]
+plotroom-view = ["plotroom-project", "plotroom-commands"]
+# L5: "plotroom-session -> every other L5 crate" (a unit test keeps this list equal to the other L5 crates above).
+plotroom-lower = ["plotroom-template"]
+plotroom-campaign-compile = ["plotroom-lower"]
+plotroom-generate = ["plotroom-lower", "plotroom-campaign-compile", "plotroom-template"]
+plotroom-drill = ["plotroom-knowledge"]
+plotroom-export = ["plotroom-campaign-compile"]
+plotroom-session = [
+  "plotroom-template",
+  "plotroom-lower",
+  "plotroom-teller",
+  "plotroom-knowledge",
+  "plotroom-drill",
+  "plotroom-generate",
+  "plotroom-campaign-compile",
+  "plotroom-campaign-sim",
+  "plotroom-export",
+  "plotroom-packs",
+]
+# L6
+plotroom-decide = ["plotroom-provider"]
+plotroom-workflow-runtime = ["plotroom-workflow", "plotroom-decide"]
+plotroom-campaign-flow = ["plotroom-workflow", "plotroom-decide"]
+plotroom-wilco = ["plotroom-workflow-runtime"]
+plotroom-evals = ["plotroom-workflow-runtime"]
+# L7: "every networked crate -> plotroom-net" (the crates with outbound traffic: provider wires, model downloads,
+# plugin connectors and feeds, the pack registry); model manager and preview -> io; preview -> gamelink.
+plotroom-provider-http = ["plotroom-net"]
+plotroom-model-manager = ["plotroom-net", "plotroom-io"]
+plotroom-plugin-host = ["plotroom-net"]
+plotroom-registry = ["plotroom-net"]
+plotroom-preview = ["plotroom-io", "plotroom-gamelink"]
+
+# Edges refused even though they point downward (crate-map §2.1 L6 row, §2.5).
+[[forbidden]]
+to = "plotroom-session"
+from-layers = ["L6"]
+from-crates = ["plotroom-plugin-host", "plotroom-mcp"]
+reason = "the harness, plugins and MCP clients must never reach the session that mints UserIntent (crate-map §2.1, §2.3; commands-undo-history §4.4): use the typed command and query API of plotroom-commands instead"
+
+# Third-party crates only some workspace crates may depend on directly (crate-map §2.3, §2.5).
+[[confined]]
+what = "egui and eframe"
+dependencies = [
+  "egui",
+  "eframe",
+  "egui-wgpu",
+  "egui-winit",
+  "egui_glow",
+  "egui_extras",
+  "egui_kittest",
+  "egui_plot",
+  "egui_tiles",
+]
+allowed-crates = ["plotroom-ui", "plotroom-app"]
+reason = "everything below the shell stays headless (crate-map §2.3; doc 06 §4.1): produce a DrawList or view state and let plotroom-ui render it"
+
+[[confined]]
+what = "HTTP clients"
+dependencies = ["reqwest", "ureq", "hyper", "hyper-util", "isahc", "attohttpc", "curl", "surf", "minreq"]
+allowed-crates = ["plotroom-net"]
+reason = "outbound traffic passes one EgressGrant check with offline mode and allowlists (crate-map §2.3; D008): call plotroom-net's client API instead"
+
+[[confined]]
+what = "WebAssembly runtimes"
+dependencies = ["wasmtime", "wasmtime-wasi", "wasmer", "wasmi"]
+allowed-crates = ["plotroom-plugin-host"]
+reason = "sandboxes stay at the edge (crate-map §2.3; D007): go through plotroom-plugin-host's grants instead"
+
+[[confined]]
+what = "rmcp"
+dependencies = ["rmcp"]
+allowed-crates = ["plotroom-plugin-host", "plotroom-mcp"]
+reason = "MCP stays at the edge (crate-map §2.3): expose product tools through plotroom-mcp, or reach plugins through plotroom-plugin-host"
+
+[[confined]]
+what = "wgpu"
+dependencies = ["wgpu"]
+allowed-crates = ["plotroom-gpu"]
+reason = "one wgpu pipeline in one crate keeps one pinned wgpu version (crate-map §2.3): draw through plotroom-gpu (the app reaches wgpu through egui-wgpu)"

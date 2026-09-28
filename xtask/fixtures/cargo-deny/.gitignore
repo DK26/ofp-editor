@@ -1,0 +1,3 @@
+# CI copies the repository's deny.toml next to each fixture manifest before running cargo-deny on it
+# (.github/workflows/ci.yml, job `deny`); the copies are never committed, so the root deny.toml stays the only one.
+/*/deny.toml
