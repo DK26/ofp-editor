@@ -4,7 +4,7 @@ Design documentation for **Plotroom — Mission & Campaign Editor for Arma: Cold
 
 > **Status:** index, created 2026-09-27. This is the entry point to `docs/` that `AGENTS.md` names under "Design Authority". It
 > decides nothing: it routes each question to the file that owns it. Where a line here summarises a decision, the linked record
-> wins. Research docs 01–52, 54, 56–58 and 60–63 are final; docs 53, 55 and 59 are drafts with experiments pending; docs 64–66 are in progress; the architecture and the roadmap are proposals (baseline 2026-09-27).
+> wins. Research docs 01–52, 54, 56–58, 60–63 and 65 are final; docs 53, 55 and 59 are drafts with experiments pending; docs 64 and 66 are in progress; the architecture and the roadmap are proposals (baseline 2026-09-27).
 > The owner answered all 23 owner questions on 2026-09-27.
 
 ## 1. What Plotroom is
@@ -308,6 +308,7 @@ Docs 01–51 are final; the status line lists the docs still in progress. Each s
 | [61 The language service for the LLM](research/61-language-service-for-the-llm.md) | What coding agents' language-server integrations teach about serving a model, and how Teller serves Wilco | Teller levels TS0–TS3; tests TT-01–TT-20 | Proposal: diagnostics pushed after each edit help weak models more than navigation tools; seven Teller refinements; pull tools only for qualified setups (doc 63); 14 design-gap candidates, not filed |
 | [62 Type-driven guidance](research/62-type-driven-guidance.md) | How types, compiler diagnostics and lints guide coding agents and Wilco; what the owner's public crate strict-path contributes | Witness/guard rules; ShapeGrant | Proposal under the owner's principle "the API leads the user into correct usage": strict-path inside `plotroom-io` for filesystem paths; a proposed `AGENTS.md` amendment awaits owner approval |
 | [63 Capability ladder](research/63-capability-ladder.md) | How "knowledge in the harness, freedom by capability" becomes concrete: freedom levels, grants and limits | Freedom levels FR0–FR8 | Proposal: raise the ceiling, never lower the floor; the level is the lowest of product ceiling, qualification, effort and the user's cap; FR8 (a plan as data) needs an owner decision (amends D025); draft decision record included |
+| [65 Strict SQF through Teller](research/65-strict-sqf-via-teller.md) | Can a language service give mission scripts a Rust-like experience, and where must enforcement live | Levels Off/Advisory/Strict; tests ST-01–ST-23; design-gap and engine-request candidates | Proposal: guidance through Teller, enforcement through a gate witness in the build path; one typed core with three front-ends (no-code IR/CXL, strict SQF with erasable declarations, raw SQF as a marked escape hatch); all Wilco, generator and plugin output must pass Strict; user files stay user-chosen (D011); owner options (a)–(c) for contract errors in user regions |
 
 ## 6. Data, skills, prompts and tools
 
