@@ -9,7 +9,11 @@ What it owns
   attempts (free_mode.py supplies it: it stops the run if the key's usage moves); and a stop after several HTTP 429
   in a row.
 * ``classify_429`` and ``reset_seconds``: which 429 is the daily quota (terminal), the per-minute window (wait for
-  the reset) or a saturated upstream provider (bounded backoff honouring Retry-After).
+  the reset) or a saturated upstream provider (bounded backoff honouring Retry-After). The structured cause
+  ``error.metadata.limit_source`` decides first when it holds the one documented value; the text and header rules
+  decide everything else.
+* ``limit_source`` and ``rate_limit_label``: that structured cause read from an untrusted body, and the words a
+  record puts after "HTTP 429" (the kind, plus the limit_source, escaped, when the body names one).
 * The UTC-day helpers (the free quota resets at 00:00 UTC).
 
 How it fits
@@ -26,6 +30,13 @@ https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key : ``fr
 UTC midnight. The 429 body and headers (``X-RateLimit-Reset`` in epoch milliseconds, a daily reset exactly at 00:00
 UTC) are as reported in litellm issue 9035; the daily-cap message ``free-models-per-day`` is quoted in public bug
 reports; whether failed requests count toward the day is not documented, so every attempt counts here.
+
+docs/research/52-rate-limits-and-ux.md, verification note "2026-09-28, re-check of the free shared pools" (observed
+2026-09-28): a :free model's 429 now carries ``error.metadata.limit_source`` "upstream_provider_shared_pool" beside
+``provider_name``, ``provider_error_code`` "429", ``is_byok`` false, a ``remedy_hint`` and the old prose in ``raw``,
+with no retry-after or x-ratelimit-* header. The pool refused every key on every network alike. The note concludes
+that classification should read ``limit_source`` first, because a provider's free text can name its own per-day
+quota and be misread as the account's daily cap. No other value has been observed or documented.
 """
 import datetime as _dt
 import json
@@ -55,6 +66,13 @@ EPOCH_S_MIN = 1e9
 # the window seeded from the ledger places it at S + LEDGER_TS_RESOLUTION_S, its latest possible time, so a resumed run
 # never drops it from the minute early.
 LEDGER_TS_RESOLUTION_S = 1.0
+# The one documented value of error.metadata.limit_source (doc 52, observed 2026-09-28): the provider that donates a
+# :free model's capacity has filled its pool for every key. Compared exactly; any other value is undocumented.
+LIMIT_SOURCE_SHARED_POOL = "upstream_provider_shared_pool"
+# The longest limit_source (in characters) a label quotes; a longer one is reported by its length only. It is never
+# cut: a cut could split a key the backend would otherwise redact whole. Escaping makes the quoted form at most 12
+# characters per character (a surrogate pair), so a label stays under 1,100 characters.
+LIMIT_SOURCE_SHOWN_MAX = 80
 
 
 # ── UTC days ─────────────────────────────────────────────────────────────────
@@ -92,6 +110,63 @@ def reset_seconds(value, now):
     return max(0.0, v - now) if v > EPOCH_S_MIN else v
 
 
+def _error_parts(data):
+    """(``error``, ``error.metadata``) of an OpenRouter error body as dicts; an empty dict for any part that is not an
+    object (the body is untrusted and may be anything JSON can hold, or not JSON at all)."""
+    err = data.get("error") if isinstance(data, dict) and isinstance(data.get("error"), dict) else {}
+    meta = err.get("metadata") if isinstance(err.get("metadata"), dict) else {}
+    return err, meta
+
+
+def limit_source(data):
+    """``error.metadata.limit_source`` of an error body when it is a JSON string, else None.
+
+    A value of another type (null, a number, a bool, a list, an object) is ignored rather than guessed at: only a
+    string has been observed (doc 52). The field is read at that one place only; the same name elsewhere in the
+    body is not the structured cause.
+    """
+    value = _error_parts(data)[1].get("limit_source")
+    return value if isinstance(value, str) else None
+
+
+def _shown(text):
+    """`text` as a JSON string literal in printable ASCII: quotes, backslashes, control characters, DEL and every
+    non-ASCII character (bidi overrides, zero-width and tag characters included) become visible escapes, so an
+    untrusted value can neither hide nor reorder the text around it on a console or in a record.
+
+    ``ensure_ascii`` escapes every character outside space to tilde (the json module's ASCII escaper), plus the
+    quote and the backslash. A key is never among those (cloud_guard.check_key refuses keys with a quote or a
+    backslash), so a key inside the value keeps its exact text and the backend's redaction still finds it.
+    """
+    return json.dumps(text, ensure_ascii=True)
+
+
+def rate_limit_label(kind, data):
+    """The words a record puts after "HTTP 429": ``"<kind> rate limit"``, plus the body's limit_source when it has one.
+
+    Why: the backend records the body's metadata cut to a few hundred characters, and in the observed shared-pool
+    body limit_source comes after the provider's long ``raw`` prose, so it can be cut short or fall past the cut
+    (in a synthetic copy of that body only "upstream_provider" of the value survives the cut). Naming the field
+    here keeps the cause visible, and marks an undocumented value as one, so a new cause OpenRouter starts sending
+    shows up in the records instead of being quietly folded into one of the three kinds.
+
+    The value is untrusted: it is quoted with ``_shown`` (printable ASCII only) and quoted whole or not at all (a
+    value over LIMIT_SOURCE_SHOWN_MAX characters is reported by its length), so a key inside it stays whole for the
+    backend's redaction. A body without a string limit_source gets the plain label, as before.
+
+    cloud_backend.py's ``chat`` puts it in both 429 records of a gated run: ``HTTP 429 (<label>): ...`` for an
+    HTTP 429, and ``...; <label>`` after the provider error of a 429 inside an HTTP 200.
+    """
+    label = f"{kind} rate limit"
+    source = limit_source(data)
+    if source is None:
+        return label
+    if source == LIMIT_SOURCE_SHARED_POOL:
+        return f"{label}, limit_source {_shown(source)}: the provider's shared free pool is full for every key"
+    shown = _shown(source) if len(source) <= LIMIT_SOURCE_SHOWN_MAX else f"of {len(source)} characters (not shown)"
+    return f"{label}, limit_source {shown} is not documented, so the message and headers decided"
+
+
 def classify_429(headers, data, now, retry_after=None):
     """(kind, seconds to wait or None) for an HTTP 429.
 
@@ -100,9 +175,27 @@ def classify_429(headers, data, now, retry_after=None):
     OpenRouter's per-minute limit (X-RateLimit-* headers, reset soon): wait for the reset. ``upstream``: the
     provider donating the capacity is saturated (the metadata names it, or the text says upstream): bounded backoff
     that honours Retry-After.
+
+    Order of the rules:
+
+    1. **Structured cause.** ``error.metadata.limit_source`` equal to LIMIT_SOURCE_SHARED_POOL is ``upstream``,
+       whatever the text and headers say. It is OpenRouter's own statement of the cause (doc 52's verification note
+       of 2026-09-28), while free text belongs to the provider and can name the provider's own per-day quota, which
+       the text rule below would take for the account's daily cap and stop the run until 00:00 UTC. Should the
+       field ever sit on the account's real daily cap, the cost is bounded. Each call gives up after its
+       ``max_attempts`` (default 5); HTTP 429s also count toward the gate's streak, which stops a free run after
+       ``max_429`` in a row across calls (``--max-consecutive-429``, default 3). A 429 reported inside an HTTP 200
+       is not in that streak (the backend counts HTTP statuses), so a run of those stops at the day's allowance.
+    2. **Text and headers**, for every other body: one without the field, one whose field is not a string (ignored,
+       see ``limit_source``), and one with an undocumented value. That last case is deliberately permissive: the
+       value is not guessed at, the rules that ran before the field existed decide, and ``rate_limit_label`` shows
+       the value in the record.
     """
-    err = data.get("error") if isinstance(data, dict) and isinstance(data.get("error"), dict) else {}
-    meta = err.get("metadata") if isinstance(err.get("metadata"), dict) else {}
+    # ── 1. The structured cause, when it is the one documented value ──
+    if limit_source(data) == LIMIT_SOURCE_SHARED_POOL:
+        return "upstream", retry_after
+    # ── 2. The text and header rules (unchanged since before limit_source existed) ──
+    err, meta = _error_parts(data)
     text = (str(err.get("message") or "") + " " + json.dumps(meta, ensure_ascii=False)[:800]).lower()
     h = headers or {}
     reset = reset_seconds(h.get("x-ratelimit-reset"), now)

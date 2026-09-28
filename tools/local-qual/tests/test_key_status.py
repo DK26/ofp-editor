@@ -131,7 +131,7 @@ def t67_key_status_reports_the_key_record_in_plain_words():
 
     # ── The pure report builder: deterministic, and untrusted shapes read as "not reported" ──
     import key_status
-    rec = free_key(usage="0.1", byok_usage=True, rate_limit={"requests": True, "interval": "1h‮"},
+    rec = free_key(usage="0.1", byok_usage=True, rate_limit={"requests": True, "interval": "1h\u202e"},
                    free_model_daily_requests={"used": -1, "limit": 50, "remaining": 49})
     now = time.time()
     a = key_status.report_lines(rec, now, host="openrouter.ai", env_name=ENV_NAME)
@@ -140,7 +140,7 @@ def t67_key_status_reports_the_key_record_in_plain_words():
     check(a == b, "report_lines gave two different reports for one record and one time")
     check("usage: not reported in all" in text and "BYOK not reported" in text and
           "per-key rate limit: not reported" in text and "free-model requests today: not reported" in text and
-          LABEL not in text and "‮" not in text, f"untrusted shapes: {text!r}")
+          LABEL not in text and "\u202e" not in text, f"untrusted shapes: {text!r}")
     odd = key_status.rate_limit_text({"requests": 5, "interval": "1h\x1b[2J"})
     check(odd == "5 requests (interval not reported)", f"unsafe interval shown: {odd!r}")
     return (f"8 fields in plain words (reset at {sorted(resets)[0]}); 1 GET /key, 0 other requests; the other value "
@@ -217,7 +217,7 @@ def t69_key_status_failures_name_the_next_step():
         (503, {"error": {"code": 503, "message": "overloaded"}}, None, 3, "try again", "overloaded"),
         (200, "<html>sign in</html>", None, 5, "--base-url", "not JSON"),
         (200, {"ok": True}, None, 5, "--base-url", "no key record"),
-        (401, {"error": {"code": 401, "message": "bad \x1b[31mred\x1b[0m ‮drow"}}, None, 5,
+        (401, {"error": {"code": 401, "message": "bad \x1b[31mred\x1b[0m \u202edrow"}}, None, 5,
          "set-openrouter-key.ps1 -Force", "\\x1b[31mred"),
         (302, {"error": {"code": 302, "message": "moved"}}, {"Location": steal}, 5, "redirect", "HTTP 302"),
     ]
@@ -229,7 +229,7 @@ def t69_key_status_failures_name_the_next_step():
         p = run_free(ks_args())
         lines = err_lines(p)
         if (p.returncode != code or p.stdout.strip() or len(lines) != 1 or step not in lines[0]
-                or seen not in lines[0] or "\x1b" in p.stderr or "‮" in p.stderr or not no_secrets(p)):
+                or seen not in lines[0] or "\x1b" in p.stderr or "\u202e" in p.stderr or not no_secrets(p)):
             bad.append(f"HTTP {status}: exit {p.returncode} (want {code}), stdout {p.stdout!r}, stderr {lines!r}")
         if other_requests():  # a chat, a catalogue read, or the redirect target (/steal) would all land here
             bad.append(f"HTTP {status}: other requests {[r['path'] for r in other_requests()]}")

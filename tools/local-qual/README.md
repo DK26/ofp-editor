@@ -774,7 +774,11 @@ run, daily routine, revoking) is [cloud/README.md](cloud/README.md). What the to
   `--daily-reserve` (default 5); a wait that crosses 00:00 UTC books the attempt to the new day after reading the
   account's new counter. Every attempt counts, 429s and errors included. A 429 naming the daily quota is
   terminal: exit 10 with the resume time (00:00 UTC). A per-minute 429 waits for `X-RateLimit-Reset` (epoch
-  milliseconds). An upstream 429 honours `Retry-After`. `--max-consecutive-429` (default 3) in a row end the run
+  milliseconds). An upstream 429 honours `Retry-After`. A 429 whose `error.metadata.limit_source` is
+  `upstream_provider_shared_pool` is always upstream, whatever its text or headers say (a provider's own "per day"
+  wording once read as the account's cap; doc 52's re-check of 2026-09-28); other `limit_source` values are not
+  documented, keep the text and header rules, and are shown in the recorded error. `--max-consecutive-429`
+  (default 3) in a row end the run
   with exit 10. A 404 or 503 saying no endpoint may serve the request (privacy settings, ZDR, a guardrail) stops
   with exit 5 instead of spending more requests.
 
@@ -935,6 +939,8 @@ python -m unittest discover -s tools/local-qual/tests -k t59 -v                #
 | `test_free_mode.py` | t40–t50 | `--free-only`: refusals, catalogue traps, request shape, zero-spend guard, substitution, key rules, key poll, daily cap and day boundary, account quota, 429s, rate-gate units |
 | `test_free_mode_review.py` | t51–t58, t75 | Second review of free mode, and the DPAPI key scripts through PowerShell (t53: 15 steps, `--key-status` through the launcher among them); t75: a label planted in the key record's date fields |
 | `test_key_status.py` | t67–t73 | `--key-status`: the report field by field, the key and label never shown (in bodies, record fields, redirect targets and `\u`-escaped copies), one next-step line per failure, refusals before sending, a run line with `--key-status` running only the key read, the limit that applies named |
+| `test_rate_limit_source.py` | r01–r08 | 429 classification by `limit_source` first: the observed shared-pool body, daily-looking text and far resets that stay upstream, unchanged behaviour without the field, undocumented and non-string values, escaped labels in the recorded error, back-off through `chat()` including 429s inside an HTTP 200 |
+| `test_source_text.py` | h01 | No hidden characters in the tool's `.py` and `.ps1` sources: C0 controls, bidi overrides and isolates, zero-width and tag characters, line and paragraph separators (a leading BOM and CRLF are allowed) |
 | `test_logprob_pick.py`, `test_logprob_failures.py` | l01–l19 | `--pick-mode logprob`: flags, request bodies, known distributions, response shapes, failures and hostile responses |
 | `test_logprob_cascade.py` | c01–c08 | `cascade.py` against hand-computed values, calibration, an end-to-end run, refusals |
 | `test_scaffolds.py`, `test_scaffolds_function.py`, `test_scaffolds_stats.py` | a01–a03, b01–b10, c01–c15, d01–d07 | Scaffold arms: regression, leakage and answer-blindness, what each arm computes and sends, `scaffold_stats.py` and `control_suite.py` |

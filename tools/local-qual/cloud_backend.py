@@ -41,7 +41,7 @@ from cloud_guard import (DROPPABLE_PARAMS, FORBIDDEN_EXTRA, STRIPPABLE_KEYWORDS,
                          check_extra_body, check_key, get_capped, normalise_schema, opener, provider_matches,
                          read_capped, redirect_host)
 from free_mode import NO_ROUTE_HINT, key_summary, no_route, paid_signal
-from rate_gate import classify_429
+from rate_gate import classify_429, rate_limit_label
 
 # ── OpenAI-compatible endpoints (cloud or local) ─────────────────────────────
 #
@@ -415,11 +415,18 @@ class OpenAICompatBackend:
                 if code in (401, 403):
                     fatal, exhausted = "config", False  # a bad or unauthorised key, reported inside a 200
                     break
-                if code == 429 and self.gate is not None and classify_429(headers, data, time.time())[0] == "daily":
-                    # The daily quota reported inside a 200 is as terminal as the HTTP status: a retry only burns it.
-                    error += "; the daily quota is used up: resume after 00:00 UTC with the same command plus --resume"
-                    fatal, exhausted = "quota", False
-                    break
+                if code == 429 and self.gate is not None:
+                    # A 429 inside a 200 is classified like the HTTP status, and its record names the kind (and the
+                    # body's limit_source, which the metadata excerpt above can cut off).
+                    kind = classify_429(headers, data, time.time())[0]
+                    error += f"; {rate_limit_label(kind, data)}"
+                    if kind == "daily":
+                        # The daily quota reported inside a 200 is as terminal as the HTTP status: a retry only burns
+                        # it.
+                        error += ("; the daily quota is used up: resume after 00:00 UTC with the same command plus "
+                                  "--resume")
+                        fatal, exhausted = "quota", False
+                        break
                 if schema_sent and code is not None and 400 <= code <= 499 and \
                         any(w in text.lower() for w in _SCHEMA_WORDS):
                     fatal, exhausted = "schema_rejected", False
@@ -471,7 +478,7 @@ class OpenAICompatBackend:
                 costs.append(0.0)
                 sources.append("unbilled")
                 kind, wait = classify_429(headers, data, time.time(), _retry_after_seconds(headers))
-                error = f"HTTP 429 ({kind} rate limit): {_error_text(data, raw)}"
+                error = f"HTTP 429 ({rate_limit_label(kind, data)}): {_error_text(data, raw)}"
                 if kind == "daily":
                     resume = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + (wait or 0.0)))
                     error += f"; the daily quota is used up: resume after {resume} with the same command plus --resume"
