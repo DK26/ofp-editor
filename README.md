@@ -3,7 +3,7 @@
 **Mission & Campaign Editor for Arma: Cold War Assault / Operation Flashpoint**
 
 > **Status: early design.** There is no code yet. The research and design work lives in
-> [`docs/`](docs/research/); contributor and coding-agent rules are in [`AGENTS.md`](AGENTS.md).
+> [`docs/`](docs/README.md) (start at its index); contributor and coding-agent rules are in [`AGENTS.md`](AGENTS.md).
 
 Plotroom is a standalone, open-source re-creation of the classic 2001 mission editor: the same
 top-down map, the same F1–F6 editing modes, the same dialogs. It runs on its own, in a window or

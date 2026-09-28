@@ -1,0 +1,37 @@
+# Line endings and byte-exact files (friction register FR-C-022).
+#
+# Every text file is stored and checked out with LF, whatever the contributor's core.autocrlf setting. Windows tools
+# (Python's csv module, PowerShell 5.1, many editors) write CRLF by default, and mixed endings make diffs noisy.
+* text=auto eol=lf
+
+# Windows batch files need CRLF to run.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Game text formats keep their bytes exactly: round-trip goldens compare them byte for byte, and the formats use CRLF
+# and tabs by convention (mission.sqm, scripts, description.ext and its includes). Git must never rewrite them.
+*.sqm -text
+*.sqs -text
+*.sqf -text
+*.ext -text
+*.hpp -text
+*.cpp -text
+*.h -text
+*.fsm -text
+# A mission's string table; this repository's own CSV files stay LF text.
+stringtable.csv -text
+
+# Binary game, model and image formats.
+*.pbo binary
+*.paa binary
+*.pac binary
+*.p3d binary
+*.wrp binary
+*.wss binary
+*.ogg binary
+*.bin binary
+*.gguf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary

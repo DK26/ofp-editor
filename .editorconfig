@@ -1,0 +1,30 @@
+# Editor defaults (friction register FR-C-022): UTF-8 without BOM, LF, final newline. See .gitattributes for how git
+# stores line endings and which game formats keep their bytes exactly.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Two trailing spaces are a Markdown line break.
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{json,toml,yml,yaml}]
+indent_size = 2
+
+[*.{cmd,bat}]
+end_of_line = crlf
+
+# Game text formats: leave bytes, endings and whitespace as they are (round-trip fixtures are byte-exact).
+[*.{sqm,sqs,sqf,ext,hpp,cpp,h,fsm}]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset
