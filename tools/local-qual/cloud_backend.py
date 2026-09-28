@@ -41,7 +41,7 @@ from cloud_guard import (DROPPABLE_PARAMS, FORBIDDEN_EXTRA, STRIPPABLE_KEYWORDS,
                          check_extra_body, check_key, get_capped, normalise_schema, opener, provider_matches,
                          read_capped, redirect_host)
 from free_mode import NO_ROUTE_HINT, key_summary, no_route, paid_signal
-from rate_gate import classify_429, rate_limit_label
+from rate_gate import classify_429, daily_resume_time, rate_limit_label
 
 # ── OpenAI-compatible endpoints (cloud or local) ─────────────────────────────
 #
@@ -103,7 +103,7 @@ def usage_fields(usage):
 def _json_or_none(raw):
     try:
         return json.loads(raw) if raw and raw.strip() else None
-    except ValueError:
+    except (ValueError, RecursionError):  # RecursionError: nested deeper than the reader goes, a few KB suffice (t76)
         return None
 
 
@@ -112,7 +112,7 @@ def _code_and_message(err):
         code = err.get("code")
         try:
             code = int(code) if code is not None and not isinstance(code, bool) else None
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):  # OverflowError: json reads 1e999 and Infinity as inf (t76)
             code = None
         text = str(err.get("message") or "")
         meta = err.get("metadata")
@@ -206,7 +206,7 @@ class OpenAICompatBackend:
     * **Free mode** (set by cloud_run.py after free_mode.start_free passed): ``gate`` (a rate_gate.RateGate) is
       asked before every attempt and may wait or stop the call; ``free_target`` makes every 200 face the zero-spend
       check (usage.cost exactly 0, the requested :free model), whose failure stops the run as ``not_free``; a 429
-      naming the daily quota stops it as ``quota`` (never retried), and several 429 in a row as ``rate_limited``.
+      naming the daily quota stops it as ``quota`` (never retried), several in a row (in a 200 too) as ``rate_limited``.
     """
 
     name = "openai"
@@ -381,10 +381,12 @@ class OpenAICompatBackend:
             status, headers, raw, exc = self._post(body)
             history.append(status if status is not None else type(exc).__name__)
             data = _json_or_none(raw)
-            too_many_429 = self.gate.note_response(status) if self.gate is not None else False
+            embedded = _embedded_error(data) if status == 200 and isinstance(data, dict) else None
+            # ── 429 streak: a 429 inside a 200 counts like the HTTP status; any other answer resets it ──
+            seen = 429 if embedded is not None and embedded[0] == 429 else status
+            too_many_429 = self.gate.note_response(seen) if self.gate is not None else False
             wait_override = None
             if status == 200 and isinstance(data, dict):
-                embedded = _embedded_error(data)
                 cost, source = (budget.cost_from_usage(data.get("usage")) if budget is not None else (None, None))
                 if cost is None:
                     cost, source = reservation, "reserved"
@@ -416,16 +418,19 @@ class OpenAICompatBackend:
                     fatal, exhausted = "config", False  # a bad or unauthorised key, reported inside a 200
                     break
                 if code == 429 and self.gate is not None:
-                    # A 429 inside a 200 is classified like the HTTP status, and its record names the kind (and the
-                    # body's limit_source, which the metadata excerpt above can cut off).
+                    # A 429 inside a 200 is classified and counted in the streak like the HTTP status; its record names
+                    # the kind (and the body's limit_source, which the metadata excerpt above can cut off).
                     kind = classify_429(headers, data, time.time())[0]
                     error += f"; {rate_limit_label(kind, data)}"
                     if kind == "daily":
-                        # The daily quota reported inside a 200 is as terminal as the HTTP status: a retry only burns
-                        # it.
+                        # As terminal as the daily quota's HTTP status: a retry only burns the quota.
                         error += ("; the daily quota is used up: resume after 00:00 UTC with the same command plus "
                                   "--resume")
                         fatal, exhausted = "quota", False
+                        break
+                    if too_many_429:
+                        error += f"; {self.gate.streak_message()}"
+                        fatal, exhausted = "rate_limited", False
                         break
                 if schema_sent and code is not None and 400 <= code <= 499 and \
                         any(w in text.lower() for w in _SCHEMA_WORDS):
@@ -477,16 +482,17 @@ class OpenAICompatBackend:
                 # ── Rate limits with a gate: the daily cap is terminal; the minute window and upstream are retried ──
                 costs.append(0.0)
                 sources.append("unbilled")
-                kind, wait = classify_429(headers, data, time.time(), _retry_after_seconds(headers))
+                now = time.time()
+                kind, wait = classify_429(headers, data, now, _retry_after_seconds(headers))
                 error = f"HTTP 429 ({rate_limit_label(kind, data)}): {_error_text(data, raw)}"
                 if kind == "daily":
-                    resume = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + (wait or 0.0)))
-                    error += f"; the daily quota is used up: resume after {resume} with the same command plus --resume"
+                    # Untrusted reset: an absurd one resumes at the next 00:00 UTC, formatted without raising.
+                    error += (f"; the daily quota is used up: resume after {daily_resume_time(now, wait)} with the "
+                              f"same command plus --resume")
                     fatal, exhausted = "quota", False
                     break
                 if too_many_429:
-                    error += (f"; {self.gate.consecutive_429} HTTP 429 in a row: stopping to spare the quota; resume "
-                              f"later with --resume")
+                    error += f"; {self.gate.streak_message()}"
                     fatal, exhausted = "rate_limited", False
                     break
                 wait_override = wait

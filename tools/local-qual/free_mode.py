@@ -120,7 +120,8 @@ def add_free_args(ap):
     free.add_argument("--daily-reserve", type=int, default=rate_gate.DAILY_RESERVE_DEFAULT,
                       help="free requests of the account's daily quota left unused (default 5)")
     free.add_argument("--max-consecutive-429", type=int, default=rate_gate.MAX_CONSECUTIVE_429_DEFAULT,
-                      help="stop (exit 10, resume later) after this many HTTP 429 in a row (default 3)")
+                      help="stop (exit 10, resume later) after this many 429 in a row, as HTTP 429 or inside an "
+                           "HTTP 200 (default 3)")
     free.add_argument("--key-poll-every", type=int, default=rate_gate.KEY_POLL_EVERY_DEFAULT,
                       help="read GET /key after at most this many attempts and stop if the key's usage moved "
                            "(1-10, default 10)")

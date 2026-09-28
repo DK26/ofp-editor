@@ -359,7 +359,7 @@ CHAT_BODY = {"model": FREE, "messages": [{"role": "user", "content": "Pick A or 
 
 
 def _chat(script):
-    """One ``chat`` call as a free run makes it (a rate gate stopping at 3 HTTP 429 in a row, the zero-spend target)
+    """One ``chat`` call as a free run makes it (a rate gate stopping at 3 429s in a row, the zero-spend target)
     against a scripted server; returns (result, POSTs the server saw, back-off sleeps). The sleeps are recorded,
     not slept."""
     slept = []
@@ -423,9 +423,9 @@ def r08_shared_pool_429s_inside_a_200_stop_within_the_call_attempt_limit():
     backend's max_attempts POSTs, without an answer and never as quota; the recorded error names the limit_source.
 
     Why: limit_source first means such a body is no longer the daily stop, so something else must bound the
-    retries, and classify_429's docstring names it. The gate's 429 streak counts HTTP statuses, and these arrive as
-    200, so the call's own attempt limit is the bound, and the day's allowance bounds the run. A stop at the streak
-    (rate_limited) is accepted too: it is the tighter bound, should the backend ever count a 429 inside a 200.
+    retries, and classify_429's docstring names it. The call's own attempt limit always does. Since a 429 inside a
+    200 counts toward the gate's streak (r12, test_rate_limit_stops.py), the streak stops it first, as rate_limited
+    after 3; the case accepts either bound, so it pins the limit_source record whichever stops the call.
 
     How: the scripted server answers every POST with the same 200 body; the backend keeps its default max_attempts,
     read from a backend built with the same defaults.

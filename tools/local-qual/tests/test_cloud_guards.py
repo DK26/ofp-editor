@@ -3,7 +3,8 @@
 that would forward the key, a key or credential smuggled into the request, two processes on one ledger, a
 stream or oversized body inside a 200, errors inside a 200, a cost reported as 0, an endpoint ignoring the
 schema, reasoning text inside the answer, a ledger named in another letter case, a redirect whose target cannot be
-parsed). Each failed on the code as first written and passes now.
+parsed, an error body with an infinite code or nested past the JSON reader's depth). Each failed on the code as first
+written and passes now.
 
 Every case runs run.py (or another tool script) as a child process against mock_server.py, in-process on
 127.0.0.1: nothing is spent and no real endpoint is contacted. cloud_support.py holds the dummy keys, the
@@ -36,7 +37,7 @@ def tearDownModule():
     cloud_support.finish()
 
 
-# ── Adversarial review (t24-t37, t74) ──────────────────────────────────────────
+# ── Adversarial review (t24-t37, t74, t76) ─────────────────────────────────────
 
 def t24_redirects_are_refused_and_never_forward_the_key():
     """A 3xx from the endpoint (chat or GET /key) is never followed, so the bearer key cannot reach another URL.
@@ -345,6 +346,82 @@ def t74_unreadable_redirect_target_is_a_config_stop_not_a_crash():
     return "HTTP 300 with an unparsable Location: exit 5, 1 call, the record names the redirect, unbilled"
 
 
+# Hostile error bodies (t76). JSON text, sent by the mock exactly as written: Python's json module reads 1e999,
+# Infinity and -Infinity as float infinity. DEEP nests 5,000 levels (10 KB), past the depth the JSON reader handles
+# (about 3,000 on Python 3.12), yet far under the 8 MiB body cap.
+INF_CODE = '{"error": {"code": 1e999, "message": "busy"}}'
+NEG_INF_CODE = '{"error": {"code": -Infinity, "message": "busy"}}'
+INF_IN_CHOICE = '{"choices": [{"error": {"code": Infinity, "message": "busy"}}]}'
+DEEP = "[" * 5000 + "]" * 5000
+DEEP_META = '{"error": {"code": 429, "message": "busy", "metadata": ' + '{"a": ' * 5000 + "1" + "}" * 5000 + "}}"
+
+
+def t76_hostile_error_bodies_never_crash_the_call():
+    """An error body whose ``code`` is not a finite number (1e999, Infinity) or that nests deeper than the JSON reader
+    goes ends its attempt like any other unreadable error, never with a traceback: as HTTP 200, 400, 429 or 503,
+    in-process with a budget and a rate gate, and through run.py on a paid and a free run.
+
+    Why: ``int()`` of an infinite code raised OverflowError out of ``_code_and_message``, and a deep body raised
+    RecursionError out of ``_json_or_none`` (both caught only ValueError). Either left ``chat()`` before the call
+    settled: the attempt's reservation stayed booked as spent, and run.py died with exit 1, no record and no stop
+    row. Found in the adversarial review of the 429 fixes (r09-r14): the streak reads every 200's error code before
+    counting it, and a gated 429 records its body's text. key_status.py already catches RecursionError.
+
+    How: in-process calls use max_attempts 3, a Budget (1 USD per million tokens) and a paid gate (``--rpm``); the
+    call must have settled exactly what it recorded. The child runs read the exit code, the stop rows and the ledger.
+    """
+    import random
+    import cloud_backend
+    import rate_gate
+    from budget import Budget, read_ledger_rows
+    chat_body = {"model": "mock/model-1", "messages": [{"role": "user", "content": "Pick A or B."}], "stream": False,
+                 "max_tokens": 16}
+    # (name, HTTP status, body, attempts, fatal): unreadable errors retry on 429 and 5xx, stop on a 4xx or a 200.
+    table = [("200, code 1e999", 200, INF_CODE, 1, None), ("200, Infinity in a choice", 200, INF_IN_CHOICE, 1, None),
+             ("400, code 1e999", 400, INF_CODE, 1, "config"), ("429, code 1e999", 429, INF_CODE, 3, None),
+             ("503, code -Infinity", 503, NEG_INF_CODE, 3, None), ("200, nested", 200, DEEP, 1, "config"),
+             ("429, nested metadata", 429, DEEP_META, 3, None), ("503, nested", 503, DEEP, 3, None)]
+    bad = []
+    for name, status, raw, attempts, fatal in table:
+        STATE.reset()
+        STATE.queue = [{"status": status, "body": raw}] * attempts
+        budget = Budget(1.0, 1.0, 1.0)
+        backend = cloud_backend.OpenAICompatBackend(URL, 10.0, None, max_attempts=3, sleep=lambda s: None,
+                                                    rng=random.Random(7))
+        backend.gate = rate_gate.RateGate(rpm=100)
+        try:
+            r = backend.chat(dict(chat_body), budget, "c1")
+        except (OverflowError, RecursionError, ValueError) as e:
+            bad.append(f"{name}: chat raised {type(e).__name__}, {budget.spent():.8f} USD left reserved")
+            continue
+        x = r["extra"]
+        if x["attempts"] != attempts or r["fatal"] != fatal or not r["error"] or budget.spent() != x["cost_usd"]:
+            bad.append(f"{name}: {x['attempts']} attempts, fatal {r['fatal']}, spent {budget.spent()} for a record of "
+                       f"{x['cost_usd']}, error {str(r['error'])[:80]!r}")
+    check(not bad, "; ".join(bad))
+    # ── Through run.py: a paid run gets an infinite code inside a 200, a free run nested 429s (its streak stops it) ──
+    STATE.reset()
+    STATE.queue = [{"status": 200, "body": INF_CODE}] * 2
+    o = out("hostile_paid.jsonl")
+    p = run_tool(base(URL) + ["--suite", "pick", "--k", "1", "--limit", "2", "--max-usd", "1", "--out", o])
+    recs = calls(rows(o)) if os.path.exists(o) else []
+    spent = Budget(1, 1, 1, rows=read_ledger_rows(o)).spent() if os.path.exists(o) else None
+    check(p.returncode == 2 and "Traceback" not in p.stderr and len(recs) == 2 and STATE.count() == 2
+          and all("code None" in (r["error"] or "") for r in recs)
+          and spent is not None and abs(spent - sum(r["cost_usd"] for r in recs)) < 1e-12,
+          f"paid: exit {p.returncode}, {len(recs)} records, spent {spent}, stderr {p.stderr.strip()[-240:]!r}")
+    STATE.reset()
+    free_state()
+    STATE.queue = [{"status": 429, "body": DEEP_META}] * 3
+    o2, led = out("hostile_free.jsonl"), out("hostile_free_ledger.jsonl")
+    p2 = run_free(free_args("hostile_free_ledger.jsonl") + ["--suite", "pick", "--k", "1", "--limit", "2", "--out", o2])
+    check(p2.returncode == 10 and "Traceback" not in p2.stderr and STATE.count() == 3
+          and [s["stop"] for s in stop_rows(o2)][-1:] == ["RateLimited"] and no_secrets(p2, o2, led),
+          f"free: exit {p2.returncode}, {STATE.count()} requests, stderr {p2.stderr.strip()[-240:]!r}")
+    return (f"{len(table)} hostile bodies in-process: no exception, each call settled what it recorded; paid run.py: "
+            f"exit 2, 2 records; free run.py with nested 429s: exit 10 RateLimited after 3 requests")
+
+
 # ── unittest wiring ──────────────────────────────────────────────────────────
 
 class AdversarialGuardTests(support.CaseTestCase):
@@ -363,7 +440,8 @@ class AdversarialGuardTests(support.CaseTestCase):
              t34_think_blocks_are_stripped_before_parsing,
              t36_ledger_path_compared_case_insensitively_on_windows,
              t37_no_ledger_note_and_warning_free_pinned_run,
-             t74_unreadable_redirect_target_is_a_config_stop_not_a_crash)
+             t74_unreadable_redirect_target_is_a_config_stop_not_a_crash,
+             t76_hostile_error_bodies_never_crash_the_call)
 
     def setUp(self):
         STATE.reset()

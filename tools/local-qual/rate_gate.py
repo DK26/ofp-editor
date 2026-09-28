@@ -6,12 +6,14 @@ What it owns
 * ``RateGate``, consulted before every attempt: at most ``rpm`` attempts in any rolling minute; at most ``per_day``
   attempts per UTC day counted from the ledger's write-ahead rows (so every run sharing the ledger counts, and a
   resume carries the count); the account's own remaining free requests less a reserve; a key poll every few
-  attempts (free_mode.py supplies it: it stops the run if the key's usage moves); and a stop after several HTTP 429
-  in a row.
+  attempts (free_mode.py supplies it: it stops the run if the key's usage moves); and a stop after several 429s in
+  a row, as HTTP 429 or reported inside an HTTP 200.
 * ``classify_429`` and ``reset_seconds``: which 429 is the daily quota (terminal), the per-minute window (wait for
   the reset) or a saturated upstream provider (bounded backoff honouring Retry-After). The structured cause
   ``error.metadata.limit_source`` decides first when it holds the one documented value; the text and header rules
   decide everything else.
+* ``daily_wait`` and ``daily_resume_time``: the daily cap's wait and resume time, sane whatever the untrusted
+  ``X-RateLimit-Reset`` says (an absurd one means the next 00:00 UTC), formatted without ever raising.
 * ``limit_source`` and ``rate_limit_label``: that structured cause read from an untrusted body, and the words a
   record puts after "HTTP 429" (the kind, plus the limit_source, escaped, when the body names one).
 * The UTC-day helpers (the free quota resets at 00:00 UTC).
@@ -56,6 +58,10 @@ KEY_POLL_EVERY_MAX = 10
 MAX_CONSECUTIVE_429_DEFAULT = 3
 # An X-RateLimit-Reset further away than this is the daily cap, not the per-minute window.
 DAILY_RESET_MIN_S = 300.0
+# How far past the next 00:00 UTC a daily cap's reset may lie and still be taken as sent (daily_wait). The free
+# counter resets at 00:00 UTC, so an honest header names the next midnight; one day of slack keeps a server clock that
+# is already past midnight (naming the midnight after) from being overruled. Anything later is absurd.
+DAILY_RESET_SLACK_S = 86_400.0
 # The rolling window of the per-minute cap, in seconds.
 WINDOW_S = 60.0
 # A header value above EPOCH_MS_MIN is epoch milliseconds (as OpenRouter sends X-RateLimit-Reset); above
@@ -108,6 +114,37 @@ def reset_seconds(value, now):
     if v > EPOCH_MS_MIN:
         v /= 1000.0
     return max(0.0, v - now) if v > EPOCH_S_MIN else v
+
+
+def daily_wait(reset, now):
+    """Seconds to wait for the daily cap: `reset` (from reset_seconds) when it is sane, else the time to the next
+    00:00 UTC.
+
+    Sane means a finite number above 0 and at most DAILY_RESET_SLACK_S past the next 00:00 UTC. Why: the header is
+    untrusted, and the daily free counter resets at 00:00 UTC whatever it says. A header of "1" and 30 zeros once
+    became a wait of 10^27 s, and formatting the resume time crashed the run (OverflowError, or OSError past the year
+    3000 on Windows); a reset in the past became a wait of 0, a resume time of now. A missing or unreadable reset
+    (None) means the next 00:00 UTC too.
+    """
+    to_midnight = seconds_to_midnight(now)
+    if isinstance(reset, bool) or not isinstance(reset, (int, float)) or not math.isfinite(reset) or reset <= 0 \
+            or reset > to_midnight + DAILY_RESET_SLACK_S:
+        return to_midnight
+    return reset
+
+
+def daily_resume_time(now, wait):
+    """When a run stopped by the daily cap may resume: ``now`` plus ``daily_wait(wait, now)``, as UTC ISO text
+    ("2026-09-22T00:00:00Z"), rounded to the second (``now`` plus the time to midnight can land a hair short of it).
+
+    Never raises: the wait is made sane first, and should formatting still fail, the next 00:00 UTC is returned.
+    cloud_backend.py puts it in the record and on the console of a ``quota`` stop.
+    """
+    try:
+        when = round(now + daily_wait(wait, now))
+        return _dt.datetime.fromtimestamp(when, _dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except (OverflowError, OSError, ValueError, TypeError):
+        return next_utc_midnight(now)
 
 
 def _error_parts(data):
@@ -171,7 +208,8 @@ def classify_429(headers, data, now, retry_after=None):
     """(kind, seconds to wait or None) for an HTTP 429.
 
     ``daily``: the free daily quota (a message naming a per-day limit, such as "free-models-per-day", or a reset more
-    than DAILY_RESET_MIN_S away): terminal, never retried, since a retry only burns the quota. ``minute``:
+    than DAILY_RESET_MIN_S away): terminal, never retried, since a retry only burns the quota; its wait is the
+    header's reset when sane, else the time to the next 00:00 UTC (``daily_wait``). ``minute``:
     OpenRouter's per-minute limit (X-RateLimit-* headers, reset soon): wait for the reset. ``upstream``: the
     provider donating the capacity is saturated (the metadata names it, or the text says upstream): bounded backoff
     that honours Retry-After.
@@ -183,9 +221,9 @@ def classify_429(headers, data, now, retry_after=None):
        of 2026-09-28), while free text belongs to the provider and can name the provider's own per-day quota, which
        the text rule below would take for the account's daily cap and stop the run until 00:00 UTC. Should the
        field ever sit on the account's real daily cap, the cost is bounded. Each call gives up after its
-       ``max_attempts`` (default 5); HTTP 429s also count toward the gate's streak, which stops a free run after
-       ``max_429`` in a row across calls (``--max-consecutive-429``, default 3). A 429 reported inside an HTTP 200
-       is not in that streak (the backend counts HTTP statuses), so a run of those stops at the day's allowance.
+       ``max_attempts`` (default 5); every 429 also counts toward the gate's streak, which stops a free run after
+       ``max_429`` in a row across calls (``--max-consecutive-429``, default 3). That includes a 429 reported inside
+       an HTTP 200: the backend passes its code to ``note_response`` as it passes an HTTP status.
     2. **Text and headers**, for every other body: one without the field, one whose field is not a string (ignored,
        see ``limit_source``), and one with an undocumented value. That last case is deliberately permissive: the
        value is not guessed at, the rules that ran before the field existed decide, and ``rate_limit_label`` shows
@@ -200,7 +238,7 @@ def classify_429(headers, data, now, retry_after=None):
     h = headers or {}
     reset = reset_seconds(h.get("x-ratelimit-reset"), now)
     if "per-day" in text or "per day" in text or "perday" in text or (reset is not None and reset > DAILY_RESET_MIN_S):
-        return "daily", reset if reset is not None else seconds_to_midnight(now)
+        return "daily", daily_wait(reset, now)
     if meta.get("provider_name") or meta.get("provider_code") or "upstream" in text:
         return "upstream", retry_after
     if reset is not None or "x-ratelimit-limit" in h:
@@ -230,7 +268,8 @@ class RateGate:
       resets the local count and forces a poll.
     * **Key poll.** ``poll()`` returns (stop or None, the account's daily counter); it runs every ``poll_every``
       attempts and on a new day.
-    * **429 streak.** ``note_response`` counts HTTP 429 in a row across calls; at ``max_429`` the run stops.
+    * **429 streak.** ``note_response`` counts 429s in a row across calls, as HTTP 429 or reported inside an HTTP
+      200; at ``max_429`` the run stops (free runs; a paid gate has no limit, max_429 None).
 
     ``before_attempt`` returns None to send, or (kind, message) to stop without sending: ``quota`` (nothing left
     today), or whatever the poll returns (``not_free``, ``config``). ``clock`` and ``sleep`` are injectable for tests.
@@ -334,9 +373,20 @@ class RateGate:
         return None
 
     def note_response(self, status):
-        """Count HTTP 429 in a row (any other answer resets the streak); True when the streak reached max_429."""
+        """Count 429s in a row (any other status resets the streak); True when the streak reached max_429.
+
+        ``status`` is the attempt's HTTP status, except that cloud_backend.py passes 429 for an HTTP 200 whose body
+        reports error code 429: OpenRouter documents both forms, and counting only the HTTP one let a storm of the
+        other run each call to its attempt limit and the run to the day's allowance. An answer, or another error
+        inside a 200, passes 200 and resets the streak.
+        """
         self.consecutive_429 = self.consecutive_429 + 1 if status == 429 else 0
         return self.max_429 is not None and self.consecutive_429 >= self.max_429
+
+    def streak_message(self):
+        """The words a record adds when the 429 streak stops the run (both 429 forms can make up the streak)."""
+        return (f"{self.consecutive_429} 429s in a row (as HTTP 429 or inside an HTTP 200): stopping to spare the "
+                f"quota; resume later with --resume")
 
     def status(self):
         """Fields for the call record."""

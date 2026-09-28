@@ -773,14 +773,16 @@ run, daily routine, revoking) is [cloud/README.md](cloud/README.md). What the to
   day in the shared `--ledger` (required), and never more than the account's remaining free requests less
   `--daily-reserve` (default 5); a wait that crosses 00:00 UTC books the attempt to the new day after reading the
   account's new counter. Every attempt counts, 429s and errors included. A 429 naming the daily quota is
-  terminal: exit 10 with the resume time (00:00 UTC). A per-minute 429 waits for `X-RateLimit-Reset` (epoch
-  milliseconds). An upstream 429 honours `Retry-After`. A 429 whose `error.metadata.limit_source` is
-  `upstream_provider_shared_pool` is always upstream, whatever its text or headers say (a provider's own "per day"
-  wording once read as the account's cap; doc 52's re-check of 2026-09-28); other `limit_source` values are not
-  documented, keep the text and header rules, and are shown in the recorded error. `--max-consecutive-429`
-  (default 3) in a row end the run
-  with exit 10. A 404 or 503 saying no endpoint may serve the request (privacy settings, ZDR, a guardrail) stops
-  with exit 5 instead of spending more requests.
+  terminal: exit 10 with the resume time, from its `X-RateLimit-Reset`. The header is not trusted: a reset that is
+  not after now, is not a number, or lies more than a day past the next 00:00 UTC resumes at the next 00:00 UTC
+  (the daily counter resets then), so an absurd header cannot crash the run. A per-minute 429 waits for
+  `X-RateLimit-Reset` (epoch milliseconds). An upstream 429 honours `Retry-After`. A 429 whose
+  `error.metadata.limit_source` is `upstream_provider_shared_pool` is always upstream, whatever its text or headers
+  say (a provider's own "per day" wording once read as the account's cap; doc 52's re-check of 2026-09-28); other
+  `limit_source` values are not documented, keep the text and header rules, and are shown in the recorded error.
+  `--max-consecutive-429` (default 3) 429s in a row, as HTTP 429 or reported inside an HTTP 200, end the run with
+  exit 10; an answer or any other status resets the count. A 404 or 503 saying no endpoint may serve the request
+  (privacy settings, ZDR, a guardrail) stops with exit 5 instead of spending more requests.
 
 Free records add `free_only`, `canonical_slug`, `endpoint_tag`, `endpoint_name`, `provider_pin`, `endpoint_params`,
 `key_start`, `free_daily_start` and `rate_gate` (`attempts_today`, `requests_left_today`, `rate_wait_s`). Exit codes
@@ -884,7 +886,7 @@ python tools/local-qual/run.py --key-status --api-key-env OPENROUTER_API_KEY [--
 | `free_mode.py` | `--free-only`: its flags, the free-model id rule, the live-catalogue check (exact-zero prices, text output, endpoint parameters), the per-response zero-spend check, the free-run lock's location, the start and end checks of a free run |
 | `free_key.py` | The OpenRouter key record in free mode: its non-secret fields (and the per-key rate limit), the refusals (management key, headroom, expiry, no daily counter), the usage-rise test, and the `key` ledger rows compared at the next start |
 | `key_status.py` | `--key-status`: one `GET <base>/key` and nothing else; the key record's non-secret fields in plain words with the free-only verdict, one next-step line per failure (401, 403, 404, 429, 5xx, a redirect, not a key record, no connection), bodies shown only redacted, the flags a run line carries but the command skips |
-| `rate_gate.py` | Client-side rate caps: requests per rolling minute, attempts per UTC day from the ledger, the account's remaining free requests less a reserve, the key poll hook, the 429 streak; the 429 classifier (daily, per minute, upstream) |
+| `rate_gate.py` | Client-side rate caps: requests per rolling minute, attempts per UTC day from the ledger, the account's remaining free requests less a reserve, the key poll hook, the 429 streak (HTTP 429 and 429 inside a 200); the 429 classifier (daily, per minute, upstream) and the daily cap's sane resume time |
 | `cloud/README.md` | Owner runbook for safe free-model testing on OpenRouter |
 | `cloud/set-openrouter-key.ps1`, `cloud/run-cloud.ps1`, `cloud/remove-openrouter-key.ps1`, `cloud/secret-common.ps1` | Windows key handling: store the key DPAPI-encrypted per user with a user-only access list (hidden input, never in a git working tree), run `run.py` with the key in that one child process's environment only (free-only rounds and `--key-status`; paid rounds with `-AllowPaid`), delete it; the plaintext never is a cmdlet argument (module logging), tracing is switched off and parameter defaults ignored when run in-process, and only DPAPI blobs are written or read |
 | `cloud/provider-zdr.json` | The tier-0 provider block for `--extra-body @...` (`zdr: true`, `data_collection: deny`) |
@@ -933,13 +935,14 @@ python -m unittest discover -s tools/local-qual/tests -k t59 -v                #
 | --- | --- | --- |
 | `test_cloud.py` | t03–t13, t18–t21, t59–t62 | Paid path: start refusals, the cap and `--resume`, retries and their cost, stops, key hygiene, shared ledger, key check, schema normalising, canary; the upstream-cost double count (doc 54 §4.2) and `--output` |
 | `test_cloud_grading.py` | t14–t17, t22, t23, t35, t39 | Open and labels arms and their grading, Fill schema modes, repair, `uplift.py` |
-| `test_cloud_guards.py` | t24–t34, t36, t37, t74 | Break-in attempts found in review: redirects (t74: one whose target cannot be parsed), smuggled keys and fields, a second process on the ledger, bodies that are not completions, errors inside a 200, cost 0 reports, ignored schemas, think blocks |
+| `test_cloud_guards.py` | t24–t34, t36, t37, t74, t76 | Break-in attempts found in review: redirects (t74: one whose target cannot be parsed), smuggled keys and fields, a second process on the ledger, bodies that are not completions, errors inside a 200, cost 0 reports, ignored schemas, think blocks; t76: error bodies with an infinite `code` or nested past the JSON reader's depth, which crashed `chat()` |
 | `test_cloud_review.py` | t63–t66 | Review of the merged tool: `--extra-body` fields billed at other rates, a thinking budget the worst case missed, a key JSON would escape, `--repeat-penalty` on OpenRouter |
 | `test_cloud_regression.py` | t01, t02, t38 | The local backends' request bodies and scores against the tool before the cloud backend (goldens) |
 | `test_free_mode.py` | t40–t50 | `--free-only`: refusals, catalogue traps, request shape, zero-spend guard, substitution, key rules, key poll, daily cap and day boundary, account quota, 429s, rate-gate units |
 | `test_free_mode_review.py` | t51–t58, t75 | Second review of free mode, and the DPAPI key scripts through PowerShell (t53: 15 steps, `--key-status` through the launcher among them); t75: a label planted in the key record's date fields |
 | `test_key_status.py` | t67–t73 | `--key-status`: the report field by field, the key and label never shown (in bodies, record fields, redirect targets and `\u`-escaped copies), one next-step line per failure, refusals before sending, a run line with `--key-status` running only the key read, the limit that applies named |
 | `test_rate_limit_source.py` | r01–r08 | 429 classification by `limit_source` first: the observed shared-pool body, daily-looking text and far resets that stay upstream, unchanged behaviour without the field, undocumented and non-string values, escaped labels in the recorded error, back-off through `chat()` including 429s inside an HTTP 200 |
+| `test_rate_limit_stops.py` | r09–r15 | Two 429 stops: a daily-cap 429 whose `X-RateLimit-Reset` is absurd (huge, past the year 3000, not a number, negative, in the past, over a day past midnight) resumes at the next 00:00 UTC, through `chat()` and as a free run (exit 10, unbilled, no traceback); 429s inside an HTTP 200 count toward the `--max-consecutive-429` streak (a free run stops as rate-limited after 3, an answer resets it, both forms share it) while paid gates retry as before; a daily-cap 429 that completes a streak still stops as the daily quota (r15) |
 | `test_source_text.py` | h01 | No hidden characters in the tool's `.py` and `.ps1` sources: C0 controls, bidi overrides and isolates, zero-width and tag characters, line and paragraph separators (a leading BOM and CRLF are allowed) |
 | `test_logprob_pick.py`, `test_logprob_failures.py` | l01–l19 | `--pick-mode logprob`: flags, request bodies, known distributions, response shapes, failures and hostile responses |
 | `test_logprob_cascade.py` | c01–c08 | `cascade.py` against hand-computed values, calibration, an end-to-end run, refusals |
@@ -1258,3 +1261,23 @@ python -m unittest discover -s tools/local-qual/tests -k t59 -v                #
   date filter), the body cap, the daily-against-minute 429 wording. The runbook's "read again 2026-09-28" source
   dates were removed: no page was re-read; the 429 texts and the two caveats now cite doc 52's observations. All
   158 checks pass, none skipped, in 384 s on Windows 10 with Python 3.12.
+- 2026-09-28, two 429 stops and their adversarial review, offline only (loopback mocks, random dummy keys, nothing
+  spent). A daily-cap 429 with an absurd `X-RateLimit-Reset` crashed `chat()` while it formatted the resume time
+  (OverflowError for 1 followed by 30 zeros, OSError past the year 3000 on Windows): exit 1, the call's reservation
+  left unsettled, no stop row. A reset in the past printed "resume after" the current time. `rate_gate.daily_wait`
+  now keeps a reset only when it is above 0 and at most a day past the next 00:00 UTC, and uses the next 00:00 UTC
+  otherwise; `daily_resume_time` formats it without raising (r09–r11). A 429 inside an HTTP 200 now counts toward
+  `--max-consecutive-429` like an HTTP 429 (r12, r13), and paid gates still retry (r14). Written test first: r09–r13
+  failed on the code before; r14 pins the unchanged paid path. The review then found two more faults, each written
+  test first. A body with `"code": 1e999` or `Infinity` raised OverflowError in `_code_and_message`, and one nested
+  a few thousand levels deep raised RecursionError in `_json_or_none`. Either crashed `chat()` on any status, with
+  the reservation unsettled and exit 1 (t76; older than these fixes; `key_status.py` already caught the second).
+  No test pinned that a daily-cap 429 completing a streak stops as the daily quota, not rate-limited, and moving
+  the streak check first on either path passed the whole suite (r15). Mutation check in copies of the tool: 17
+  faults are each caught. They are the classifier without `daily_wait`, no upper bound, no lower bound, the bound
+  off by one, no slack, the bound as the fallback, no NaN guard and no bool guard (r09, with r10, r11 or r03–r06
+  for some); the HTTP status alone in the streak, no stop inside a 200, an HTTP 429 resetting the streak, any
+  embedded error counting and a paid gate stopping (r07, r12–r14, t49); the streak before the daily cap on either
+  path (r15); and either `except` narrowed back (t76). Three changes are unobservable: formatting the resume time
+  with `time.gmtime` again, and dropping the formatter's rounding or its exception handler, because `daily_wait`
+  has already bounded the wait. All 175 checks pass, none skipped, in 289 s on Windows 10 with Python 3.12.
