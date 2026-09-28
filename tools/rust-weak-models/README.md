@@ -19,14 +19,17 @@ the numbers.
 From this folder:
 
 ```text
-python -m unittest test_rwm                  # 53 harness tests; no cargo, no model, no scaffold needed
+python -m unittest test_rwm                  # 77 harness tests; no cargo, no model, no scaffold needed
 python runner.py scaffold                    # writes the 68 task crates and Cargo.lock (under 1 s; git-ignored)
 python runner.py verify --tasks all          # 68/68 reference runs: visible and hidden tests, both variants
 cargo test --workspace --offline --locked    # 406 Rust tests (crates, visible and hidden task tests)
 ```
 
 `verify`, `mutants`, `conformance` and `run` stop with the command to run when the scaffold output
-is missing. The first `verify` compiles everything (about 2.5 minutes); later runs reuse `target/`.
+is missing. Cargo cannot: before `scaffold` has run, every cargo command here, `cargo clippy -p
+<crate>` included, fails with "failed to load manifest for workspace member ...pilot/P01/plain"
+(the workspace lists the generated crates), so run `python runner.py scaffold` once first. The
+first `verify` compiles everything (about 2.5 minutes); later runs reuse `target/`.
 
 Model-free re-derivations of doc 64's other numbers (each writes under `results/`):
 
@@ -36,7 +39,7 @@ python runner.py run --dry-run --tasks all --samples 6   # every prompt, no mode
 python runner.py conformance --tasks all     # PLAIN and GUIDED references export byte-identical text
 python runner.py mutants --tasks scored      # static catch rate of the 13 trap mutants
 python power_sim.py 500                      # the power simulation doc 64 quotes (about 20 s)
-python -m rwm.hygiene                        # hidden characters, local paths, enclosing workspace
+python -m rwm.hygiene                        # text and workspace hygiene (what it checks: below)
 ```
 
 ## How the repository's rules apply here
@@ -44,16 +47,28 @@ python -m rwm.hygiene                        # hidden characters, local paths, e
 `AGENTS.md` governs Plotroom's product crates. This folder is research tooling, so:
 
 - **Apply fully:** public-repository hygiene (no private project names, local paths, user names or
-  keys; `python -m rwm.hygiene` and `test_rwm.Hygiene` check it), the naming rule (no third-party marks
-  in crate, module or format names: the crates are `mb-*`, the export format is `mbx`), test-first
-  changes to the harness (`test_rwm.py`), the friction review and the evidence rule.
-- **Fast inner loop:** while changing Rust here, `cargo clippy -p <crate> --all-targets --offline`
-  and that crate's tests (`cargo test -p <crate> --offline <filter>`); while changing the Python,
-  `python -m unittest test_rwm -k <name>`. Finish with the four verification commands above. Clippy
-  is not clean on the stimuli and they are left as they ran: on 2026-09-28 it reported 6
-  `collapsible_if` warnings (mb-core 3, mb-oracle 2, mb-plain 1; mb-spec and mb-guided clean), so
-  compare against that baseline instead of passing `-D warnings`. A clippy-feedback arm would need a
-  clean baseline and its own `clippy.toml` here first.
+  keys), the naming rule (no third-party marks in crate, module or format names: the crates are
+  `mb-*`, the export format is `mbx`), test-first changes to the harness (`test_rwm.py`,
+  `test_rwm_guards.py`), the friction review and the evidence rule. `python -m rwm.hygiene` checks
+  part of the hygiene rule mechanically: hidden characters, a CR without LF, absolute local paths
+  (drive letters, user-home folders, the per-user application-data folder), key-like tokens (common
+  API-key prefixes, cloud access-key ids, PEM private-key headers, a literal bearer token) and the
+  enclosing workspace and tool configs. It cannot know private project or user names; set
+  `RWM_HYGIENE_DENYLIST` to a file outside the repository (one term per line) to add them. A pass is
+  not a review of what the text says.
+- **Fast inner loop:** run `python runner.py scaffold` once first (see above). While changing Rust
+  here, `cargo clippy -p <crate> --all-targets --offline` and that crate's tests (`cargo test -p
+  <crate> --offline <filter>`); while changing the Python, `python -m unittest test_rwm -k <name>`.
+  Finish with the four verification commands above. Clippy is not clean on the stimuli and they are
+  left as they ran: on 2026-09-28 it reported 6 `collapsible_if` warnings (mb-core 3, mb-oracle 2,
+  mb-plain 1; mb-spec and mb-guided clean), so compare against that baseline instead of passing `-D
+  warnings`, and run `cargo clean -p <crate>` first after any `clippy.toml` change, because clippy
+  does not re-run on a crate whose sources did not change. A clippy-feedback arm would need a clean
+  baseline and its lint table in this folder's `clippy.toml` first.
+- **Never `cargo fmt` or `cargo clippy --fix` here.** Both rewrite the stimuli, which changes the
+  listings and prompts a model sees. `rustfmt.toml` turns formatting off (so `cargo fmt` is a no-op
+  and `cargo fmt --check` passes), and `test_rwm_guards.PromptPins` fails, naming what to do, if a
+  listing, system prompt or user prompt no longer matches the pilot's.
 - **Do not apply to the stimuli:** `crates/`, `tasks/`, `pilot/` and `prompts/` are the experiment's
   independent variable and its fixed inputs, not product code. PLAIN is deliberately idiomatic
   runtime-checked Rust and GUIDED deliberately typestate-driven; bringing either closer to the product
@@ -61,15 +76,19 @@ python -m rwm.hygiene                        # hidden characters, local paths, e
   what is measured. A change there is an experiment change: record it under "Deviations" (and in
   `design.json` before freezing) and re-run `verify`, `conformance`, `mutants` and `listing`.
   Model-written `src/solution.rs` files are data; every test crate carries `#![forbid(unsafe_code)]`
-  and a static scan rejects process, file, network, environment and include escapes before compiling.
+  and a best-effort static scan runs before compiling (`rwm/scan.py`: process, file, network,
+  environment and include escapes; only listed standard-library modules; no crate-root aliases, glob
+  imports of the root, raw-identifier or macro-built paths). It reads text, so it is not a sandbox:
+  run the harness only against model endpoints you trust (the runner accepts loopback endpoints
+  unless told otherwise, below).
 - **Building and running:** the product rule "agents do not run `cargo build` or `cargo run`" is about
   Plotroom. Here the runner compiles task crates as its instrument, and agents may run the verification
   commands above. Live model runs take GPU hours and are started only when the owner asks.
 
 ## Standalone workspace
 
-This folder is its own Cargo workspace (`Cargo.toml` is a virtual manifest). A repository-root
-workspace does not exist yet. Probed with cargo 1.98.1 on a nested copy:
+This folder is its own Cargo workspace (`Cargo.toml` is a virtual manifest). Probed with cargo
+1.98.1 on a nested copy, before any repository-root workspace existed:
 
 - a root `members` glob that matches this folder itself (`"tools/*"`) fails loudly: "multiple workspace
   roots found in the same workspace";
@@ -80,14 +99,16 @@ workspace does not exist yet. Probed with cargo 1.98.1 on a nested copy:
 - `exclude = ["tools/rust-weak-models"]` in the root filters globbed members, but an explicit member
   path still wins over `exclude`.
 
-So the root `Cargo.toml`, when it is created, must carry `exclude = ["tools/rust-weak-models"]` in its
-`[workspace]` table and must never name a path below this folder as a member (`CODE-INDEX.md` §3
-records the rule). Configuration also leaks downward: a root `rust-toolchain.toml` or `.cargo/config.toml`
-would change the compiler or flags the experiment uses (a toolchain pin can even trigger a rustup
-download, which an offline run must never do), and clippy and rustfmt read the nearest `clippy.toml` or
-`rustfmt.toml` above a crate, so a clippy-feedback arm must pin its own `clippy.toml` in this folder.
-`test_rwm.EnclosingWorkspace` fails, naming the fix, if any `Cargo.toml` workspace, `rust-toolchain`
-file or `.cargo/config` between this folder and the repository root would reach it.
+So the root `Cargo.toml` must carry `exclude = ["tools/rust-weak-models"]` in its `[workspace]`
+table and must never name a path below this folder as a member (`CODE-INDEX.md` §3 records the
+rule). Configuration also leaks downward: a root `rust-toolchain.toml` or `.cargo/config.toml` would
+change the compiler or flags the experiment uses (a toolchain pin can even trigger a rustup download,
+which an offline run must never do), and clippy and rustfmt read the nearest `clippy.toml` or
+`rustfmt.toml` above a crate and never merge files. So this folder pins both: an empty `clippy.toml`
+(no repository-level lint table reaches the experiment) and a `rustfmt.toml` that turns formatting off.
+`test_rwm.EnclosingWorkspace` and `python -m rwm.hygiene` fail, naming the fix, if any `Cargo.toml`
+workspace, `rust-toolchain` file or `.cargo/config` between this folder and the repository root would
+reach it, or a `clippy.toml` / `rustfmt.toml` there would not be shadowed.
 
 ## Layout
 
@@ -105,7 +126,11 @@ prompts/           system role text, domain rules sheet (R1-R11), export-format 
 rwm/               harness package: listing generator, prompt/budget, cargo runner, static scan,
                    model clients (OpenAI-compatible + mock), scaffolding, hygiene checks
 runner.py          CLI (scaffold, listing, verify, run, mutants, conformance, summary)
-test_rwm.py        harness unit tests (python -m unittest test_rwm)
+test_rwm.py        harness unit tests (python -m unittest test_rwm runs both files)
+test_rwm_guards.py guard tests: scan bypasses, endpoint, pinned prompts and tool configs,
+                   key and denylist hygiene, the server command
+clippy.toml        this folder's clippy config, empty until a lint arm needs one
+rustfmt.toml       formatting off: the stimuli must never be reformatted
 design.json        pre-registration draft
 power_sim.py       Monte Carlo power check of the primary contrast
 diag-probe/        rustc probes: which typestate shapes let on_unimplemented text reach a model
@@ -160,7 +185,7 @@ one model at a time; each arm (34 tasks x 2 variants, R0 to R3) took 2 to 3.5 ho
    python analysis/time_split.py       results/pilot-live/<tag>.jsonl ...
    ```
 
-A single run by hand, against any OpenAI-compatible endpoint:
+A single run by hand, against an OpenAI-compatible endpoint on this machine:
 
 ```text
 python runner.py run --base-url http://127.0.0.1:8080/v1 --model qwen3.5-4b-q4km \
@@ -171,12 +196,16 @@ python runner.py run --mock ref|fail-first|no-code-first|mutant --tasks pilot   
 ```
 
 `--resume` appends to an interrupted results file only when model, tasks, sampler, rounds, seed,
-context, budget and system-prompt hashes match. `RWM_API_KEY` (or `OPENAI_API_KEY`) is sent as a
-bearer token when set.
+context, budget and system-prompt hashes match. `RWM_API_KEY` is sent as a bearer token when set (no
+other variable is read). The runner accepts loopback endpoints only (`127.0.0.0/8`, `::1`,
+`localhost`) and never follows a redirect. It has no spend cap, so cloud models do not run from here:
+under D058 harness testing uses `tools/local-qual`'s guarded, budget-capped backend.
+`--allow-remote-endpoint` exists for a trusted https endpoint you run yourself; plain http to a
+remote host is always refused.
 
 ## Results
 
-The pilot's outcomes, paired comparisons, diagnostic clearance and cost are in doc 64 §3.6 to §4.8.
+The pilot's outcomes, paired comparisons, diagnostic clearance and cost are in doc 64 §3.6 to §4.9.
 Which script produced which table:
 
 | Doc 64 | Source |
@@ -191,8 +220,8 @@ Which script produced which table:
 
 The raw records (JSONL per round and episode, saved replies, code and feedback, server checks) are
 not committed: they are run output and hold model text. The pilot's records stay with the machine
-that ran them; a derived CSV under `docs/research/data/` (doc 64 §6 step 8) is the planned way to
-publish the numbers.
+that ran them; a derived per-episode CSV under `docs/research/data/` (doc 64 §6 step 11; no raw
+model text) is the planned way to publish the numbers.
 
 Probe commands (from `diag-probe/`, output to a folder outside the repository):
 
@@ -229,7 +258,9 @@ Episode loop (live and mock): system prompt (role, rules sheet, generated API li
 export-format appendix, `mb_spec` catalog and `Refusal`; byte-stable per variant for prompt
 caching) + user prompt (task module, task text, entry signature, visible tests; identical across
 variants) -> extract the first ```rust block -> static scan (rejects `std::process/fs/net/env`,
-`unsafe`, `extern`, `include!`, `#[path]`, out-of-file `mod`, entry-point macros) -> write
+`unsafe`, `extern`, `include!`, `#[path]`, out-of-file `mod`, entry-point macros, standard-library
+modules not on its allowed list, crate-root aliases, glob imports of the root, raw-identifier and
+macro-built paths) -> write
 `src/solution.rs` -> `cargo test --no-run --offline --locked --message-format json` -> run the
 visible and hidden test binaries directly (single-threaded, 20 s wall limit, process-tree kill) ->
 feed back compiler diagnostics (errors first, 6,000-character cap on a message boundary) or
@@ -272,7 +303,8 @@ with `--server-tokens`, local estimate otherwise); the run aborts if the ratio i
   `.err.txt` files; the E0618 probe shows no fix hint and "defined here" only for the local enum.
 - `run --mock fail-first --tasks pilot`: 8 episodes fail to compile at R0 and are repaired at R1.
 
-Trap coverage (scored tasks, from hidden-test names; 167 hidden tests, 97 trap tests): ACT-RULE,
+Trap coverage (scored tasks, from hidden-test names; 154 hidden tests on the 30 scored tasks, 168
+with the pilot tasks; 97 trap tests; one visible test per task): ACT-RULE,
 ID-MIX, REF-SYNC 8 tasks each; SEQ-CYCLE 7; ERR-HANDLING 6; REF-VEHICLE, SEQ-MOUNT, UNIT-MEASURE 4;
 BOUNDS, EMPTY-GROUP, SEQ-HOLD, TIMER-ORDER 3; SEQ-EXPORT 2. T01 and T03 have no trap (controls).
 
@@ -280,10 +312,10 @@ BOUNDS, EMPTY-GROUP, SEQ-HOLD, TIMER-ORDER 3; SEQ-EXPORT 2. T01 and T03 have no 
 
 Committed: the five crates, the 34 task folders' hand-written files, prompts, `design.json`, the
 runner and its package, the tests, the power simulation, the probes, the live driver and its arms
-file, and the analysis scripts. Not committed (`.gitignore`): `target/`; `results/` (run records,
-saved replies and code, logs, listings, dry-run prompts, conformance dumps, simulation output); the
-68 generated task crates and `Cargo.lock`, which `scaffold` regenerates deterministically; and
-`live/arms.local.json`. Left out of the move: the one-off script that resolved the Granite pin (the
+file, the analysis scripts, and the pinned `clippy.toml` and `rustfmt.toml`. Not committed
+(`.gitignore`): `target/`; `results/` (run records, saved replies and code, logs, listings, dry-run
+prompts, conformance dumps, simulation output); the 68 generated task crates and `Cargo.lock`, which
+`scaffold` regenerates deterministically; `live/arms.local.json`; and the probes' build output. Left out of the move: the one-off script that resolved the Granite pin (the
 pin is in `arms.json`), the pilot's status, check and log files, and the probes' build output.
 
 Changes made when the harness moved here from a scratch folder, none of which changes a prompt, a

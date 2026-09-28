@@ -1,0 +1,7 @@
+# clippy: this folder's own configuration (doc 64's experiment), empty on purpose.
+#
+# clippy reads the nearest clippy.toml above a crate and never merges files. Pinning an
+# empty one here keeps any repository-level table (disallowed methods, test allowances)
+# out of the experiment, so the lints clippy reports on the stimuli and any lint text fed
+# back to a model depend only on this folder. The GUIDED-L arm (doc 64 §3.9) adds its
+# lint table here; test_rwm_guards.ToolConfigs checks the file stays key-free until then.

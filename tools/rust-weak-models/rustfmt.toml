@@ -1,0 +1,8 @@
+# rustfmt: formatting is off in this folder (doc 64's experiment).
+#
+# The crates, task files and reference solutions are stimuli: the API listing and the
+# prompts a model sees are generated from their exact text, and the pilot's prompt hashes
+# are pinned (test_rwm_guards.PromptPins). `cargo fmt` would rewrite them and change what a
+# model sees, so every rule is disabled; `cargo fmt --check` passes without touching a file.
+# The file also stops rustfmt from using any rustfmt.toml above this folder.
+disable_all_formatting = true

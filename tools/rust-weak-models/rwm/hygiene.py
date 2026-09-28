@@ -3,15 +3,25 @@
 Two kinds of check, used by `test_rwm.py` and runnable as `python -m rwm.hygiene`:
 
 * **Text hygiene.** Every file git would track here must be UTF-8 without hidden
-  characters (controls other than tab, LF and CR; Unicode format characters such as
-  zero-width, bidi and tag characters; private-use characters; line and paragraph
-  separators) and without absolute local paths (drive letters, user-home folders), so no
-  machine or user name reaches the repository and no invisible text changes how a file
-  reads to a person or a model.
+  characters (controls other than tab and LF, a CR only before an LF; Unicode format
+  characters such as zero-width, bidi and tag characters; private-use characters; line and
+  paragraph separators), without absolute local paths (drive letters, user-home folders,
+  the per-user application-data folder) and without key-like tokens (common API-key
+  prefixes, cloud access-key ids, PEM private-key headers, a literal bearer token), so no
+  machine or user name or secret reaches the repository and no invisible text changes how
+  a file reads to a person or a model. Names cannot be checked from a public list, so an
+  optional local denylist (a file named by `RWM_HYGIENE_DENYLIST`, kept outside the
+  repository, one term per line) adds the terms its owner must never publish; findings
+  cite the entry number, never the term.
 * **Standalone workspace.** This folder is its own Cargo workspace. An enclosing
   workspace (a future root `Cargo.toml`) must `exclude` it and must not name a crate in it
   as a member, and no toolchain pin or cargo config may sit between it and the repository
-  root, because each would silently change how the experiment compiles.
+  root, because each would silently change how the experiment compiles. A `clippy.toml` or
+  `rustfmt.toml` above it is reported unless this folder pins its own (it does), because
+  both tools use the nearest file and never merge.
+
+What it does not check: whether text is public-safe in meaning (a private project named
+in prose is found only through the denylist), or files git ignores.
 
 Standard library only; `tomllib` (Python 3.11+) is needed for the workspace check.
 """
@@ -39,6 +49,8 @@ _SKIP_ANY = {"__pycache__", ".pytest_cache"}
 _GENERATED_PARENTS = {"tasks", "pilot"}
 _GENERATED_NAMES = {"plain", "guided"}
 _SKIP_FILES = {"Cargo.lock", "live/arms.local.json"}
+# Build output of the diag-probe rustc commands when run without --out-dir.
+_SKIP_SUFFIXES_IN = {"diag-probe": {".rlib", ".rmeta", ".pdb"}}
 
 
 def candidate_files(root: Path = ROOT) -> list[Path]:
@@ -57,8 +69,9 @@ def candidate_files(root: Path = ROOT) -> list[Path]:
         dirnames[:] = keep  # prune in place so os.walk never descends into skipped folders
         for f in filenames:
             rel = (rel_dir / f).as_posix()
-            if rel not in _SKIP_FILES:
-                out.append(Path(dirpath) / f)
+            if rel in _SKIP_FILES or Path(f).suffix in _SKIP_SUFFIXES_IN.get(rel_dir.as_posix(), ()):
+                continue
+            out.append(Path(dirpath) / f)
     return sorted(out)
 
 
@@ -68,7 +81,10 @@ def candidate_files(root: Path = ROOT) -> list[Path]:
 # are allowed separately), Cf format characters (zero-width, bidi, BOM, soft hyphen, tag
 # characters), Co private use, Zl/Zp line and paragraph separators.
 _HIDDEN_CATEGORIES = {"Cc", "Cf", "Co", "Zl", "Zp"}
-_ALLOWED_CONTROLS = {chr(0x09), chr(0x0A), chr(0x0D)}  # tab, LF, CR
+# Tab, LF and CR pass the per-character scan; a CR that is not followed by an LF is
+# reported separately (_BARE_CR), since only CRLF line endings are legitimate.
+_ALLOWED_CONTROLS = {chr(0x09), chr(0x0A), chr(0x0D)}
+_BARE_CR = re.compile("\r(?!\n)")
 # Characters other than LF and CR at which str.splitlines() also breaks a line (vertical
 # tab, form feed, file/group/record separators, NEL, line and paragraph separators).
 # Written as code points so this source file holds no such character itself.
@@ -83,10 +99,36 @@ _LOCAL_PATHS = [
     (re.compile(r"(?i)app[d]ata"), "per-user application-data folder"),
 ]
 
+# Key-like tokens. Each pattern needs a long run of token characters right after its
+# prefix, so these source lines (where a character class follows the prefix) do not match
+# themselves, and neither do SHA-256 pins or code such as f"Bearer {key}".
+_KEYS = [
+    re.compile(r"\bsk-[A-Za-z0-9_-]{20,}"),                    # OpenAI-style secret keys
+    re.compile(r"\bhf_[A-Za-z0-9]{30,}"),                      # Hugging Face tokens
+    re.compile(r"\bgh[pousr]_[A-Za-z0-9]{36,}"),               # GitHub tokens
+    re.compile(r"\bAKIA[0-9A-Z]{16}\b"),                       # AWS access-key ids
+    re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),         # PEM private keys
+    re.compile(r"\bBearer\s+[A-Za-z0-9._~+/=-]{20,}"),         # a literal bearer token
+]
 
-def text_problems(text: str) -> list[str]:
-    """Hidden characters and local paths in `text`, one message per finding, each with
-    its line number (and the code point for a hidden character)."""
+DENYLIST_ENV = "RWM_HYGIENE_DENYLIST"
+
+
+def load_denylist(env=os.environ) -> list[str]:
+    """Lower-cased terms from the file named by RWM_HYGIENE_DENYLIST (one per line; blank
+    lines and `#` comments skipped); empty when the variable is unset. The file lives outside
+    the repository, so the terms themselves are never committed."""
+    path = env.get(DENYLIST_ENV)
+    if not path:
+        return []
+    lines = Path(path).read_text(encoding="utf-8").splitlines()
+    return [ln.strip().lower() for ln in lines if ln.strip() and not ln.lstrip().startswith("#")]
+
+
+def text_problems(text: str, deny: list[str] | None = None) -> list[str]:
+    """Hidden characters, bare CRs, local paths, key-like tokens and denylisted terms in
+    `text`, one message per finding, each with its line number (and the code point for a
+    hidden character; the entry number, not the term, for a denylisted term)."""
     problems = []
     for n, line in enumerate(text.splitlines(keepends=False) or [text], 1):
         for ch in line:
@@ -99,6 +141,15 @@ def text_problems(text: str) -> list[str]:
         for pattern, what in _LOCAL_PATHS:
             if pattern.search(line):
                 problems.append(f"line {n}: {what}")
+        if any(p.search(line) for p in _KEYS):
+            problems.append(f"line {n}: key-like token")
+        lowered = line.lower()
+        for i, term in enumerate(deny or [], 1):
+            if term and term in lowered:
+                problems.append(f"line {n}: denylisted term (entry {i})")
+    # str.splitlines() treats a lone CR as a line break, so the per-line scan never sees it.
+    for m in _BARE_CR.finditer(text):
+        problems.append(f"line {text.count(chr(10), 0, m.start()) + 1}: CR without LF")
     # str.splitlines() also splits on U+2028/U+2029 and a few controls, which would hide
     # them from the per-line scan above; report them from the whole text instead.
     for ch in sorted({c for c in text if c in _LINE_SPLITTERS}):
@@ -107,8 +158,10 @@ def text_problems(text: str) -> list[str]:
     return problems
 
 
-def scan_tree(root: Path = ROOT) -> list[str]:
-    """Text-hygiene findings for every candidate file, as `path: message`."""
+def scan_tree(root: Path = ROOT, deny: list[str] | None = None) -> list[str]:
+    """Text-hygiene findings for every candidate file, as `path: message`. `deny` defaults
+    to the local denylist (`load_denylist`)."""
+    deny = load_denylist() if deny is None else deny
     problems = []
     for path in candidate_files(root):
         rel = path.relative_to(root).as_posix()
@@ -117,7 +170,7 @@ def scan_tree(root: Path = ROOT) -> list[str]:
         except UnicodeDecodeError as e:
             problems.append(f"{rel}: not UTF-8 ({e.reason} at byte {e.start})")
             continue
-        problems.extend(f"{rel}: {p}" for p in text_problems(text))
+        problems.extend(f"{rel}: {p}" for p in text_problems(text, deny))
     return problems
 
 
@@ -177,19 +230,30 @@ def enclosing_workspace_problems(harness: Path, top: Path) -> list[str]:
 
 # Files that change how cargo or rustup build everything below them.
 _CONFIG_FILES = ("rust-toolchain", "rust-toolchain.toml", ".cargo/config", ".cargo/config.toml")
+# Tool configs found by searching upward from a crate or file; the nearest one wins and
+# files are never merged, so a copy in the harness folder shadows every enclosing one.
+_TOOL_CONFIGS = {"clippy": ("clippy.toml", ".clippy.toml"), "rustfmt": ("rustfmt.toml", ".rustfmt.toml")}
 
 
 def enclosing_config_problems(harness: Path, top: Path) -> list[str]:
-    """Toolchain pins and cargo configs above `harness` (up to `top`). The harness pins no
-    toolchain on purpose (a pin can trigger a rustup download, which an offline run must
-    never do) and records `rustc --version` per run; an enclosing pin or config would
-    change the compiler or flags without showing up in that record."""
+    """Toolchain pins, cargo configs and unshadowed clippy/rustfmt configs above `harness`
+    (up to `top`). The harness pins no toolchain on purpose (a pin can trigger a rustup
+    download, which an offline run must never do) and records `rustc --version` per run; an
+    enclosing pin or config would change the compiler or flags without showing up in that
+    record. A clippy or rustfmt config above it would change the lints fed back or rewrite
+    the stimuli, unless the harness pins its own (then the enclosing one never applies)."""
     problems = []
+    fix = "decide whether the experiment should use it, then pin the choice in this folder and record it in the README"
     for d in _between(harness, top):
         for name in _CONFIG_FILES:
             if (d / name).is_file():
-                problems.append(f"{(d / name).relative_to(top).as_posix()} applies to this harness too: decide whether the "
-                                "experiment should use it, then pin the choice in this folder and record it in the README")
+                problems.append(f"{(d / name).relative_to(top).as_posix()} applies to this harness too: {fix}")
+        for names in _TOOL_CONFIGS.values():
+            if any((harness / n).is_file() for n in names):
+                continue  # shadowed by the harness's own file
+            for name in names:
+                if (d / name).is_file():
+                    problems.append(f"{(d / name).relative_to(top).as_posix()} applies to this harness too: {fix}")
     return problems
 
 

@@ -2,6 +2,8 @@
 # ready, pid, port, load_s, gpu_mib_before, gpu_mib_after, out_log, err_log.
 # Called by drive_pilot.py; usable by hand:
 #   .\start-server.ps1 -Gguf <model.gguf> -LogDir <folder> [-Ctx 24576] [-Name label] [-LlamaServer <exe>]
+# -Ctx defaults to the pilot's 24,576 tokens (a ~9k system prompt, repair feedback and a 3,072-token reply
+# do not fit in less; README, Deviations item 6).
 # Nothing machine-specific lives here: the server binary is -LlamaServer, else the RWM_LLAMA_SERVER
 # environment variable, else llama-server on PATH (the pilot used release b11146). -StopOllama unloads
 # whatever an Ollama install holds in GPU memory first (it never deletes models). GPU memory is read with
@@ -10,7 +12,7 @@
 param(
   [Parameter(Mandatory = $true)][string]$Gguf,
   [Parameter(Mandatory = $true)][string]$LogDir,
-  [int]$Ctx = 8192,
+  [int]$Ctx = 24576,
   [string]$Name = 'server',
   [int]$WaitSec = 240,
   [string]$LlamaServer = $(if ($env:RWM_LLAMA_SERVER) { $env:RWM_LLAMA_SERVER } else { 'llama-server' }),

@@ -134,16 +134,31 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def start_server_command(tag: str, gguf: Path, ctx: int, llama_server: str, log_dir: Path) -> tuple[list[str], dict]:
+    """The PowerShell call that runs start-server.ps1, and the environment it needs.
+
+    Why the environment: the paths, the tag and the server name come from an arms file and
+    the command line. Pasted into the `-Command` text inside quotes, a value with a quote in
+    it (an apostrophe in a folder name, or a typographic quote, which PowerShell also treats
+    as one) would end the string and the rest would run as code. Here the command text holds
+    only fixed words, `$env:` references and an integer; PowerShell passes each variable's
+    value as one argument without parsing it again."""
+    env = dict(os.environ, RWM_START_SCRIPT=str(START), RWM_START_GGUF=str(gguf), RWM_START_NAME=f"rwm-{tag}",
+               RWM_START_SERVER=str(llama_server), RWM_START_LOGDIR=str(log_dir))
+    command = (f"& $env:RWM_START_SCRIPT -Gguf $env:RWM_START_GGUF -Ctx {int(ctx)} -Name $env:RWM_START_NAME "
+               "-LlamaServer $env:RWM_START_SERVER -LogDir $env:RWM_START_LOGDIR "
+               "-ExtraArgs @('-np','1','--cache-ram','4096') | ConvertTo-Json -Compress")
+    return ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command], env
+
+
 def start_server(tag: str, gguf: Path, ctx: int, llama_server: str) -> dict:
-    cmd = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
-           f"& '{START}' -Gguf '{gguf}' -Ctx {ctx} -Name 'rwm-{tag}' -LlamaServer '{llama_server}' "
-           f"-LogDir '{OUT / 'logs'}' -ExtraArgs @('-np','1','--cache-ram','4096') | ConvertTo-Json -Compress"]
+    cmd, env = start_server_command(tag, gguf, ctx, llama_server, OUT / "logs")
     # Output goes to a file, not a pipe: Start-Process inside the helper makes llama-server
     # inherit the helper's stdout handle, so a pipe would never reach EOF while the server
     # lives and communicate() would hang. With a file we only wait for the helper to exit.
     out_file = OUT / f"start-{tag}.out.txt"
     with out_file.open("w", encoding="utf-8") as fh:
-        subprocess.run(cmd, stdout=fh, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, timeout=600)
+        subprocess.run(cmd, stdout=fh, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, timeout=600, env=env)
     text = out_file.read_text(encoding="utf-8", errors="replace")
     for ln in reversed(text.splitlines()):
         if ln.strip().startswith("{"):

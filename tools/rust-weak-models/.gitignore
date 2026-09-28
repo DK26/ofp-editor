@@ -19,3 +19,8 @@
 
 # A local copy of live/arms.json with this machine's model locations.
 /live/arms.local.json
+
+# Build output of the diag-probe rustc commands when run without --out-dir.
+/diag-probe/*.rlib
+/diag-probe/*.rmeta
+/diag-probe/*.pdb

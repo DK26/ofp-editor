@@ -376,7 +376,12 @@ def cmd_run(args) -> int:
         if not args.base_url or not args.model:
             print("live mode needs --base-url and --model (or use --mock / --dry-run)")
             return 2
-        client = OpenAIClient(args.base_url, args.model, timeout=args.request_timeout)
+        try:
+            client = OpenAIClient(args.base_url, args.model, timeout=args.request_timeout,
+                                  allow_remote=args.allow_remote_endpoint)
+        except ValueError as e:  # the endpoint guard names the fix (rwm.llm.check_endpoint)
+            print(e)
+            return 2
     elif mode == "mock":
         client = MockClient(args.mock)
     sp = _system_prompts(args, client if mode == "live" else None)
@@ -604,7 +609,10 @@ def main(argv=None) -> int:
     common(sp)
     sp.add_argument("--dry-run", action="store_true", help="build prompts only; no model calls, no cargo")
     sp.add_argument("--mock", choices=["ref", "fail-first", "no-code-first", "mutant"], help="replay reference solutions")
-    sp.add_argument("--base-url", help="OpenAI-compatible endpoint, e.g. http://127.0.0.1:8080/v1")
+    sp.add_argument("--base-url", help="OpenAI-compatible endpoint on this machine, e.g. http://127.0.0.1:8080/v1")
+    sp.add_argument("--allow-remote-endpoint", action="store_true",
+                    help="allow a non-loopback https --base-url (no spend cap here; cloud runs belong in "
+                         "tools/local-qual's guarded backend, D058)")
     sp.add_argument("--model", help="model name sent to the endpoint and recorded")
     sp.add_argument("--samples", type=int, default=1)
     sp.add_argument("--rounds", type=int, default=3, help="repair rounds after the first attempt")

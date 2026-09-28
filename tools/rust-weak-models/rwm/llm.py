@@ -1,14 +1,24 @@
-"""Model clients: an OpenAI-compatible chat client (llama-server or a cloud endpoint)
-and a mock that replays reference solutions to prove the pipeline end to end.
+"""Model clients: an OpenAI-compatible chat client (llama-server on this machine by
+default) and a mock that replays reference solutions to prove the pipeline end to end.
 
 Only the standard library is used (urllib), so the harness runs on a bare Python.
+
+Endpoint guard (added after review, doc 64): the client sends every prompt and, when
+`RWM_API_KEY` is set, a bearer token. So it accepts loopback endpoints only, unless the
+caller passes `allow_remote=True` (`runner.py run --allow-remote-endpoint`), and then only
+over https; it never reads a general `OPENAI_API_KEY`; and it never follows a redirect,
+because urllib re-sends added headers, the Authorization header included, to the redirect
+target. The runner has no spend cap: cloud runs belong in `tools/local-qual`'s guarded,
+budget-capped backend (D058).
 """
 from __future__ import annotations
 
+import ipaddress
 import json
 import os
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 
@@ -41,6 +51,43 @@ class Sampler:
     neutral_penalties: bool = True
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Declines every redirect. urllib then raises HTTPError for the 3xx answer (a URLError,
+    which `chat` records as an infrastructure error) instead of re-sending the request, and
+    its Authorization header, to wherever the Location points."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _is_loopback(host: str) -> bool:
+    """True for `localhost` and any loopback IP literal (127.0.0.0/8, ::1)."""
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+def check_endpoint(base_url: str, allow_remote: bool) -> None:
+    """Raises ValueError, naming the fix, unless `base_url` is an http(s) URL on a loopback
+    host, or `allow_remote` is set and the URL is https."""
+    parts = urllib.parse.urlsplit(base_url)
+    scheme, host = parts.scheme.lower(), (parts.hostname or "").lower()
+    if scheme not in ("http", "https") or not host:
+        raise ValueError(f"--base-url must be an http(s) URL with a host, for example http://127.0.0.1:8080/v1; "
+                         f"got {base_url!r}")
+    if _is_loopback(host):
+        return
+    if not allow_remote:
+        raise ValueError(f"--base-url host {host!r} is not a loopback address. This runner sends every prompt and "
+                         "RWM_API_KEY and has no spend cap: run cloud models through tools/local-qual's guarded, "
+                         "budget-capped backend (D058), or pass --allow-remote-endpoint for a trusted https endpoint")
+    if scheme != "https":
+        raise ValueError(f"--base-url host {host!r} is remote: use https, so prompts and the key are not sent in clear")
+
+
 class OpenAIClient:
     """POST {base_url}/chat/completions, non-streaming.
 
@@ -48,13 +95,19 @@ class OpenAIClient:
     cache_n = prompt tokens reused from the cache, predicted_n, prompt_ms,
     predicted_ms); cloud endpoints return `usage` (with
     `prompt_tokens_details.cached_tokens` where supported). Both are recorded.
+    The constructor refuses endpoints `check_endpoint` does not allow.
     """
 
-    def __init__(self, base_url: str, model: str, api_key: str | None = None, timeout: float = 600.0):
+    def __init__(self, base_url: str, model: str, api_key: str | None = None, timeout: float = 600.0,
+                 allow_remote: bool = False):
+        check_endpoint(base_url, allow_remote)
         self.base_url = base_url.rstrip("/")
         self.model = model
-        self.api_key = api_key or os.environ.get("RWM_API_KEY") or os.environ.get("OPENAI_API_KEY")
+        # Only the harness's own variable: a general OPENAI_API_KEY set for other tools must
+        # not be sent to a local test server.
+        self.api_key = api_key or os.environ.get("RWM_API_KEY")
         self.timeout = timeout
+        self._opener = urllib.request.build_opener(_NoRedirect)
 
     def _post(self, url: str, body: dict) -> dict:
         data = json.dumps(body).encode("utf-8")
@@ -62,7 +115,7 @@ class OpenAIClient:
         req.add_header("Content-Type", "application/json")
         if self.api_key:
             req.add_header("Authorization", f"Bearer {self.api_key}")
-        with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+        with self._opener.open(req, timeout=self.timeout) as resp:
             return json.loads(resp.read().decode("utf-8"))
 
     def chat(self, messages: list[dict], sampler: Sampler, seed: int) -> Reply:

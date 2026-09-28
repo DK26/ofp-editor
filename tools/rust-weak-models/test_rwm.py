@@ -6,12 +6,13 @@ Sections: code extraction and static scan; listing generator; prompt budget; tes
 parsing and feedback; resume; and the packaging checks added when the harness moved into
 the repository (scaffold guard, git-ignored outputs, the live driver's model config, the
 relocated analysis scripts, hidden characters and local paths, and the rule that no
-enclosing Cargo workspace may adopt this one).
+enclosing Cargo workspace may adopt this one). The guard tests (scan bypasses, the model
+endpoint, pinned prompts and tool configs, key and denylist hygiene, the server command)
+live in `test_rwm_guards.py` and are imported at the end, so this module runs them too.
 """
 from __future__ import annotations
 
 import contextlib
-import importlib.util
 import io
 import json
 import sys
@@ -23,6 +24,7 @@ from unittest import mock
 import runner
 from rwm import cargo, hygiene, listing, padding, prompt, scan, tasks
 from rwm.tasks import ROOT, trap_category
+from test_rwm_guards import _load_script, _tmpdir
 
 # ── Code extraction and static scan ───────────────────────────────────────────
 
@@ -270,14 +272,12 @@ class Resume(unittest.TestCase):
               "sampler": {"temperature": 0.6}, "ctx": 24576, "budget": "equal", "system_sha256": {"plain": "x"}}
 
     def _write(self, lines):
-        import json
-        d = tempfile.mkdtemp()
-        p = Path(d) / "r.jsonl"
+        p = _tmpdir(self) / "r.jsonl"
         p.write_text("".join((json.dumps(x) if isinstance(x, dict) else x) + "\n" for x in lines), encoding="utf-8")
         return p
 
     def test_missing_file_resumes_nothing(self):
-        done, prior, mismatch = runner.resume_state(Path(tempfile.mkdtemp()) / "none.jsonl", dict(self.HEADER))
+        done, prior, mismatch = runner.resume_state(_tmpdir(self) / "none.jsonl", dict(self.HEADER))
         self.assertEqual((done, prior, mismatch), (set(), [], None))
 
     def test_finished_episodes_skipped_infra_rerun_torn_line_ignored(self):
@@ -301,21 +301,10 @@ class Resume(unittest.TestCase):
 # ── Packaging: fresh checkout, outputs, relocated scripts ─────────────────────
 
 
-def _load_script(rel: str):
-    """Imports a script that is not part of the `rwm` package (`live/`, `analysis/`,
-    `power_sim.py`) from its path, so its functions can be tested without running its
-    command line. Loading only defines names; every script keeps its work in `main()`."""
-    path = ROOT / rel
-    spec = importlib.util.spec_from_file_location(f"rwm_script_{path.stem}", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-def _task_root() -> Path:
-    """A throwaway harness root with one complete task folder (T01) and nothing generated:
-    the state of a fresh clone before `python runner.py scaffold`."""
-    root = Path(tempfile.mkdtemp())
+def _task_root(case: unittest.TestCase) -> Path:
+    """A throwaway harness root (removed after the test) with one complete task folder (T01)
+    and nothing generated: the state of a fresh clone before `python runner.py scaffold`."""
+    root = _tmpdir(case)
     d = root / "tasks" / "T01"
     d.mkdir(parents=True)
     (d / "task.json").write_text(json.dumps({"id": "T01", "spec_module": "t01", "scored": True}), encoding="utf-8")
@@ -331,14 +320,14 @@ class ScaffoldGuard(unittest.TestCase):
 
     def test_missing_crates_and_lock_are_listed(self):
         """Both generated crate manifests of a task and the lock file are reported when absent."""
-        root = _task_root()
+        root = _task_root(self)
         found = tasks.discover(root, quiet=True)
         self.assertEqual(tasks.scaffold_missing(found, root),
                          ["tasks/T01/plain/Cargo.toml", "tasks/T01/guided/Cargo.toml", "Cargo.lock"])
 
     def test_nothing_missing_once_scaffold_output_exists(self):
         """After scaffold wrote every manifest and the lock, nothing is reported."""
-        root = _task_root()
+        root = _task_root(self)
         for v in ("plain", "guided"):
             (root / "tasks" / "T01" / v).mkdir()
             (root / "tasks" / "T01" / v / "Cargo.toml").write_text("", encoding="utf-8")
@@ -375,7 +364,8 @@ class Outputs(unittest.TestCase):
         the local model config."""
         lines = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
         for entry in ("/target/", "/results/", "/Cargo.lock", "/tasks/*/plain/", "/tasks/*/guided/",
-                      "/pilot/*/plain/", "/pilot/*/guided/", "/live/arms.local.json"):
+                      "/pilot/*/plain/", "/pilot/*/guided/", "/live/arms.local.json",
+                      "/diag-probe/*.rlib", "/diag-probe/*.rmeta", "/diag-probe/*.pdb"):
             with self.subTest(entry=entry):
                 self.assertIn(entry, lines)
 
@@ -392,7 +382,7 @@ class LiveArms(unittest.TestCase):
 
     def setUp(self):
         self.drive = _load_script("live/drive_pilot.py")
-        self.dir = Path(tempfile.mkdtemp())
+        self.dir = _tmpdir(self)
 
     def _config(self, gguf: str, **extra) -> Path:
         arm = {"tag": "m1", "label": "model-one", "gguf": gguf, "size": 10, "sha256": "0" * 64,
@@ -452,7 +442,7 @@ class AnalysisPaths(unittest.TestCase):
     RID = "r1"
 
     def setUp(self):
-        self.dir = Path(tempfile.mkdtemp())
+        self.dir = _tmpdir(self)
         base = {"run_id": self.RID, "task": "T01", "variant": "plain", "sample": 0, "gen": {}}
         rows = [{"kind": "run", "model": "m", "run_id": self.RID, "rounds": 1},
                 dict(base, kind="round", round=0, compile_ok=False, failure_mode="compile"),
@@ -497,7 +487,7 @@ class TimeSplit(unittest.TestCase):
     def test_split_from_named_files(self):
         """Four synthetic rounds (two per arm), each 4.5 s generation and 0.5 s build, no
         tests; only PLAIN's repair round compiles."""
-        d = Path(tempfile.mkdtemp())
+        d = _tmpdir(self)
         timings = {"prompt_ms": 3000, "predicted_ms": 1500, "prompt_n": 100,
                    "predicted_per_second": 20.0, "prompt_per_second": 500.0}
         rounds = [{"kind": "round", "run_id": "r", "ts": f"2026-09-28T10:00:{10 * n + i:02d}+00:00", "task": "T01",
@@ -566,7 +556,7 @@ class EnclosingWorkspace(unittest.TestCase):
     .cargo/config would also change how the experiment compiles."""
 
     def _tree(self, root_manifest: str | None) -> tuple[Path, Path]:
-        top = Path(tempfile.mkdtemp())
+        top = _tmpdir(self)
         (top / ".git").mkdir()
         harness = top / "tools" / "rw"
         (harness / "crates" / "a").mkdir(parents=True)
@@ -619,6 +609,18 @@ class EnclosingWorkspace(unittest.TestCase):
         problems = hygiene.enclosing_workspace_problems(ROOT, top) + hygiene.enclosing_config_problems(ROOT, top)
         self.assertEqual(problems, [], "\n".join(problems))
 
+
+# ── Guard tests (defined in test_rwm_guards.py) ───────────────────────────────
+
+# Imported by name so that `python -m unittest test_rwm` collects them with this module's tests.
+from test_rwm_guards import (  # noqa: E402,F401
+    EndpointGuard,
+    HygieneGuards,
+    PromptPins,
+    ScanBypasses,
+    ServerCommand,
+    ToolConfigs,
+)
 
 if __name__ == "__main__":
     unittest.main()
