@@ -539,7 +539,7 @@ of 36 or pass^3 at least 9 of 12, and for offload models pass^3 at least 10 of 1
   ledger for the same jobs; the key's usage figure lags by a few seconds, so the ratio (2.14) is a partial check.
 - **Outside every cap.** OpenRouter's card fee on the credits bought (5.5%, at least $0.80), which no ledger sees.
 
-### 4.2 The ledger counts every call twice (a bug in the pending tool patch) [V]
+### 4.2 The ledger counts every call twice (a bug in the tool patch, fixed when it landed) [V]
 
 - **Where.** The settle step (`budget.py`, `cost_from_usage`) books `usage.cost + usage.cost_details.upstream_inference_cost`.
 - **Why that is wrong.** The backend's own notes describe `upstream_inference_cost` as the provider's bill on a

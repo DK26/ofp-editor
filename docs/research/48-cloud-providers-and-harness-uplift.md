@@ -28,7 +28,8 @@ row's lowest planned setting (§6.2); it is blank for aggregators and GPU rental
 **Tooling.** A cloud backend for `tools/local-qual` (any OpenAI-compatible endpoint, a hard budget cap, the harness-uplift variants of §5
 and an `uplift.py` comparer, plus the `--free-only` mode, DPAPI key scripts and free-tier rate caps of §6.0) has been built and tested
 against a local mock server only. It lands as one patch, with its `CODE-INDEX.md` entry, once doc 49's local measurement run has finished
-with `tools/local-qual` [V for the mock tests; I for readiness].
+with `tools/local-qual` [V for the mock tests; I for readiness]. *Landed 2026-09-28, after doc 49's run, with the budget double-count fix
+of doc 54 §4.2 and `--output` for the launcher; the tool's test suite passes; round 1 ran as doc 54.*
 **Relation to sibling docs.** Doc 14 (tiers, candidates), doc 21 and doc 25 (step shapes, evaluation), doc 40 (token economy, cost model,
 instrument E12), doc 44 (first local measurement), doc 46 (llama.cpp, UD quants, `pick-hard`), doc 47 (small models, MoE offload
 candidates); D021 (provider layer), D022 (Model Manager), D023 (model strategy), D026 (token economy). This doc changes no decision.
@@ -441,7 +442,7 @@ transfers only qualitatively [I].
 Proposed as doc 25's next evaluation instrument after doc 40's E12. Doc 29 already uses E13 for an engine extension (the E-number
 collision is tracked in DG005), so this doc calls it **48-U** until codes are assigned.
 
-### 5.1 Rungs [I; implemented as `--variant` and `--repair` in the pending tool patch]
+### 5.1 Rungs [I; implemented as `--variant` and `--repair` in `tools/local-qual`]
 
 Each rung removes one harness mechanism; every other byte of the prompt, the seeds and the menu permutations stay the same, so arms pair
 item by item.
