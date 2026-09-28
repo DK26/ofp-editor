@@ -117,6 +117,25 @@ and the folding steps that move the request to `folded`.>
 | [DG037](DG037-director-feature-names.md) | One word, six features: names for the "Director" features | design round (OWQ-08 answered: the owner delegated pending names and reviews the names table) | open | 39 review "Names"; 41 §3; 32 §3.3; 33 §5.4; 34 ed18 |
 | [DG038](DG038-sl11-engine-random-exceptions.md) | Engine `random` and SL11: the play-seed bootstrap and opt-in re-roll on restart | technical (OWQ-21 answered: re-roll (a), no exception in v1) | open | 43 §3.2, §2.5, OQ2–OQ3; 29 SL11; 36 OQ2 |
 | [DG039](DG039-downstream-hosts-behind-aggregators.md) | Downstream hosts behind an aggregator: what "the model provider the user configured" covers | **owner** (network boundary) | open | 48 §7.4 item 2, §7.1, §2.6, OQ2; 50 §4; D008; D046 |
+| [DG040](DG040-bounded-repeat-until-step.md) | A bounded "repeat until" step with a code-checked condition and a hard maximum | technical (the owner reviews; amends D025 decision 2) | open | the owner's dynamic-workflow additions; 38 §3.2, §4.5, §7; D025; 21 §1.4, §8.2; 56 WR5 |
+| [DG041](DG041-verification-panel-for-creative-steps.md) | A verification panel for strong models on creative work, opt-in by effort | technical; **owner** for a reviewer role | open | the owner's dynamic-workflow additions; 25 §2.5, §7.3; 38 §3.3; 21 §1.4; D024; D026 |
+| [DG042](DG042-plan-draft-format-and-saved-plans.md) | Dynamic authoring, static execution: the `PlanDraft` format, its checks and where saved plans live | technical (the principle is [D051](../decisions/D051-capability-ladder-freedom-by-qualification.md) item 9) | open | the owner's dynamic-workflow additions; 63 §8, §13 items 9–10; 38 §6.1 |
+| [DG043](DG043-repair-turn-shape-and-content.md) | The repair turn: capsule shape, which finding goes in, and repair versus resample | technical (measure) | open | 51 §4.6, §6.1 item 9; 57 TE-G3, §6.3; 61 §6 items 1, 3, 7, 13; 62 §10 item 8 |
+| [DG044](DG044-wording-and-profile-hashes-in-keys.md) | Question wording, model profile and language in the qualification and calibration keys | technical | open | 60 §4 items 1, 10; 55 §7 item 1; 63 §13 item 3; 51 §4.8; D051 item 4; DG012 |
+| [DG045](DG045-model-profiles-beside-harness-presets.md) | Model profiles beside harness presets: where probed facts about a model live | technical | open | 51 §4, §6.1 items 1, 5–6; 55 §7 item 10, OQ1; D048 |
+| [DG046](DG046-leading-why-doctrine-or-knob.md) | The leading `why`: doctrine for every Pick and Fill, or a per-model knob | technical (measure: 53 R7) | open | 53 R7; 55 §7 item 8; 59 §7 items 5–6; 60 §4 item 11 |
+| [DG047](DG047-decompositions-and-forms-for-pick-fill.md) | Authored decompositions and question forms for Pick and Fill | technical | open | 55 §7 item 2; 59 §7 items 1, 7; 60 §4 items 3–5 |
+| [DG048](DG048-answer-schema-identity-and-compiler.md) | Answer schema identity per harness preset, and one schema compiler | technical | open | 55 §7 items 3, 6; 51 §6.1 items 8, 14; DG015; DG024 |
+| [DG049](DG049-named-capsule-layouts.md) | A small set of named capsule layouts that harness presets choose from | technical (measure) | open | 55 §7 item 5; 51 §6.1 item 11; 57 TE-G1; 52 RG6; 60 §4 items 6–7; DG019 |
+| [DG050](DG050-second-stage-escalation-on-low-confidence.md) | Escalation to a second bound stage when the first is unsure | **owner** | open | 53 §4.3, OQ2; 55 §7 item 9; 56 §10 item 6; 58 OQ4; D023; D050 |
+| [DG051](DG051-provider-seam-outcome-taxonomy.md) | One outcome taxonomy at the provider seam | technical | open | 51 §4.5–§4.7, §6.1 items 2–5; 52 §5.2, RG2; D050 item 4; DG016 |
+| [DG052](DG052-encoder-runtime-for-components.md) | A runtime for non-generative encoder components | **owner** (after spike S-ENC) | open | 53 §4.9; 58 §4.11 item 2, OQ2; D022 |
+| [DG053](DG053-journal-record-kinds-and-ownership.md) | New journal record kinds, and one owner per journal | technical | open | 56 §10 items 2, 4; 57 TE-G4–G5; 58 §4.11 item 4; 59 §7 item 4; 63 §13 item 6; DG017 |
+| [DG054](DG054-stakes-floors-per-decision-kind.md) | Stakes floors per `DecisionKind` that no preset can lower | technical (who sets them: owner or technical) | open | 60 §2.8, P-09, §4 item 2, OQ2; D048 item 2; D051 item 3 |
+| [DG055](DG055-grant-witness-name-and-crate.md) | The grant witness: one name, one scope, one crate | technical | open | 63 §9.2, §9.4, §13 item 7; 62 §6.3, §10 item 7; D051 |
+| [DG056](DG056-model-facing-result-envelope.md) | One envelope, sanitiser and diagnostic contract for model-facing tool output | technical | open | 57 TE-G9, TM1–TM3; 61 §6 item 2; 62 §10 item 4 |
+| [DG057](DG057-component-bindings-and-visibility.md) | Bindings, badges and kill switches for non-generative components | **owner** | open | 58 §4.11 items 1, 5, OQ3; D024 item 4 |
+| [DG058](DG058-endpoint-verification.md) | Endpoint verification: behavioural probes, "Check this endpoint" and "last verified" | technical | open | 51 §6.1 item 10, K1–K4, K20, OQ12; 48 §7.4 items 3–4; 50 §6; D045 item 5 |
 
 ## Candidates noticed but not filed in this pass
 
@@ -130,6 +149,57 @@ and the folding steps that move the request to `folded`.>
   such a variant is proposed.
 - Doc 37 §10's candidates other than (g) are factual corrections for the cross-doc correction step (docs 03 and 31 already carry
   (b), (c) and (f)). They are filed here only if a correction turns out to need a decision.
+
+## Candidates not filed (2026-09-28)
+
+The design-gap candidates listed in docs 51, 52, 53 and 55–63 that the go-ahead pass did not file, each with where it stands. Items
+filed as DG043–DG058 are mapped in that pass's verification note below. "Decided" means decided in a decision record of 2026-09-28
+under the owner's go-ahead; the owner may overrule those on return.
+
+| Source item | Candidate | Where it stands |
+| --- | --- | --- |
+| 51 §6.1 item 6 | An untrusted-text control-token table per model family | A profile fact (doc 51 §4.3 "Untrusted text" row), so its home follows DG045; the neutralising rule stays doc 21 §9.3 |
+| 51 §6.1 item 7 | Tracking re-authored third-party harness tests | DG018 (third-party port records); `docs/porting/upstream-test-map.csv` covers engine tests only |
+| 51 §6.1 item 12 | Resume and cassette keys hash the full canonical request | DG010 (resume) and doc 38 §6.4 (cassettes); doc 51's `tools/local-qual --resume` finding |
+| 51 §6.1 item 13 | The workflow runtime as a sans-IO reducer | An implementation shape for doc 38 §4.7; no conflict found |
+| 51 §6.1 item 15 | Pick soft scores from log-probabilities; single-token letter check | D048 item 2 (scoring mode) and doc 53 §4.2; the tokenizer check is a test |
+| 51 §6.1 item 16 | Vendor penalties against D022 item 5 | D022 item 5 stands (doc 55 applied it); a request only if a measured win appears |
+| 52 RG1, RG3, RG4, RG8 | Route lists; quota ledger and `QuotaLimited`; the UX standard; the paid backstop | Decided: [D050](../decisions/D050-rate-limit-ux-standard-and-router.md) items 3, 4 and 6, 1, 5 |
+| 52 RG2, RG5, RG6, RG7 | Retry accounting; cloud K; lean capsules; packing | D050 routes them to DG016 (and DG051 for the taxonomy), DG021, DG019 and DG025 (and DG049), and "not adopted" |
+| 52 RG9 | Who curates the dated limit and free-preset data | Open part of D045 and D050; refreshed through releases only (D050 item 4); pairs with doc 50 §6's preset-data candidate |
+| 55 §7 item 1 | The harness preset in the qualification key | Decided: [D051](../decisions/D051-capability-ladder-freedom-by-qualification.md) item 4; the remaining hashes are DG044 |
+| 55 §7 item 4 | Card policy per model and `DecisionKind` | D051 items 2 and 5 express it as FR1 (no cards) against FR2 (cards), with push always; a request only if a preset moves cards to another channel |
+| 55 §7 item 7 | Harness preset distribution and override UX | D048's open part (shipping through the Model Manager under D008) |
+| 56 §10 item 1 | Check outcomes with counts | Validation-and-lints §2; technical, no conflict |
+| 56 §10 item 3 | Operation policy as data | DG016 (retry causes) and doc 38 §4.2's class table |
+| 56 §10 item 5 | Adoption on small suites (doc 55 PR4 against doc 56 EQ3) | Doc 56 §9 tension 3: the first tuning run or the owner decides |
+| 56 §10 item 7; 57 TE-G7 | Token budgets against window fractions | Doc 56 WR6 and doc 57 TE-G7/TM2 both derive budgets from the served per-slot context, so they agree; folds remain for doc 38 §3.5 ("about 2% of the window") and doc 12 §5.3 (`T_result`) |
+| 57 TE-G2 | Conversation context policy and narrative fields | Doc 57 §3.6; doc 21 §8.1 (no model-written summaries of facts) |
+| 57 TE-G6 | Owner of the llama-server launch profile and slot map | D022 (the sidecar) and DG027 (slots) |
+| 57 TE-G8, TE-G11 | TTL by pacing; uncached one-shot calls | DG025 and doc 40 R11 |
+| 57 TE-G10 | "Unchanged since" receipts | Doc 57 TM4; no conflict |
+| 57 TE-G12 | Journal query tools for Wilco | DG032 (tool family) and DG053 (records) |
+| 58 §4.11 item 3 | Weights against data tables in the installer | D023 decision 1's reading (owner); a request when a component needs shipped tables |
+| 58 §4.11 item 6 | A local reliability report from the journal | Doc 58 §4.10; a product proposal, no conflict |
+| 58 §4.11 item 7 | Mozilla's model bucket as a download source | D008 (a user-enabled source, owner); a request when a component needs it |
+| 59 §7 item 2 | Code-written thought as a named capsule segment | Owner question first (doc 59 OQ1; D010); DG049 names segments |
+| 59 §7 item 3 | The two-phase call shape | DG045 (reasoning facts) and DG016 (the output cap); D023 decision 3 holds (same model) |
+| 59 §7 item 8 | A dev-time prompt-pack optimiser | Tooling under D027 item 6 and D048 item 3; never at run time |
+| 60 §4 item 8 | Known rough edges per harness preset | D048 item 6 and doc 55 §3.6 (visible presets) |
+| 60 §4 item 9 | Recipes as a documented artifact kind | DG007 |
+| 61 §6 items 4–5 | Freshness-bound handles; name-addressed query tools | DG032 (option C) |
+| 61 §6 item 6 | Teller surface levels in the preset schema | D051 item 5 (pull by grant); a preset may declare a surface level, never above the effective level (doc 63's sibling finding) |
+| 61 §6 item 8 | "Fixed by deletion" admission note | D024 (autonomy) |
+| 61 §6 item 9 | Draft mode on a `Scratch` fork | D051 (FR6 under the existing autonomy dial); the dry-run tool is doc 63 §13 item 5, below |
+| 61 §6 items 10–12 | Prefix verdicts while streaming; completeness of decode constraints; Teller latency targets | Experimental after v1 (doc 62 §6.9); a doc 30 §4.5 fold; the M2 benchmark and D050 item 1 |
+| 61 §6 item 14 | Reference kinds for where-used and rename | A factual check of validation-and-lints §9 |
+| 62 §10 items 1, 3 | Witness trait policy; diagnostics as guidance | `AGENTS.md` "Witness and guard types", "Diagnostics as Guidance" and "Negative Compile Tests"; DG011 for `Admitted<T>` |
+| 62 §10 item 2 | Model-facing text against developer doc comments | Commands-undo-history §3 (doc 62's finding) |
+| 62 §10 item 5 | The OS-path guard against the lexical `VfsPath`; a strict-path dependency | Owner (doc 62 OQ2) |
+| 62 §10 items 6, 9, 10 | Typed plugin WIT; map-indexing check; the `CheckedUrl` egress shape | Doc 22 OQ2; crate-map §2.4; `plotroom-net` under D008 |
+| 63 §13 items 1–3 | Level vocabulary; product ceilings; level and domain in the key | Decided: D051 items 2–4 (names: D034 item 3; ceilings above FR0: D051's open part); stakes floors are DG054, the hashes DG044 |
+| 63 §13 items 4–5 | Tool sets per (chat mode, level group); a dry-run admission tool | DG023; doc 63 §3.1's FR6 row and commands-undo-history §4.1 |
+| 63 §13 items 8, 11, 12 | A Draft vocabulary of know-how units; off-menu idea cards; the flywheel's review path | Doc 63 §2.3 and OQ10; doc 21 §5.1; doc 55's tuning split and doc 60 P-15 |
 
 ## Verification notes
 
@@ -183,3 +253,30 @@ and the folding steps that move the request to `folded`.>
 - Not filed in this step, and still candidates: doc 48 §7.4 item 1 (cloud artifact identity) and items 3–5, and doc 50 §6's two
   (free-provider preset data and its refresh; a "screened, not qualified" state in the model catalogue). D045 and D046 list the
   cloud artifact identity, and D045 the preset data's refresh, as open parts.
+
+### Go-ahead pass (2026-09-28)
+
+- **Dynamic-workflow requests.** The owner's go-ahead of 2026-09-28 ("Either way, except for GPG Signing, we can do everything else")
+  covered filing the three dynamic-workflow requests discussed with the owner: DG040 (a bounded "repeat until" step), DG041 (a
+  verification panel for strong models on creative work, opt-in by effort) and DG042 (dynamic authoring with static execution). The
+  go-ahead chose no option among them and no research doc recommends DG040's or DG041's shape, so both stay **open** for the owner
+  to decide on return. DG042 covers only what [D051](../decisions/D051-capability-ladder-freedom-by-qualification.md) item 9 (plans
+  as data after v1, adopted the same day under the go-ahead) leaves open: doc 63 §13 items 9–10.
+- **Candidates of docs 51–63.** Every design-gap candidate listed in docs 51, 52, 53, 55, 56, 57, 58, 59, 60, 61, 62 and 63 was
+  collected (119 items; doc 54 was out of scope) and deduplicated across docs. Filed as open requests, each with the source
+  docs' recommended option marked as a proposal where they give one: DG043 (51 item 9, 57 TE-G3, 61 items 1, 3, 7, 13, 62 item 8),
+  DG044 (60 items 1, 10; 55 item 1 and 63 item 3 in part), DG045 (51 item 1, citing items 5–6 as uses; 55 item 10), DG046 (53 R7, 55 item 8, 59 items
+  5–6, 60 item 11), DG047 (55 item 2, 59 items 1, 7, 60 items 3–5), DG048 (55 items 3, 6; 51 items 8, 14), DG049 (55 item 5, 51
+  item 11, 57 TE-G1, 52 RG6, 60 items 6–7), DG050 (53 §4.3, 55 item 9, 56 item 6, 58 OQ4), DG051 (51 items 2–5, 52 RG2), DG052 (53
+  §4.9, 58 item 2), DG053 (56 items 2, 4, 57 TE-G4–G5, 58 item 4, 59 item 4, 63 item 6), DG054 (60 item 2; 63 item 2 in part),
+  DG055 (63 item 7, 62 item 7), DG056 (57 TE-G9, 61 item 2, 62 item 4), DG057 (58 items 1, 5) and DG058 (51 item 10). The rest are
+  in "Candidates not filed (2026-09-28)" above.
+- **Decided the same day.** [D050](../decisions/D050-rate-limit-ux-standard-and-router.md) and D051 appeared during this step,
+  both adopted under the go-ahead. Candidates they decide were not filed (doc 52 RG1, RG3, RG4, RG8; doc 55 §7 item 1; doc 63 §13
+  items 1–3 in part), and DG042, DG044, DG050, DG051, DG054 and DG055 cite them as decided.
+- **Owner-level requests.** DG050, DG052 and DG057 (and DG041's reviewer role) need owner questions (doc 53 OQ2, doc 58 OQ2 and
+  OQ3 ask them). `docs/decisions/OWNER-QUESTIONS.md` is outside this folder and was not edited by this step.
+- **Earlier leftovers.** DG058 also covers doc 48 §7.4 items 3–4 and doc 50 §6's "screened, not qualified" state from the previous
+  step's list; doc 48 §7.4 items 1 and 5 and doc 50 §6's preset-data refresh (with doc 52 RG9) remain candidates.
+- No research doc, decision record or file outside this folder was edited. Every source section cited in DG040–DG058 was re-read on
+  2026-09-28 unless its own verification note says otherwise. The next free number is DG059.
