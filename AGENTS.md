@@ -331,7 +331,14 @@ They are not optional style preferences.
 - Never use stringly-typed errors; prefer `&'static str` context tags over
   allocated `String`.
 - Implement `Display` so the human-readable message embeds the numeric context
-  (byte counts, offsets, limits).
+  (byte counts, offsets, limits) and, when there is a next action (what to
+  check, call or change), ends with it.
+- `Display` text is for developers and logs: never forward it verbatim to a
+  model, a plugin or an external agent, or let host paths and user names
+  reach them through it; map the error to the typed findings and repair data
+  those consumers are designed to receive. Untrusted text quoted in an error
+  or diagnostic passes through one shared display sanitizer that makes
+  control, bidi, zero-width and tag characters visible.
 
 ### Integer Overflow Safety
 
@@ -414,8 +421,15 @@ failure mode.
 
 ### Type Safety — Make Invalid States Unrepresentable
 
-- Use the Rust type system to **prevent invalid, incorrect, or ambiguous
-  states at compile time** rather than guarding against them at runtime.
+APIs lead their users, human or model, into correct usage: invalid states
+are unrepresentable, where a check can be a gate it is one, and diagnostics
+name the fix. Use the Rust type system to **prevent invalid, incorrect, or
+ambiguous states at compile time** rather than guarding against them at
+runtime. A type that cannot be built, a method that does not exist, a trait
+bound or a lint beats a comment, because much of the code here is written
+and repaired by coding agents that loop on compiler and lint output. Keep
+prose for rationale and for conventions no tool can check.
+
 - **Enum state machines over boolean flags.** When an object moves through
   distinct phases (e.g., loading → streaming → ready), model each phase as
   an enum variant carrying only the data valid for that phase. This makes
@@ -434,11 +448,13 @@ failure mode.
   indices, hashes) would benefit from newtype wrapping. Apply newtypes where
   misuse could cause silent data corruption or security issues — not for every
   integer.
-- **Typestate where appropriate.** When an API has a mandatory call sequence
-  (build → configure → finalize), encode each step as a distinct type so
-  callers cannot skip or reorder steps. Where a framework requires a single
-  concrete type (for example a UI state container), prefer an internal enum
-  over typestate on the outer type.
+- **Typestate at in-process seams, enums in storage.** When an API has a
+  mandatory call sequence (build → configure → finalize), encode each step
+  as a distinct type so callers cannot skip or reorder steps. Where a
+  framework requires a single concrete type (for example a UI state
+  container), prefer an internal enum over typestate on the outer type.
+  State that is persisted, journaled, resumed or sent over a wire is an
+  enum state machine and is validated again when it is loaded.
 - **`Option` / `Result` over sentinel values.** Never use `-1`, `0`,
   `""`, or `null`-equivalent magic values to signal absence. Use `Option`
   or `Result` so the compiler forces callers to handle the missing case.
@@ -447,9 +463,77 @@ failure mode.
   be in a valid state when constructed through specific paths, make the
   invalid construction path impossible rather than documenting "don't do
   this."
+- **Witness and guard types.** A *witness* is a value whose existence proves
+  that a check ran (an admitted proposal, a validated path, a granted
+  capability); a *guard* wraps a value so it can be used only through
+  checked operations.
+  - The proof is the value itself: built only by a private constructor in
+    the module that runs the check, taken by the code that requires the
+    check, and bound to what it was checked against (a revision, a root, a
+    grant, a scope). A phantom type parameter labels a domain; it is never
+    the proof.
+  - No `Default`, `Deserialize`, `From<Inner>`, `DerefMut` or public fields;
+    values that come back from storage, a replay, the network or a plugin
+    are checked again. `Deref` / `AsRef` to the inner type only when no
+    workspace API accepts that type unchecked; otherwise one explicitly
+    named exit, one explicitly named escape hatch, and nothing else.
+  - Name operations after the kind of value they act on (`mission_join`,
+    not a bare `join`) so an unchecked call stands out in review. Doc
+    comments add "When to use", "When not to use" and "Security" paragraphs
+    and `#[doc(alias = "…")]` entries for the familiar names people search
+    for.
+  - A change to a witness or guard type's public surface is a design
+    decision: record a design-gap request and add a negative compile test
+    (see "Negative Compile Tests").
+- **Name untrusted values by provenance** (`model_reply`, `plugin_output`,
+  `requested_file_name`) and domain markers by the resource they label, so
+  an unchecked use is visible in review.
 - **Exhaustive matching.** Prefer `match` over `if let` when handling enums
   so that adding a new variant produces a compile error at every site that
   must handle it, rather than silently falling through.
+
+#### Diagnostics as Guidance
+
+A gate is easy to pass when its diagnostic names the fix. Some agents see
+only error-severity diagnostics, and of those only the main message and the
+notes, so guidance is written to survive that feed.
+
+- **State the next action.** Every `#[must_use = "…"]` message,
+  `#[deprecated(note = "…")]`, `#[diagnostic::on_unimplemented]` message and
+  lint `reason` says in one sentence what to do instead and names the
+  sanctioned API, in the primary message or a note, never only in a label,
+  a `help` or a warning.
+- **Never widen a guard.** Guidance never tells the caller to add an impl,
+  make a field public, grant a capability or silence a lint: needing more
+  capability is a design decision (a design-gap request), not a compile
+  fix. Never clear an error on a witness, guard or sealed trait with the
+  impl, field, `Default` or allowance the compiler or clippy suggests.
+- **Where the attributes go.** `#[must_use]` with a message on witness and
+  guard types, validation functions, functions that consume a witness and
+  security-relevant accessors (not on `io::Result`, `Result<(), _>` or
+  builder methods returning `Self`). `#[diagnostic::on_unimplemented]` on
+  every sealed or capability trait, with guidance-bearing bounds on
+  functions (`fn f<T: Trait>(…)`), where rustc shows the custom text, not
+  only on `impl` blocks, where it does not. `#[diagnostic::do_not_recommend]`
+  on blanket or internal impls that would suggest the wrong fix.
+- **Deny-level guidance.** `unused_must_use` and `deprecated` are `deny` in
+  `[workspace.lints.rust]`, and clippy's `let_underscore_must_use` is
+  `deny`, so `let _ =` cannot discard a witness; CI already fails on
+  warnings, so this changes what an agent sees while editing, not what can
+  merge. Every `disallowed-methods` / `disallowed-types` entry in
+  `clippy.toml` has a `reason` written as an instruction that names the
+  sanctioned API, and no `replacement` unless the call shape is identical
+  (a replacement moves the reason into a `help`, which errors-only feeds
+  drop).
+- **Suppressions carry a reason:** `#[expect(lint, reason = "…")]`, with
+  clippy's `allow_attributes_without_reason` at `deny`. Use
+  `#[allow(lint, reason = "…")]` only where a lint fires on some targets or
+  feature sets, since an unfulfilled `expect` warns and fails the other
+  targets' CI. Capability lints (files, processes, network) are silenced
+  only in the crates that confine that capability.
+- **Close the escape, not the symptom.** When code compiles but bypasses a
+  guard, remove or rename the API surface that allowed it and add a
+  negative compile test for the bypass; a new comment alone is not a fix.
 
 ### Lifetime Naming
 
@@ -595,6 +679,25 @@ If a code example requires filesystem access, network, or other unavailable
 resources, rewrite it to use in-memory data so it runs in CI without external
 dependencies.
 
+#### Negative Compile Tests
+
+`compile_fail` doctests stay banned: stable rustdoc passes them on any
+compile error, a typo included, so they prove nothing. Prove that misuse
+does not compile, and that the compiler says the right thing, with
+`trybuild` UI tests:
+
+- One `tests/ui/*.rs` case per misuse of a witness, guard, typestate or
+  sealed trait (building it outside its module, the wrong domain, an
+  unchecked operation, deserializing or discarding it, a final step in the
+  wrong state), beginning with a comment that states the rule it proves and
+  why it matters, with the compiler output committed as a `.stderr`
+  snapshot. Every guard property has a case, so a change that weakens a
+  guard fails CI; for a new guard API, write its misuse cases first.
+- The snapshot is part of the contract: a change to guidance text is
+  reviewed like an API change. UI tests run on one CI job with a pinned
+  toolchain, because compiler output changes between releases; snapshots
+  change only with a toolchain bump or a reviewed guidance change.
+
 #### Test Organisation
 
 Tests within each module are grouped under section-comment headers:
@@ -699,6 +802,7 @@ input.
 - If docs and code conflict, treat this as a design-gap or stale-code-index problem and report it — do not silently override
 - Never use `cargo build`, `cargo run`, or similar pure build/run commands unless the user explicitly asks; prefer `cargo clippy` first, then `cargo test`, and use `cargo check` as a lighter fallback
 - When a task would normally end with "run the app locally", provide the exact user-run command instead of executing it yourself
+- On witness, guard and sealed-trait types, follow compiler and lint text only when it names a sanctioned API; never add the impl, public field, `Default` or `#[allow]` it suggests (see "Diagnostics as Guidance")
 
 ## Evidence Rule (Implementation Progress Claims)
 

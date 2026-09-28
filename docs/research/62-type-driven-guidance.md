@@ -17,8 +17,7 @@ the coding agents that write Plotroom, Wilco and other models using Plotroom's A
 same principle to mission scripts.
 
 **Status: proposal.** Nothing in the repository was coded or changed except this file. Two throwaway probe crates outside the
-repository were checked with rustc and clippy 1.98.1 (verification notes). `AGENTS.md` is unchanged: §8 summarises a proposed
-amendment that awaits owner approval. Every design proposal is [I].
+repository were checked with rustc and clippy 1.98.1 (verification notes). §8's `AGENTS.md` amendment was applied on 2026-09-28 under the owner's go-ahead (decisions README, 'Records of 2026-09-28'). Every design proposal is [I].
 **Epistemic legend** (doc 16's): **[V]** read at the cited source or commit on 2026-09-28. **[V, probe]** observed by compiling the
 probe crates. **[V-author]** a number published by a paper's authors, quoted as published and not reproduced by us. **[I]** our
 inference or proposal. **[U]** unknown, needs measurement.
@@ -72,7 +71,7 @@ local paths.
   `plotroom-io`, wrapped in Plotroom types; build boundaries only from resolved roots, never from model or plugin strings; use
   `StrictPath` (reject), never `VirtualPath` (clamp), for extraction. It would close a gap the upstream PBO extractor leaves open: a
   link already present inside the destination (§6.5, §6.6).
-- **A proposed `AGENTS.md` amendment awaits owner approval** (§8): witness and guard rules, a "Diagnostics as Guidance" section,
+- **The `AGENTS.md` amendment of §8 was applied on 2026-09-28** under the owner's go-ahead: witness and guard rules, a "Diagnostics as Guidance" section,
   error text for developers only, trybuild negative compile tests and one agent-use rule; 116 lines added, none removed. Ten
   design-gap candidates are listed, not filed (§10).
 
@@ -532,7 +531,7 @@ examples mirrored by test-kit tests. Licence per D031: GPL-3.0-or-later for now.
 trybuild cases in the SDK (undeclared scope, proposal kind outside the grant, building an empty draft); test-kit host tests where an
 adversarial component calls raw imports outside its grant and is denied at run time.
 
-## 8. Proposed `AGENTS.md` amendment (proposed, awaiting owner approval)
+## 8. The `AGENTS.md` amendment (applied 2026-09-28 under the owner's go-ahead)
 
 A unified diff was prepared outside the tree. It applies cleanly to `AGENTS.md` as of 2026-09-28, adds 116 lines and removes none
 (114 before the review edits recorded in the verification notes).
@@ -750,3 +749,7 @@ All read on 2026-09-28.
   `[workspace.lints.rust]`, trybuild, `tests/ui`) is the mechanism the rule is about. `AGENTS.md` itself is unchanged.
 - **Still open for the owner:** approval of §8; whether `plotroom-io` depends on strict-path; the one name for the grant witness
   (§6.3 here, doc 63 §9.2).
+
+### 2026-09-28, amendment applied
+
+- §8's amendment was applied to `AGENTS.md` by hand under the owner's go-ahead of 2026-09-28 (Error Design, Type Safety with 'Witness and guard types', 'Diagnostics as Guidance', 'Negative Compile Tests', and one agent-rules bullet). Companion changes it implies are still to do: the crate-map §2.4 lint table, `clippy.toml` reasons, the testing-strategy §14 UI-test gate and §16 item 1, and core-document-model §5.1's trybuild note.
