@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for ``run.py --key-status`` (key_status.py): the key's own record, read at no quota (t67-t73).
+"""Tests for ``run.py --key-status`` (key_status.py): the key's own record, read at no quota (t67-t73, t77).
 
 Why the command exists: before it, the only zero-quota way to see what a key allows (credit limit, usage, today's
 free-model requests) was a hand-written script, since ``--dry-run`` sends nothing, not even the key check, and a real
@@ -23,6 +23,8 @@ so ``--key-status`` sends exactly that one request and prints the record's non-s
 * t73: the lines name the limit that applies: the per-account free-model limits beside the per-key ``rate_limit``,
   the daily counter shown as possibly lagging, a daily against a per-minute 429, a body over the cap, a 300 whose
   Location cannot be parsed.
+* t77: a label is scrubbed as written inside a decoded error message (one holding a double quote or a backslash), and
+  in the record's date and period fields when it sits under a nested ``label`` key, not the record's own.
 
 The launcher path (cloud/run-cloud.ps1 with a throwaway DPAPI blob, ``--key-status`` accepted without ``--free-only``,
 ``sk-or-`` and ``--api-key`` still refused) is step 15 of dpapi_round_trip.ps1, run by t53 in
@@ -485,6 +487,74 @@ def t73_key_status_names_the_limit_that_applies():
             "per-minute 429, an oversized body and an unreadable redirect each name their own next step")
 
 
+# ── Security edge cases: label forms (mutation check) ────────────────────────
+
+def t77_key_status_scrubs_labels_as_written_and_when_nested():
+    """A label is scrubbed in the form the console would show it: as written inside a decoded error message, and in
+    a record's date or period field when it sits under a nested ``label`` key rather than the record's own.
+
+    Why: a mutation check found two guards of key_status.py that no test pinned; either could be removed and the
+    whole suite still passed. ``scrub`` replaces each label as written and as json.dumps writes it inside a string.
+    t72's quoted label reaches the console only inside error metadata that this module writes as JSON (the ``\\"``
+    form), and t68's plain label holds no character JSON escapes, so its two forms are one string; a decoded error
+    message shows a label with a double quote or a backslash as written, which only the as-written form matches.
+    ``report_lines`` blanks a date or period field holding any label its ``_labels`` walk finds, anywhere in the
+    record, while free_key.key_summary drops only one holding the record's top-level label; t72 and t75 plant that
+    top-level label, which the summary already drops, so only a label nested deeper tells the report's own filter
+    apart.
+
+    How: a 500 whose JSON error message quotes a label holding double quotes, then one holding a backslash, each
+    with ``data.label`` naming the same label (as t68's plain case does), must show ``lookup failed for [REDACTED]``.
+    Then a key record keeps its usual masked top-level label while ``limit_reset``, ``expires_at`` and
+    ``rate_limit.interval`` each hold another date-shaped label that appears only under a nested ``workspace``
+    object: directly, in a list inside it, and one object further down. Secrets are matched by their random hex
+    tail, which no escaping changes, and a failure names them, never prints them.
+    """
+    quoted = 'my "free" key ' + secrets.token_hex(6)
+    slashed = "keys\\owner-" + secrets.token_hex(6)  # one backslash: keys\owner-<hex>
+    nested = {field: f"{field}-named-" + secrets.token_hex(6) for field in ("reset", "expiry", "period")}
+    SWEEP.extend([quoted, slashed] + list(nested.values()))
+    tails = {"key": FREE_KEY[len("sk-or-"):], "masked label": LABEL[len("sk-or-"):], "quoted label": quoted[-12:],
+             "backslash label": slashed[-12:]}
+    tails.update({f"label nested for {field}": label[-12:] for field, label in nested.items()})
+
+    def leaked(p):
+        """The names (never the values) of the secrets a run printed."""
+        return [name for name, tail in tails.items() if tail in p.stdout + p.stderr]
+    bad = []
+    # ── A label as written, inside a decoded error message ──
+    # The mock writes the body with json.dumps, so the raw reply carries \" and \\; key_status decodes it before the
+    # scrub, and the message then holds the quote or the backslash as written.
+    for name, label in (("quoted label", quoted), ("backslash label", slashed)):
+        STATE.reset()
+        free_state()
+        STATE.key_queue = [{"status": 500, "body": {"error": {"code": 500, "message": "lookup failed for " + label},
+                                                    "data": {"label": label}}}]
+        p = run_free(ks_args())
+        redacted = "lookup failed for [REDACTED]" in p.stderr
+        if p.returncode != 3 or leaked(p) or len(err_lines(p)) != 1 or not redacted or not no_secrets(p):
+            bad.append(f"HTTP 500 quoting the {name} in its error message: exit {p.returncode}, shown {leaked(p)}, "
+                       f"{len(err_lines(p))} stderr lines, redaction marker shown {redacted}")
+    # ── A label nested below the record's own, in each text field the report prints ──
+    # Each value is date-shaped (letters, digits and hyphens, under 40 characters), holds no sk-or- and is not the
+    # top-level label, so free_key.key_summary and rate_limit_summary keep it; only report_lines' own filter, which
+    # reads every "label" in the record, blanks it.
+    STATE.reset()
+    free_state(limit_reset=nested["reset"], expires_at=nested["expiry"],
+               rate_limit={"requests": 5, "interval": nested["period"]},
+               workspace={"label": nested["reset"],
+                          "members": [{"label": nested["expiry"]}, {"team": {"label": nested["period"]}}]})
+    p = run_free(ks_args())
+    missing = [want for want in ("limit reset: none", "expires: not set or not reported", "interval not reported")
+               if want not in p.stdout]
+    if p.returncode != 0 or leaked(p) or missing or not no_secrets(p):
+        bad.append(f"labels nested in the record's workspace object: exit {p.returncode}, shown {leaked(p)}, "
+                   f"missing {missing}")
+    check(not bad, "; ".join(bad))
+    return ("2 decoded error messages quoting a label as written (a double quote, a backslash) and 3 record fields "
+            "holding a label nested below the record's own: no secret shown")
+
+
 # ── unittest wiring ──────────────────────────────────────────────────────────
 
 class KeyStatusTests(support.CaseTestCase):
@@ -496,7 +566,8 @@ class KeyStatusTests(support.CaseTestCase):
              t70_key_status_refusals_send_nothing,
              t71_key_status_on_a_run_command_line_skips_the_run,
              t72_key_status_hostile_replies_show_no_secret,
-             t73_key_status_names_the_limit_that_applies)
+             t73_key_status_names_the_limit_that_applies,
+             t77_key_status_scrubs_labels_as_written_and_when_nested)
 
     def setUp(self):
         STATE.reset()

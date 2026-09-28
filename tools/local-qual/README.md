@@ -940,7 +940,7 @@ python -m unittest discover -s tools/local-qual/tests -k t59 -v                #
 | `test_cloud_regression.py` | t01, t02, t38 | The local backends' request bodies and scores against the tool before the cloud backend (goldens) |
 | `test_free_mode.py` | t40–t50 | `--free-only`: refusals, catalogue traps, request shape, zero-spend guard, substitution, key rules, key poll, daily cap and day boundary, account quota, 429s, rate-gate units |
 | `test_free_mode_review.py` | t51–t58, t75 | Second review of free mode, and the DPAPI key scripts through PowerShell (t53: 15 steps, `--key-status` through the launcher among them); t75: a label planted in the key record's date fields |
-| `test_key_status.py` | t67–t73 | `--key-status`: the report field by field, the key and label never shown (in bodies, record fields, redirect targets and `\u`-escaped copies), one next-step line per failure, refusals before sending, a run line with `--key-status` running only the key read, the limit that applies named |
+| `test_key_status.py` | t67–t73, t77 | `--key-status`: the report field by field, the key and label never shown (in bodies, record fields, redirect targets and `\u`-escaped copies), one next-step line per failure, refusals before sending, a run line with `--key-status` running only the key read, the limit that applies named; t77: a label holding a quote or a backslash scrubbed as written in a decoded error message, and a label nested below the record's own kept out of its date and period fields |
 | `test_rate_limit_source.py` | r01–r08 | 429 classification by `limit_source` first: the observed shared-pool body, daily-looking text and far resets that stay upstream, unchanged behaviour without the field, undocumented and non-string values, escaped labels in the recorded error, back-off through `chat()` including 429s inside an HTTP 200 |
 | `test_rate_limit_stops.py` | r09–r15 | Two 429 stops: a daily-cap 429 whose `X-RateLimit-Reset` is absurd (huge, past the year 3000, not a number, negative, in the past, over a day past midnight) resumes at the next 00:00 UTC, through `chat()` and as a free run (exit 10, unbilled, no traceback); 429s inside an HTTP 200 count toward the `--max-consecutive-429` streak (a free run stops as rate-limited after 3, an answer resets it, both forms share it) while paid gates retry as before; a daily-cap 429 that completes a streak still stops as the daily quota (r15) |
 | `test_source_text.py` | h01 | No hidden characters in the tool's `.py` and `.ps1` sources: C0 controls, bidi overrides and isolates, zero-width and tag characters, line and paragraph separators (a leading BOM and CRLF are allowed) |
@@ -1281,3 +1281,10 @@ python -m unittest discover -s tools/local-qual/tests -k t59 -v                #
   path (r15); and either `except` narrowed back (t76). Three changes are unobservable: formatting the resume time
   with `time.gmtime` again, and dropping the formatter's rounding or its exception handler, because `daily_wait`
   has already bounded the wait. All 175 checks pass, none skipped, in 289 s on Windows 10 with Python 3.12.
+- **`--key-status` mutation check repeated in isolation (2026-09-28).** An earlier run shared a scratch folder with
+  another agent, so it was repeated on a clean copy of the committed tool: all 16 listed faults are caught and every
+  earlier "caught" claim reproduces. Two further faults survived the whole suite, both guards that work but that no
+  test pinned: scrubbing a label in its exact written form when it holds a quote or a backslash inside a decoded
+  error message, and keeping a label nested below the record's own out of the date and period fields. t77 was
+  written for them; it fails on each of the two faulty copies and passes on the tool. All 176 checks pass, none
+  skipped, in 273 s.
