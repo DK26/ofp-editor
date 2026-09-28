@@ -869,3 +869,28 @@ history, latency and served provider). The OpenRouter catalogue read of 20:30 an
   gained their "Why" paragraphs. The README and the module docs no longer call this doc "planned".
 - **Hygiene.** Doc 52 and `tools/quota-sim/` were searched for local paths, user names, key prefixes, call or run ids and private
   project names; none found. No model was run and no keyed API was called; the public source pages were read without a key.
+
+### 2026-09-28, re-check of the free shared pools (owner report of HTTP 429 from a second machine)
+
+- **Trigger.** Another project on the same account, on another machine and another ISP, got HTTP 429 on `qwen/qwen3.8-27b:free`.
+  Its error body named ModelRun and `upstream_provider_shared_pool` (owner report).
+- **Keyless reads [V].** `GET /api/v1/models` answered 200 through Cloudflare; 17 `:free` models were listed. The `:free` Qwen3.8-27B
+  has one endpoint, ModelRun (fp4), with `uptime_last_30m` 96.95%. The paid `qwen/qwen3.8-27b` has 16 endpoints, most at 99–100%
+  uptime over 30 minutes, from $0.05 / $2.20 to $0.45 / $3.20 per MTok (input / output).
+- **Calls from this machine [V-obs]** with the $0-limit free key and one-line synthetic prompts (one call shortly before 12:31 UTC,
+  eight at 12:31–12:32 UTC). `qwen/qwen3.8-27b:free` answered 2 of 9 calls; the other 7 were HTTP 429 in 0.29–0.74 s. Both calls
+  with a ~6,900-token prompt were refused, as were most ~40-token ones, with and without `provider.data_collection: deny`: neither
+  prompt size nor the filter made a difference. `google/gemma-4-26b-a4b-it:free`
+  answered 429 with provider Google AI Studio and the same `limit_source`. `liquid/lfm-2.5-2.6b:free` answered 404: no endpoint met
+  the account's data policy (its one host trains on inputs), which is the privacy setting working.
+- **The 429 body now carries a structured cause [V-obs].** `error.metadata` holds `provider_name`, `provider_error_code` "429",
+  `is_byok` false, `limit_source` "upstream_provider_shared_pool" and a `remedy_hint` (retry shortly, add your own provider key, or
+  route to another provider), beside the old prose in `raw`. §2.1's "429 with `provider_name` and a short `retry_after`" still
+  holds; no `retry-after` or `x-ratelimit-*` header came with these 429s.
+- **Consequences [I].** The shared pool refuses every key on every network alike, so a second machine or ISP is not a cause; this
+  confirms §2.3 and §5's rule "route around, do not retry into". The router (§5.2) and `tools/local-qual`'s `classify_429` should
+  classify on `metadata.limit_source` first and fall back to text matching only when it is absent, because free text from a
+  provider can mention "per day" for its own quota and be misread as the account's daily cap. The account counter
+  `free_model_daily_requests.used` read 0 before and after an answered free call, so it is not a real-time count of free requests
+  (`GET /api/v1/key` reports `rate_limit` as -1 requests per 10 s: no per-key limit).
+- **Hygiene.** Only synthetic one-line prompts and filler words were sent; no key, call id or run id is recorded here.
