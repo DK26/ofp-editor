@@ -3,3 +3,6 @@
 # with core.autocrlf=true would otherwise change the bytes, mark every record stale and fail the golden checks).
 suites/*.json text eol=lf
 tests/golden/*.json text eol=lf
+# run.py --preset records each harness preset's SHA-256 (and its bases') in every record, and --resume refuses a file
+# whose records carry another hash: the same LF rule keeps a preset's hash the same on every checkout.
+presets/**/*.json text eol=lf

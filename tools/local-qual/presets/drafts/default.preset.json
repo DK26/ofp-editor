@@ -1,0 +1,78 @@
+{
+  "format": "plotroom.harness-preset/1",
+  "preset_id": "default",
+  "version": "0.1.0",
+  "status": "draft",
+  "prompt_pack": { "id": "wilco-core", "version": "0.1.0" },
+  "binds_to": { "kind": "any" },
+  "step_kinds": {
+    "pick": {
+      "answer": { "form": "letter", "field": "choice", "why": { "mode": "off" }, "transport": "response_format" },
+      "reasoning": { "mode": "off", "switch": "chat_template_kwargs.enable_thinking", "value": false },
+      "sampler": { "temperature": 0.6, "top_p": 0.95, "top_k": 40, "min_p": 0, "presence_penalty": 0, "frequency_penalty": 0, "repeat_penalty": 1 },
+      "schema_mode": "json_schema_strict",
+      "layout": { "id": "static_first.v1", "instruction_variant": "pick.plain.v1", "system_message": "pack",
+                  "cards": { "mode": "declared", "format": "prose" }, "option_rendering": "letter_label_desc",
+                  "exemplars": { "count": 0 } },
+      "decomposition": { "mode": "direct", "facet_cap": 7 },
+      "scoring": { "mode": "generate_vote", "permutation": "per_sample" },
+      "voting": { "k_max": 3, "stop": "two_agree" },
+      "repair": { "r_max": 2, "message": "finding_with_allowed_values" },
+      "cascade": { "route": "user_card" },
+      "output_cap_tokens": 64
+    },
+    "fill": {
+      "reasoning": { "mode": "off", "switch": "chat_template_kwargs.enable_thinking", "value": false },
+      "sampler": { "temperature": 0.6, "top_p": 0.95, "top_k": 40, "min_p": 0, "presence_penalty": 0, "frequency_penalty": 0, "repeat_penalty": 1 },
+      "schema_mode": "json_schema_strict",
+      "layout": { "id": "static_first.v1", "instruction_variant": "fill.plain.v1", "system_message": "pack",
+                  "cards": { "mode": "declared", "format": "prose" }, "exemplars": { "count": 0 } },
+      "decomposition": { "record": "whole_record_prefill", "spans": "free_quote_checked", "judgement_fields": "computed_pick" },
+      "voting": { "k_max": 3, "stop": "fixed" },
+      "repair": { "r_max": 2, "message": "refill_failed_field" },
+      "output_cap_tokens": 320
+    },
+    "compose": {
+      "reasoning": { "mode": "off", "switch": "chat_template_kwargs.enable_thinking", "value": false },
+      "schema_mode": "json_schema_strict",
+      "repair": { "r_max": 2, "message": "finding_with_allowed_values" },
+      "on_budget": "authored_split",
+      "output_cap_tokens": 800
+    },
+    "text": {
+      "reasoning": { "mode": "off", "switch": "chat_template_kwargs.enable_thinking", "value": false },
+      "sampler": { "temperature": 0.6, "top_p": 0.95, "top_k": 40, "min_p": 0, "presence_penalty": 0, "frequency_penalty": 0, "repeat_penalty": 1 },
+      "schema_mode": "json_schema_strict",
+      "layout": { "id": "static_first.v1", "instruction_variant": "text.slot.v1", "system_message": "pack",
+                  "cards": { "mode": "declared", "format": "prose" }, "exemplars": { "count": 0 } },
+      "voting": { "k_max": 3, "stop": "fixed" },
+      "repair": { "r_max": 1, "message": "finding_with_allowed_values" },
+      "output_cap_tokens": 120
+    },
+    "explain": {
+      "reasoning": { "mode": "off", "switch": "chat_template_kwargs.enable_thinking", "value": false },
+      "sampler": { "temperature": 0.2, "top_p": 0.95, "top_k": 40, "min_p": 0, "presence_penalty": 0, "frequency_penalty": 0, "repeat_penalty": 1 },
+      "schema_mode": "json_schema_strict",
+      "layout": { "id": "static_first.v1", "instruction_variant": "explain.card.v1", "system_message": "pack",
+                  "cards": { "mode": "declared", "format": "prose" } },
+      "decomposition": { "mode": "explanation_and_fix" },
+      "checker": "none",
+      "repair": { "r_max": 1, "message": "finding_with_allowed_values" },
+      "output_cap_tokens": 320
+    }
+  },
+  "provenance": {
+    "created": "2026-09-28",
+    "authors": ["plotroom research (doc 55 draft)"],
+    "tuning_runs": [],
+    "held_out": []
+  },
+  "badges": [],
+  "notes": [
+    "UNTESTED HYPOTHESIS PRESET: starting points for tuning (doc 55 section 4; D048 item 4). No value here has been run with this preset; status stays 'draft' until tuning, and becomes 'tuned' only after the sealed held-out rules PR1-PR7 pass.",
+    "The general harness as measured in docs 44 and 46: letter answers without a leading why, thinking off, neutral penalties, strict schema, declared cards, K = 3 permuted samples. Values are what those runs used, not tuned optima.",
+    "top_k 40 is llama-server's own default; docs 44 and 46 used each family's build value (20 for Qwen, 64 for Gemma). Unknown models get 40 until a check says otherwise.",
+    "Doctrine (doc 25 section 4.3, doc 38 section 3.3) asks for a bounded why before the answer; every measured run used letter-only. Doc 53 rule R7 decides; until then the default keeps the measured form.",
+    "k_max and r_max are ceilings under the effort table; the loader clamps them to the chosen effort level."
+  ]
+}

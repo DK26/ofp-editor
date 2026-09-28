@@ -1,0 +1,72 @@
+{
+  "format": "plotroom.harness-preset/1",
+  "preset_id": "gemma-4-e4b-it-qat-q4_0",
+  "version": "0.1.0",
+  "status": "draft",
+  "extends": "default@0.1.0",
+  "prompt_pack": { "id": "wilco-core", "version": "0.1.0" },
+  "binds_to": {
+    "kind": "local-gguf",
+    "model": {
+      "repo": "unsloth/gemma-4-E4B-it-qat-GGUF",
+      "revision": "8c5a9e4fd5482e2be20fe0bf013b4c262a8f4265",
+      "file": "gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf",
+      "bytes": 4215695776,
+      "sha256": "df0fd4ee07072c607c29a0a1cb4f98918426cca12f45a2776bdd6ee6d09a4de3"
+    },
+    "quant_label": "QAT Q4_0 (file named UD-Q4_K_XL)",
+    "chat_template_sha256": null,
+    "runtime": { "name": "llama.cpp", "build": "b11146", "backend": "vulkan",
+                 "asset_sha256": "55a378aa095b466979d85075234f66d7655c7a7483222af0c006c0e55b4d7bd6" },
+    "context_tokens": 8192,
+    "kv_cache_type": "f16",
+    "placement": "gpu-all"
+  },
+  "step_kinds": {
+    "pick": {
+      "sampler": { "temperature": 0.6, "top_p": 0.95, "top_k": 64, "min_p": 0, "presence_penalty": 0, "frequency_penalty": 0, "repeat_penalty": 1 },
+      "schema_mode": "gbnf_compact",
+      "output_cap_tokens": 32
+    },
+    "fill": {
+      "sampler": { "temperature": 0.6, "top_p": 0.95, "top_k": 64, "min_p": 0, "presence_penalty": 0, "frequency_penalty": 0, "repeat_penalty": 1 },
+      "schema_mode": "gbnf_compact"
+    },
+    "text": {
+      "sampler": { "temperature": 0.6, "top_p": 0.95, "top_k": 64, "min_p": 0, "presence_penalty": 0, "frequency_penalty": 0, "repeat_penalty": 1 },
+      "schema_mode": "gbnf_compact"
+    },
+    "explain": {
+      "sampler": { "temperature": 0.2, "top_p": 0.95, "top_k": 64, "min_p": 0, "presence_penalty": 0, "frequency_penalty": 0, "repeat_penalty": 1 },
+      "schema_mode": "gbnf_compact",
+      "decomposition": { "mode": "explanation_plus_code_fix" }
+    }
+  },
+  "decision_overrides": [
+    {
+      "decision_kind": "replay.roll_scope",
+      "step_kind": "pick",
+      "settings": { "decomposition": { "mode": "extract_dispatch" } },
+      "evidence": "HV01: 7 of 24 samples across four Gemma 4 E4B builds; the non-QAT Q4_K_M and UD files chose PerCampaign in all 12 samples, with and without the card."
+    }
+  ],
+  "provenance": {
+    "created": "2026-09-28",
+    "authors": ["plotroom research (doc 55 draft)"],
+    "tuning_runs": [],
+    "held_out": [],
+    "vendor_sources": [
+      "https://huggingface.co/google/gemma-4-E4B-it",
+      "https://huggingface.co/unsloth/gemma-4-E4B-it-qat-GGUF"
+    ]
+  },
+  "badges": [],
+  "notes": [
+    "UNTESTED HYPOTHESIS PRESET: starting points for tuning (doc 55 section 4; D048 item 4). No value here has been run with this preset; status stays 'draft' until tuning, and becomes 'tuned' only after the sealed held-out rules PR1-PR7 pass.",
+    "Draft: every change is a hypothesis for doc 55 section 4.",
+    "gbnf_compact: under llama-server's json_schema grammar Gemma pretty-prints JSON, 16.3 output tokens per pick against 7 for Qwen and for the same model on Ollama, about 200 ms per pick on the reference card (doc 46 section 2.6). Adopt only if accuracy is non-inferior.",
+    "explanation_plus_code_fix: the QAT build proposed the same invented one-line syntax as the fix for finding E10 on both runtimes (doc 46 section 2.5); the model keeps the explanation, the fix comes from code's fix list or the card.",
+    "The vendor's sampler (temperature 1.0, top_p 0.95, top_k 64 'across all use cases') is a tuning arm for text only; Pick and Fill keep the measured 0.6.",
+    "Not recommendable while the GGUF says 'gemma' and the card says Apache-2.0 (D023 amendment, D037); the preset still serves a custom install and must be re-bound if Google's official QAT Q4_0 file becomes the default."
+  ]
+}

@@ -80,6 +80,10 @@ Design notes
 * ``--suite-file`` runs a suite kept outside suites/ (the staged pools), and
   ``--split`` keeps one half of a suite whose items carry a split; the held-out
   half needs ``--confirm-heldout``.
+* ``--preset FILE`` (D048, doc 55 section 3) applies a data-only harness preset
+  (presets/): run_preset.py turns its knobs for the suite's step kind into the
+  flags above, refuses what run.py cannot honour, and every record carries the
+  preset's id, version and SHA-256. Without the flag nothing changes.
 """
 import datetime as _dt
 import json
@@ -92,6 +96,7 @@ import uuid
 import cloud_run
 import logprob_pick
 import run_cli
+import run_preset
 import scaffold_run
 import scaffolds
 # The local backend classes are looked up in this module's namespace when main() creates one, so a test harness can
@@ -124,6 +129,9 @@ def main(argv=None):
         ap.error("--suite is required (or --suite-file)")
     else:
         shape = SUITE_SHAPE[args.suite]
+    # --preset: its knobs for this step kind become the flags that send them, before any check below reads a flag; a
+    # knob run.py cannot honour, or a flag that contradicts one, stops the run here (exit 2, nothing sent).
+    preset = run_preset.apply(ap, args, shape, sys.argv[1:] if argv is None else argv) if args.preset else None
     cloud = args.backend == "openai"
     if args.free_only and not cloud:
         ap.error("--free-only applies to --backend openai (OpenRouter's :free models)")
@@ -274,6 +282,9 @@ def main(argv=None):
     if cloud:
         label, fields = cloud_run.run_info(args, backend, model, cloud_settings, sampler)
         run_info.update(fields)
+    if preset is not None:
+        # Every record carries the preset (id, version, hashes, binding check); the label gains +<id>@<version>.
+        label = run_preset.finish(args, preset, label, info, backend.name, model, run_info)
     if sidecar is not None:
         run_info["open_sidecar_sha"] = sidecar_sha
     print(f"backend {backend.name} at {run_info.get('base_host') or base_url}: model {model}"
@@ -322,6 +333,10 @@ def main(argv=None):
     out = args.out or os.path.join(
         RESULTS_DIR, f"{slug(label)}__{args.suite}__{condition}{'' if variant == 'plain' else '__' + variant}.jsonl")
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+    if args.resume:
+        # With or without --preset: a file whose records of this label came from other preset bytes (or from a preset,
+        # when this run has none) would get two harnesses under one label, because --resume skips by label.
+        run_preset.check_resume(ap, out, label, preset["record"]["sha256"] if preset is not None else None)
     skip = done_keys(out) if args.resume else set()
     run_id = _dt.datetime.now(_dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 

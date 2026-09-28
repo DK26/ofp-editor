@@ -5,9 +5,10 @@ What it owns
 ------------
 The checks that run before the ``openai`` backend (cloud_backend.py) sends
 anything: the base URL (https, or plain http only to this machine), the key
-(stripped, printable, long enough to redact, never inside the URL or the extra
-body), ``--extra-body`` (no field run.py owns, no billing the budget cap cannot
-price, no provider thinking switch next to ``--reasoning``, no credential), the
+(stripped, printable, long enough to redact, free of the two characters JSON
+escapes, never inside the URL or the extra body), ``--extra-body`` (no field
+run.py owns, no billing the budget cap cannot price, no provider thinking
+switch next to ``--reasoning``, no credential), the
 ``--schema-strip`` whitelist and the strict-mode schema copy; the transport
 rules: redirects are never followed (the key would go with them), a loopback
 server is reached without a proxy, and a response body is read up to a size
@@ -35,12 +36,17 @@ from backends import SAMPLER_KEYS
 # (response_format); `reasoning` has its own flag so the effort is always explicit and recorded. The second
 # line is billing the cap cannot see or price: OpenRouter's fallback `models` list (another model, another
 # price), web search options billed per search, predicted outputs, and fields that add prompt text or lift the
-# output cap under another name (https://openrouter.ai/docs/api-reference/overview, read 2026-09-27).
+# output cap under another name (https://openrouter.ai/docs/api-reference/overview, read 2026-09-27). The third
+# line bills tokens at a rate the price flags do not name: a service tier (OpenAI's priority tier costs more per
+# token than its list price) and audio or image output (`modalities`, `audio`: billed per audio token or per
+# image). On an endpoint that reports no cost the ledger would count those calls at the flags' lower rate, and the
+# cost-anomaly check, which compares with that same computed figure, could not see it.
 FORBIDDEN_EXTRA = frozenset(("model", "messages", "stream", "stream_options", "max_tokens", "max_completion_tokens",
                              "n", "best_of", "response_format", "temperature", "seed", "reasoning", "tools",
                              "tool_choice", "functions", "function_call") + SAMPLER_KEYS
                             + ("models", "route", "web_search_options", "prediction", "max_output_tokens", "prompt",
-                               "input"))
+                               "input")
+                            + ("service_tier", "modalities", "audio"))
 # Provider-specific thinking switches. --reasoning already sets the effort, so they may appear in --extra-body
 # only with --reasoning omit (the documented way to pass a provider's own field).
 REASONING_EXTRA = ("reasoning_effort", "thinking", "enable_thinking", "chat_template_kwargs", "include_reasoning")
@@ -59,6 +65,9 @@ MAX_BODY_BYTES = 8 * 1024 * 1024
 # Shortest key the tool accepts: every record line is scrubbed of the key by plain substring replacement, so a
 # tiny key such as "x" or "sk" would also rewrite field names and corrupt the records.
 MIN_KEY_CHARS = 8
+# The printable ASCII characters json.dumps does not write as themselves (a quote and a backslash). The key scrub
+# replaces the key's exact text in every JSON line, so a key must not contain them (check_key).
+JSON_ESCAPED = ('"', "\\")
 # Parameters run.py may leave out per endpoint (--drop-params), for models that reject them.
 DROPPABLE_PARAMS = ("temperature", "seed") + SAMPLER_KEYS
 
@@ -111,13 +120,20 @@ def check_key(key):
 
     A key read from a file or with PowerShell's ``Get-Content -Raw`` often ends in a newline; sent as is, Python's
     http.client refuses the header with a ValueError whose message *contains the header value*, so the key would
-    land in a traceback. Inner whitespace, control or non-ASCII characters mean the variable holds something else.
+    land in a traceback. Inner whitespace, control or non-ASCII characters mean the variable holds something else;
+    a quote or a backslash (``JSON_ESCAPED``) would defeat the scrub of the JSON lines the tool writes.
     """
     k = (key or "").strip()
     if not k:
         return k
     if any(ord(c) < 33 or ord(c) > 126 for c in k):
         raise ValueError("the API key contains spaces, control or non-ASCII characters; check the environment variable")
+    if any(c in JSON_ESCAPED for c in k):
+        # Records and ledgers are JSON lines, scrubbed of the key by exact-text replacement just before each write;
+        # JSON writes these two characters escaped, so a key holding one, echoed inside a nested object, would reach
+        # the file in a form the scrub cannot find. No real API key contains them.
+        raise ValueError("the API key contains a double quote or backslash, which JSON escapes, so it could not be "
+                         "scrubbed from records; check the environment variable")
     if len(k) < MIN_KEY_CHARS:
         raise ValueError(f"the API key is shorter than {MIN_KEY_CHARS} characters, too short to redact safely from "
                          f"records")

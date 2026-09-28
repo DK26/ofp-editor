@@ -1,0 +1,411 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "plotroom:harness-preset/1",
+  "title": "Plotroom harness preset (draft 2, doc 55 section 3)",
+  "description": "Data-only description of HOW Plotroom asks one exact model setup for each step kind. It never carries prompt text, model ids other than its own binding, tools, facts, menus, validators or limits above the effort ceiling. The loader refuses unknown keys, unknown fragment or layout ids, and any value outside the ranges below. Draft 2 adds only optional fields (knob_ledger, exemplar selection, scoring rotations, the first_admitted stop, in_record_bands, the text envelope and the from_profile switch), so draft-1 files still validate; the review of 2026-09-28 narrowed layout.system_message (no draft used the removed value). Loader rules the schema cannot express (presets/lint.py): native tool-call transport and json_mode_validate / none_validate only on cloud endpoints, sidecar grammars (gbnf_compact, verbatim_grammar) only locally, and no bound_second_stage route until its design gap is decided. Status: proposal; nothing here is tuned.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "preset_id", "version", "status", "binds_to", "step_kinds", "provenance"],
+  "properties": {
+    "format": { "const": "plotroom.harness-preset/1" },
+    "preset_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$" },
+    "version": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" },
+    "status": {
+      "description": "draft: written, not run. candidate: tuning started. tuned: held-out rules passed. qualified: doc 21 section 12.3 trials passed per step kind (see badges). withdrawn: must not be applied.",
+      "enum": ["draft", "candidate", "tuned", "qualified", "withdrawn"]
+    },
+    "extends": {
+      "description": "The preset this one is a diff of, as id@version. Only the default preset may omit it.",
+      "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}@[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "prompt_pack": {
+      "description": "The versioned prompt pack whose fragment and layout ids this preset names (DG012 keys).",
+      "type": "object", "additionalProperties": false, "required": ["id", "version"],
+      "properties": { "id": { "type": "string" }, "version": { "type": "string" } }
+    },
+    "binds_to": {
+      "oneOf": [
+        { "$ref": "#/$defs/bindLocal" },
+        { "$ref": "#/$defs/bindCloud" },
+        { "$ref": "#/$defs/bindAny" }
+      ]
+    },
+    "step_kinds": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "pick": { "$ref": "#/$defs/pickSettings" },
+        "fill": { "$ref": "#/$defs/fillSettings" },
+        "compose": { "$ref": "#/$defs/composeSettings" },
+        "text": { "$ref": "#/$defs/textSettings" },
+        "explain": { "$ref": "#/$defs/explainSettings" }
+      }
+    },
+    "decision_overrides": {
+      "description": "Per-DecisionKind deviations from the step-kind settings, e.g. extract-then-dispatch for trigger-type menus. Each must name an alternative the DecisionKind registers; the preset never invents a decomposition.",
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["decision_kind", "step_kind", "settings", "evidence"],
+        "properties": {
+          "decision_kind": { "type": "string", "pattern": "^[a-z0-9_.-]+$" },
+          "step_kind": { "enum": ["pick", "fill", "compose", "text", "explain"] },
+          "settings": { "type": "object" },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+    "provenance": { "$ref": "#/$defs/provenance" },
+    "badges": { "type": "array", "items": { "$ref": "#/$defs/badge" } },
+    "knob_ledger": {
+      "description": "One entry per knob and step kind (and per decision override): the value this preset starts from, whether it is this preset's own change or inherited, the evidence behind it and the alternatives tuning must try. It is the glass-box explanation the editor shows (doc 55 section 3.6); it carries no prompt text and changes nothing at run time. The checker verifies that every 'start' equals the merged preset's value and that every alternative is itself a legal value.",
+      "type": "array", "items": { "$ref": "#/$defs/ledgerEntry" }
+    },
+    "notes": { "type": "array", "items": { "type": "string", "maxLength": 400 } }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "bindLocal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "model", "quant_label", "chat_template_sha256", "runtime", "context_tokens"],
+      "properties": {
+        "kind": { "const": "local-gguf" },
+        "model": {
+          "type": "object", "additionalProperties": false, "required": ["repo", "revision", "file", "bytes", "sha256"],
+          "properties": {
+            "repo": { "type": "string", "pattern": "^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$" },
+            "revision": { "$ref": "#/$defs/commit" },
+            "file": { "type": "string", "pattern": "^[^/\\\\]+\\.gguf$" },
+            "bytes": { "type": "integer", "minimum": 1 },
+            "sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "quant_label": { "type": "string", "description": "From the file name; GGUF file type alone cannot tell Q4_K_M from UD-Q4_K_XL (doc 46 section 1.5)." },
+        "chat_template_sha256": {
+          "description": "SHA-256 of the chat template embedded in the GGUF (tokenizer.chat_template), read from the header. null is allowed only while status is draft; the loader refuses null for any other status.",
+          "oneOf": [ { "$ref": "#/$defs/sha256" }, { "type": "null" } ]
+        },
+        "runtime": {
+          "type": "object", "additionalProperties": false, "required": ["name", "build", "backend"],
+          "properties": {
+            "name": { "const": "llama.cpp" },
+            "build": { "type": "string", "pattern": "^b[0-9]+$" },
+            "backend": { "enum": ["vulkan", "metal", "cpu", "cuda-user"] },
+            "asset_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "context_tokens": { "type": "integer", "minimum": 2048, "maximum": 131072 },
+        "kv_cache_type": { "enum": ["f16", "q8_0"] },
+        "placement": { "enum": ["gpu-all", "moe-offload", "cpu"] }
+      }
+    },
+    "bindCloud": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "provider", "model", "endpoint", "precision", "reasoning_setting", "read_on"],
+      "properties": {
+        "kind": { "const": "cloud-endpoint" },
+        "provider": { "type": "string" },
+        "model": { "type": "string" },
+        "endpoint": { "type": "string" },
+        "precision": { "type": "string" },
+        "reasoning_setting": { "type": "string" },
+        "read_on": { "type": "string", "format": "date" }
+      }
+    },
+    "bindAny": {
+      "type": "object", "additionalProperties": false, "required": ["kind"],
+      "properties": { "kind": { "const": "any" } },
+      "description": "Only the default (general) preset binds to any setup."
+    },
+    "neutralPenalties": {
+      "description": "D022 amendment item 5: presence and frequency 0, repeat 1 for Pick and Fill. Not a tunable knob.",
+      "type": "object",
+      "properties": {
+        "presence_penalty": { "const": 0 },
+        "frequency_penalty": { "const": 0 },
+        "repeat_penalty": { "const": 1 }
+      }
+    },
+    "samplerBase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["temperature", "top_p", "top_k", "min_p", "presence_penalty", "frequency_penalty", "repeat_penalty"],
+      "properties": {
+        "temperature": { "type": "number", "minimum": 0, "maximum": 1.5 },
+        "top_p": { "type": "number", "minimum": 0.5, "maximum": 1 },
+        "top_k": { "type": "integer", "minimum": 0, "maximum": 100, "description": "0 = off" },
+        "min_p": { "type": "number", "minimum": 0, "maximum": 0.2 },
+        "presence_penalty": { "type": "number", "minimum": 0, "maximum": 2 },
+        "frequency_penalty": { "type": "number", "minimum": 0, "maximum": 2 },
+        "repeat_penalty": { "type": "number", "minimum": 1, "maximum": 1.3 }
+      }
+    },
+    "samplerPickFill": { "allOf": [ { "$ref": "#/$defs/samplerBase" }, { "$ref": "#/$defs/neutralPenalties" } ] },
+    "reasoning": {
+      "type": "object", "additionalProperties": false, "required": ["mode"],
+      "properties": {
+        "mode": { "enum": ["off", "budget", "on"] },
+        "budget_tokens": { "type": "integer", "minimum": 16, "maximum": 2048 },
+        "switch": {
+          "description": "How the runtime turns thinking off or on for this template; recorded, checked with /apply-template before the first call.",
+          "enum": ["chat_template_kwargs.enable_thinking", "system_think_token", "not_applicable", "reasoning_effort", "from_profile"]
+        },
+        "value": { "type": ["string", "boolean", "null"] }
+      }
+    },
+    "schemaMode": {
+      "description": "json_schema_strict: response_format compiled to a grammar by the server. gbnf_compact: sidecar-built GBNF without optional whitespace. json_mode_validate / none_validate: cloud endpoints without enforced schemas only; admission still validates.",
+      "enum": ["json_schema_strict", "gbnf_compact", "json_mode_validate", "none_validate"]
+    },
+    "layout": {
+      "description": "A diff may give only the fields it changes; the loader requires 'id' after merging onto the base.",
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "description": "A runtime-owned capsule layout (doc 38 section 3.3; DG019). Authors and presets choose among named layouts; they never write one.", "enum": ["static_first.v1", "static_first_menu_last.v1", "cpu_compact.v1"] },
+        "instruction_variant": { "type": "string", "pattern": "^[a-z0-9_.-]+$", "description": "Id of a prompt-pack fragment, never inline text." },
+        "system_message": {
+          "description": "Where the prompt pack's system text goes. A preset places it but never drops it: the text is what the release ships (doc 55 sections 1.4 and 2.3). 'pack' uses the template's system role; 'fold_into_first_user' is for templates without a native system role (doc 51 section 4.3 template facts). Review 2026-09-28 replaced the earlier 'none', which no preset used.",
+          "enum": ["pack", "fold_into_first_user"]
+        },
+        "cards": {
+          "type": "object", "additionalProperties": false, "required": ["mode"],
+          "properties": {
+            "mode": { "enum": ["declared", "off", "documents_channel"], "description": "declared = the step's D027 cards in the user turn; documents_channel = the same cards through the template's documents path (Granite 4.x). Cards are LocalReference text only, never untrusted mission text." },
+            "format": { "enum": ["prose", "usage_lines"] }
+          }
+        },
+        "option_rendering": { "enum": ["letter_label_desc", "letter_label", "key_label_desc", "json_array"] },
+        "exemplars": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "count": { "type": "integer", "minimum": 0, "maximum": 3 },
+            "set": { "type": "string" },
+            "selection": {
+              "description": "none; frozen_by_decision_kind: the same exemplars for every call of a DecisionKind, cache-stable, placed after the static prefix; nearest_in_kind: the most similar bank entries within the kind (deterministic lexical ranking), placed in the tail after the cache breakpoint.",
+              "enum": ["none", "frozen_by_decision_kind", "nearest_in_kind"]
+            },
+            "bank": { "type": "string", "pattern": "^[a-z0-9_.-]+$", "description": "Id of a versioned exemplar bank in the prompt pack; banks never share items with a tuning or held-out suite." },
+            "position": { "enum": ["prefix_after_static", "tail"] }
+          }
+        }
+      }
+    },
+    "scoring": {
+      "type": "object", "additionalProperties": false, "required": ["mode"],
+      "properties": {
+        "mode": { "enum": ["generate_vote", "letter_probs", "letter_probs_calibrated", "option_text"] },
+        "permutation": { "enum": ["per_sample", "cyclic_reask"] },
+        "rotations": { "type": "integer", "minimum": 1, "maximum": 7, "description": "Letter-probability modes: forward passes over cyclic rotations of the option order at most (the first pass plus re-asks); the escape stays last as X." },
+        "calibration": {
+          "type": "object", "additionalProperties": false,
+          "properties": { "temperature": { "type": "number", "minimum": 0.1, "maximum": 5 }, "prior_id": { "type": "string" } }
+        }
+      }
+    },
+    "voting": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "k_max": { "type": "integer", "minimum": 1, "maximum": 8, "description": "Never above the effort level's K (loader clamps and reports)." },
+        "stop": { "enum": ["fixed", "two_agree", "margin", "first_admitted"] }
+      }
+    },
+    "repair": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "r_max": { "type": "integer", "minimum": 0, "maximum": 3, "description": "Never above the effort level's R." },
+        "message": { "enum": ["finding_with_allowed_values", "remenu_valid_only", "refill_failed_field"] }
+      }
+    },
+    "cascade": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "accept_margin": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reask_margin": { "type": "number", "minimum": 0, "maximum": 1 },
+        "top2_margin": { "type": "number", "minimum": 0, "maximum": 1 },
+        "x_mass_threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+        "route": {
+          "description": "Where an unsure decision goes. Never a model id: a second stage is a user-made role binding (pending design gap, doc 55 section 7 item 9); until that is decided the loader refuses bound_second_stage.",
+          "enum": ["none", "same_model_reask", "user_card", "code_default", "bound_second_stage"]
+        }
+      }
+    },
+    "answerPick": {
+      "type": "object", "additionalProperties": false, "required": ["form"],
+      "properties": {
+        "form": { "enum": ["letter", "option_key"] },
+        "field": { "enum": ["choice", "answer"] },
+        "why": {
+          "type": "object", "additionalProperties": false, "required": ["mode"],
+          "properties": { "mode": { "enum": ["off", "before"] }, "max_chars": { "type": "integer", "minimum": 40, "maximum": 240 } }
+        },
+        "transport": { "enum": ["response_format", "native_tool_call"] }
+      }
+    },
+    "pickSettings": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "answer": { "$ref": "#/$defs/answerPick" },
+        "reasoning": { "$ref": "#/$defs/reasoning" },
+        "sampler": { "$ref": "#/$defs/samplerPickFill" },
+        "schema_mode": { "$ref": "#/$defs/schemaMode" },
+        "layout": { "$ref": "#/$defs/layout" },
+        "decomposition": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "mode": { "enum": ["direct", "facets", "extract_dispatch", "escape_precheck"] },
+            "facet_cap": { "type": "integer", "minimum": 3, "maximum": 7, "description": "DG006 option C: hard maximum 7." }
+          }
+        },
+        "scoring": { "$ref": "#/$defs/scoring" },
+        "voting": { "$ref": "#/$defs/voting" },
+        "repair": { "$ref": "#/$defs/repair" },
+        "cascade": { "$ref": "#/$defs/cascade" },
+        "output_cap_tokens": { "type": "integer", "minimum": 8, "maximum": 256 }
+      }
+    },
+    "fillSettings": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "reasoning": { "$ref": "#/$defs/reasoning" },
+        "sampler": { "$ref": "#/$defs/samplerPickFill" },
+        "schema_mode": { "$ref": "#/$defs/schemaMode" },
+        "layout": { "$ref": "#/$defs/layout" },
+        "decomposition": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "record": { "enum": ["whole_record_prefill", "field_by_field", "closed_fields_as_picks"] },
+            "spans": { "enum": ["free_quote_checked", "verbatim_grammar", "code_candidates_pick", "extractor"] },
+            "judgement_fields": {
+              "description": "in_record_bands: the field stays in the record, its values described by code-written bands in the instructions (what docs 44 and 46 measured); computed_pick: a separate Pick per judgement field over code-described bands plus 'unspecified'; ask_user: never model-filled.",
+              "enum": ["in_record_bands", "computed_pick", "ask_user"]
+            }
+          }
+        },
+        "voting": { "$ref": "#/$defs/voting" },
+        "repair": { "$ref": "#/$defs/repair" },
+        "output_cap_tokens": { "type": "integer", "minimum": 32, "maximum": 512 }
+      }
+    },
+    "composeSettings": {
+      "description": "How to ask for Compose where the setup's qualification record already grants it. A preset has no field that grants a shape: shape grants come only from qualification (doc 21 section 3.3; agent-runtime section 7).",
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "reasoning": { "$ref": "#/$defs/reasoning" },
+        "sampler": { "$ref": "#/$defs/samplerBase" },
+        "schema_mode": { "$ref": "#/$defs/schemaMode" },
+        "layout": { "$ref": "#/$defs/layout" },
+        "repair": { "$ref": "#/$defs/repair" },
+        "on_budget": { "enum": ["authored_split"] },
+        "output_cap_tokens": { "type": "integer", "minimum": 64, "maximum": 2048 }
+      }
+    },
+    "textSettings": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "reasoning": { "$ref": "#/$defs/reasoning" },
+        "sampler": { "$ref": "#/$defs/samplerBase" },
+        "schema_mode": { "$ref": "#/$defs/schemaMode" },
+        "envelope": {
+          "description": "json_object: the line inside a one-field JSON object (measured); tagged_plain_text: bounded plain text between fixed tags under a local grammar (doc 51 section 5.2, arm E), avoiding JSON escaping of quotes and newlines.",
+          "enum": ["json_object", "tagged_plain_text"]
+        },
+        "layout": { "$ref": "#/$defs/layout" },
+        "voting": { "$ref": "#/$defs/voting" },
+        "repair": { "$ref": "#/$defs/repair" },
+        "output_cap_tokens": { "type": "integer", "minimum": 16, "maximum": 400 }
+      }
+    },
+    "explainSettings": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "reasoning": { "$ref": "#/$defs/reasoning" },
+        "sampler": { "$ref": "#/$defs/samplerBase" },
+        "schema_mode": { "$ref": "#/$defs/schemaMode" },
+        "layout": { "$ref": "#/$defs/layout" },
+        "decomposition": {
+          "type": "object", "additionalProperties": false,
+          "properties": { "mode": { "enum": ["explanation_and_fix", "explanation_plus_code_fix", "card_sentence_pick"] } }
+        },
+        "checker": { "enum": ["none", "advisory_small_checker", "advisory_vendor_adapter"] },
+        "repair": { "$ref": "#/$defs/repair" },
+        "output_cap_tokens": { "type": "integer", "minimum": 32, "maximum": 400 }
+      }
+    },
+    "provenance": {
+      "type": "object", "additionalProperties": false, "required": ["created", "authors", "tuning_runs", "held_out"],
+      "properties": {
+        "created": { "type": "string", "format": "date" },
+        "authors": { "type": "array", "items": { "type": "string" } },
+        "tuning_runs": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["run_id", "suite", "suite_sha", "date"],
+            "properties": {
+              "run_id": { "type": "string" }, "suite": { "type": "string" }, "suite_sha": { "type": "string" },
+              "date": { "type": "string", "format": "date" }, "arms": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "held_out": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["step_kind", "suite", "suite_sha", "n", "metric", "default_value", "preset_value", "test", "decision_rule"],
+            "properties": {
+              "step_kind": { "enum": ["pick", "fill", "compose", "text", "explain"] },
+              "suite": { "type": "string" }, "suite_sha": { "type": "string" },
+              "n": { "type": "integer", "minimum": 1 },
+              "metric": { "type": "string" },
+              "default_value": { "type": "number" }, "preset_value": { "type": "number" },
+              "ci95": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+              "test": { "type": "string" },
+              "decision_rule": { "type": "string", "pattern": "^PR[0-9]+$" }
+            }
+          }
+        },
+        "vendor_sources": { "type": "array", "items": { "type": "string", "format": "uri" } }
+      }
+    },
+    "ledgerEntry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["step_kind", "knob", "start", "change", "family", "evidence", "alternatives", "tune"],
+      "properties": {
+        "step_kind": { "enum": ["pick", "fill", "compose", "text", "explain"] },
+        "decision_kind": { "type": "string", "pattern": "^[a-z0-9_.-]+$", "description": "Set only for an entry that explains a decision_overrides item." },
+        "knob": { "type": "string", "pattern": "^([a-z_]+(\\.[a-z_]+)*|\\(all\\))$", "description": "Path under step_kinds.<step_kind> (or under the override's settings); '(all)' for a step kind that is not tuned as a whole." },
+        "start": { "description": "The merged preset's value at the path; the checker recomputes and compares it." },
+        "change": {
+          "description": "base: the default preset's own value; diff: this preset changes it from its base; inherit: taken unchanged from the base; fixed: set by doctrine, not a knob.",
+          "enum": ["base", "diff", "inherit", "fixed"]
+        },
+        "hypothesis": { "type": "string", "pattern": "^H-[A-Z][0-9A-Za-z]*$" },
+        "family": { "enum": ["decomposition", "answer_schema", "layout_cards", "sampler", "scoring", "voting_cascade", "repair", "output", "reasoning", "not_tuned"] },
+        "evidence": {
+          "type": "array", "minItems": 1,
+          "items": { "type": "string", "pattern": "^\\[(V|V-vendor|V-3p|V per [^\\]]+|V, [^\\]]+|I|U)\\] ", "maxLength": 600 }
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["value", "why"],
+            "properties": {
+              "arm": { "type": "string", "pattern": "^[A-Z]{1,2}-[A-Z0-9]+[0-9A-Za-z]*$" },
+              "value": { "description": "A legal value for the same path; the checker substitutes it into the merged preset and validates the result." },
+              "why": { "type": "string", "maxLength": 400 },
+              "priority": { "enum": ["grid", "reserve", "not_in_grid"] }
+            }
+          }
+        },
+        "tune": { "type": "string", "maxLength": 300 }
+      }
+    },
+    "badge": {
+      "type": "object", "additionalProperties": false, "required": ["step_kind", "instrument", "instrument_sha", "n", "value", "state", "date"],
+      "properties": {
+        "step_kind": { "enum": ["pick", "fill", "compose", "text", "explain"] },
+        "field": { "type": "string", "description": "Fill badges are per field (agent-runtime section 7)." },
+        "instrument": { "type": "string" }, "instrument_sha": { "type": "string" },
+        "n": { "type": "integer" }, "value": { "type": "number" },
+        "state": { "enum": ["spike-checked", "qualified", "not-met", "requalifying"] },
+        "date": { "type": "string", "format": "date" }
+      }
+    }
+  }
+}

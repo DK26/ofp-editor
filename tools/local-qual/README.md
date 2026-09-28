@@ -475,6 +475,78 @@ python tools/local-qual/scaffold_stats.py --suite-file <pool>/pick-pool.json --s
   escapes, no category losing more than 2 units, SR3 not failed), `harmful` (Holm p < 0.05 for worse) or
   `no_effect`. Output `results/scaffold_stats.json`.
 
+### Harness presets (`--preset`, `presets/`)
+
+D048 fits the harness to each model with a **harness preset**: a data-only file that says how Wilco asks one model setup
+for each step kind (doc 55 §3). `run.py --preset FILE` runs a suite with one; `presets/lint.py` checks preset files on
+their own.
+
+```text
+python tools/local-qual/presets/lint.py                  # check every draft (or name files); exit 1 on any finding
+python tools/local-qual/run.py --backend llamacpp --suite pick-hard --k 3 --dry-run --preset tools/local-qual/presets/drafts/qwen3.5-4b-q4_k_m.preset.json
+python tools/local-qual/run.py --backend llamacpp --suite pick-hard --k 3 --preset tools/local-qual/presets/drafts/qwen3.5-4b-q4_k_m.preset.json
+```
+
+- **Files.** `presets/schema/harness-preset.schema.json` is the format (JSON Schema 2020-12, draft 2 of doc 55 §3.3).
+  `presets/drafts/` holds the 0.1.0 drafts for the default, Qwen3.5-4B, Gemma 4 E4B QAT and Granite 4.1 3B. They are
+  **untested hypotheses**: status `draft`, and their first note says so; no run has used them. Doc 55 §3.3's 0.2.0
+  revision (knob ledgers, template hashes read from the GGUF headers) and the checks that go with it (the ledger and the
+  tuning plan, the pins, the template-fact rules for a documents channel or an `enable_thinking` switch, and verbatim
+  spans only with the compact grammar, which the 0.1.0 Qwen draft predates) land with the first tuning run.
+- **Loading.** The file is read strictly: at most 256 KiB, UTF-8, one JSON object, no duplicate key and no NaN or
+  Infinity (either would change a knob without showing it). It is checked against the schema, merged onto its base
+  (`"extends": "<id>@<version>"`, looked up among the `*.json` files in the same folder; at most 8 levels; no cycles)
+  and checked against the loader rules the schema cannot express: neutral Pick and Fill penalties (D022 amendment item
+  5), no step-shape grant, `k_max` at most 5 and `r_max` at most 3, only the default binds to `any`, every other preset
+  extends a base, a null template hash only in a draft, native tool calls and validator-only schema modes only on
+  cloud endpoints, the compact grammar and verbatim spans only locally, no `bound_second_stage` route, a layout id
+  after merging, and decision overrides valid as the step settings they become. A withdrawn preset is refused.
+- **What it sets.** The settings of the suite's step kind (Pick for `pick`, `pick-hard` and Pick suite files; `fill`;
+  `text`; `explain`) become the flags that send them, converted to the flags' types, so a preset run's requests are
+  byte for byte those of the same flags typed out (p15–p17):
+
+  | Knob | run.py flag |
+  | --- | --- |
+  | `sampler`: `temperature`, `top_p`, `top_k`, `min_p`, `presence_penalty`, `repeat_penalty` | `--temperature`, `--top-p`, `--top-k`, `--min-p`, `--presence-penalty`, `--repeat-penalty` |
+  | `sampler.frequency_penalty` | not sent, so it must be 0 (every runtime's default) |
+  | `output_cap_tokens` | `--num-predict` |
+  | `schema_mode`: `json_schema_strict`, `none_validate` | `--schema-mode strict`, `none` (Pick and Fill only) |
+  | `reasoning.mode` `off` | local: `--think-mode false` (switch `chat_template_kwargs.enable_thinking`, `from_profile` or none), `--think-mode omit` (`not_applicable`); openai: `--reasoning none` (`omit` for `not_applicable`) |
+  | `reasoning.mode` `budget`, `on` | openai only: `--reasoning '{"max_tokens": B}'`, `--reasoning <effort>` |
+  | `layout.cards.mode`: `declared`, `off` | `--condition` stays yours (both card conditions are runs of the preset); `--condition none` |
+  | Pick `scoring.mode`: `generate_vote`, `letter_probs` (with `rotations`) | `--pick-mode generate`; `--pick-mode logprob` (with `--permute N`; llamacpp only) |
+  | Pick `answer.why.mode` `before` | `--scaffold why`, the bounded why of 40–160 characters (local only) |
+  | `binds_to.context_tokens` of a local file | `--num-ctx` |
+
+  Every other request-shaping knob must hold the value run.py already runs (the measured harness of docs 44 and 46,
+  which the default preset names): layout `static_first.v1`, run.py's own instruction variants, system text in the
+  system role, prose cards, `A) label: description` menus, no exemplars, a letter in `choice` under a response schema,
+  direct Pick and Explain, whole-record Fill with free-quoted spans and judgement fields in the record, text in a JSON
+  object.
+- **What it leaves out.** Voting, the repair ceiling, cascade thresholds and calibration shape no single request: each
+  record lists them under `preset.not_applied` with the reason (score.py, uplift.py and cascade.py apply them offline).
+  Decision overrides need a DecisionKind per item, which the suites do not carry: they are printed and listed under
+  `preset.overrides_not_applied`, and those menus run the step setting.
+- **Refusals** (exit 2, nothing sent), each naming the knob or flag and the fix: any knob value run.py cannot send (the
+  compact GBNF grammar, verbatim spans, per-field Fill, extract-then-dispatch, exemplars, another layout or
+  instruction variant, the documents channel, thinking on or a thinking budget locally, calibrated or option-text
+  scoring, a non-zero frequency penalty), all of a preset's at once; the knowledge suite, which has no step kind; a
+  flag that sets a knob the preset sets, to another value (the same value is accepted); `--variant`, `--why`,
+  `--calibration` and `--condition open`; a `--scaffold` arm other than the preset's (the draft-2 format has no field
+  for the other doc 59 arms: friction register FR-C-031); `--repair` when `repair.r_max` is 0; `--drop-params` naming
+  a sampler value the preset sets. So of the drafts, the default, Qwen and Granite run Pick, text and explain; Gemma
+  runs none as written (the compact grammar on every step); no draft runs Fill, because the 0.1.0 default asks for
+  judgement fields as separate Picks (`computed_pick`; the 0.2.0 revision returns to `in_record_bands`, the measured
+  form) and Qwen and Granite add verbatim spans or per-field Picks.
+- **Records.** Every record carries `preset`: `id`, `version`, `status`, `file`, `sha256` (of the file's bytes),
+  `extends`, `bases` (ref, file and SHA-256 of each base), `prompt_pack`, `step_kind`, `applied` (the flags),
+  `adapted`, `not_applied`, `overrides_not_applied` and `binding` (whether the served model is the bound one:
+  llama-server's model file or the requested cloud model; not checked on Ollama; a mismatch is also printed). The
+  label gains `+<id>@<version>` unless `--label` is given, so preset runs never pool or resume with flag-only runs.
+  Every `--resume`, with or without `--preset`, refuses a file whose records of that label were made with other preset
+  bytes, with a preset when the run has none, or without one when it has one (one `--label` can name both kinds of
+  run). `.gitattributes` keeps the preset files LF on every checkout, so their hashes do not change.
+
 ### Ollama, including Hugging Face GGUFs
 
 Any model Ollama can run works, since the tool only talks to `/api/chat`. GGUF files hosted on Hugging Face can be
@@ -509,9 +581,10 @@ whatever URL a 3xx names), so a redirecting endpoint stops the run (exit 5) and 
 No account id, user name or local path is sent or recorded; records keep only the endpoint's host name
 (`base_host`). Plain `http` is refused unless the server is on this machine, and then no proxy is used. The key is
 stripped of surrounding whitespace (a key file's trailing newline would otherwise make Python print the header, key
-included, in a traceback); a key with inner spaces or control characters, shorter than 8 characters, or found inside
-`--base-url` or `--extra-body` is refused, and so is any `--extra-body` field named like a credential (`api_key`,
-`token`, `secret`, ...), because `--extra-body` is copied into every record.
+included, in a traceback); a key with inner spaces or control characters, shorter than 8 characters, holding a
+double quote or a backslash (JSON writes those escaped, so the scrub of every record line could not find the key), or
+found inside `--base-url` or `--extra-body` is refused, and so is any `--extra-body` field named like a credential
+(`api_key`, `token`, `secret`, ...), because `--extra-body` is copied into every record.
 
 **Before the first run (the account owner, never an agent):** create the account and an API key; on OpenRouter, set a
 credit limit on the key itself (a second, independent cap: a key over its limit gets HTTP 402, which the runner treats
@@ -557,7 +630,10 @@ Fill and one knowledge item) and look at the record before running a battery.
   to an endpoint that ignores `response_format`). `--extra-body` may not set the fields run.py owns, nor billing the
   cap cannot price: `models` and `route` (fallback to other models at other prices), `plugins` (response healing
   would blur the schema rungs; web search is billed per request), `web_search_options`, `prediction`, `prompt`,
-  `input` and `max_output_tokens`; a `:online` model id is refused for the same reason. Provider thinking switches
+  `input` and `max_output_tokens`, nor fields billed at a rate the price flags do not name: `service_tier` (a
+  priority tier costs more per token) and `modalities` or `audio` (audio or image output). On an endpoint that
+  reports no cost the ledger would count those calls at the flags' rate, below what was billed. A `:online` model id
+  is refused for the same reason. Provider thinking switches
   (`reasoning_effort`, `thinking`, `chat_template_kwargs`, ...) are accepted only with `--reasoning omit`.
   `--expect-provider <tag or name>` stops the run if a response names another provider. It reads the
   response's top-level `provider` field, which OpenRouter's API reference does not document, so confirm it in the
@@ -608,7 +684,9 @@ key's usage change after it.
 
 **Reasoning.** `--reasoning` is required, so the effort is explicit and recorded on every call (`reasoning_sent`):
 `none` switches reasoning off on hybrid models, another effort (`minimal`, `low`, `medium`, `high`, `xhigh`, `max`)
-or a JSON object sets it, and `omit` sends no field (the provider's default applies). Models whose reasoning is
+or a JSON object sets it, and `omit` sends no field (the provider's default applies). A JSON object's `max_tokens` (a
+thinking budget, added to every worst case) must be a whole number above 0: `5000.0`, `"5000"` or `true` would reach
+the provider as a budget the reservation never counted, so they are refused. Models whose reasoning is
 mandatory reject `none`; use their lowest effort and give the output cap thinking headroom with `--num-predict`. A
 call sent with `none` that still reports reasoning tokens, or returns non-blank thinking text (a `reasoning` field or
 `<think>` tags in the content), stops the run (`ReasoningLeak`, exit 7); that record is an error, so it is neither
@@ -638,7 +716,9 @@ instead of being retried. The canary judges the first `--canary` calls (default 
 answers in a strict-schema arm (above) or more than 10% errors stop the run (`CanaryAbort`, exit 7). `--warmup` is not
 available (every call is paid and recorded; drop each schema's first call from latency figures instead). Parameters
 a model rejects can be left out per endpoint with `--drop-params temperature,seed` (recorded as `params_dropped`);
-seeds are best-effort on cloud endpoints.
+seeds are best-effort on cloud endpoints. `--repeat-penalty` goes out under llama-server's name, `repeat_penalty`,
+which OpenRouter lists as `repetition_penalty`; on OpenRouter the pin is most likely ignored, and the run warns at
+the start: pass `{"repetition_penalty": <value>}` in `--extra-body` instead of the flag.
 
 **What the records add.** `backend: "openai"`, `base_host`, `model_requested`, `model_served`, `provider_served`,
 `endpoint_tag`, `quant` (from a single `provider.quantizations` entry, or `--quant`), `extra_body_sent`,
@@ -755,11 +835,15 @@ variable from its own environment once it has read it, so no process it starts i
 | `run.py` | Runner: one loop over (sample, item) for every backend (with the optional repair call, a logprob decision or a multi-call scaffold decision), the server probe, JSONL records |
 | `run_cli.py` | run.py's command line (`--out` and its alias `--output` included) and the refusals checked before anything is sent: variant and scaffold selection, `--suite-file`, `--split` |
 | `run_records.py` | What a call becomes in the record: reply parsing, the repair call folded into its decision, the keys `--resume` skips, file-name slugs |
+| `run_preset.py` | `--preset`: the knob plan (each supported knob to the run.py flag that sends it; fixed values; policies left to offline analysis; refusals), conflicts with command-line flags, the record's `preset` object and binding check, the `--resume` hash check |
+| `presets/lint.py` | The harness-preset checker: the JSON Schema subset validator, strict file reading, base resolution and merging with file hashes, the loader rules the schema cannot express, and its command line |
+| `presets/schema/harness-preset.schema.json` | The harness-preset format (JSON Schema 2020-12, draft 2 of doc 55 §3.3) |
+| `presets/drafts/*.preset.json` | Draft presets 0.1.0 (default, Qwen3.5-4B, Gemma 4 E4B QAT, Granite 4.1 3B): untested hypotheses |
 | `prompts.py` | What each call asks: suite shapes, temperatures, output caps, system prompts, seeds and menu permutations, one prompt builder per shape and variant, reasoning-block stripping and JSON extraction, repair checks and messages |
 | `backends.py` | The two local HTTP clients: Ollama `/api/chat` and llama-server `/v1/chat/completions` (both `stream: false`), plus the per-run server probe (version, model file, quant, context, template thinking check) |
 | `cloud_backend.py` | The OpenAI-compatible client (`stream: false`): strict `response_format`, retries with backoff, error classification, redaction of the key, usage and cost parsing, and the checks that stop a run |
 | `cloud_guard.py` | What a paid request may carry and how it travels: base URL, key and `--extra-body` checks, the `--schema-strip` whitelist, schema normalising, an opener that never follows redirects (and uses no proxy for a loopback server), the response-size cap |
-| `cloud_run.py` | The `openai` flags and their refusals, record fields for the endpoint, and the per-run session: ledger and its lock (plus the per-user free-run lock), budget, key check, key readings written to the ledger, stop rows, canary (with the schema-conformance check), the key check on every stop of a free run, exit codes |
+| `cloud_run.py` | The `openai` flags and their refusals, record fields for the endpoint and the start-of-run warnings (an unpinned OpenRouter run, `--repeat-penalty` on OpenRouter), and the per-run session: ledger and its lock (plus the per-user free-run lock), budget, key check, key readings written to the ledger, stop rows, canary (with the schema-conformance check), the key check on every stop of a free run, exit codes |
 | `budget.py` | The hard cap for paid endpoints: worst-case reservation per attempt, write-ahead ledger, settled costs, resume |
 | `free_mode.py` | `--free-only`: its flags, the free-model id rule, the live-catalogue check (exact-zero prices, text output, endpoint parameters), the per-response zero-spend check, the free-run lock's location, the start and end checks of a free run |
 | `free_key.py` | The OpenRouter key record in free mode: its non-secret fields, the refusals (management key, headroom, expiry, no daily counter), the usage-rise test, and the `key` ledger rows compared at the next start |
@@ -813,12 +897,14 @@ python -m unittest discover -s tools/local-qual/tests -k t59 -v                #
 | `test_cloud.py` | t03–t13, t18–t21, t59–t62 | Paid path: start refusals, the cap and `--resume`, retries and their cost, stops, key hygiene, shared ledger, key check, schema normalising, canary; the upstream-cost double count (doc 54 §4.2) and `--output` |
 | `test_cloud_grading.py` | t14–t17, t22, t23, t35, t39 | Open and labels arms and their grading, Fill schema modes, repair, `uplift.py` |
 | `test_cloud_guards.py` | t24–t34, t36, t37 | Break-in attempts found in review: redirects, smuggled keys and fields, a second process on the ledger, bodies that are not completions, errors inside a 200, cost 0 reports, ignored schemas, think blocks |
+| `test_cloud_review.py` | t63–t66 | Review of the merged tool: `--extra-body` fields billed at other rates, a thinking budget the worst case missed, a key JSON would escape, `--repeat-penalty` on OpenRouter |
 | `test_cloud_regression.py` | t01, t02, t38 | The local backends' request bodies and scores against the tool before the cloud backend (goldens) |
 | `test_free_mode.py` | t40–t50 | `--free-only`: refusals, catalogue traps, request shape, zero-spend guard, substitution, key rules, key poll, daily cap and day boundary, account quota, 429s, rate-gate units |
 | `test_free_mode_review.py` | t51–t58 | Second review of free mode, and the DPAPI key scripts through PowerShell |
 | `test_logprob_pick.py`, `test_logprob_failures.py` | l01–l19 | `--pick-mode logprob`: flags, request bodies, known distributions, response shapes, failures and hostile responses |
 | `test_logprob_cascade.py` | c01–c08 | `cascade.py` against hand-computed values, calibration, an end-to-end run, refusals |
 | `test_scaffolds.py`, `test_scaffolds_function.py`, `test_scaffolds_stats.py` | a01–a03, b01–b10, c01–c15, d01–d07 | Scaffold arms: regression, leakage and answer-blindness, what each arm computes and sends, `scaffold_stats.py` and `control_suite.py` |
+| `test_presets.py`, `test_presets_plan.py`, `test_presets_run.py` | p01–p21 | Harness presets: the drafts and the checker's negative controls, strict loading and bases, the knob plan and its refusals, flag conflicts, preset runs byte-identical to their flags, the record, `--resume` with and without a preset |
 
 - **Case names.** Each check is a function named after its group and number (`t04_budget_cap_...`, `l03_...`);
   the verification notes below cite them. `tests/support.py` turns each into a `unittest` method; `-v` shows the
@@ -1067,3 +1153,38 @@ python -m unittest discover -s tools/local-qual/tests -k t59 -v                #
   (`run_cli.py`, `run_records.py`, `score_checks.py`, `logprob_dist.py`, `cascade_numbers.py`, `scaffold_algos.py`);
   the goldens above were unchanged by the split. All 124 checks pass, none skipped, in 312 s on Windows 10 with
   Python 3.12 (`python -m unittest discover -s tools/local-qual/tests`): the 120 moved here and t59–t62.
+- 2026-09-28, harness presets (`--preset`, `presets/`; D048, doc 55 §3). The schema (draft 2) and the four 0.1.0 draft
+  presets were copied from the staged tuning material; the drafts gained an "untested hypothesis" first note, and the
+  schema's description now points at `presets/lint.py`. The staged draft checker was ported as `presets/lint.py`, its
+  three negative controls (a Pick presence penalty of 1.5, a step granting itself Compose, a cascade route naming a
+  model) became p02–p04, and the rules the schema's description names but cannot express became p05's twelve controls.
+  Written test first: p01–p20 failed before the code existed (the checker did not import; `run.py` rejected
+  `--preset`) and pass now. Mutation check: 15 safeguards broken one at a time in a copy of the tool (the second-stage
+  rule, duplicate keys, NaN, the size cap, the override check, neutral penalties, the flag-type conversion, the
+  compact grammar passed as strict, unknown knobs ignored, fixed knobs unchecked, the conflict check, the withdrawn
+  check, the resume hash check, the label suffix, the flag ignored); each made at least one p-case fail. Without
+  `--preset` nothing changed: a01, t01, t02 and t38 pass against their goldens. All 144 checks pass, none skipped, in
+  247 s on Windows 10 with Python 3.12. Offline only: no model ran, no endpoint was called.
+- 2026-09-28, adversarial review of the merged tool: paid and free-only cloud runs, logprob mode, scaffold arms and
+  presets. Offline only: no model ran, no real endpoint was called, every key was a random dummy. Checked and found
+  sound: the reservation, the write-ahead ledger and the settlement (the doc 54 double count stays fixed); refused
+  redirects; the redaction of every string the client returns; the free-only guards; and the request bodies. The
+  openai bodies are byte-identical to the tool before the merge over 34 command lines (253 bodies: every suite and
+  condition, `--why`, the uplift variants, `--repair`, four reasoning forms, schema normalising and stripping, dropped
+  parameters, sampler pins, a pinned provider block with rate caps, two free-only runs), and the local bodies match
+  their goldens (t01, a01). No path falls back to an unconstrained answer: a schema rejection stops the run, and the
+  local retries drop only the thinking switch. Every preset knob maps to an existing flag, and every later refusal
+  still applies. Found and fixed, each with a check written first that failed on the merged code:
+  - `--extra-body` accepted `service_tier`, `modalities` and `audio`, which bill at rates the price flags do not name
+    (t63);
+  - `--reasoning '{"max_tokens": 5000.0}'` (or `"5000"`, `true`) went out as a thinking budget while the worst case
+    added nothing for it: an output cap of 64 instead of 5,064 (t64);
+  - a key holding a double quote or a backslash passed the key check; echoed by the mock inside `usage`, it reached
+    the record JSON-escaped, where the scrub could not find it (t65);
+  - `--resume` without `--preset`, under a preset run's `--label`, finished the preset's decisions with the command
+    line's own knobs (p21).
+
+  `--repeat-penalty` goes out as `repeat_penalty`, which OpenRouter lists as `repetition_penalty`, so on OpenRouter
+  the pin was most likely dropped while the records listed it. The body is unchanged (existing command lines keep
+  their bytes); the run now warns at the start with the fix (t66; friction register FR-C-032). All 149 checks pass,
+  none skipped, in 329 s on Windows 10 with Python 3.12.

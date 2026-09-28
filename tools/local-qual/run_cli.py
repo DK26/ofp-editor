@@ -4,7 +4,8 @@
 What it owns
 ------------
 * ``build_parser``: every flag of run.py; the openai backend's flags (and free mode's) come from
-  cloud_run.add_cloud_args.
+  cloud_run.add_cloud_args. ``--preset`` is only declared here: run_preset.py loads the preset and turns it into the
+  other flags before the checks below read them.
 * The checks that run before anything is sent, each refusing an impossible combination with argparse's exit 2:
   ``resolve_variant`` (--condition, --variant, --schema-mode, --why and --repair into one recorded variant),
   ``resolve_scaffold`` (--scaffold and its options), ``load_suite_file`` (a suite kept outside suites/) and
@@ -181,6 +182,12 @@ def build_parser():
                     help="run only the items of this split (required for a suite whose items carry 'split')")
     ap.add_argument("--confirm-heldout", action="store_true",
                     help="with --split heldout: this is the pre-registered confirmation run")
+    ap.add_argument("--preset", default=None,
+                    help="a harness preset file (D048, doc 55 section 3; drafts in presets/drafts/): its knobs for "
+                         "the suite's step kind become the flags that send them (sampler, thinking switch, schema "
+                         "mode, card policy, Pick scoring mode, the bounded why, output cap, context); a knob run.py "
+                         "cannot honour, or a flag that contradicts one, is refused (run_preset.py). Records carry the "
+                         "preset's id, version and SHA-256; the label gains '+<id>@<version>' unless --label is given")
     ap.add_argument("--condition", default="none", choices=("none", "cards", "open"),
                     help="'cards' appends the item's reference card when it has one; 'open' (Pick only) is short "
                          "for --condition none --variant open")

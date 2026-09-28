@@ -22,7 +22,7 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 | Record a gap in our own design | [`docs/design-gap-requests/README.md`](docs/design-gap-requests/README.md) (lifecycle and template) |
 | Record a limitation of the game engine | [`docs/upstream/README.md`](docs/upstream/README.md) (engine-requests register) |
 | Look up editor concepts and engine facts | [`skills/standing-orders/`](skills/standing-orders/SKILL.md), [`skills/mission-primer/`](skills/mission-primer/SKILL.md), docs 03, 04 and 18 |
-| Measure a local or cloud model (free OpenRouter models included), the harness's uplift, reasoning scaffolds, a small-to-large cascade, or model cost | [`tools/local-qual/`](tools/local-qual/README.md), [`tools/cost-model/`](tools/cost-model/cost_model.py) |
+| Measure a local or cloud model (free OpenRouter models included), the harness's uplift, reasoning scaffolds, a harness preset, a small-to-large cascade, or model cost | [`tools/local-qual/`](tools/local-qual/README.md), [`tools/cost-model/`](tools/cost-model/cost_model.py) |
 | Simulate free-tier rate limits and upstream 429s over a user day | [`tools/quota-sim/`](tools/quota-sim/README.md) |
 
 ## 2. Repository layout (current)
@@ -56,7 +56,9 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 │   └── design-sensibility/  v0.2 taste pack: core.md, lenses/ (8), rubric.md, code-owned-principles.md, EVALUATION.md
 ├── tools/                 Python research tools, standard library only; not product code
 │   ├── local-qual/        README.md (usage, suites, metrics, tests, verification); run.py (runner) with run_cli.py (flags,
-│   │                      refusals) and run_records.py; prompts.py; backends.py (Ollama and llama-server clients);
+│   │                      refusals), run_records.py and run_preset.py (--preset: a harness preset's knobs to flags);
+│   │                      presets/ (harness-preset schema, draft presets, lint.py checker; D048, doc 55 §3);
+│   │                      prompts.py; backends.py (Ollama and llama-server clients);
 │   │                      cloud_backend.py, cloud_guard.py, cloud_run.py, budget.py (OpenAI-compatible endpoints under a
 │   │                      hard budget); free_mode.py, free_key.py, rate_gate.py (--free-only: OpenRouter :free models at
 │   │                      zero spend); logprob_pick.py, logprob_dist.py (--pick-mode logprob); scaffolds.py,
@@ -324,9 +326,7 @@ Not newtypes: `DiagCode` is a generated enum (`plotroom-diag`, from the DG005 re
 - §2 now reads research docs 01–48 (doc 49 in progress, not linked) and 10 data CSVs, matching `docs/README.md` §5 and §6.1; this
   resolves the note above. The decisions line records that every owner question was answered on 2026-09-27.
 - The `tools/local-qual` entry lists its current tracked files, taken from the working tree: `README.md`, `run.py`, `score.py`,
-  `backends.py` and the six suite files, including `pick-hard.json` (`results/` and Python caches are git-ignored). Doc 48 describes a
-  cloud backend with a budget cap and an uplift comparer, tested against a local mock server only, that lands as one patch; the change
-  set that applies it updates this entry.
+  `backends.py` and the six suite files, including `pick-hard.json` (`results/` and Python caches are git-ignored).
 - §4's introduction notes that the OWQs in "Blocked on" (OWQ-03, OWQ-13, OWQ-14, OWQ-15, OWQ-19) are answered and that DG014 and
   DG030 are decided; the cells are left unchanged until the architecture folds the answers. The research-doc size range in §6 is now 30–127 KB (doc 47 is 126 KB).
 - No crate, module or newtype changed; no architecture, decision, research or tool file was edited by this change.
@@ -346,13 +346,32 @@ Not newtypes: `DiagCode` is a generated enum (`plotroom-diag`, from the DG005 re
 
 ### `tools/local-qual`: cloud backend, logprob mode, cascade simulator and scaffold arms land (2026-09-28)
 
-- §1 and §2 list the tool's current files. The pending cloud-backend patch (doc 48; free-only mode, the Windows key scripts,
-  `--pick-mode logprob` and `cascade.py` from doc 53) and the scaffold arms (doc 59) were merged into `tools/local-qual`; this
-  resolves the "pending" note of the doc 46–48 entry above. The five modules over the ~600-line ceiling (`run.py`, `score.py`,
-  `logprob_pick.py`, `cascade.py`, `scaffolds.py`) were split into six new ones with every name re-exported (`run_cli.py`,
-  `run_records.py`, `score_checks.py`, `logprob_dist.py`, `cascade_numbers.py`, `scaffold_algos.py`).
+- §1 and §2 list the tool's current files. The cloud backend of doc 48 (with its free-only mode and the Windows key scripts),
+  `--pick-mode logprob` and `cascade.py` from doc 53, and the scaffold arms (doc 59) were merged into `tools/local-qual`. The
+  five modules over the ~600-line ceiling (`run.py`, `score.py`, `logprob_pick.py`, `cascade.py`, `scaffolds.py`) were split
+  into six new ones with every name re-exported (`run_cli.py`, `run_records.py`, `score_checks.py`, `logprob_dist.py`,
+  `cascade_numbers.py`, `scaffold_algos.py`).
 - The tool's tests live in `tools/local-qual/tests/` and run with the standard library's `unittest`; checks that compared the
   tool with a copy of an earlier version now compare with golden files frozen from that version (`tests/golden/`).
 - Fixed while landing, test first: the budget booked OpenRouter's non-BYOK `upstream_inference_cost` on top of `cost` (doc 54
   §4.2), and `run.py` gained `--output`, an alias of `--out` that `cloud/run-cloud.ps1` can pass through `powershell -File`.
+- No crate, module boundary of the planned workspace or newtype changed.
+
+### `tools/local-qual`: harness presets (2026-09-28)
+
+- `run.py --preset FILE` (D048 Consequences; doc 55 §3): `run_preset.py` turns a data-only harness preset into run.py's own
+  flags, refuses what run.py cannot honour, and records the preset's id, version and hashes in every record. `presets/` holds
+  the draft-2 schema, the 0.1.0 draft presets (untested hypotheses) and `lint.py`, the ported draft checker. Tests p01–p20 in
+  `tests/test_presets.py`, `test_presets_plan.py` and `test_presets_run.py`. §2 lists the new files.
+- No crate, module boundary of the planned workspace or newtype changed.
+
+### `tools/local-qual`: review of the merged tool (2026-09-28)
+
+- An adversarial review of the merged tool (paid and free-only cloud runs, logprob mode, scaffold arms, presets) fixed four gaps,
+  each with a check written first: `--extra-body` fields billed at rates the price flags do not name (`service_tier`,
+  `modalities`, `audio`); a JSON `--reasoning` thinking budget the worst case did not count (`5000.0`, `"5000"`, `true`); a key
+  holding a character JSON escapes, which the record scrub could not find; and `--resume` without `--preset` into a preset run's
+  records under one `--label`. `--repeat-penalty` on OpenRouter now warns at the start (friction register FR-C-032). New cases:
+  t63–t66 in `tests/test_cloud_review.py` and p21 in `tests/test_presets_run.py`. The "pending patch" wording of the doc 46–48
+  entry above is removed, since that patch has landed.
 - No crate, module boundary of the planned workspace or newtype changed.

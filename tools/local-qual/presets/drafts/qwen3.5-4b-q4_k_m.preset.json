@@ -1,0 +1,78 @@
+{
+  "format": "plotroom.harness-preset/1",
+  "preset_id": "qwen3.5-4b-q4_k_m",
+  "version": "0.1.0",
+  "status": "draft",
+  "extends": "default@0.1.0",
+  "prompt_pack": { "id": "wilco-core", "version": "0.1.0" },
+  "binds_to": {
+    "kind": "local-gguf",
+    "model": {
+      "repo": "unsloth/Qwen3.5-4B-GGUF",
+      "revision": "e87f176479d0855a907a41277aca2f8ee7a09523",
+      "file": "Qwen3.5-4B-Q4_K_M.gguf",
+      "bytes": 2740937888,
+      "sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4"
+    },
+    "quant_label": "Q4_K_M",
+    "chat_template_sha256": null,
+    "runtime": { "name": "llama.cpp", "build": "b11146", "backend": "vulkan",
+                 "asset_sha256": "55a378aa095b466979d85075234f66d7655c7a7483222af0c006c0e55b4d7bd6" },
+    "context_tokens": 8192,
+    "kv_cache_type": "f16",
+    "placement": "gpu-all"
+  },
+  "step_kinds": {
+    "pick": {
+      "sampler": { "temperature": 0.6, "top_p": 0.95, "top_k": 20, "min_p": 0, "presence_penalty": 0, "frequency_penalty": 0, "repeat_penalty": 1 }
+    },
+    "fill": {
+      "sampler": { "temperature": 0.6, "top_p": 0.95, "top_k": 20, "min_p": 0, "presence_penalty": 0, "frequency_penalty": 0, "repeat_penalty": 1 },
+      "decomposition": { "record": "whole_record_prefill", "spans": "verbatim_grammar", "judgement_fields": "computed_pick" }
+    },
+    "text": {
+      "sampler": { "temperature": 0.6, "top_p": 0.95, "top_k": 20, "min_p": 0, "presence_penalty": 0, "frequency_penalty": 0, "repeat_penalty": 1 }
+    },
+    "explain": {
+      "sampler": { "temperature": 0.2, "top_p": 0.95, "top_k": 20, "min_p": 0, "presence_penalty": 0, "frequency_penalty": 0, "repeat_penalty": 1 }
+    }
+  },
+  "decision_overrides": [
+    {
+      "decision_kind": "trigger.end_type",
+      "step_kind": "pick",
+      "settings": { "decomposition": { "mode": "extract_dispatch" } },
+      "evidence": "HT03 (same End number means AND): 0 of 24 samples right across four Qwen3.5-4B builds and runtimes, with and without the card that states the rule; code can map a plain 'both / either' answer to the trigger types."
+    },
+    {
+      "decision_kind": "replay.roll_scope",
+      "step_kind": "pick",
+      "settings": { "decomposition": { "mode": "extract_dispatch" } },
+      "evidence": "HV01: 6 of 24 samples across four Qwen3.5-4B arms (3 of 6 on Q4_K_M llama.cpp, 0 of 6 on Ollama); the deciding facts (depends on the previous outcome? same on restart?) are plain yes/no questions."
+    },
+    {
+      "decision_kind": "module.pick",
+      "step_kind": "pick",
+      "settings": { "decomposition": { "mode": "escape_precheck" } },
+      "evidence": "HM04 (near-fit escape, vehicle respawn): 7 of 12 without cards and 5 of 12 with cards across four arms, while the far escapes HA03 and HR04 were 46 of 48; Gemma 4 E4B builds 22 of 24."
+    }
+  ],
+  "provenance": {
+    "created": "2026-09-28",
+    "authors": ["plotroom research (doc 55 draft)"],
+    "tuning_runs": [],
+    "held_out": [],
+    "vendor_sources": [
+      "https://huggingface.co/Qwen/Qwen3.5-4B",
+      "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF"
+    ]
+  },
+  "badges": [],
+  "notes": [
+    "UNTESTED HYPOTHESIS PRESET: starting points for tuning (doc 55 section 4; D048 item 4). No value here has been run with this preset; status stays 'draft' until tuning, and becomes 'tuned' only after the sealed held-out rules PR1-PR7 pass.",
+    "Draft: every change is a hypothesis for the tuning protocol (doc 55 section 4); none is tuned.",
+    "The vendor's non-thinking recommendation (temperature 0.7, top_p 0.8, top_k 20, presence_penalty 1.5) is a tuning arm, but presence_penalty stays 0 for Pick and Fill (D022 amendment item 5): on llama-server the penalty window covers the end of the prompt (doc 46 section 2.2), end-of-menu answers fell from 41 of 50 to 34 of 50 under it, and the Ollama build (penalty 1.5) put CJK characters into 2 of 36 Fill records, the language mixing the vendor card itself warns about.",
+    "Explain is Qwen's strongest step (20 of 20 on Ollama, 19 of 20 on llama.cpp): no change.",
+    "decision_kind ids are spike-local until the DecisionKind registry exists (doc 38)."
+  ]
+}

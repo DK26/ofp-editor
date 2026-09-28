@@ -10,7 +10,8 @@ Everything run.py needs only when it talks to a paid endpoint:
   ``--reasoning``; no key on the command line; no ``--warmup``;
 * building ``OpenAICompatBackend`` (cloud_backend.py) from those flags and
   the record fields that describe the endpoint (host, pinned endpoint, prices,
-  flags sent and dropped);
+  flags sent and dropped), with the start-of-run warnings (an unpinned
+  OpenRouter run, a sampler pin OpenRouter lists under another name);
 * ``Session``: the ledger (the output file, or a shared ``--ledger`` file)
   and its lock (one process per ledger, so two runs cannot each spend the
   cap), the ``Budget`` (budget.py) loaded from it, the optional key check
@@ -139,7 +140,12 @@ def add_cloud_args(ap):
 
 
 def parse_reasoning(value):
-    """--reasoning: 'omit' (the field is not sent), an effort word, or a JSON object such as {"effort":"low"}."""
+    """--reasoning: 'omit' (the field is not sent), an effort word, or a JSON object such as {"effort":"low"}.
+
+    A JSON object's ``max_tokens`` (a thinking budget, which a provider may bill on top of the output cap) must be a
+    whole number above 0: budget.py adds it to every worst case only as an integer, so 5000.0, "5000" or true would go
+    out as a budget the reservation never counted.
+    """
     v = (value or "").strip()
     if v == "omit":
         return None
@@ -147,6 +153,11 @@ def parse_reasoning(value):
         obj = json.loads(v)
         if not isinstance(obj, dict):
             raise ValueError("--reasoning JSON must be an object")
+        if "max_tokens" in obj:
+            budget = obj["max_tokens"]
+            if isinstance(budget, bool) or not isinstance(budget, int) or budget <= 0:
+                raise ValueError(f"--reasoning max_tokens must be a whole number of tokens above 0 (the worst case "
+                                 f"counts it only then), got {json.dumps(budget)}")
         return obj
     if v in REASONING_EFFORTS:
         return {"effort": v}
@@ -187,6 +198,27 @@ def pinning_warnings(host, extra_body):
         notes.append("the run is not pinned: set provider.only (or order) with allow_fallbacks false in --extra-body, "
                      "or calls may be served by different providers and precisions")
     return notes
+
+
+# Sampler pins whose run.py name (llama-server's) is not OpenRouter's: the backend sends the flag's own name, while
+# OpenRouter's endpoints list the parameter under the second name in their supported_parameters (free_mode.PARAM_NAMES
+# maps the same pair when it checks an endpoint's list).
+OPENROUTER_NAMES = {"repeat_penalty": "repetition_penalty"}
+
+
+def sampler_warnings(host, sampler_sent):
+    """Advice when an OpenRouter run pins a sampler value under a name OpenRouter does not list.
+
+    The request is left as it is (existing command lines keep their exact bodies), so the run says it at the start:
+    the pin is most likely dropped while the record's ``sampler_sent`` names it. The fix is the same value under
+    OpenRouter's name in --extra-body, instead of the flag.
+    """
+    if not host.endswith("openrouter.ai"):
+        return []
+    return [f"--{name.replace('_', '-')} is sent as '{name}', which OpenRouter lists as '{theirs}', so the pin is "
+            f"most likely ignored although the records list it; drop the flag and pass "
+            f"'{{\"{theirs}\": {sampler_sent[name]}}}' in --extra-body instead"
+            for name, theirs in OPENROUTER_NAMES.items() if sampler_sent.get(name) is not None]
 
 
 def routing_refusal(host, extra_body, schema_sent):
@@ -359,6 +391,8 @@ def run_info(args, backend, model, settings, sampler):
         "budget_usd": args.max_usd,
     }
     for note in ([] if args.free_only else pinning_warnings(host, extra_body)):  # free mode pins at start
+        print(f"warning: {note}", file=sys.stderr)
+    for note in sampler_warnings(host, info["sampler_sent"]):
         print(f"warning: {note}", file=sys.stderr)
     if not (args.price_as_of and args.price_source):
         print("warning: record where and when the prices were read (--price-as-of, --price-source)", file=sys.stderr)
