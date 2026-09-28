@@ -4,7 +4,7 @@ Design documentation for **Plotroom — Mission & Campaign Editor for Arma: Cold
 
 > **Status:** index, created 2026-09-27. This is the entry point to `docs/` that `AGENTS.md` names under "Design Authority". It
 > decides nothing: it routes each question to the file that owns it. Where a line here summarises a decision, the linked record
-> wins. Research docs 01–48, 50 and 51 are final (docs 49, 52–60 are in progress); the architecture and the roadmap are proposals (baseline 2026-09-27).
+> wins. Research docs 01–52, 56–58 and 60–63 are final; docs 53, 55 and 59 are drafts with experiments pending; docs 54 and 64–66 are in progress; the architecture and the roadmap are proposals (baseline 2026-09-27).
 > The owner answered all 23 owner questions on 2026-09-27.
 
 ## 1. What Plotroom is
@@ -32,7 +32,7 @@ the planned crates. The rules for contributors and coding agents are in [`AGENTS
 
 | Where | What it holds | States used | Start at |
 | --- | --- | --- | --- |
-| [`research/`](research/) | 48 standalone research docs (doc 49 in progress): evidence (engine source, corpus, prior art, measurements) and design proposals. Epistemic tags: **[V]** verified, **[I]** inferred, **[U]** unknown (some docs add variants such as `[V-search]`) | All final. Designs stay proposal-only unless a decision record adopts them | §5 below |
+| [`research/`](research/) | 58 standalone research docs (01–53, 55, 56 and 58–60): evidence (engine source, corpus, prior art, measurements) and design proposals. Epistemic tags: **[V]** verified, **[I]** inferred, **[U]** unknown (some docs add variants such as `[V-search]`) | Final, except those the status line lists as in progress. Designs stay proposal-only unless a decision record adopts them | §5 below |
 | [`research/data/`](research/data/) | Measured data behind the docs (CSV) | Measurements, dated in the owning doc | §6.1 |
 | [`design-gap-requests/`](design-gap-requests/README.md) | DG001–DG038: gaps and contradictions in **Plotroom's own design**, with options and a recommendation | `open` → `decided` → `folded`; `withdrawn`, `superseded by` | Its README (index, lifecycle, template) |
 | [`decisions/`](decisions/README.md) | D001–D043 decision records, and [`OWNER-QUESTIONS.md`](decisions/OWNER-QUESTIONS.md) (OWQ-01–OWQ-23, all answered by the owner on 2026-09-27 in dated "Answer" lines, each folded into a record or a DG by its own change set) | `accepted`, `baseline`, `superseded by`, `withdrawn` | Its README (index, precedence) |
@@ -137,7 +137,8 @@ in `upstream/`, not DGs.
    (Model Manager).
 3. The TL;DRs of the measurements and their follow-ups, newest evidence last: doc 44 (first local measurement), doc 46 (llama.cpp
    against Ollama, UD quants, `pick-hard`), doc 47 (candidates and the next local run), doc 48 (cloud providers and the harness-uplift
-   instrument). Doc 49 (doc 47's shortlist measured) is pending. Docs 13 and 14 are the earlier studies these refine.
+   instrument), doc 49 (four of doc 47's shortlist rows measured, MoE offload, CUDA against Vulkan). Docs 13 and 14 are the earlier
+   studies these refine.
 4. The [`tools/local-qual` README](../tools/local-qual/README.md) before running or changing a measurement, and the data files in §6.1.
 5. Qualification badges come from Plotroom's own instruments, never from vendor claims alone (D022, decision item 4); quote a vendor number as
    `[V-vendor]`, as doc 47 does.
@@ -175,7 +176,7 @@ names the record for each OWQ). DG002, DG014, DG029 and DG030 are decided (§2.1
 | Local inference and the Model Manager | D022, D037 | [agent-runtime §13](architecture/agent-runtime.md) | Docs 13, 44, 46, 47; OWQ-19 |
 | Model strategy and qualification | D023, D037 | [agent-runtime §7](architecture/agent-runtime.md) | Docs 14, 16, 44, 46, 47; DG012 |
 | Local runtime: managed llama-server, Hugging Face GGUFs at a pinned revision and SHA-256 | D022 (amendment of 2026-09-27, owner) | [agent-runtime §3, §13](architecture/agent-runtime.md) | Docs 13 §3, 46 ([data](research/data/runtime-quant-comparison.csv)); doc 47 §2.7 (fork-only formats); [`tools/local-qual/`](../tools/local-qual/README.md) |
-| Model selection: candidates, tiers, the next local run | D023, D037 | [agent-runtime §7, §13](architecture/agent-runtime.md) | Docs 14, 44, 47 ([data](research/data/slm-candidates.csv)); doc 49 pending; OWQ-19 |
+| Model selection: candidates, tiers, the next local run | D023, D037 | [agent-runtime §7, §13](architecture/agent-runtime.md) | Docs 14, 44, 47 ([data](research/data/slm-candidates.csv)), 49 ([data](research/data/local-shortlist-results.csv)); OWQ-19 |
 | Cloud providers, cheap models, harness uplift | D021 (doc 48's consequences are proposals in its amendment note) | [agent-runtime §3, §12](architecture/agent-runtime.md) | Doc 48 ([data](research/data/cloud-candidates.csv)); round 0 (free models, $0, §6.0) first; round 1 deferred until doc 49; doc 40; SP-12 |
 | Effort, autonomy, role binding | D024 | [agent-runtime §11](architecture/agent-runtime.md) | DG013 (decided); doc 21 §7 |
 | Workflows and the decision journal | D025 | [agent-runtime §4–§5](architecture/agent-runtime.md) | Doc 38; DG007, DG010, DG016, DG017 |
@@ -203,9 +204,10 @@ names the record for each OWQ). DG002, DG014, DG029 and DG030 are decided (§2.1
 | Accessibility, locales, windows | D036 (English first) | [ui-shell §12](architecture/ui-shell.md) | Docs 06, 34 (ed21, mo23); OWQ-14 |
 | Outreach (Bohemia, CWR-CE, mod channels) | D035 | [upstream README](upstream/README.md) ("Filing") | Docs 01, 02 §11; OWQ-10–OWQ-12; DG029 |
 
-## 5. Research docs 01–48
+## 5. Research docs 01–60
 
-All 48 docs are final; doc 49 is in progress and gets its row when it lands. Each stands alone and ends with verification notes. "Codes" lists the doc's own provisional families
+Rows cover docs 01–53 and 60; docs 55, 56, 58 and 59 are in the tree without rows yet, and numbers 54 and 57 are unused so far.
+Docs 01–51 are final; the status line lists the docs still in progress. Each stands alone and ends with verification notes. "Codes" lists the doc's own provisional families
 (DG005 assigns final codes); "—" means none. Decision records adopt parts of a doc; the rest stays proposal-only.
 
 ### 5.1 Upstream, legal, the original editor and the game (01–09)
@@ -270,7 +272,7 @@ All 48 docs are final; doc 49 is in progress and gets its row when it lands. Eac
 | [36 Lessons from Civilization V](research/36-lessons-from-civilization-v.md) | What made Civilization V good and "one more turn", what went wrong, and which lessons shape Plotroom | Rows cv01–cv44; SL26–SL31, CF26–CF27, MC30–MC31, TX07 | Study and proposal. OWQ-20, OWQ-21 answered 2026-09-27; DG005 (a pattern number) |
 | [37 Power tools for classic workarounds](research/37-power-tools-for-classic-workarounds.md) | First-class replacements for hand-edited files and init-line workarounds | WA01–WA47, G1–G8, PL01–PL14, PP1–PP12, PT0–PT4, PAT1–PAT16 | Proposal. Adopted: D015. Open: DG003 |
 
-### 5.6 Workflows, cost, the v1.x features, models and measurements (38–48)
+### 5.6 Workflows, cost, the v1.x features, models and measurements (38–60)
 
 | Doc | Question it answers | Codes | Status, adoption, follow-ups |
 | --- | --- | --- | --- |
@@ -283,16 +285,29 @@ All 48 docs are final; doc 49 is in progress and gets its row when it lands. Eac
 | [44 Local model qualification spike](research/44-local-model-qualification-spike.md) | Can the harness make a 4B local model effective, and how could the editor recommend and install fitting models | Suites pick, pick-hard, fill, explain, text, knowledge | Measured (verdicts are proposals). Designed in agent-runtime §7 and §13 (with D022); confirmation run SP-11 |
 | [45 Lessons from open-source editors](research/45-lessons-from-open-source-editors.md) | What 20 open-source content-creation tools, read at source level, teach about Plotroom's core | Rows oe01–oe96; OQ1–OQ10 | Study and proposal. Spine of the architecture's core, commands, validation and testing; its open questions are architecture §8 candidates |
 | [46 Runtime and quant spike](research/46-llamacpp-huggingface-and-ud-quant-spike.md) | Does the UD quant beat Q4_K_M, and does llama.cpp with models pulled straight from Hugging Face match Ollama | — | Measured (recommendations are proposals): UD no detectable gain; llama.cpp matches Ollama on Pick with less GPU memory and slower prompt processing on the test card; pin samplers. Adopted: D022 (amendment of 2026-09-27, the owner's runtime decision: managed llama-server sidecar primary, GGUFs from Hugging Face at a pinned revision and SHA-256, samplers pinned; Ollama and LM Studio optional bring-your-own endpoints); D023 (provisional local defaults, a proposal). Doc 13 Phase B, spikes S1, S2, S4 |
-| [47 Small-model landscape](research/47-small-model-landscape.md) | Which small or locally runnable models not yet covered by docs 14 and 44 are worth measuring next, which helper models could sit beside them, and what the next `tools/local-qual` run should contain | Tiers `T1`, `T1-cpu`, `T2a`, `T2b` (doc 14's); step kinds `PICK`…`EXPLAIN` | Research, no model run (verdicts, fit scores and the test plan are proposals). Adopted: D022 (amendment item 4: the Model Manager refuses a GGUF the pinned runtime cannot run; forks are never managed), D023 (licences read at the pinned revision). §2.7 Bonsai 2 27B: watch list, bring-your-own only. Its §6 shortlist is measured in doc 49 (pending) |
+| [47 Small-model landscape](research/47-small-model-landscape.md) | Which small or locally runnable models not yet covered by docs 14 and 44 are worth measuring next, which helper models could sit beside them, and what the next `tools/local-qual` run should contain | Tiers `T1`, `T1-cpu`, `T2a`, `T2b` (doc 14's); step kinds `PICK`…`EXPLAIN` | Research, no model run (verdicts, fit scores and the test plan are proposals). Adopted: D022 (amendment item 4: the Model Manager refuses a GGUF the pinned runtime cannot run; forks are never managed), D023 (licences read at the pinned revision). §2.7 Bonsai 2 27B: watch list, bring-your-own only. Four of its §6 shortlist rows are measured in doc 49; the rest were deferred under D044 |
 | [48 Cloud providers and harness uplift](research/48-cloud-providers-and-harness-uplift.md) | Once local testing is done, which cheap and reliable providers to test, whether some models do better on cloud hardware, and which cheap models gain most from the harness for their cost | Rungs `P0`–`P5`, `F0`–`F3`, `E0`–`E1`, `T0`–`T3`, `K0`–`K1`; runs `R01`–`R23`, `O1`–`O6`; instrument 48-U | Research and a test plan; nothing run in the cloud. Recorded in D021's amendment note of 2026-09-27 (and D023's cloud note), as proposals. Round 1 (one OpenRouter key, about $6.63) deferred by the owner until doc 49's local results are in; its `tools/local-qual` cloud backend is a pending patch. Design-gap candidates in §7.4 |
+| [49 Local shortlist, measured](research/49-local-shortlist-measured.md) | Which of doc 47's shortlisted local models beat doc 46's defaults per step kind, what MoE expert offload delivers on an 8 GB GPU with 32 GB of RAM, and whether a CUDA build is worth offering on older NVIDIA cards | — | Measured (verdicts, tier table and the D022/D023 notes are proposals). Four rows run (Qwen3-4B-Instruct-2507, Spark-X2.5-4B, Qwen3-30B-A3B-Instruct-2507 and Gemma 4 26B-A4B QAT by offload), plus CUDA 12.4 vs Vulkan. None beats the defaults with statistical support. Offload reaches whole-record Fill pass^3 0.917 at 6–25 s per call (warm p50). CUDA cuts warm Pick latency by about 40% with no detectable quality change. The other rows and the Bonsai probe were deferred under D044 (how D044 applies to them is open). Proposes an optional CUDA download, a pinned `--cache-ram` and an opt-in offload switch for heavy steps (not adopted) |
 
 | [50 Free LLM services and cloud-first screening](research/50-free-llm-services-and-cloud-first-screening.md) | Which free LLM services Plotroom can legally offer or preconfigure, how open-source apps offer free models, and what screening local candidates in the cloud first costs | OWQ-24–OWQ-27; screening battery S | Research, not legal advice; nothing run. No Plotroom-owned key or proxy; a "connect a free model" preset on the user's own account is the recommendation (OWQ-24). The screening rule is D044 (owner, 2026-09-27; protocol a proposal) |
 
 | [51 Model-native harnesses](research/51-model-native-harnesses.md) | Which harnesses, tool-call formats, reasoning switches and samplers each candidate model was built and benchmarked with, what eight harnesses' code teaches, and what Plotroom adopts | Lessons H/B/T/M/V/Z/Q/K; profile fields; A/B arms U and N | Research; no model run. Proposes per-endpoint model profiles beneath D048's presets and a pre-registered uniform-vs-native A/B test; 16 design-gap candidates listed, not filed |
 
+| [52 Rate limits and UX](research/52-rate-limits-and-ux.md) | Can free tiers carry Plotroom's workload under their rate limits, what UX standard should hold when they throttle, and how the harness routes, reduces calls and degrades | Strategies S0–S6 (quota-sim, not doc 25's stages); UX standard UX1–UX9; design-gap candidates RG1–RG9 | Research and simulation; no model run. Finding: shared upstream capacity, not the account quota, binds (1 of 13 attempts answered on the observed free host). Proposes a UX standard and a quota-aware router over user-authored route lists (owner decisions; RG1–RG9 listed, not filed). Tool: `tools/quota-sim/` |
+
 | [53 How small can we go?](research/53-how-small-can-we-go.md) | How small a model each step kind can use when the harness is built around small models: step floors, the sub-4B frontier incl. the Granite 4.x family, one-pass option scoring, confidence cascades, extraction and retrieval | Step floors; stages and decision rules of its experiment plan | **Draft, experiments pending.** Nothing under 3B run yet; cascades only as a visible, user-set binding (D023, DG022); proposes a D044 exception (≤2B models and encoders screened locally) for the owner to confirm |
 
-Doc 49 (the local shortlist of doc 47 §6, measured) is in progress; its row, and a row for any data file it adds, follow when it lands.
+| [54 Cloud screening, round 1](research/54-cloud-screening-round-1.md) | Which local candidates D044's cloud-first screen promotes to a local trial, per step kind; whether hosted copies of the same weights match the local records; what the round cost | Endpoints E01–E14; rule amendments A1–A8 | Measured (verdicts and rule changes are proposals). Battery S on 14 pinned OpenRouter endpoints, 3,501 calls, $0.163 billed against a $0.90 cap. No endpoint differs from the local default with statistical support, and same-weights pairs show no host or quantisation effect. Doc 50 §5.6's rule as written promotes nothing and would drop doc 49's offload files, so eight amendments are proposed; no new local download recommended. Found a double count in the pending cloud backend's ledger (§4.2) |
+
+| [55 Per-model harness presets](research/55-per-model-harness-presets.md) | How to adapt the harness to each model (D048): the knob catalogue, a data-only preset file bound to model, runtime and template, and a tuning protocol with a frozen held-out set | Knobs per step kind; rules PR1–PR9; design-gap candidates | **Draft, tuning runs pending.** Presets change how Wilco asks, never what code owns; card policy must be set per model and decision kind (the same card helps one model and hurts another); first targets Qwen3.5-4B, Gemma 4 E4B, Granite 4.1 3B, tuned locally |
+| [56 Harness implementation patterns](research/56-harness-implementation-patterns.md) | Which implementation patterns help weak models across the harness (workflow runtime, model adapters and presets, decision steps and abstention, validation and repair, evaluation, local model management, tracing, packaging) | WR1–7, MA1–6, DS1–6, VR1–3, EQ1–7, MM1–2, TJ1–3, PK1–3 | Proposals only [I]; 38 patterns mapped to the planned crates with tests to write first; five tensions with current docs and seven design-gap candidates, not filed |
+| [57 Token efficiency and compaction](research/57-token-efficiency-and-compaction.md) | What agent harnesses (23 repos at pinned commits, plus llama.cpp's server) and the literature teach about token efficiency, compaction and summaries, mapped to a step-based harness | Techniques (CSV); instrument E13; fold list for doc 40 | Research and proposals: steps and long runs need no compaction (fresh capsules); Wilco conversations use code-driven masking, then a code-built session digest; llama-server reuses prefixes only at message boundaries, so capsules split into messages at cache breakpoints (to be confirmed by E13); 12 design-gap candidates and 14 doc 40 folds, not applied |
+| [58 Purpose-specific ML components](research/58-purpose-specific-ml-components.md) | Where small specialised models, classical statistics or plain code should take work off the LLM across the editor and harness | Touchpoints (64); experiments E1–E5; draft OWQ-28 | Research and proposals: plain code for 40 touchpoints, statistics for 9, a small model for 10, a specialist for 3, the LLM for 2; official ONNX Runtime builds send telemetry (a D008 conflict), so any ONNX helper needs a telemetry-free build |
+| [59 Synthetic reasoning](research/59-synthetic-reasoning.md) | Whether harness-provided ("synthetic") reasoning can lift small models, which scaffolds target which failure types, and how code can write reasoning without leaking answers | Scaffolds S1–S13; tests T-L1–T-L10; arms A0–A15; rules SR1–SR7 | **Draft, experiments pending.** For 3–4B models, reasoning done by the harness beats longer model thinking; thinking stays off by default and becomes a per-model, per-decision preset knob (D048); most misses are counter-intuitive rules |
+| [60 Lessons from TypeSafe AI](research/60-lessons-from-typesafe-ai.md) | What TypeSafe AI's public design (typed questions, one-pass probabilities, limitations, cookbooks, SDKs) teaches Plotroom's harness | Proposals P-01–P-20; design-gap candidates | Research from public sources; borrow the design, not the model (D023 decision 5 stands). 20 test-first proposals and 11 design-gap candidates, none filed; an optional hosted shadow test needs an owner-paid key and a D047 reading |
+| [61 The language service for the LLM](research/61-language-service-for-the-llm.md) | What coding agents' language-server integrations teach about serving a model, and how Teller serves Wilco | Teller levels TS0–TS3; tests TT-01–TT-20 | Proposal: diagnostics pushed after each edit help weak models more than navigation tools; seven Teller refinements; pull tools only for qualified setups (doc 63); 14 design-gap candidates, not filed |
+| [62 Type-driven guidance](research/62-type-driven-guidance.md) | How types, compiler diagnostics and lints guide coding agents and Wilco; what the owner's public crate strict-path contributes | Witness/guard rules; ShapeGrant | Proposal under the owner's principle "the API leads the user into correct usage": strict-path inside `plotroom-io` for filesystem paths; a proposed `AGENTS.md` amendment awaits owner approval |
+| [63 Capability ladder](research/63-capability-ladder.md) | How "knowledge in the harness, freedom by capability" becomes concrete: freedom levels, grants and limits | Freedom levels FR0–FR8 | Proposal: raise the ceiling, never lower the floor; the level is the lowest of product ceiling, qualification, effort and the user's cap; FR8 (a plan as data) needs an owner decision (amends D025); draft decision record included |
 
 ## 6. Data, skills, prompts and tools
 
@@ -303,18 +318,23 @@ Doc 49 (the local shortlist of doc 47 §6, measured) is in progress; its row, an
 | [catalog-sizes.csv](research/data/catalog-sizes.csv) | 338 | Counts and sizes measured over a local install (config classes, addons, UI keys, fonts, prompt-size estimates); counts only, no game content | Doc 35 §10; used by docs 05, 40 |
 | [cloud-candidates.csv](research/data/cloud-candidates.csv) | 73 | Cloud model and host candidates read 2026-09-27: prices (input, output, cached), batch, free tier, precision, structured output, context, privacy, estimated cost of battery B, role, sources | Doc 48 |
 | [cloud-screening-candidates.csv](research/data/cloud-screening-candidates.csv) | 47 | Cloud endpoints (free and paid) for each local candidate, read 2026-09-27: price, precision, strict schema, estimated screening cost, local fallback | Doc 50; D044 |
+| [cloud-screening-results.csv](research/data/cloud-screening-results.csv) | 2,231 | D044's first screening round (battery S) on 14 pinned OpenRouter endpoints: setup and pins, scores per arm on the 29 shared harder menus, local comparators re-scored on the same menus, every paired test, promotion checks and verdicts, and the spend audit | Doc 54; D044 |
 | [corpus-script-idioms.csv](research/data/corpus-script-idioms.csv) | 202 | Script idioms counted over the mission corpus, by group and category | Doc 35 |
 | [corpus-structure-stats.csv](research/data/corpus-structure-stats.csv) | 1,750 | Structure statistics per corpus group (min, median, p90, max) | Doc 35; generator presets (rc41) |
 | [cost-model.csv](research/data/cost-model.csv) | 520 | Estimated tokens and cost per workflow × strategy × model | Doc 40; generated by `tools/cost-model/` |
 | [cwa199-observed-commands.csv](research/data/cwa199-observed-commands.csv) | 509 | Script commands observed in official and community content, with 1.99 evidence | Doc 35 §8; catalog evidence tiers (I35-90) |
 | [free-llm-services.csv](research/data/free-llm-services.csv) | 23 | Free LLM services read 2026-09-27: free models, limits, structured output, data use, EU availability, what the terms allow for a third-party app, content policy on military fiction, verdict | Doc 50; OWQ-24 |
 | [local-qualification.csv](research/data/local-qualification.csv) | 748 | Local-model qualification measurements per model, suite and condition | Doc 44; produced with `tools/local-qual/` |
+| [local-shortlist-results.csv](research/data/local-shortlist-results.csv) | 3,199 | Doc 47's shortlist on llama.cpp b11146 (four models run, the rest as `status` rows with pins): scores, graded counts, pins and flags, GPU and host memory, speed, MoE offload tuning, CUDA 12.4 vs Vulkan benchmarks and every paired test | Doc 49; produced with `tools/local-qual/` |
+| [token-efficiency-techniques.csv](research/data/token-efficiency-techniques.csv) | 116 | Token-efficiency, compaction and caching techniques found in 23 harness and research repos: evidence, measured effect, fit and verdict for Plotroom (68 adopt, 19 adapt, 13 keep, 16 reject) | Doc 57 |
+| [ml-components.csv](research/data/ml-components.csv) | 64 | Editor and harness touchpoints: current owner, recommended owner (algorithm, statistics, small model, specialist, LLM), candidates, runtime, latency budget, volume, qualification, glass box, priority, risks | Doc 58 |
 | [model-profiles.csv](research/data/model-profiles.csv) | 44 | Per-model conventions read 2026-09-28: vendor harness, tool-call format, reasoning control, sampler, template quirks, recommended schema mode, pitfalls, sources | Doc 51; D048 |
 | [runtime-quant-comparison.csv](research/data/runtime-quant-comparison.csv) | 2,814 | llama.cpp vs Ollama and UD-Q4_K_XL vs Q4_K_M: scores, latency, GPU memory, GGUF facts and every paired test | Doc 46; produced with `tools/local-qual/` |
 | [script-command-risk.csv](research/data/script-command-risk.csv) | 111 | Risk category and lint, agent and harness policy per script command and harness verb, with citations | Doc 24 |
-| [slm-candidates.csv](research/data/slm-candidates.csv) | 53 | Small and locally runnable model candidates: repository, parameters, architecture, licence and whether it may be recommended, Q4 GGUF size, llama.cpp support, tool calling, tier, fit per step kind, verdict (doc 44's four models as baselines) | Doc 47 |
+| [slm-candidates.csv](research/data/slm-candidates.csv) | 53 | Small and locally runnable model candidates: repository, parameters, architecture, licence and whether it may be recommended, Q4 GGUF size, llama.cpp support, tool calling, tier, fit per step kind, verdict (doc 44's four models as baselines; the four rows doc 49 measured carry its verdicts) | Doc 47 |
 
-Row counts are data rows (header excluded), counted with a CSV parser on 2026-09-27.
+Row counts are data rows (header excluded), counted with a CSV parser on 2026-09-27 (`local-shortlist-results.csv` and
+`cloud-screening-results.csv` on 2026-09-28).
 
 ### 6.2 Skills (`skills/`, standard SKILL.md, D019)
 
@@ -336,10 +356,13 @@ Row counts are data rows (header excluded), counted with a CSV parser on 2026-09
 
 - [`local-qual`](../tools/local-qual/README.md): measures whether a local model carries the harness's step shapes (Pick, harder Pick
   `pick-hard`, Fill, explain, text, knowledge) through llama.cpp's llama-server or Ollama; Python standard library only. Raw results
-  are git-ignored. Docs 44 and 46 (doc 49 pending); SP-11. A cloud backend for OpenAI-compatible endpoints, with a hard budget cap and
+  are git-ignored. Docs 44, 46 and 49; SP-11. A cloud backend for OpenAI-compatible endpoints, with a hard budget cap and
   the harness-uplift comparer of doc 48 §5, is a pending patch that will add files.
 - [`cost-model`](../tools/cost-model/cost_model.py): estimates billed tokens and cost per workflow run for several harness strategies
   and model tiers; writes a git-ignored JSON from which `cost-model.csv` is derived. Doc 40.
+- [`quota-sim`](../tools/quota-sim/README.md): a seeded discrete-event replay of Wilco user days against free-tier limits (requests,
+  tokens, neurons, credits), upstream 429 congestion and routing strategies S0–S6; Python standard library only, no network, no keys;
+  31 unit tests; results are written only where the caller points and are not committed. Doc 52.
 
 ## 7. Integration items: ownership check
 
@@ -453,3 +476,31 @@ data is not included and is licensed by Bohemia Interactive under the APL-SA. (T
 - §4's "Settled" column now names the records that state the owner's answers (D031–D043) beside the earlier records they refine, and
   the note above the table says the records state the rules. `cloud-candidates.csv` has 67 data rows (doc 48 §6.6 added two; counted
   with Python's `csv` module) and doc 48's optional runs are `O1`–`O8` (§2.2).
+
+### Doc 52 and `tools/quota-sim` rows (2026-09-28)
+
+- Added the §5 row for doc 52 (between the rows for docs 51 and 53) and the §6.4 line for `tools/quota-sim`. Both links were resolved
+  against the working tree. The status line and the "01–48" counts in §2 and §5 were not changed here; they already lag behind the
+  rows for docs 50, 51 and 53 added since, and a later consolidation pass should update them together.
+
+### Doc 49 rows and the research counts (2026-09-28)
+
+- **Rows added.**
+  - §5.6: the doc 49 row, directly after doc 48's, where the pending line used to sit.
+  - §6.1: `local-shortlist-results.csv`, 3,199 data rows, counted with Python's `csv` module.
+- **Doc 49 now appears as landed** in: §3.4 item 3, the model-selection row of §4, the doc 47 row, the `slm-candidates.csv` row
+  and the `local-qual` line in §6.4.
+- **Counts brought up to date.**
+  - Status line: docs 01–51 final.
+  - §2: 58 research docs, counted in the working tree (01–53, 55, 56 and 58–60).
+  - §5 heading and lead-in: rows cover 01–53 and 60; 55, 56, 58 and 59 have no rows yet.
+  - §5.6 heading: now 38–60.
+- **Not changed.** The rows other change sets added after doc 48 (50–53 and 60) keep their blank-line separators. Those lines render
+  outside the table and should be joined in a later pass. Both new links were resolved against the working tree.
+
+### Doc 49 review (2026-09-28)
+
+- The status line had been rewritten after the note above and listed doc 49 as in progress while §5 says 01–51 are final; it now
+  reads 01–52 final and 54, 55, 57 and 59 in progress (the rest of that line, including 54 and 57, is as another change set left it).
+- The doc 49 row's "6–25 s per call" now says "(warm p50)"; the p90 of an offload explanation reaches 62 s. The CSV row count
+  (3,199) was re-counted with Python's `csv` module after the review's CSV fix.
