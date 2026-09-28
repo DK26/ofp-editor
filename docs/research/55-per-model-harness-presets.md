@@ -655,6 +655,32 @@ Plays to: speed, terse constrained text, card-grounded explanation, predictable 
     the checker's template facts (thinking switch, `documents` path) need one record of that split, its layering and where each fact
     lives, extending D021's adapter and D022's Model Manager.
 
+## 8. Tuning run 0: cheap levers on Qwen3.5-4B and Gemma 4 E4B (2026-09-28)
+
+A first, pre-registered run of cheap preset levers, before the full protocol of §4 [V]. Same files, runtime (llama.cpp b11146
+Vulkan), seeds and option orders as doc 46, so every arm pairs item by item with doc 46's records; drift checks reproduced doc 46 on
+90 of 90 calls for both models. Harder menus (`pick-hard`, none + cards pooled, 180 calls) and whole-record Fill (36):
+
+| Arm | Qwen3.5-4B Q4_K_M | Gemma 4 E4B QAT |
+| --- | --- | --- |
+| Baseline (doc 46) | 152/180; Fill 23/36 | 168/180; Fill 31/36 |
+| Vendor non-thinking sampler (T 0.7, top-p 0.8, top-k 20, no penalty) | 152 (±0); Fill 22 | — |
+| T 0.3 | 158 (+6; 4 menus better, 1 worse; sign p 0.375) | 168 (±0); Fill 29 |
+| Short reason before the answer (`--why`) | 155 (+3) | 163 (−5) |
+| Thinking, 256-token budget | 157 (+5; p 0.73); Fill 25; p50 about 8.3 s | 167 (−1); Fill 31; p50 about 7.9–9.4 s |
+| Thinking, 1,024-token budget, 8 of Qwen's hardest menus only | 39/48 vs 27/48 baseline (+12; p 0.0625, Holm 0.31); p50 about 27 s | — |
+
+- **No pre-registered rule was met** (a gain of at least 9 of 180 calls with a Holm-adjusted per-menu sign test p ≤ 0.05), so no
+  lever is adopted. Qwen does not close the gap to Gemma under any cheap lever (best 158 < 164; best Fill 25 < 29) [V].
+- **Thinking always hit the cap**: every 256-token call used the whole budget (265–276 generated tokens), so 256 tokens truncates
+  these models' reasoning; the 1,024-token gain is on menus chosen for being hard (regression to the mean possible) and is too slow
+  for interactive steps — at most a rare, visible "think harder" escalation [V; I].
+- **Gemma's current preset stays**: `--why` cost it 5 calls, T 0.3 and thinking changed nothing [V].
+- **Next** (doc 59): harness-side reasoning — extract-then-dispatch where code applies the counter-intuitive rules that cause most
+  misses — rather than longer model thinking [I].
+- Caveats: latency is indicative only (the GPU was shared with desktop applications); two samples of thinking arms per smoke gate;
+  the experiment design was prepared from our own failure analysis of doc 46's records.
+
 ## Open questions
 
 1. **Naming (owner or technical):** "harness preset", "prompt profile" (doc 14 §7) or another word, given four existing uses of
