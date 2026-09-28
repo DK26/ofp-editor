@@ -38,6 +38,7 @@ Terms used in this file:
 - **Default local pack (tier "local small"), candidate to be qualified by our own evals: Qwen3.5-4B at Q4 (2.7–2.9 GB, Apache-2.0, 201 languages).**
   - It has the strongest vendor tool-use numbers among the ~4B candidates (BFCL-V4 50.3, τ²-bench 79.9 [V-vendor]). It must pass our own evals (§9) before it becomes the default [I].
   - Fallback candidates: Gemma 4 E2B (3.1 GB file; τ² 24.5 [V-vendor]; 2.3B effective parameters [V]), and Granite 4.2-3B as a narrow router (2.2 GB; BFCL v4 52.4 [V-vendor]). Routing accuracy, false-accept rates and memory use for all three are unmeasured on our tasks [U]; our own evals (§9) decide.
+  - *Correction (2026-09-28):* Granite 4.2-3B is a reasoning model with **thinking on by default**, so as a router it must be sent `enable_thinking=false` and checked; its card does not say which mode its BFCL v4 figure used [V: [card](https://huggingface.co/ibm-granite/granite-4.2-3b)]. The non-thinking Granite is 4.1 3B, post-trained from the same base (doc 53 §2.4). See §3.2 and the verification notes.
 - **Local medium tier (16–24 GB VRAM): Qwen3.8-27B (Apache-2.0, 16.5 GB Q4).** It is an all-rounder with EQ-Bench Elo 1671 [V].
   - Meta's **Muse-Glimmer-30B** (Apache-2.0) scores Elo 1798, the best local writer on EQ-Bench [V]. Its tool-use evidence is vendor-only (MCP Atlas 75.5, τ3-Banking 23.5 [V-vendor]); it has no independent tool-calling data [U]. Its repos also carry a separate Usage Policy that bans use "related to … Military, warfare … applications" [V]; check whether that covers a war-game editor before shipping it as a pack.
   - For 8–12 GB cards: Qwen3.5-9B (tools; BFCL-V4 66.1 [V-vendor]) or Gemma 4 12B (writing; Elo 1289) [V].
@@ -190,7 +191,8 @@ Sources for the table:
 
 Architecture caveats that matter for the runtime:
 
-- Qwen3.5 is a hybrid of Gated DeltaNet and gated attention, with image input. Thinking is **on by default**; `enable_thinking: False` turns it off [V, model card].
+- Qwen3.5 is a hybrid of Gated DeltaNet and gated attention, with image input. Thinking is **on by default** from 4B up; `enable_thinking: False` turns it off [V, model card]. The 0.8B and 2B default to non-thinking (card and template; doc 47's Qwen3.5-2B row, doc 53 finding 8) [V per docs 47 and 53; corrected 2026-09-28].
+- Granite 4.2 (3B, 8B, 30B) is a reasoning model. Thinking is **on by default**: the generation prompt ends with an open `<think>` block; `enable_thinking=False` ends it with an empty `<think></think>`; `low_effort=True` asks for shorter reasoning. The card's benchmark table (IFBench 74.33, BFCL v4 52.41 for the 3B) does not state the mode, so the BFCL figures in the table above are presumably thinking-mode numbers [V: [3B card](https://huggingface.co/ibm-granite/granite-4.2-3b), re-read 2026-09-28; I]. Granite 4.1 3B, post-trained from the same base, has no thinking mode (doc 53 §2.4). *Added 2026-09-28 (doc 53 finding 2).*
 - Gemma 4 E-models use Per-Layer Embeddings; "the 'E' in E2B and E4B stands for 'effective' parameters" (E2B: 2.3B effective, 5.1B with embeddings) [V: [Gemma 4 E2B card](https://huggingface.co/google/gemma-4-E2B-it)]. So "E2B" is not a RAM figure [I].
 - The `candle-transformers` model directory lists `quantized_qwen3`, `quantized_gemma3` and `quantized_lfm2`. Its `models/mod.rs` has **no** Qwen3.5 module at all (neither `qwen3_5` nor `quantized_qwen3_5`), and its `gemma4/` module (audio, config, text, vision, …) has no quantized variant [V: [candle tree](https://github.com/huggingface/candle/tree/main/candle-transformers/src/models), `mod.rs` on `main`, re-checked 2026-09-26].
 - The llama.cpp server supports GBNF `grammar`, `json_schema`-constrained sampling, and OpenAI-style tools with `--jinja` [V: [server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)].
@@ -322,7 +324,7 @@ How well this transfers to our use [I]:
   | Model | Q4 file [V] | Public tool evidence [V-vendor] | Languages [V] | Why it is a candidate [I] |
   | --- | --- | --- | --- | --- |
   | Qwen3.5-4B | 2.74 GB (UD-Q4_K_XL 2.91) | BFCL-V4 50.3, τ² 79.9 | 201 claimed | Strongest vendor tool numbers at ~4B |
-  | Granite 4.2-3B | 2.24 GB | BFCL v4 52.4 | 12, incl. CZ | Smaller file; narrow menus |
+  | Granite 4.2-3B | 2.24 GB | BFCL v4 52.4 (mode not stated; thinking is the default) | 12, incl. CZ | Smaller file; narrow menus; thinks by default, so thinking must be sent off (§3.2) |
   | Gemma 4 E2B | 3.11 GB | τ² 24.5 | 35+ | 2.3B effective parameters; low-memory option |
 
   - The file size is not the RAM requirement: KV cache, runtime buffers, the editor itself and the OS come on top [I]. Working set and per-request latency must be measured on reference machines (§9).
@@ -406,7 +408,7 @@ How well this transfers to our use [I]:
 | Tier | Who | What installs | Default model(s) [I, from §3–4 evidence] |
 | --- | --- | --- | --- |
 | **T0 No-AI** | Everyone, always available | Nothing | Templates, fuzzy command search, snippet library, deterministic lints and validators (these also run in every other tier) |
-| **T1 Local small** | About 16 GB RAM, any GPU or CPU-only (8 GB machines: no default local pack, see §5) | ~1.3–3.1 GB download | Candidates, each to be qualified by our own evals (§9): **Qwen3.5-4B Q4** (Q4_K_M or UD-Q4_K_XL; qualify both). Low-memory fallback: **Gemma 4 E2B**. Narrow-router option: **Granite 4.2-3B**. Thinking off for routing |
+| **T1 Local small** | About 16 GB RAM, any GPU or CPU-only (8 GB machines: no default local pack, see §5) | ~1.3–3.1 GB download | Candidates, each to be qualified by our own evals (§9): **Qwen3.5-4B Q4** (Q4_K_M or UD-Q4_K_XL; qualify both). Low-memory fallback: **Gemma 4 E2B**. Narrow-router option: **Granite 4.2-3B** (it thinks by default, so off must be sent and checked, §3.2). Thinking off for routing |
 | **T2a Local medium-lite** | 8–12 GB VRAM or 32 GB RAM | 5.7–7 GB | **Qwen3.5-9B** for tools; **Gemma 4 12B QAT** for writing and translation drafts |
 | **T2b Local medium** | ≥16 GB VRAM, or 32–64 GB RAM with MoE offload | 16–22 GB | **Qwen3.8-27B** as the all-rounder. **Muse-Glimmer-30B** for writing (tool use vendor-reported only; Usage Policy caveat in §5). **Gemma 4 26B-A4B** as the faster MoE option (3.8B active) |
 | **T3 Cloud frontier** | Anyone with a key | Nothing | Planner: `claude-opus-5-5` / `gpt-6-sol` / `gemini-3.8-flash`. Writer: any top-cluster model. Router: `gpt-6-luna` / `gemini-3.5-flash-lite`. Max: `claude-fable-5-1` / `gpt-6-astra`. Budget: `deepseek-flash` |
@@ -589,3 +591,12 @@ Adversarial fact-check, 2026-09-26. We re-read every pinned code citation in the
 - The Qwen3.6-35B-A3B, Gemma 4 E2B/E4B, Granite 4.2 and LFM2.5 GGUF sizes.
 - Vanilla CWA 1.99's language set.
 - Cross-doc claims attributed to docs 08, 09, 11 and 18. We did check pi-ai's `classify()` for TypeSafe in `packages/ai/src/api/typesafe-system-one.lazy.ts`.
+
+### 2026-09-28, correction: Granite 4.2-3B thinks by default (doc 53 finding 2)
+
+- **The error.** This doc framed Granite 4.2-3B as a narrow router with "thinking off for routing" and quoted its BFCL v4 52.4 without saying that the model thinks by default; the doc 47 shortlist JSON went further and said it has no thinking mode. Doc 53 ("Findings that affect sibling docs", items 2 and 3) reported both.
+- **Re-read for this correction [V]:** the Granite 4.2-3B model card (<https://huggingface.co/ibm-granite/granite-4.2-3b>), fetched 2026-09-28. "Thinking enabled" is the default: the generation prompt ends with `<|im_start|>assistant\n<think>\n` and the model reasons until it emits `</think>`. With `enable_thinking=False` the prompt ends with `<think></think>`. `low_effort=True` appends "{reasoning effort: low}". The card's sampler is temperature 1.0 and top_p 0.95 "across all tasks and serving backends", and its token budgets are 8,192 new tokens with thinking and 2,048 without. The evaluation table (IFBench 74.33, BFCL v4 52.41) does not state the mode.
+- **What changed:** a correction line under the TL;DR's fallback candidates; a Granite 4.2 bullet in §3.2's architecture caveats; the Granite 4.2-3B row of §4.3's router table; the T1 row of §6. The shortlist JSON's note was fixed in the same change set (doc 47's verification notes, 2026-09-28).
+- **What did not change:** the tiers, the candidate list and every number. Direct-mode results stay valid: `tools/local-qual/run.py` sends `enable_thinking=false` by default, which the 4.2 template honours; records should still show `thinking_chars` = 0 (doc 53 finding 3).
+- **Also folded from doc 53's list (finding 8):** §3.2's Qwen3.5 caveat now says thinking is on by default from 4B up; the 0.8B and 2B default to non-thinking. Not folded here: finding 1 (the LFM2.5 language list in §4.2, which doc 47's 2026-09-27 finding and doc 53 describe differently for different LFM2.5 sizes, so it needs its own re-check) and finding 6 (Qwen3-1.7B as a candidate, a scope question for the next consolidation pass).
+- **Hygiene:** the change names no private project, local path or user name.

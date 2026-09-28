@@ -320,7 +320,7 @@ These are typed values in their own crates (L3), with no store and no I/O. Their
 | Modules | `plotroom-modules` | `ModuleDef` and instances; mission modules and campaign modules as one family (DG004 option C, proposal); variant groups, counter/any/switch logic nodes and fault isolation (failed module falls back to its default outcome) (I35-MOD2); AI-executability note per module and a default announce cue on reinforcements (I36-31); rule-override scenarios as typed module presets (I36-31) | doc 31 §4; doc 26 §5; DG004 |
 | Rules and conversations | `plotroom-modules::rule`, `::conversation` | WHEN/IF/THEN rules with modes; conversations of `Line`, `Choice`, `Gather`, `Branch`, `Todo`; sentence templates with named, typed slots (doc 45 §4.2) | doc 31 §5; doc 45 §4 |
 | Planning layer | `plotroom-sidecar::planning` | Zones, phases, named routes, notes: sidecar-only objects (I34-04; doc 34 ed01, ed06, ed08) | doc 34 |
-| Cinematics | `plotroom-cine` | v1: the Cutscene-node recipe subset (doc 35 rc35, rc50 timing defaults, provisional until reconciled with doc 39 §9.4 through DG035; I35-CUT); the full timeline is v1.x | doc 32 §3; doc 39 |
+| Cinematics | `plotroom-cine` | v1: the Cutscene-node recipe subset (doc 35 rc35, rc50 timing defaults, provisional until reconciled with doc 39 §9.3 through DG035; I35-CUT); the full timeline is v1.x | doc 32 §3; doc 39 |
 | Campaign | `plotroom-campaign` | See below | doc 19 §4–§7 |
 
 **The campaign document** (`CampaignDoc { model: Guarded<CampaignModel>, cst: Guarded<ConfigDoc> }`):

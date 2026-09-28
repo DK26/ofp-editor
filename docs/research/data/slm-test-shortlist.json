@@ -596,6 +596,13 @@
       "doc14_carryovers_unmeasured (Gemma 4 E2B QAT, Granite 4.2-3B)"
     ]
   },
+  "corrections_2026_09_28": {
+    "source": "doc 53 'Findings that affect sibling docs', item 3; Granite 4.2-3B model card re-read 2026-09-28 (https://huggingface.co/ibm-granite/granite-4.2-3b)",
+    "fixes": [
+      "Granite 4.2-3B carry-over: request_settings said 'no thinking mode'; the model thinks by default and honours enable_thinking false (empty <think></think>). Direct-mode records made with run.py's default --think-mode false stay valid; check thinking_chars == 0"
+    ],
+    "schedule_note": "owner answer of 2026-09-28 ('Tiny models with no cloud availability should be tested directly on PC'; D044 amendment note of 2026-09-28): the tiny no-host rows (rank 7 Granite-4.0-H-1B and 1B, rank 6 Qwen3.5-2B, which is on Featherless only, and the Spark-X2.5-1.7B sibling, whose host was not checked separately) run directly on the reference PC at -dev none without a cloud screen; ranks 4, 5 and 8 and the Gemma 4 E2B carry-over also go local directly under D044's P5 (adopted under the owner's go-ahead; open to overrule). The Granite 4.2-3B carry-over has a same-weights host (DeepInfra through the Hugging Face router), so it gets a no-schema cloud screen first unless the owner rules that doc 53's stage S7 is local by nature. Details: doc 47 section 6"
+  },
   "doc14_carryovers_unmeasured": [
     {
       "name": "Granite 4.2-3B (doc 14 narrow-router option; successor of doc 44's Granite 4.1 3B)",
@@ -614,7 +621,7 @@
         "llama-server -m granite-4.2-3b-Q4_K_M.gguf -ngl 99 --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080",
         "llama-server -m granite-4.2-3b-Q4_K_M.gguf -dev none -t <physical cores> --jinja -c 8192 -np 1 --no-mmproj --host 127.0.0.1 --port 8080"
       ],
-      "request_settings": "no thinking mode; same issue #29006 json_schema check as rows 7 and 8",
+      "request_settings": "thinking is ON by default (corrected 2026-09-28; this note said 'no thinking mode'): send enable_thinking false (run.py's default --think-mode false does; the template then ends the prompt with an empty <think></think>) and check thinking_chars == 0 on one --dry-run and one real call; the card sampler (temperature 1.0, top_p 0.95) is embedded in the official GGUF, so the common pin must override it; 4.2 uses a ChatML template, not the Granite role tokens of llama.cpp issue #29006, but run the same json_schema --dry-run as rows 7 and 8",
       "suites": [
         "pick",
         "pick-hard",

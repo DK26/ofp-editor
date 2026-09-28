@@ -11,8 +11,8 @@ quality number is public and mostly vendor-reported. Verdicts, fit scores and th
 claimed to be better than a measured model: the most any row can say is "candidate to test".
 **Epistemic legend** (doc 14's): **[V]** verified against the cited primary source; **[V-vendor]** the vendor's or author's own
 number about its own model, quoted correctly but not independently checked; **[V per doc N]** taken from a sibling doc; **[I]** our
-inference or proposal; **[U]** unknown. Web sources are cited as [S1]…[S85] and listed under §Sources.
-**Data.** One row per model in [`data/slm-candidates.csv`](data/slm-candidates.csv) (53 rows; columns `name, vendor, hf_repo,
+inference or proposal; **[U]** unknown. Web sources are cited as [S1]…[S89] and listed under §Sources.
+**Data.** One row per model in [`data/slm-candidates.csv`](data/slm-candidates.csv) (54 rows; columns `name, vendor, hf_repo,
 params_total, params_active, arch, release, license, license_ok_to_recommend, context, gguf_q4_size_gb, llamacpp_support, tool_calling,
 thinking_toggle, tier, fit_pick, fit_fill, fit_draft, fit_explain, fit_multilingual, verdict, sources`). The four models doc 44 measured
 are included as `baseline` rows so the table can be read on its own.
@@ -78,11 +78,15 @@ creative-text meaning. Open question 1 asks for a single name.
   98.2%-of-FP16 figure is the vendor's, in thinking mode only and served through vLLM rather than the released GGUFs; an independent
   KLD run shows a retrained sibling of the base, not a lossless copy [V-vendor S74, S76; V S81]. At most an optional paired probe
   against a mainline Qwen3.8-27B UD-IQ2_XXS; the fork stays bring-your-own until upstream support lands [I].
-- **Licences are the main filter for the recommended list.** 41 of the CSV's 53 rows (the four baselines included; the Bonsai rows by
-  licence only, §2.7) are OSI-licensed and eligible under D023 decision 6, some with conditions such as a pinned revision or the
-  ungated GGUF. Others are bring-your-own at most: LFM Open License (revenue-gated), NVIDIA Nemotron (notice and indemnity), Gemma
-  Terms (TranslateGemma), CC-BY-NC (xLAM-2, Tiny Aya), Katanemo (derivative naming). Licences change between revisions, so the Model
-  Manager must read the LICENSE at the pinned revision [V S42, S51; I].
+- **OrcaSAQ-2-27B (added 2026-09-28, §2.8): watch.** A 3.21-bit mixed-precision (EXL3-style) quantization of Qwen3.8-27B, 12.3 GB,
+  Apache-2.0 per its card, for 16 GB CUDA GPUs. It runs only through vLLM (or exllamav3) with a vendor plugin; no llama.cpp or GGUF
+  build of these weights exists [V S86, S87]. Bring-your-own endpoint only (D021); whether it is worth a look waits on doc 54's cloud
+  screen of the Qwen3.8-27B base [I].
+- **Licences are the main filter for the recommended list.** 42 of the CSV's 54 rows (the four baselines included; the Bonsai and
+  OrcaSAQ-2 rows by licence only, §2.7–§2.8) are OSI-licensed and eligible under D023 decision 6, some with conditions such as a
+  pinned revision or the ungated GGUF. Others are bring-your-own at most: LFM Open License (revenue-gated), NVIDIA Nemotron (notice
+  and indemnity), Gemma Terms (TranslateGemma), CC-BY-NC (xLAM-2, Tiny Aya), Katanemo (derivative naming). Licences change between
+  revisions, so the Model Manager must read the LICENSE at the pinned revision [V S42, S51; I].
 - **Next run (§6):** nine models through `tools/local-qual` on llama-server, re-running doc 44's Gemma and Qwen baselines on the same
   runtime first. Four answer doc 44's open items on the reference box (Qwen3-4B-2507, Qwen3-30B-A3B-2507, Gemma 4 26B-A4B QAT,
   NuExtract3). Four probe the CPU and 4–6 GB tiers (MiniCPM5-2B, Qwen3.5-2B, Granite-4.0-H-1B, Granite-4.0-H-Tiny). One, added in
@@ -125,7 +129,8 @@ Sources: doc 21 §3.1–§3.3, doc 25 §5.1 and §6.2, doc 38 §3.2, doc 44 §2 
     closed 2026-03-09 by the stale bot as "not planned", so no fix is recorded there) [V S11]. Every output must still be validated
     (D009), and the sidecar supervisor should treat that log line as an error [I].
   - *Template quirks.* JSON Schema through `/v1/chat/completions` failed for Granite 3.1's role tokens while an equivalent GBNF worked
-    (issue #29006, open since 2026-09-17) [V S28]; Granite 4.0 uses the same role tokens, so the Granite rows need a schema check [I].
+    (issue #29006, open since 2026-09-17) [V S28]; Granite 4.0 and 4.1 use the same role tokens, so their rows need a schema check
+    [I]. Granite 4.2 switched to a ChatML template with `<think>` blocks (doc 53 §2.4) [V S89].
     TranslateGemma's template needs its language codes passed as `chat_template_kwargs` (`source_lang_code`, `target_lang_code`;
     PR #19052, merged 2026-01-24, after which #19295 was closed as completed); a separate Jinja parser failure on the 27B (#20305)
     was closed as stale without a fix, with `--no-jinja` reported to work [V S45].
@@ -430,6 +435,64 @@ What would change the verdict [I]:
    ahead of UD-IQ2_XXS (doc 44 §6's noise rule) and at least level with the offload rows on Fill and text.
 3. **Down to "skip":** with thinking off it loops, breaks the JSON schema, or is no better than UD-IQ2_XXS.
 
+### 2.8 Low-bit Qwen3.8-27B for 16 GB GPUs: OrcaSAQ-2-27B (watch)
+
+Added 2026-09-28. Nothing was downloaded or run. The model repository, its API, config and chat template, the serving plugin's
+repository and a sibling GGUF repository were read on 2026-09-28 (Verification notes, 2026-09-28).
+
+**What it is.** `orcarouter/OrcaSAQ-2-27B` (repository created 2026-09-24, ungated, Apache-2.0 in the card and the tag, base
+`Qwen/Qwen3.8-27B`) is a quantization of Qwen3.8-27B [V S86]. The card calls the method a "proprietary sensitivity-aware mixed-precision
+quantization system" averaging 3.21 bits per weight, taking the checkpoint from 54 GB (BF16) to 12.3 GB; the four safetensors shards
+total 12,270,435,404 B [V S86]. The config names the method `exl3` (version 1.5.1: 3 bits nominal, a 6-bit head, an int8
+embedding), and the plugin's README describes the weights as "a QTIP-style trellis code with a searched mixed-precision allocation"
+[V S86, S87]. The checkpoint is text only ("The vision tower is not included") and keeps the base architecture (64 layers: 48 Gated
+DeltaNet and 16 gated attention, 4 KV heads × 256, 262,144-token context), so its f16 KV cache is about 512 MiB at 8K, as in §2.7
+[V S86; I]. The card targets 16 GB GPUs: "~3.7 GB remaining" after the weights and "approximately 32K interactive context"
+[V-vendor S86].
+
+**Runtime: vLLM with a vendor plugin, no llama.cpp.**
+
+- The card's only serving path is vLLM plus `pip install git+https://github.com/Continuum-AI-Corp/OrcaSAQ2-kernel`: "OrcaSAQ2
+  requires the OrcaSAQ2 vLLM integration" [V S86].
+- The plugin repository (created 2026-09-24) also patches exllamav3, and says: "llama.cpp is not an option for these weights: it
+  reads only its own i-quant codebooks, so a GGUF would mean re-quantizing with a measurably weaker quantizer" [V S87].
+- Both paths are CUDA (the launch presets probe for the CUDA toolkit that flashinfer compiles against); no minimum GPU or compute
+  capability is stated [V S87; U]. It cannot run on the pinned llama-server runtime (D022's amendment note, item 1) or on the 8 GB
+  reference card.
+- The plugin's README says "Apache-2.0", but the repository has no licence file, and GitHub reports no licence [V S87].
+
+**Thinking.** "Thinking mode is enabled by default" [V S86]. The template is Qwen3.8's: `enable_thinking` false emits an empty
+think block, `reasoning_effort` defaults to `xhigh`, and earlier reasoning is re-rendered unless `preserve_thinking` is false, as in
+§2.7's Bonsai template [V S86].
+
+**Vendor claims [V-vendor S86].**
+
+- Agentic: SWE-bench Verified 70.0 and Terminal-Bench 2.1 58.4, set beside other models' published scores with their own agents
+  (for example "Gemini 3.1 Pro / Terminus 2" 70.7 and "Claude Opus 4.6 / Claude Code" 70.1). The card warns: "Public scores use
+  different agent stacks and should not be interpreted as a strict model-only ranking." It gives no BF16 score of the base on the
+  same benchmarks and does not name its own agent stack or reasoning budget.
+- Fidelity: +0.02% perplexity and 93.2% top-1 token agreement against BF16, on 16,376 WikiText-2 tokens. §2.7's top-token figures
+  (96.9% for Unsloth's UD-Q4_K_XL, about 78% for the 2-bit builds) come from other runs on other text, so they only bracket it [I].
+- None of these is a non-thinking or single-step result; Plotroom runs every step with thinking off [I].
+
+**The "Cyber-Uncensored" GGUF.** A separate repository on the same account, `orcarouter/OrcaSAQ-2-Cyber-27B-Uncensored-GGUF`
+(created 2026-09-26, library llama.cpp, gated "auto", tagged "uncensored" and "abliterated"), quantizes
+`orcarouter/Qwen3.8-27B-Uncensored`, a derivative with its refusals removed, not the base [V S88; I for "refusals removed"]. It is
+not recommended: it is a different model, it answers nothing about OrcaSAQ-2 itself, and whether stock llama.cpp runs its tensor
+types was not checked [I; U].
+
+**Verdict: watch [I].**
+
+- **Tier:** a 16 GB CUDA GPU (T2b by VRAM, not by offload). It is never a local candidate on the reference box, so D044's
+  cloud-first rule does not reach it.
+- **How a user reaches it:** only as a bring-your-own OpenAI-compatible endpoint (D021), which vLLM serves; by analogy with D022's
+  amendment note (item 4) for a fork's server, the model stays "unqualified" until qualification passes on that endpoint (D037).
+  Plotroom does not download or supervise vLLM or the plugin. The card links an "OrcaRouter AI Gateway" but documents no hosted
+  endpoint for these weights; none was checked [V S86; U].
+- **What decides it:** doc 54's cloud screen of the Qwen3.8-27B base (in progress). If the base does not screen well with thinking
+  off, a 3.2-bit copy of it will not either. If it does, the next step is a paired screen of OrcaSAQ-2 against the base on the same
+  battery, on an endpoint that serves these exact weights. **Down to "skip"** if the base misses.
+
 ## 3. Specialists
 
 ### 3.1 Tool-calling and structured-output specialists
@@ -642,8 +705,8 @@ its licence and use policy shown and accepted; and a use statement whose force i
 
 | Licence family | Examples in this doc | Model Manager treatment |
 | --- | --- | --- |
-| Apache-2.0 or MIT, ungated | Qwen3 / 3.5 / 3.6, Gemma 4, Granite 4.0, MiniCPM5, NuExtract3, decider, Nanbeige, Jamba2, EuroLLM, gpt-oss, GigaChat (MIT), Bielik GGUFs, Hy-MT2 at current revisions, Spark-X2.5, Ling-3.0-tiny (MIT); Bonsai 2 27B and Bonsai-27B by licence only (the runtime is the blocker, §2.7) | Eligible for the recommended list; licence and size shown before download |
-| Apache-2.0 with a use statement | Olmo 3 ("intended for research and educational use") [V S34]; Qwen3.5-2B's intended-use note [V S29] | Eligible; show the statement |
+| Apache-2.0 or MIT, ungated | Qwen3 / 3.5 / 3.6, Gemma 4, Granite 4.0, MiniCPM5, NuExtract3, decider, Nanbeige, Jamba2, EuroLLM, gpt-oss, GigaChat (MIT), Bielik GGUFs, Hy-MT2 at current revisions, Spark-X2.5, Ling-3.0-tiny (MIT); Bonsai 2 27B and Bonsai-27B by licence only (the runtime is the blocker, §2.7); OrcaSAQ-2-27B by licence only (vLLM-only weights, §2.8) | Eligible for the recommended list; licence and size shown before download |
+| Apache-2.0 with a use statement | Olmo 3 ("intended for research and educational use") [V S34]; Qwen3.5-2B's intended-use note [V S29] | Not recommended until it is resolved whether the statement is a binding field-of-use limit (D037; corrected 2026-09-28, this cell said "Eligible"); installable as custom with the statement shown |
 | Licence tag with unclear provenance | harrier-oss-v1-270m (MIT tag; config identical to Gemma 3 270M) [V S58] | Not first-party until provenance is confirmed |
 | Not yet OSI-approved | OpenMDW (Seed-X), submitted to OSI in August 2026 [V S46]; OpenMDW-1.1 (Arcee Trinity-Mini, Trinity-Nano-Preview) [V S68] | Custom only until OSI approves the licence (OWQ-19 answered, D037) |
 | Custom, revenue-gated | LFM Open License v1.0: commercial use excluded at $10,000,000 annual revenue or more [V S30, S31] | Bring-your-own; licence shown and accepted |
@@ -670,6 +733,24 @@ screened in the cloud first, and tried locally only if promising) and [doc 50](5
 (which rows have a same-weights host, and the proposed battery S, costs and promotion rule; the schedule is OWQ-27, answered
 2026-09-28 in D044's amendment note: the cloud backend lands after doc 49's run, and the Featherless-only rows go local directly).
 
+**Owner answer: models with no cloud host are tested directly on the PC (2026-09-28).** In the owner's words: "Tiny models with no
+cloud availability should be tested directly on PC." D044's amendment note of the same day records it: a tiny model (about 2B
+parameters or less) with no same-weights host skips the cloud screen and runs directly on the reference PC, and the other no-host
+models that D044's P5 lists go local directly as well (adopted under the owner's go-ahead, open to the owner's overrule). Applied
+to this plan:
+
+- **Directly on the PC, as tiny models:** row 7 (Granite-4.0-H-1B and 1B), row 6 (Qwen3.5-2B, served only by Featherless, which
+  D044 already sends local) and the Spark-X2.5-1.7B sibling (doc 50 §5 found no host for the 4B; the 1.7B was not checked
+  separately). They run at `-dev none` on the CPU, never at the same time as a timed job (D044's note).
+- **Directly on the PC under P5, not as tiny models:** row 5 (MiniCPM5-2B, 2.52B, at the edge of "about 2B"), row 4 (NuExtract3)
+  and row 8 (Granite-4.0-H-Tiny, 6.94B); doc 50 §5 found no host for any of them. The Gemma 4 E2B carry-over is Featherless-only,
+  so it goes local too.
+- **Still cloud-first:** the Granite 4.2-3B carry-over has a same-weights host (DeepInfra through the Hugging Face router), so D044's
+  rule applies: a no-schema cloud screen first, unless the owner rules on return that doc 53's stage S7 is local by nature (D044's
+  note, "Not covered").
+
+The rows' content, suites and §6.3 rules are unchanged; only the screening order changes.
+
 ### 6.1 Shortlist for the next `tools/local-qual` run
 
 Placement and memory figures are estimates [I] from file sizes, the KV arithmetic in §1.3 and doc 44's measured increases; the run
@@ -690,7 +771,9 @@ records the real values. Pinned files are in Appendix A.
 **Doc 14 carry-overs (unmeasured T1 names):** Gemma 4 E2B QAT (UD-Q4_K_XL 2.62 GB, Google Q4_0 3.35 GB; doc 14's low-memory
 fallback; EuroEval Czech 2.61, Polish 2.71 [V S7, S65]) and Granite 4.2-3B (official Q4_K_M 2.24 GB; doc 14's narrow router; the
 successor of doc 44's Granite 4.1 3B; vendor IFEval 93.7 and BFCL v4 52.2 in OpenBMB's table [V-vendor S25; V S65]). Both run pick,
-pick-hard and fill on the GPU and at `-dev none`.
+pick-hard and fill on the GPU and at `-dev none`. *Correction (2026-09-28):* unlike 4.1 3B, Granite 4.2-3B thinks by default, and
+its card does not state the mode of its benchmark rows; `enable_thinking` false must be sent (`run.py`'s default) and
+`thinking_chars` = 0 checked [V S89; doc 53 §2.4].
 
 **Alternates:** Qwen3.5-35B-A3B (UD-IQ4_XS 17.49 GB if 22 GB is too much for 32 GB of RAM) and Qwen3.6-35B-A3B, for the offload slot
 if rows 2 or 3 fail on quality rather than speed.
@@ -999,6 +1082,23 @@ Sources added for the Bonsai 2 27B addendum, §2.7 (fetched 2026-09-27):
   <https://www.intel.com/content/www/us/en/products/sku/88969/intel-core-i76820hk-processor-8m-cache-up-to-3-60-ghz/specifications.html>
   (4 cores, 8 threads, AVX2, two memory channels), <https://en.wikipedia.org/wiki/GeForce_10_series> (GTX 1070: 256 GB/s); the CPU
   model and the memory modules (4 × 8 GB, 2,400 MT/s) were read locally through Windows WMI on 2026-09-27
+
+Sources added for §2.8 and the 2026-09-28 corrections (fetched 2026-09-28):
+
+- **[S86]** OrcaSAQ-2-27B at `15d20d7`: <https://huggingface.co/orcarouter/OrcaSAQ-2-27B/blob/15d20d7e9ae4fd89d1a47878f69381760169445b/README.md>,
+  <https://huggingface.co/api/models/orcarouter/OrcaSAQ-2-27B> (created, licence, gating, base model),
+  <https://huggingface.co/api/models/orcarouter/OrcaSAQ-2-27B/tree/main> (file sizes),
+  <https://huggingface.co/orcarouter/OrcaSAQ-2-27B/raw/main/config.json>,
+  <https://huggingface.co/orcarouter/OrcaSAQ-2-27B/raw/main/chat_template.jinja>
+- **[S87]** The serving plugin: <https://github.com/Continuum-AI-Corp/OrcaSAQ2-kernel> (README on `main`),
+  <https://api.github.com/repos/Continuum-AI-Corp/OrcaSAQ2-kernel> (created 2026-09-24; licence field empty) and its root listing
+  (no licence file)
+- **[S88]** The "Cyber-Uncensored" GGUF: <https://huggingface.co/api/models/orcarouter/OrcaSAQ-2-Cyber-27B-Uncensored-GGUF>, found
+  through <https://huggingface.co/api/models?search=OrcaSAQ>
+- **[S89]** Granite 4.2-3B model card (thinking modes, sampler, token budgets, evaluation table):
+  <https://huggingface.co/ibm-granite/granite-4.2-3b>; Granite 4.1 3B config and official GGUF tree (CSV row):
+  <https://huggingface.co/ibm-granite/granite-4.1-3b/raw/main/config.json>,
+  <https://huggingface.co/api/models/ibm-granite/granite-4.1-3b-GGUF/tree/main>
 
 ## Appendix A: pinned files for §6
 
@@ -1326,3 +1426,61 @@ names; none were found.
   [`data/slm-candidates.csv`](data/slm-candidates.csv) now reads "best or joint-best point estimates on most step kinds" (Gemma 4 E4B
   QAT leads it on harder menus without cards; Qwen3-30B-A3B and Spark-X2.5-4B on explanations). Open question 8's answer and the
   four verdicts were re-checked against the raw records and `llama-bench` output; the other numbers match.
+
+### 2026-09-28, research corrections (OrcaSAQ-2-27B, Granite 4.2-3B thinking, the owner's answer on no-host models)
+
+Nothing was downloaded or run, and the GPU was not used. Only text files and API responses were fetched.
+
+**Added: OrcaSAQ-2-27B as a watch row** (§2.8, a TL;DR bullet, a CSV row, §5's licence table, S86–S88).
+
+- **Re-read directly [V]:** the model card at `15d20d7` and the Hugging Face API (created 2026-09-24T03:44Z, Apache-2.0, ungated,
+  base `Qwen/Qwen3.8-27B`, library `vllm`); the file tree (four shards, 12,270,435,404 B in all); `config.json` (`exl3` 1.5.1,
+  `Qwen3_5ForCausalLM`, 64 layers, 48 linear and 16 full attention, 4 KV heads × 256, 262,144 positions); `chat_template.jinja`
+  (`enable_thinking`, `reasoning_effort` default `xhigh`, `preserve_thinking`); the plugin repository through the GitHub API
+  (created 2026-09-24, licence field empty, no licence file at the root) and its README; the "Cyber-Uncensored" GGUF repository
+  through the Hugging Face API.
+- **The brief, checked against the sources:**
+  1. "3.21 bpw, 12.3 GB, Apache-2.0 per its card": confirmed. The config and the plugin's README show an EXL3 (QTIP-style trellis)
+     checkpoint, which the card calls "proprietary".
+  2. "vLLM-only with a custom kernel": confirmed for the card, which documents only vLLM with the plugin. The plugin's README adds
+     exllamav3 (with a patch) as a second CUDA path. It also says llama.cpp "is not an option for these weights", so no llama.cpp or
+     GGUF build of them exists.
+  3. "A separate community 'Cyber-Uncensored' GGUF variant": the repository is separate, but it is on the same `orcarouter`
+     account, not a community one. It quantizes an abliterated derivative (`orcarouter/Qwen3.8-27B-Uncensored`), not the base.
+     Not recommended.
+  4. "Vendor agentic benchmark claims from mixed agent stacks": confirmed. The card's own caveat is quoted in §2.8, and the card
+     gives no BF16 base score on the same benchmarks.
+- **Found beyond the brief:** the plugin repository has no licence file although its README says Apache-2.0. Its CUDA-only paths name
+  no minimum GPU. The card says the MTP head is included, while the plugin's README calls MTP "a separate download"; this doc does
+  not rely on MTP.
+- **Not verified:** any run; whether any host serves these exact weights; the vendor's agentic, perplexity and throughput figures;
+  whether stock llama.cpp loads the "Cyber-Uncensored" GGUF's tensor types.
+
+**Corrected: Granite 4.2-3B thinks by default** (doc 53 "Findings that affect sibling docs", items 2 and 3; S89).
+
+- The Granite 4.2-3B card was re-read. Thinking is on by default: the prompt ends with an open `<think>`, and
+  `enable_thinking=False` ends it with `<think></think>`. The evaluation table does not state the mode.
+- Fixed: §6.1's carry-over paragraph (a correction sentence); the shortlist JSON's Granite 4.2-3B `request_settings`, which said "no
+  thinking mode", plus a `corrections_2026_09_28` block; doc 14 (a TL;DR correction line, a §3.2 caveat, the §4.3 router row, the §6
+  T1 row and its own verification note).
+- Direct-mode results stay valid, because `run.py`'s default `--think-mode false` sends `enable_thinking=false`.
+
+**Folded from the same doc 53 list, in this doc's own files:**
+
+- **Item 7:** §1.2's role-token remark now covers Granite 4.0 and 4.1 only; 4.2 uses ChatML.
+- **Item 5:** the CSV's Granite 4.1 3B row now has context 131,072 (config), the official Q4_K_M of 2,099,501,664 B (API tree), and
+  release 2026-04-29 with the repository date kept, all re-read [V S89]. The release date is taken from doc 53 [V per doc 53].
+- **Item 4:** §5's "Apache-2.0 with a use statement" row said "Eligible". It now follows D037's Consequences: not recommended until
+  the statement's force is resolved; custom install with the statement shown.
+- **Item 8** (doc 14's Qwen3.5 thinking default) is fixed in doc 14. Items 1 (doc 14's LFM2.5 languages, which need their own
+  re-check) and 6 (Qwen3-1.7B as a candidate) are left for doc 14's next consolidation pass.
+
+**The owner's answer on models with no cloud host** (D044's amendment note of 2026-09-28). §6 gains a paragraph that quotes the
+answer and applies it to the §6.1 rows and carry-overs. The shortlist JSON's `corrections_2026_09_28.schedule_note` says the same.
+The rows, suites and rules are unchanged.
+
+**Counts.** The CSV now has 54 rows, and 42 of them are OSI-licensed and eligible under D023 decision 6 (OrcaSAQ-2-27B by licence
+only). The epistemic legend now cites S1–S89.
+
+**Hygiene:** the changed text, the CSV row and the JSON were searched for private project names, local absolute paths and user
+names; none were found.
