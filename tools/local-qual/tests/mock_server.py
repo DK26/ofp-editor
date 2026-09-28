@@ -36,8 +36,9 @@ usage without cost; "none": no usage at all), ``cost_details`` (None, the defaul
 a number: a bring-your-own-key request, ``is_byok`` true with that upstream cost in USD), ``cost_multiplier``,
 ``provider``, ``reasoning_tokens``,
 ``answer_fn``, ``key_redirect`` (a URL: ``GET /key`` answers 302 to it, to prove the client never follows a
-redirect with the key) and ``delay_s`` (seconds each chat call waits, for the concurrency test). Every request
-(path, headers, parsed body) is appended to ``state.requests``.
+redirect with the key), ``key_queue`` (scripted ``GET /key`` responses, consumed first-in first-out like ``queue``,
+with the same ``"ECHO_AUTH"`` body; the key-status failure tests) and ``delay_s`` (seconds each chat call waits,
+for the concurrency test). Every request (path, headers, parsed body) is appended to ``state.requests``.
 
 Run standalone (``python mock_server.py --port 8765``) or in-process (``start()``). Standard library only.
 """
@@ -148,6 +149,7 @@ class MockState:
         self.answer_fn = None
         self.key = {"limit": 2.0, "limit_remaining": 1.5, "usage": 0.5}
         self.key_redirect = None
+        self.key_queue = []  # scripted GET /key responses ({"status", "body", "headers"}), first in, first out
         self.delay_s = 0.0
         self.catalogue = default_catalogue()
         self.free_daily_limit = None
@@ -213,6 +215,14 @@ class Handler(BaseHTTPRequestHandler):
             STATE.requests.append({"path": self.path, "headers": dict(self.headers), "body": None})
         rel = self.path.split("/api/v1", 1)[1] if "/api/v1" in self.path else self.path
         if rel == "/key" or (rel.endswith("/key") and not rel.startswith("/models")):
+            with STATE.lock:
+                scripted = STATE.key_queue.pop(0) if STATE.key_queue else None
+            if scripted is not None:
+                out = scripted.get("body")
+                if out == "ECHO_AUTH":
+                    out = {"error": {"code": scripted.get("status", 500),
+                                     "message": "key lookup failed; you sent " + str(self.headers.get("Authorization"))}}
+                return self._send(scripted.get("status", 200), out, scripted.get("headers"))
             if STATE.key_redirect:
                 return self._send(302, {"error": {"code": 302, "message": "moved"}}, {"Location": STATE.key_redirect})
             return self._send(200, {"data": STATE.key_record()})

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """The free-only layer's second review and the Windows key scripts (cloud/*.ps1).
 
-t51, t52 and t54-t57 each encode a hole found in review (the per-minute window across runs, key redaction, a
+t51, t52, t54-t57 and t75 each encode a hole found in review (the per-minute window across runs, key redaction, a
 charge no response showed, two free runs on two ledgers, a wait across 00:00 UTC, the key variable left in
-run.py's environment). t53 and t58 run the DPAPI key scripts through PowerShell with a random dummy key
+run.py's environment, a label planted in the key record's date fields). t53 and t58 run the DPAPI key scripts through PowerShell with a random dummy key
 (dpapi_round_trip.ps1, dpapi_trace.ps1, probe_env.py); they are skipped on other systems.
 
 Every case runs run.py (or another tool script) as a child process against mock_server.py, in-process on
@@ -91,19 +91,23 @@ def t52_free_mode_redaction_of_keys_and_label():
 def t53_dpapi_key_scripts_round_trip():
     """set-openrouter-key.ps1 stores a DPAPI blob with a user-only access list; run-cloud.ps1 hands the key to one
     child process through its environment only; refusals start no child; run.py's --output alias passes through
-    ``powershell -File`` (where --out cannot, see t62); remove-openrouter-key.ps1 deletes the key.
+    ``powershell -File`` (where --out cannot, see t62); ``--key-status`` runs through the launcher without
+    ``--free-only`` and shows neither the key nor its label (test_key_status.py covers the command itself);
+    remove-openrouter-key.ps1 deletes the key.
 
     Why: the key must never be plaintext on disk, in a command line or in this session, and the launcher must work
     exactly as the runbook starts it.
 
-    How: a random dummy key only; the PowerShell side is dpapi_round_trip.ps1 (14 PASS/FAIL lines), with probe_env.py
-    standing in for run.py where the test needs to see what the child received.
+    How: a random dummy key only; the PowerShell side is dpapi_round_trip.ps1 (15 PASS/FAIL lines), with probe_env.py
+    standing in for run.py where the test needs to see what the child received. The mock's key record carries a
+    masked copy of the dummy as its label, as OpenRouter's does; it is added to the final sweep.
     """
     if os.name != "nt":
         return "skipped (not Windows)"
-    free_state()
     dummy = "sk-or-v1-" + secrets.token_hex(32)
-    SWEEP.append(dummy)
+    masked = dummy[:12] + "..." + dummy[-3:]
+    free_state(label=masked)
+    SWEEP.extend([dummy, masked])
     env = dict(os.environ, CLOUDQUAL_DUMMY_KEY=dummy, PYTHONIOENCODING="utf-8")
     for k in (ENV_NAME, "OPENROUTER_API_KEY", "LLAMA_API_KEY"):
         env.pop(k, None)
@@ -116,10 +120,11 @@ def t53_dpapi_key_scripts_round_trip():
     lines = [ln for ln in p.stdout.splitlines() if ln.startswith(("PASS ", "FAIL "))]
     fails = [ln for ln in lines if ln.startswith("FAIL ")]
     auth = [r["headers"].get("Authorization") for r in STATE.requests if r["path"].endswith("/chat/completions")]
-    check(p.returncode == 0 and len(lines) == 14 and not fails, f"exit {p.returncode}; {fails or p.stderr[-400:]}")
+    check(p.returncode == 0 and len(lines) == 15 and not fails, f"exit {p.returncode}; {fails or p.stderr[-400:]}")
+    # One chat call in all: the end-to-end run's (step 8); the key-status run (step 15) sends none.
     check(auth == [f"Bearer {dummy}"], f"the run launched by run-cloud.ps1 sent {len(auth)} calls with the stored key: "
                                        f"{[a == f'Bearer {dummy}' for a in auth]}")
-    check(dummy not in p.stdout + p.stderr, "the dummy key was printed")
+    check(dummy not in p.stdout + p.stderr and masked not in p.stdout + p.stderr, "the dummy key or its label was printed")
     return "; ".join(ln[5:].split(":", 1)[0] for ln in lines) + " all PASS; " + " | ".join(
         ln.split(": ", 1)[1] for ln in lines[:2] + lines[3:5])
 
@@ -314,6 +319,31 @@ def t58_key_scripts_under_powershell_tracing():
     return "; ".join(f"{w}: {tr} trace lines, {pc} key pieces" for w, _, tr, pc in found)
 
 
+def t75_key_record_date_fields_never_carry_the_label():
+    """A key record that puts its label into ``limit_reset`` or ``expires_at`` shows it neither on the console of a
+    free run nor in its records or ledger.
+
+    Why: free_key.key_summary keeps those two strings when they look like a date or a period, and the masked label
+    (``sk-or-v1-abc...xyz``) and a plain owner-typed label both do. The free run prints the summary at its key check
+    (unredacted) and records it in ``key_start``, so a hostile or broken record put the label on the console and a
+    plain label into the files. Found in the review of ``--key-status``, which reads the same summary.
+    """
+    plain = "owner-named-" + secrets.token_hex(4)
+    SWEEP.append(plain)
+    shown = []
+    for n, (label, reset, expires) in enumerate(((plain, plain, None), (LABEL, None, LABEL))):
+        STATE.reset()
+        free_state(label=label, limit_reset=reset, expires_at=expires)
+        o = out(f"label_fields{n}.jsonl")
+        p = run_free(free_args(f"label_fields{n}_ledger.jsonl") + ["--suite", "pick", "--k", "1", "--limit", "1",
+                                                                     "--out", o])
+        text = p.stdout + p.stderr + read_text(o) + read_text(out(f"label_fields{n}_ledger.jsonl"))
+        if p.returncode != 0 or label in text or "key check:" not in p.stdout:
+            shown.append(f"{'plain' if label == plain else 'masked'} label: exit {p.returncode}, shown {label in text}")
+    check(not shown, "; ".join(shown))
+    return "a plain label in limit_reset and the masked label in expires_at: exit 0, neither shown nor recorded"
+
+
 # ── unittest wiring ──────────────────────────────────────────────────────────
 
 class FreeReviewTests(support.CaseTestCase):
@@ -326,7 +356,8 @@ class FreeReviewTests(support.CaseTestCase):
              t55_one_free_run_at_a_time_per_account,
              t56_rate_gate_day_edge_and_whole_second_ledger_times,
              t57_key_variable_leaves_the_run_environment,
-             t58_key_scripts_under_powershell_tracing)
+             t58_key_scripts_under_powershell_tracing,
+             t75_key_record_date_fields_never_carry_the_label)
 
     def setUp(self):
         STATE.reset()

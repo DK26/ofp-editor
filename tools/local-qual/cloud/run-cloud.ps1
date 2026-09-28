@@ -11,8 +11,11 @@ unchanged; --api-key-env is added when missing.
 
 Refusals, before the key is decrypted (exit 2): a secret path inside a git working tree or the tool folder; a key
 file whose access list names anyone but the current user, or that is not a DPAPI blob; an argument containing sk-or-
-(a pasted key) or --api-key; no --free-only unless -AllowPaid is given. After decrypting: an argument containing the
-stored key.
+(a pasted key) or --api-key; no --free-only unless -AllowPaid or --key-status is given. After decrypting: an argument
+containing the stored key.
+
+--key-status (run.py reads GET /key once and prints the key's credit limit, usage and today's free-model requests)
+needs no --free-only: it sends no model request, writes no ledger, takes no lock and uses no quota.
 
 Run in-process (& .\run-cloud.ps1) it switches Set-PSDebug tracing off for the session, since trace level 2 would
 print the key; powershell -File (as in the runbook) starts a fresh session anyway.
@@ -39,6 +42,9 @@ The script to run. Default: run.py in the folder above this one.
 
 .PARAMETER AllowPaid
 Allow a run without --free-only (a paid round, which run.py caps with its own --max-usd).
+
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\run-cloud.ps1 --key-status
 
 .EXAMPLE
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\run-cloud.ps1 --backend openai --free-only --base-url https://openrouter.ai/api/v1 --model qwen/qwen3.8-27b:free --reasoning low --drop-params seed --ledger tools/local-qual/results/free-ledger.jsonl --suite pick --items PW01 --k 1
@@ -83,8 +89,12 @@ try {
             throw '--api-key is refused: the key comes from the DPAPI store through the environment; nothing was run'
         }
     }
-    if (-not $AllowPaid -and ($runArgs -notcontains '--free-only')) {
-        throw 'this launcher runs free-only rounds: add --free-only (or pass -AllowPaid for a paid round capped by run.py''s --max-usd); nothing was run'
+    # --key-status makes run.py send one GET /key and nothing else (no model request, no ledger, no lock, no quota), so
+    # it cannot spend and needs no --free-only. Exact, case-sensitive match: argparse is case-sensitive, so any other
+    # spelling is not the flag and falls under the --free-only rule.
+    $keyStatus = $runArgs -ccontains '--key-status'
+    if (-not $AllowPaid -and -not $keyStatus -and ($runArgs -notcontains '--free-only')) {
+        throw 'this launcher runs free-only rounds: add --free-only (or --key-status to check the key, or pass -AllowPaid for a paid round capped by run.py''s --max-usd); nothing was run'
     }
     $at = [Array]::IndexOf($runArgs, '--api-key-env')
     if ($at -ge 0) {

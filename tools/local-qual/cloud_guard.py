@@ -11,8 +11,11 @@ run.py owns, no billing the budget cap cannot price, no provider thinking
 switch next to ``--reasoning``, no credential), the
 ``--schema-strip`` whitelist and the strict-mode schema copy; the transport
 rules: redirects are never followed (the key would go with them), a loopback
-server is reached without a proxy, and a response body is read up to a size
-cap; and the provider-name match that checks who served a response.
+server is reached without a proxy, a response body is read up to a size
+cap, ``get_capped`` turns one GET into (status, headers, body, error)
+without raising, and ``redirect_host`` reads a refused redirect's target
+without raising; and the provider-name match that checks who served a
+response.
 
 How it fits
 -----------
@@ -23,9 +26,11 @@ schema-conformance check. Every refusal is a ValueError whose message never
 contains the key; cloud_run.py turns it into a command-line error (exit 2)
 before any request leaves the machine. Standard library only.
 """
+import http.client
 import ipaddress
 import json
 import re
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -199,6 +204,46 @@ def read_capped(stream):
     if len(raw) > MAX_BODY_BYTES:
         return "", ValueError(f"response body larger than {MAX_BODY_BYTES} bytes")
     return raw.decode("utf-8", "replace"), None
+
+
+def redirect_host(headers):
+    """The host a 3xx reply's Location header names: "" when there is none, "(unreadable)" when it cannot be parsed.
+    Never raises.
+
+    Why: urllib parses Location only on the codes it would follow (301, 302, 303, 307, 308), so on a 300 or 304 a
+    malformed value such as ``http://[x`` reaches the caller intact, and urlsplit raises ValueError on it; the caller
+    only wants a host to name in its one-line refusal. The host is the server's text: redact it before showing it.
+    """
+    try:
+        return urllib.parse.urlsplit((headers or {}).get("location") or "").hostname or ""
+    except ValueError:
+        return "(unreadable)"
+
+
+def get_capped(url_opener, url, headers, timeout):
+    """One GET that never raises: (HTTP status or None, lower-case headers, body text, exception or None).
+
+    Why: a caller that must turn every outcome into its own one-line message (key_status.py) needs the status and the
+    body of a 4xx or 5xx too, which urllib only hands over inside an HTTPError. ``url_opener`` is ``opener(base)``, so
+    a 3xx comes back as its status (never followed, the key never forwarded). Status None means no answer at all (no
+    connection, a timeout, an invalid header); a 200 whose body is over MAX_BODY_BYTES comes back as "" with a
+    ValueError. The body is untrusted text: callers redact it before showing any of it.
+    """
+    req = urllib.request.Request(url, headers=headers, method="GET")
+    try:
+        with url_opener.open(req, timeout=timeout) as resp:
+            text, too_big = read_capped(resp)
+            return resp.status, {k.lower(): v for k, v in resp.headers.items()}, text, too_big
+    except urllib.error.HTTPError as e:
+        try:
+            text, _ = read_capped(e)
+        except (OSError, http.client.HTTPException):
+            text = ""
+        return e.code, {k.lower(): v for k, v in (e.headers.items() if e.headers else [])}, text, e
+    except (urllib.error.URLError, TimeoutError, ConnectionError, OSError, http.client.HTTPException,
+            ValueError) as e:
+        # ValueError: http.client refuses an invalid header or URL (with the value in its message: redact it).
+        return None, {}, "", e
 
 
 def normalise_schema(schema, strict_objects=True, strip=()):

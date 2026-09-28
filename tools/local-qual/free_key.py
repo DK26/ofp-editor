@@ -5,7 +5,7 @@ What it owns
 ------------
 * ``key_summary``: the non-secret fields of ``GET /api/v1/key`` [K]. The record's ``label`` is a partly masked copy of
   the key and its creator, organisation and workspace ids identify the account, so none of them is kept, recorded or
-  printed.
+  printed. ``rate_limit_summary`` reads the per-key ``rate_limit`` the same way, for ``run.py --key-status``.
 * ``key_refusal`` and ``key_headroom``: which keys may run a free round (never a management key; no paid-model
   headroom above a threshold; not expired; the account's daily free-request counter and the usage figures readable).
 * ``usage_rise``: whether the key's spend moved between two readings of one run (the key poll).
@@ -25,8 +25,8 @@ Source (read 2026-09-27)
 ------------------------
 [K] https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key : ``limit``, ``limit_remaining``,
 ``limit_reset``, ``usage``, ``usage_daily``, ``byok_usage``, ``include_byok_in_limit``, ``is_free_tier``,
-``is_management_key`` (``is_provisioning_key`` is its deprecated name), ``expires_at`` and
-``free_model_daily_requests`` {used, limit, remaining} per UTC day.
+``is_management_key`` (``is_provisioning_key`` is its deprecated name), ``expires_at``,
+``free_model_daily_requests`` {used, limit, remaining} per UTC day, and ``rate_limit`` {requests, interval}.
 """
 import datetime as _dt
 import math
@@ -34,6 +34,8 @@ import re
 
 # Key-record strings kept for printing only when they look like a date or a reset period.
 _SAFE_TEXT = re.compile(r"^[A-Za-z0-9:.+\- ]{1,40}$")
+# Every OpenRouter key, and its masked label, starts with this; a kept string never contains it.
+_KEY_PREFIX = "sk-or-"
 # The all-time spend figures a key row keeps and the next start compares (``usage_daily`` resets at 00:00 UTC, so it
 # is recorded but never compared across runs).
 BASELINE_FIELDS = ("usage", "byok_usage")
@@ -51,19 +53,38 @@ def key_summary(data):
     """The non-secret fields of a GET /key ``data`` object [K].
 
     Strings are kept only when they look like what the schema says (a date, a reset period), numbers only when
-    finite; ``label`` and the account ids are dropped.
+    finite; ``label`` and the account ids are dropped. A string that holds the record's own label or ``sk-or-`` is
+    dropped too: both label shapes (the masked ``sk-or-v1-abc...xyz`` and an owner-typed name) pass the date-shaped
+    filter, and these fields are printed at the key check and written to the run's records.
     """
     d = data if isinstance(data, dict) else {}
+    label = d.get("label") if isinstance(d.get("label"), str) and d.get("label") else None
     out = {f: _num(d.get(f)) for f in ("limit", "limit_remaining", "usage", "usage_daily", "byok_usage")}
     out.update({f: d.get(f) if isinstance(d.get(f), bool) else None
                 for f in ("is_free_tier", "is_management_key", "include_byok_in_limit")})
     for f in ("limit_reset", "expires_at"):
         v = d.get(f)
-        out[f] = v if isinstance(v, str) and _SAFE_TEXT.match(v) else None
+        keep = isinstance(v, str) and _SAFE_TEXT.match(v) and _KEY_PREFIX not in v and not (label and label in v)
+        out[f] = v if keep else None
     fm = d.get("free_model_daily_requests")
     out["free_model_daily_requests"] = ({k: _count(fm.get(k)) for k in ("used", "limit", "remaining")}
                                         if isinstance(fm, dict) else None)
     return out
+
+
+def rate_limit_summary(value):
+    """A key record's per-key ``rate_limit`` object as {"requests": int or None, "interval": str or None}.
+
+    Kept apart from ``key_summary`` so the free-run records (``key_start``) keep their fields; only ``run.py
+    --key-status`` (key_status.py) shows it. ``requests`` is kept only as a whole number (a bool, a string or a float
+    is not a count); a negative count, OpenRouter's -1, is read as "no per-key limit" by the caller. The interval is
+    kept only when it looks like a period ("10s", "1h"), since it is printed.
+    """
+    rl = value if isinstance(value, dict) else {}
+    req = rl.get("requests")
+    interval = rl.get("interval")
+    return {"requests": req if isinstance(req, int) and not isinstance(req, bool) else None,
+            "interval": interval if isinstance(interval, str) and _SAFE_TEXT.match(interval) else None}
 
 
 def key_headroom(k):

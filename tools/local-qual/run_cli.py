@@ -5,7 +5,8 @@ What it owns
 ------------
 * ``build_parser``: every flag of run.py; the openai backend's flags (and free mode's) come from
   cloud_run.add_cloud_args. ``--preset`` is only declared here: run_preset.py loads the preset and turns it into the
-  other flags before the checks below read them.
+  other flags before the checks below read them. ``--key-status`` is declared here too; key_status.py runs it (and
+  nothing else) straight after parsing.
 * The checks that run before anything is sent, each refusing an impossible combination with argparse's exit 2:
   ``resolve_variant`` (--condition, --variant, --schema-mode, --why and --repair into one recorded variant),
   ``resolve_scaffold`` (--scaffold and its options), ``load_suite_file`` (a suite kept outside suites/) and
@@ -269,5 +270,12 @@ def build_parser():
                          "not with openai, where every call is paid and recorded")
     ap.add_argument("--resume", action="store_true", help="skip calls already recorded without error in --out")
     ap.add_argument("--dry-run", action="store_true", help="print the first request payload and exit")
+    ap.add_argument("--key-status", action="store_true",
+                    help="read the key's own record once (GET <base>/key; --base-url defaults to "
+                         "https://openrouter.ai/api/v1 for an OpenRouter key) and print its non-secret fields: credit "
+                         "limit, usage, free tier, management key, today's free-model requests and their UTC reset, "
+                         "the per-key rate limit, and whether --free-only would accept the key; needs --api-key-env; "
+                         "sends no model request, uses no quota, writes nothing and skips every other flag "
+                         "(key_status.py)")
     cloud_run.add_cloud_args(ap)
     return ap

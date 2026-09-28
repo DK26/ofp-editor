@@ -61,7 +61,8 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 │   │                      prompts.py; backends.py (Ollama and llama-server clients);
 │   │                      cloud_backend.py, cloud_guard.py, cloud_run.py, budget.py (OpenAI-compatible endpoints under a
 │   │                      hard budget); free_mode.py, free_key.py, rate_gate.py (--free-only: OpenRouter :free models at
-│   │                      zero spend); logprob_pick.py, logprob_dist.py (--pick-mode logprob); scaffolds.py,
+│   │                      zero spend); key_status.py (--key-status: the key record at no quota);
+│   │                      logprob_pick.py, logprob_dist.py (--pick-mode logprob); scaffolds.py,
 │   │                      scaffold_algos.py, scaffold_run.py, scaffold_stats.py, control_suite.py (reasoning scaffolds,
 │   │                      doc 59); score.py, score_checks.py, grade_open.py, uplift.py, cascade.py, cascade_numbers.py;
 │   │                      cloud/ (owner runbook, Windows DPAPI key scripts); suites/ (pick, pick-hard, fill, explain,
@@ -374,4 +375,16 @@ Not newtypes: `DiagCode` is a generated enum (`plotroom-diag`, from the DG005 re
   records under one `--label`. `--repeat-penalty` on OpenRouter now warns at the start (friction register FR-C-032). New cases:
   t63–t66 in `tests/test_cloud_review.py` and p21 in `tests/test_presets_run.py`. The "pending patch" wording of the doc 46–48
   entry above is removed, since that patch has landed.
+- No crate, module boundary of the planned workspace or newtype changed.
+
+### `tools/local-qual`: `--key-status` (2026-09-28)
+
+- `run.py --key-status` (new `key_status.py`) reads OpenRouter's `GET /key` once and prints the key's non-secret fields, at
+  no quota: no model request, no ledger, no lock. `cloud/run-cloud.ps1` accepts it without `--free-only`. The runbook
+  (`tools/local-qual/cloud/README.md`) gains step 5 for it (later steps renumbered 6–10) and an HTTP 429 section. Tests
+  t67–t73 in `tests/test_key_status.py` (t72–t73 from the review: redirect targets, record fields and `\u`-escaped
+  copies never show a secret; the limit that applies is named) and step 15 of `tests/dpapi_round_trip.ps1` (t53).
+  §2 lists the new file. The same review fixed two older paths: a 300 with an unparsable Location crashed a run
+  (`cloud_guard.redirect_host`, t74 in `tests/test_cloud_guards.py`), and a label planted in the key record's date
+  fields reached a free run's console and records (`free_key.key_summary`, t75 in `tests/test_free_mode_review.py`).
 - No crate, module boundary of the planned workspace or newtype changed.

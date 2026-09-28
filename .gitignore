@@ -13,3 +13,6 @@
 
 # Python bytecode caches (tools/*.py)
 __pycache__/
+
+# Temporary git worktrees that coding agents create for isolated changes
+/.claude/worktrees/

@@ -680,7 +680,7 @@ that report no cost, the cap is only as good as the price flags: set a spending 
 `--dry-run` with the budget flags prints the first request's worst case without sending anything. `--key-check` (OpenRouter) also reads
 `GET <base>/key` before the run, refuses unless the key has a credit limit with at most `--max-usd` +
 `--key-margin-usd` left ([limits](https://openrouter.ai/docs/api-reference/limits), read 2026-09-27), and reports the
-key's usage change after it.
+key's usage change after it. `--key-status` reads the same record alone, with no run (next section).
 
 **Reasoning.** `--reasoning` is required, so the effort is explicit and recorded on every call (`reasoning_sent`):
 `none` switches reasoning off on hybrid models, another effort (`minimal`, `low`, `medium`, `high`, `xhigh`, `max`)
@@ -784,6 +784,38 @@ beyond the paid path's: **9** the free-only guard refused or stopped the run; **
 limit ended it (resume later with `--resume`). With any key (paid runs too), `run.py` removes the `--api-key-env`
 variable from its own environment once it has read it, so no process it starts inherits the key.
 
+**Checking the key at no quota (`--key-status`, `key_status.py`).** A dry run sends nothing, not even the key check,
+and a real free run spends one of the day's requests, so this command sends only `GET <base>/key` and prints the
+key record's non-secret fields in plain words, then exits 0:
+
+```text
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\run-cloud.ps1 --key-status
+python tools/local-qual/run.py --key-status --api-key-env OPENROUTER_API_KEY [--base-url <API base>]
+```
+
+- **What it prints.** Credit limit and what is left, usage in all and today (UTC), BYOK usage, free tier and
+  management key (yes or no), the expiry, today's free-model requests (used, limit, left) with the reset at 00:00 UTC,
+  the per-key rate limit (`-1` reads as none), and whether a `--free-only` run would accept the key (`accepted`, with
+  how many requests the account still allows today after `--daily-reserve`, or `refused:` with `key_refusal`'s own
+  reason and fix). The fields are `free_key.key_summary`'s and `rate_limit_summary`'s; the `label` and account ids
+  are never read into the report. Two caveats are printed with the figures, from doc 52's re-check of 2026-09-28:
+  the daily counter can lag (it read 0 before and after an answered free call), and the per-key `rate_limit` (-1 per
+  10 s that day; the record marks it deprecated) is not what a free run meets, since the free-model limits count
+  per account.
+- **What it does not do.** No chat or completion request, no catalogue read, no ledger, record or other file, no
+  lock (it runs while a free run holds the free-run lock). It skips every other flag and names them in one note, so
+  `--key-status` can be added to any run line. `cloud/run-cloud.ps1` accepts it without `--free-only` (it cannot
+  spend) and still refuses `sk-or-` and `--api-key` in the arguments.
+- **Base URL and key.** `--base-url` defaults to `https://openrouter.ai/api/v1` only for an `sk-or-` key; another
+  provider's key needs `--base-url`, so it is never sent to OpenRouter by default. The base-URL and key checks are the
+  paid path's (`cloud_guard.py`): https, or plain http to this machine only; `--api-key` and `--dry-run` are refused.
+- **Failures** are one line on stderr that names the next step: exit 5 for 401 or 403 (store a new key with
+  `set-openrouter-key.ps1 -Force`), 404, a refused redirect or a body that is not a key record (check `--base-url`);
+  exit 10 for 429 (wait); exit 3 for 5xx or no connection (try again later). A body is shown only after every
+  `label` value, the key and anything shaped like an OpenRouter key are redacted, as one line of printable ASCII; a
+  JSON body is decoded first, so a copy written with `\u` escapes is found too, and a redirect's target host is
+  scrubbed the same way.
+
 ## Limitations
 
 - **Small n.** 30 picks × k samples gives wide confidence intervals; treat differences under ~10 points as noise
@@ -846,10 +878,11 @@ variable from its own environment once it has read it, so no process it starts i
 | `cloud_run.py` | The `openai` flags and their refusals, record fields for the endpoint and the start-of-run warnings (an unpinned OpenRouter run, `--repeat-penalty` on OpenRouter), and the per-run session: ledger and its lock (plus the per-user free-run lock), budget, key check, key readings written to the ledger, stop rows, canary (with the schema-conformance check), the key check on every stop of a free run, exit codes |
 | `budget.py` | The hard cap for paid endpoints: worst-case reservation per attempt, write-ahead ledger, settled costs, resume |
 | `free_mode.py` | `--free-only`: its flags, the free-model id rule, the live-catalogue check (exact-zero prices, text output, endpoint parameters), the per-response zero-spend check, the free-run lock's location, the start and end checks of a free run |
-| `free_key.py` | The OpenRouter key record in free mode: its non-secret fields, the refusals (management key, headroom, expiry, no daily counter), the usage-rise test, and the `key` ledger rows compared at the next start |
+| `free_key.py` | The OpenRouter key record in free mode: its non-secret fields (and the per-key rate limit), the refusals (management key, headroom, expiry, no daily counter), the usage-rise test, and the `key` ledger rows compared at the next start |
+| `key_status.py` | `--key-status`: one `GET <base>/key` and nothing else; the key record's non-secret fields in plain words with the free-only verdict, one next-step line per failure (401, 403, 404, 429, 5xx, a redirect, not a key record, no connection), bodies shown only redacted, the flags a run line carries but the command skips |
 | `rate_gate.py` | Client-side rate caps: requests per rolling minute, attempts per UTC day from the ledger, the account's remaining free requests less a reserve, the key poll hook, the 429 streak; the 429 classifier (daily, per minute, upstream) |
 | `cloud/README.md` | Owner runbook for safe free-model testing on OpenRouter |
-| `cloud/set-openrouter-key.ps1`, `cloud/run-cloud.ps1`, `cloud/remove-openrouter-key.ps1`, `cloud/secret-common.ps1` | Windows key handling: store the key DPAPI-encrypted per user with a user-only access list (hidden input, never in a git working tree), run `run.py` with the key in that one child process's environment only, delete it; the plaintext never is a cmdlet argument (module logging), tracing is switched off and parameter defaults ignored when run in-process, and only DPAPI blobs are written or read |
+| `cloud/set-openrouter-key.ps1`, `cloud/run-cloud.ps1`, `cloud/remove-openrouter-key.ps1`, `cloud/secret-common.ps1` | Windows key handling: store the key DPAPI-encrypted per user with a user-only access list (hidden input, never in a git working tree), run `run.py` with the key in that one child process's environment only (free-only rounds and `--key-status`; paid rounds with `-AllowPaid`), delete it; the plaintext never is a cmdlet argument (module logging), tracing is switched off and parameter defaults ignored when run in-process, and only DPAPI blobs are written or read |
 | `cloud/provider-zdr.json` | The tier-0 provider block for `--extra-body @...` (`zdr: true`, `data_collection: deny`) |
 | `score.py` | Scorer: summary CSV and JSON, console table, optional grading sheet; consumes open-arm grade files; `--suite-file` for suites outside `suites/` |
 | `score_checks.py` | The code checks shared by `score.py`, `uplift.py`, the repair check and the canary: the schema subset, quoted spans, Fill validators, Text constraints, names, words and sentences |
@@ -896,11 +929,12 @@ python -m unittest discover -s tools/local-qual/tests -k t59 -v                #
 | --- | --- | --- |
 | `test_cloud.py` | t03–t13, t18–t21, t59–t62 | Paid path: start refusals, the cap and `--resume`, retries and their cost, stops, key hygiene, shared ledger, key check, schema normalising, canary; the upstream-cost double count (doc 54 §4.2) and `--output` |
 | `test_cloud_grading.py` | t14–t17, t22, t23, t35, t39 | Open and labels arms and their grading, Fill schema modes, repair, `uplift.py` |
-| `test_cloud_guards.py` | t24–t34, t36, t37 | Break-in attempts found in review: redirects, smuggled keys and fields, a second process on the ledger, bodies that are not completions, errors inside a 200, cost 0 reports, ignored schemas, think blocks |
+| `test_cloud_guards.py` | t24–t34, t36, t37, t74 | Break-in attempts found in review: redirects (t74: one whose target cannot be parsed), smuggled keys and fields, a second process on the ledger, bodies that are not completions, errors inside a 200, cost 0 reports, ignored schemas, think blocks |
 | `test_cloud_review.py` | t63–t66 | Review of the merged tool: `--extra-body` fields billed at other rates, a thinking budget the worst case missed, a key JSON would escape, `--repeat-penalty` on OpenRouter |
 | `test_cloud_regression.py` | t01, t02, t38 | The local backends' request bodies and scores against the tool before the cloud backend (goldens) |
 | `test_free_mode.py` | t40–t50 | `--free-only`: refusals, catalogue traps, request shape, zero-spend guard, substitution, key rules, key poll, daily cap and day boundary, account quota, 429s, rate-gate units |
-| `test_free_mode_review.py` | t51–t58 | Second review of free mode, and the DPAPI key scripts through PowerShell |
+| `test_free_mode_review.py` | t51–t58, t75 | Second review of free mode, and the DPAPI key scripts through PowerShell (t53: 15 steps, `--key-status` through the launcher among them); t75: a label planted in the key record's date fields |
+| `test_key_status.py` | t67–t73 | `--key-status`: the report field by field, the key and label never shown (in bodies, record fields, redirect targets and `\u`-escaped copies), one next-step line per failure, refusals before sending, a run line with `--key-status` running only the key read, the limit that applies named |
 | `test_logprob_pick.py`, `test_logprob_failures.py` | l01–l19 | `--pick-mode logprob`: flags, request bodies, known distributions, response shapes, failures and hostile responses |
 | `test_logprob_cascade.py` | c01–c08 | `cascade.py` against hand-computed values, calibration, an end-to-end run, refusals |
 | `test_scaffolds.py`, `test_scaffolds_function.py`, `test_scaffolds_stats.py` | a01–a03, b01–b10, c01–c15, d01–d07 | Scaffold arms: regression, leakage and answer-blindness, what each arm computes and sends, `scaffold_stats.py` and `control_suite.py` |
@@ -1188,3 +1222,33 @@ python -m unittest discover -s tools/local-qual/tests -k t59 -v                #
   the pin was most likely dropped while the records listed it. The body is unchanged (existing command lines keep
   their bytes); the run now warns at the start with the fix (t66; friction register FR-C-032). All 149 checks pass,
   none skipped, in 329 s on Windows 10 with Python 3.12.
+- 2026-09-28, `--key-status` (`key_status.py`), offline only: the mock gained scripted `GET /key` replies, no real
+  endpoint was called, and every key was a random dummy (the launcher step used a throwaway DPAPI blob in a temp
+  folder). Written test first: t67–t71 failed before the code existed (`run.py` rejected `--key-status`; t70 could
+  not import `key_status`), and t53 failed on its new step 15 (the launcher refused `--key-status` without
+  `--free-only`); all pass now. t67 checks the report field by field and that one `GET /key` and nothing else was
+  sent; t68 that neither the key nor the record's `label` (with or without `sk-or-`) reaches the console, on success
+  or inside four hostile error bodies; t69 one next-step line per failure (401, 403, 404, 429, 500, 503, a non-JSON
+  200, a 200 without a record, a 302, a closed port) with its exit code, and an escape sequence and a bidi override
+  shown escaped; t70 ten refusals with 0 requests, and the default base URL in-process with the default pointed at the
+  mock, so a regression cannot reach openrouter.ai; t71 a free-run and a paid-run line with `--key-status` added
+  (no catalogue, chat, ledger, output file or lock; a held free-run lock untouched). Mutation check: 14 deliberate
+  faults in a copy of the tool (the three body scrubs, the default base for any key, the `--dry-run` and `--api-key`
+  refusals, 5xx as a key fault, no escaping, the label printed, the skipped-flags note, -1 read as a limit, the
+  dispatch after the suite check, and two launcher faults) are each caught. Default requests and records are
+  unchanged: a01, t01, t02 and t38 pass against their goldens. All 154 checks pass, none skipped, in 299 s on Windows
+  10 with Python 3.12.
+- 2026-09-28, adversarial review of `--key-status`, offline only (loopback mock, random dummy keys, no page or
+  endpoint of OpenRouter opened). Found and fixed, each test first (red on the code as reviewed, green now): a
+  redirect's Location host was printed unredacted, so a 302 to `<key>.example` showed the whole key (t72); a JSON
+  body writing a label or the key with `\u` escapes, or a label with quotes in error metadata, escaped the scrub
+  (t72); a 300 with an unparsable Location crashed `--key-status` (t73) and a paid or free run (t74, in `chat()`,
+  older than `--key-status`; `cloud_guard.redirect_host` serves both now); a label planted in the key record's
+  `limit_reset` or `expires_at` reached a free run's console and records (t75, `free_key.key_summary`, older too);
+  the report presented the per-key `rate_limit` ("none") and the daily counter as the limits that apply, while doc
+  52's re-check of 2026-09-28 found the counter lagging and the free-model limits count per account (t73 now wants
+  both said). Guards the first tests did not pin, each now caught by t72 or t73 when removed in a copy of the tool:
+  the record-field scrub, the verbatim key scrub of report lines (another provider's 40-character key passes the
+  date filter), the body cap, the daily-against-minute 429 wording. The runbook's "read again 2026-09-28" source
+  dates were removed: no page was re-read; the 429 texts and the two caveats now cite doc 52's observations. All
+  158 checks pass, none skipped, in 384 s on Windows 10 with Python 3.12.

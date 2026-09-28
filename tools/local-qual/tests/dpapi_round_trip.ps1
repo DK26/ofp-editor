@@ -197,6 +197,8 @@ $plainText = 'plain-dummy-' + [Guid]::NewGuid().ToString('N')
 Set-UserOnlyAcl -Path $aesFile
 Set-UserOnlyAcl -Path $plainFile
 $bad12 = @()
+# The probe touches the marker only when PROBE_MARKER is set (step 8 removed it), so "child ran" below is a real check.
+$env:PROBE_MARKER = $marker
 foreach ($f in @($aesFile, $plainFile)) {
     Clear-Probe
     $errFile = Join-Path $Work 'run-err.txt'
@@ -206,6 +208,7 @@ foreach ($f in @($aesFile, $plainFile)) {
         $bad12 += "$(Split-Path -Leaf (Split-Path -Parent $f)): exit $($proc.ExitCode), child ran: $(Test-Path -LiteralPath $marker)"
     }
 }
+Remove-Item Env:\PROBE_MARKER -ErrorAction SilentlyContinue
 Report ($bad12.Count -eq 0) 'non-dpapi-refused' ("an AES blob and a plaintext file: each exit 2, no child, the file's text not echoed" + $(if ($bad12) { '; ' + ($bad12 -join '; ') } else { '' }))
 
 # -- 13. A pasted trailing space is trimmed on the way in; the child receives the exact key --
@@ -235,6 +238,31 @@ $want14 = @('--free-only', '--output', $outFile, '--api-key-env', 'OPENROUTER_AP
 $args14 = $p14 -and ((@($p14.argv) -join '|') -ceq ($want14 -join '|'))
 Report ($proc.ExitCode -eq 0 -and $args14 -and $p14.sha256 -eq $sha) 'output-alias-through-file' "powershell -File with --output: exit $($proc.ExitCode), run.py received --output and the path intact: $args14"
 Remove-Item Env:\PROBE_OUT -ErrorAction SilentlyContinue
+
+# -- 15. --key-status through the launcher: no --free-only needed, the key record printed, nothing secret shown --
+# run.py --key-status sends one GET /key and nothing else (no model request, no ledger, no lock), so the launcher lets
+# it through without --free-only; the sk-or- and --api-key refusals still apply. The child shares the launcher's
+# console, so its output is captured by redirecting the whole powershell -File run into files (in the work folder,
+# where the Python side's final sweep also searches them for the key and the key label).
+Clear-Probe
+$ksOut = Join-Path $Work 'key-status-out.txt'
+$ksErr = Join-Path $Work 'key-status-err.txt'
+$proc = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', "`"$run`"", '-SecretPath', "`"$store`"", '-Python', "`"$Python`"", '--key-status', '--base-url', $BaseUrl) -NoNewWindow -Wait -PassThru -RedirectStandardOutput $ksOut -RedirectStandardError $ksErr
+$ksText = ''
+foreach ($f in @($ksOut, $ksErr)) { if (Test-Path -LiteralPath $f) { $ksText += [string](Get-Content -LiteralPath $f -Raw) } }
+$fields = @('credit limit:', 'usage:', 'free tier:', 'management key:', 'free-model requests today:', 'per-key rate limit:')
+$missing15 = @($fields | Where-Object { -not $ksText.Contains($_) })
+$shown15 = $ksText.Contains($dummy) -or $ksText.Contains('sk-or-')
+$env:PROBE_MARKER = $marker
+$bad15 = @()
+foreach ($a in @(@('--key-status', '--label', 'sk-or-v1-0123456789'), @('--key-status', '--api-key', 'x'))) {
+    Clear-Probe
+    & $run -SecretPath $store -Python $Python -RunPy $Probe @a
+    $c = $LASTEXITCODE
+    if ($c -ne 2 -or (Test-Path -LiteralPath $marker)) { $bad15 += "$($a -join ' '): exit $c, child ran: $(Test-Path -LiteralPath $marker)" }
+}
+Remove-Item Env:\PROBE_MARKER -ErrorAction SilentlyContinue
+Report ($proc.ExitCode -eq 0 -and $missing15.Count -eq 0 -and -not $shown15 -and $bad15.Count -eq 0) 'key-status' ("without --free-only: exit $($proc.ExitCode), missing fields [$($missing15 -join ', ')], key or sk-or- text shown: $shown15; sk-or- and --api-key still refused with no child: $($bad15.Count -eq 0)" + $(if ($bad15) { '; ' + ($bad15 -join '; ') } else { '' }))
 
 # -- 9. Remove --
 & $remove -SecretPath $store

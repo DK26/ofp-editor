@@ -22,7 +22,8 @@ budget.py) and reads its key only from the environment variable named by
 ``--api-key-env`` (cloud_run.py holds its flags and run-time guards).
 ``--free-only`` runs OpenRouter's ``:free`` models with a cap of 0, rate caps
 and a zero-spend check on every response (free_mode.py; runbook in
-cloud/README.md).
+cloud/README.md). ``--key-status`` runs nothing but one ``GET <base>/key``
+and prints what the key allows (key_status.py).
 
 How it fits
 -----------
@@ -94,6 +95,7 @@ import urllib.parse
 import uuid
 
 import cloud_run
+import key_status
 import logprob_pick
 import run_cli
 import run_preset
@@ -121,6 +123,10 @@ RESULTS_DIR = os.path.join(HERE, "results")
 def main(argv=None):
     ap = run_cli.build_parser()
     args = ap.parse_args(argv)
+    if args.key_status:
+        # Read-only: one GET <base>/key, the key record's non-secret fields printed, and the exit code (key_status.py).
+        # Nothing below runs: no suite, no preset, no model request, no ledger, no lock.
+        return key_status.run(ap, args)
     file_suite = None
     if args.suite_file is not None:
         file_suite = load_suite_file(ap, args)

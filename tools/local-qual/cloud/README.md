@@ -3,8 +3,9 @@
 This is the runbook for the account owner. It covers running the local-qual suites against OpenRouter's **free**
 model variants (ids ending in `:free`) with no way to spend money, a key that never sits in plaintext, and the free
 tier's rate limits kept on the client side. It sets up an account, a key and a Windows machine for the first round.
-All facts below were read on **2026-09-27**; OpenRouter changes its free catalogue without notice, so the tool
-re-checks them on every start.
+All facts below were read on **2026-09-27**; step 5 and the HTTP 429 section (added 2026-09-28) rest on those
+readings and on the project's own observations of 2026-09-28 (doc 52), not on a new reading of OpenRouter's pages.
+OpenRouter changes its free catalogue without notice, so the tool re-checks them on every start.
 
 Only an owner creates accounts and keys, changes settings, or pays. An agent never does, and never sees the key.
 
@@ -34,6 +35,9 @@ With `--free-only`, `run.py`:
   account's remaining free requests minus 5. Every attempt counts, 429s and errors too. A 429 naming the daily quota
   ends the run (**exit 10**) with the time to resume. A per-minute 429 waits for its reset. Three 429s in a row also
   end it (exit 10). `--resume` after 00:00 UTC continues where it stopped.
+
+Without a run, `--key-status` reads the key record alone, at no quota, and prints its credit limit, usage and today's
+free-model requests (step 5).
 
 What the tool cannot decide for you: **which providers may see the prompts.** That is an account setting (step 2).
 Only the synthetic suite items in `suites/` are ever sent: our own text, no user content, no mission files, no
@@ -111,11 +115,48 @@ profile. The key never becomes a cmdlet argument, so PowerShell module logging, 
 cannot record it. Run in-process instead (`& .\run-cloud.ps1`), the scripts switch `Set-PSDebug` tracing off for
 your session, because trace level 2 would print the key.
 
-## 5. Dry run (sends nothing)
+## 5. Check the key and today's free allowance (no quota used)
+
+```text
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\run-cloud.ps1 --key-status
+```
+
+This sends one request, `GET https://openrouter.ai/api/v1/key` with the stored key, and prints the key record's
+non-secret fields in plain words: the credit limit and what is left of it, usage in all and today, BYOK usage, free
+tier yes or no, management key yes or no, the expiry, today's free-model requests (used, limit, left) with the reset
+at 00:00 UTC, the per-key rate limit, and whether a `--free-only` run would accept the key (`refused:` names the
+fix). It sends no model request, so it spends nothing and uses none of the day's free requests. It writes no ledger
+or file and takes no lock, so it also runs while a free run is active. The record's `label` (a partly masked copy of
+the key) is never printed. Use it after step 4, before a round, or whenever a 429 elsewhere makes you wonder whether
+this setup still works.
+
+Two fields need care. The free-model count is the account's own counter, and it is not a real-time count: on
+2026-09-28 it read 0 before and after an answered free call ([doc 52](../../../docs/research/52-rate-limits-and-ux.md),
+re-check of that day), so the report says it can lag. The per-key `rate_limit` read `-1` requests per 10 s on that
+day (shown as `none`), and the record itself marks the field deprecated; it is not the limit a free run meets. The
+free-model limits count per account, so the report says so on the same line
+([HTTP 429](#http-429-which-limit-and-who-shares-it)).
+
+The launcher accepts `--key-status` without `--free-only`, because the command cannot spend; it still refuses `sk-or-`
+and `--api-key` in the arguments. Adding `--key-status` to any run line (step 6) works too: `run.py` then only reads
+the key and names the flags it skipped. Without the launcher, `python tools/local-qual/run.py --key-status
+--api-key-env OPENROUTER_API_KEY` does the same; `--base-url` defaults to OpenRouter's API for an `sk-or-` key, and
+any other key needs `--base-url`.
+
+| Exit | Meaning | What to do |
+| --- | --- | --- |
+| 0 | The report printed | Expect `credit limit: 0 USD` (step 3), `management key: no` and `free-only runs: accepted`. |
+| 2 | Refused before sending (a flag) | Read the message; it names the flag to change. |
+| 3 | No answer, or HTTP 5xx | Check the network connection; try again in a few minutes. |
+| 5 | HTTP 401 or 403 (the key is revoked, expired, deleted or mistyped, or may not read its record); HTTP 404, a redirect, or a body that is not a key record | 401 or 403: create a new key (step 3) and store it with `set-openrouter-key.ps1 -Force`. Otherwise check `--base-url`. |
+| 10 | HTTP 429 | Wait a minute and run it again; see [HTTP 429](#http-429-which-limit-and-who-shares-it). |
+
+## 6. Dry run (sends nothing)
 
 `run-cloud.ps1` decrypts the key into the environment of the one `python run.py` process it starts (variable
 `OPENROUTER_API_KEY`), never into your PowerShell session, a command line, a file or the console. It passes every
-other argument to `run.py` and adds `--api-key-env` itself. It refuses to run without `--free-only`, refuses any
+other argument to `run.py` and adds `--api-key-env` itself. It refuses to run without `--free-only` (or `--key-status`,
+step 5), refuses any
 argument containing `sk-or-` or `--api-key`, and refuses a key file readable by anyone else or holding anything but
 a DPAPI blob. Pass JSON as a file
 (`--extra-body @file.json`): quotes do not survive `powershell -File`. Name the output file with `--output` (the same
@@ -135,7 +176,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\run-c
 prints the request with `provider.require_parameters: true` and `allow_fallbacks: false`, and a worst case of
 0 USD.
 
-## 6. First run: one request
+## 7. First run: one request
 
 Drop `--dry-run` and run the same line. It uses one of the day's requests. At start the tool prints the key check
 (credit limit, usage, today's free requests), the model's canonical slug and the pinned endpoint. After the call it
@@ -150,10 +191,10 @@ free models, and whether Qwen 3.8 routes a strict schema, since it lists structu
 | 4 | HTTP 402 | A $0 key limit blocks free calls, or the balance is negative. See step 3. |
 | 5 | Configuration: the key check, 404 "no endpoints" (privacy settings, ZDR, a guardrail), a missing parameter, or another free run holds `%LOCALAPPDATA%\plotroom-dev\free-run.lock` | The message names the fix, for example `--drop-params seed` or `--schema-mode none`. Delete the lock only when no other run is active. |
 | 7 | Reasoning on an effort-none call, or the canary failed | For a model that always reasons, use `--reasoning low` and a larger `--num-predict`. |
-| 9 | **Free-only guard:** the model is not free now, a response was charged or came from another model, or the key's usage rose (during the run, or since the ledger's last reading) | Stop. Check the account's Activity page. If a charge is there, revoke the key (step 9) and start again with a new key and a new ledger. A ledger with any spend refuses further runs. If a free response named its model differently (for example without `:free`) at `usage.cost` 0, report the record: the check is deliberately strict. |
-| 10 | The day's allowance is used up, or 429s held | Run the same command with `--resume` after the time printed (00:00 UTC). |
+| 9 | **Free-only guard:** the model is not free now, a response was charged or came from another model, or the key's usage rose (during the run, or since the ledger's last reading) | Stop. Check the account's Activity page. If a charge is there, revoke the key (step 10) and start again with a new key and a new ledger. A ledger with any spend refuses further runs. If a free response named its model differently (for example without `:free`) at `usage.cost` 0, report the record: the check is deliberately strict. |
+| 10 | The day's allowance is used up, or 429s held | Run the same command with `--resume` after the time printed (00:00 UTC). [HTTP 429](#http-429-which-limit-and-who-shares-it) tells the kinds apart. |
 
-## 7. Daily routine
+## 8. Daily routine
 
 - Use **one ledger for every free run** (`--ledger tools/local-qual/results/free-ledger.jsonl`): the daily quota is
   per account, and the ledger is how runs share the count and the key's last reading. Free runs go one at a time:
@@ -173,7 +214,7 @@ Candidate models on 2026-09-27 (each has one free endpoint; the list changes wit
 | `nvidia/nemotron-3-super-120b-a12b:free` | 2 | none | Strict schema, seed; reasons by default (efforts low, medium). |
 | `liquid/lfm-2.5-2.6b:free` | 2 | `--reasoning low` | The small-model floor; reasoning is mandatory. |
 
-## 8. Reading the results
+## 9. Reading the results
 
 Records go to `--output` (default `tools/local-qual/results/...`, git-ignored) and score with `score.py` as usual. Free
 records add `free_only`, `canonical_slug`, `endpoint_tag`, `endpoint_name`, `provider_pin`, `endpoint_params`,
@@ -182,7 +223,7 @@ records add `free_only`, `canonical_slug`, `endpoint_tag`, `endpoint_name`, `pro
 `key` with each reading of the key's usage and the daily counter, `stop` with its reason) are the audit trail;
 `score.py` and `--resume` skip them.
 
-## 9. Revoking
+## 10. Revoking
 
 - In the OpenRouter dashboard, **delete the key** (Settings → API Keys). This is what makes it useless everywhere.
 - Then delete the local copy:
@@ -193,6 +234,30 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\remov
 
 - Revoke at once if the key ever showed up somewhere it should not (a screenshot, a log, a chat), or if a run ever
   ended with exit 9 and the Activity page shows a charge.
+
+## HTTP 429: which limit, and who shares it
+
+A 429 is not always about your account. The error body tells the four kinds apart (the run records keep it in
+`error`; `--key-status` shows today's counter at no quota, step 5). The texts below are OpenRouter's error messages
+as this project's own runs received them (doc 52, including its 2026-09-28 re-check) and as public bug reports quote
+them (`rate_gate.py` lists those); OpenRouter's pages do not document them, so they can change:
+
+| The error body contains | What it means | What to do |
+| --- | --- | --- |
+| `temporarily rate-limited upstream`, with `provider_name` (and, since 2026-09-28, `limit_source: upstream_provider_shared_pool`) in the error's metadata | The provider serving that free model is congested (doc 52 saw two machines on two networks refused alike). Not your fault, and not your account's limit; another machine does not help. | Route to another model, or wait and try later. The tool honours `Retry-After`; three 429s in a row end the run (exit 10). |
+| `free-models-per-min` | More than 20 free-model requests in one minute on the account. | Back off; send no parallel bursts. The tool keeps 18 a minute and one free run at a time on this Windows user, but other projects and machines on the account add to the same count. |
+| `free-models-per-day` | The account's daily cap (50 a day, or 1,000 after 10 credits were ever bought). | Wait for the reset at 00:00 UTC, then `--resume`. The tool stops at once (exit 10) and prints the time. |
+| No OpenRouter JSON at all: an HTML page "Error 1015 … You are being rate limited", or (with `Accept: application/json`) JSON with `"cloudflare_error": true`, `"error_code": 1015`, `"error_name": "rate_limited"`; `Server: cloudflare` and `CF-RAY` headers, but no `X-RateLimit-*` headers and no `provider_name` | Cloudflare, in front of OpenRouter, is rate-limiting your network's address before OpenRouter sees the request: your own bursts, or a shared ISP address, VPN or proxy. The only 429 that depends on the machine or network rather than the account. A site owner may replace Cloudflare's body with its own (any 400–499 status, JSON allowed), so the missing `X-RateLimit-*` headers and provider metadata are the dependable tell (inference). | Stop sending, wait at least `Retry-After` (30 s by default), then resume slowly: repeated tries can extend the block. A 429 on a request with no key at all (`https://openrouter.ai/api/v1/models`) confirms it; another network (a phone hotspot) should work. If it persists at low volume, send OpenRouter support the `CF-RAY` values and UTC times. |
+
+**The free limits are per account** ([limits](https://openrouter.ai/docs/api_reference/limits)): every key and every
+machine on the account shares the same per-minute and daily counts, so a burst from another project on this account
+can use up this setup's allowance, and more keys do not raise the limits. **Nothing in this setup binds the key to a
+machine or an address:** the tool sends it as a bearer token in the `Authorization` header (`cloud_backend.py`) and the
+runbook sets up no restriction, so treat the key as usable by whoever holds it (revoke it at once if it leaks, step
+10). **The stored copy is bound:** the DPAPI file decrypts only for your Windows user on this machine (step 4), so a second
+computer runs `set-openrouter-key.ps1` again. Prefer **one key per machine or project**: each key has its own credit
+limit, can be revoked alone (step 10), and reports its own usage in its key record (`--key-status`). The free limits
+stay shared across them.
 
 ## Limits of this setup
 
@@ -216,10 +281,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\remov
 
 ## Sources (read 2026-09-27)
 
-- Limits (20 requests per minute; 50 or 1,000 a day by lifetime credits; per account; 402 on a negative balance):
-  <https://openrouter.ai/docs/api_reference/limits>
-- Key record (`GET /api/v1/key`, `free_model_daily_requests`, reset at UTC midnight):
-  <https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key>
+- Limits (20 requests per minute; 50 or 1,000 a day by lifetime credits; per account, more keys do not raise them;
+  402 on a negative balance): <https://openrouter.ai/docs/api_reference/limits>
+- Key record (`GET /api/v1/key`: `limit`, `limit_remaining`, `limit_reset`, `usage`, `usage_daily`, `byok_usage`,
+  `is_free_tier`, `is_management_key`, `free_model_daily_requests` with its reset at UTC midnight, `rate_limit`, and
+  the `label`): <https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key>
+- Observed, not documented (this project's runs, [doc 52](../../../docs/research/52-rate-limits-and-ux.md) and its
+  re-check of 2026-09-28): the 429 bodies and their `limit_source`; `rate_limit` reading `-1` requests per 10 s; the
+  daily counter reading 0 before and after an answered free call.
 - Free endpoints and privacy toggles, the 404 message, ZDR, strictest setting wins (updated 2026-09-23):
   <https://openrouter.zendesk.com/hc/en-us/articles/51690904755227>
 - `openrouter/auto:free` can bill paid models: <https://openrouter.zendesk.com/hc/en-us/articles/51679572756123>
@@ -235,3 +304,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\remov
 - Live catalogue (keyless): <https://openrouter.ai/api/v1/models> and
   <https://openrouter.ai/api/v1/models/qwen/qwen3.8-27b:free/endpoints>
 - `X-RateLimit-Reset` in epoch milliseconds (third-party report): <https://github.com/BerriAI/litellm/issues/9035>
+- Cloudflare's edge 429 (read 2026-09-28): error 1015 means the site's rate-limiting rules blocked the visitor, and repeated
+  tries may extend the block (<https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-1xxx-errors/error-1015/>);
+  HTML by default, JSON with `error_code`, `error_name`, `cloudflare_error`, `ray_id` and `retry_after` when the client asks
+  for `application/json`, and 30 s `Retry-After` for 1015 (<https://developers.cloudflare.com/fundamentals/reference/error-responses/>);
+  429 is the default status of a rate-limiting rule (<https://developers.cloudflare.com/waf/rate-limiting-rules/parameters/>).

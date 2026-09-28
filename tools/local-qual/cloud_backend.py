@@ -31,7 +31,6 @@ import random
 import re
 import time
 import urllib.error
-import urllib.parse
 import urllib.request
 
 # Request hygiene lives in cloud_guard.py; check_base_url, normalise_schema, provider_matches, DROPPABLE_PARAMS and
@@ -39,7 +38,8 @@ import urllib.request
 # (--free-only: zero spend on OpenRouter's :free models) live in free_mode.py, the client-side rate caps in
 # rate_gate.py.
 from cloud_guard import (DROPPABLE_PARAMS, FORBIDDEN_EXTRA, STRIPPABLE_KEYWORDS, check_base_url,  # noqa: F401
-                         check_extra_body, check_key, normalise_schema, opener, provider_matches, read_capped)
+                         check_extra_body, check_key, get_capped, normalise_schema, opener, provider_matches,
+                         read_capped, redirect_host)
 from free_mode import NO_ROUTE_HINT, key_summary, no_route, paid_signal
 from rate_gate import classify_429
 
@@ -337,6 +337,13 @@ class OpenAICompatBackend:
             raise ValueError("unexpected /key response")
         return key_summary(d)
 
+    def key_read(self):
+        """GET <base>/key once, never raising (``run.py --key-status``, key_status.py): (HTTP status or None,
+        lower-case headers, body text, exception or None), from cloud_guard.get_capped. Unlike ``key_info`` it hands
+        back a 4xx or 5xx with its body, so the caller can name the next step; the body is untrusted and may echo the
+        key or the record's ``label``, so pass anything shown through ``redact`` first."""
+        return get_capped(self._opener, self.base + "/key", self._headers, min(self.timeout, 30.0))
+
     # ── One call ─────────────────────────────────────────────────────────────
 
     def chat(self, body, budget=None, call_id=None):
@@ -445,7 +452,7 @@ class OpenAICompatBackend:
             elif _is_redirect(status):
                 costs.append(0.0)
                 sources.append("unbilled")
-                target = urllib.parse.urlsplit(headers.get("location") or "").hostname
+                target = redirect_host(headers) or None  # never raises: a 300 keeps a malformed Location intact
                 error = (f"HTTP {status}: the endpoint redirects (to host {target!r}); redirects are never followed so "
                          f"the key is never forwarded; pass the final URL as --base-url")
                 fatal, exhausted = "config", False

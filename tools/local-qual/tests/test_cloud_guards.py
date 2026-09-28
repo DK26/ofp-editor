@@ -2,8 +2,8 @@
 """Adversarial checks of the paid path: each case encodes one break-in attempt found in review (a redirect
 that would forward the key, a key or credential smuggled into the request, two processes on one ledger, a
 stream or oversized body inside a 200, errors inside a 200, a cost reported as 0, an endpoint ignoring the
-schema, reasoning text inside the answer, a ledger named in another letter case). Each failed on the code as
-first written and passes now.
+schema, reasoning text inside the answer, a ledger named in another letter case, a redirect whose target cannot be
+parsed). Each failed on the code as first written and passes now.
 
 Every case runs run.py (or another tool script) as a child process against mock_server.py, in-process on
 127.0.0.1: nothing is spent and no real endpoint is contacted. cloud_support.py holds the dummy keys, the
@@ -36,7 +36,7 @@ def tearDownModule():
     cloud_support.finish()
 
 
-# ── Adversarial review (t24-t37) ───────────────────────────────────────────────
+# ── Adversarial review (t24-t37, t74) ──────────────────────────────────────────
 
 def t24_redirects_are_refused_and_never_forward_the_key():
     """A 3xx from the endpoint (chat or GET /key) is never followed, so the bearer key cannot reach another URL.
@@ -326,6 +326,25 @@ def t37_no_ledger_note_and_warning_free_pinned_run():
     return "note printed: the cap covers only this output file unless --ledger is given"
 
 
+def t74_unreadable_redirect_target_is_a_config_stop_not_a_crash():
+    """A 3xx whose Location cannot be parsed stops the run as a refused redirect (exit 5, unbilled), not a traceback.
+
+    Why: urllib parses Location only on the codes it would follow (301, 302, 303, 307, 308), so a 300 reaches the
+    redirect branch with a Location such as ``http://[bad`` intact, and reading its host raised ValueError out of
+    chat(): exit 1 with a traceback, the call never settled and no record naming the fix. Found in the review of
+    ``--key-status``, whose failure line reads the same header.
+    """
+    STATE.queue = [{"status": 300, "body": {"error": {"code": 300, "message": "choices"}},
+                    "headers": {"Location": "http://[bad/x"}}]
+    o = out("redirect_300.jsonl")
+    p = run_tool(base(URL) + ["--suite", "pick", "--k", "1", "--limit", "1", "--max-usd", "1", "--out", o])
+    rs = calls(rows(o)) if os.path.exists(o) else []
+    check(p.returncode == 5 and "Traceback" not in p.stderr and STATE.count() == 1,
+          f"exit {p.returncode}, {STATE.count()} calls, stderr {p.stderr[-300:]!r}")
+    check(rs and rs[0]["cost_usd"] == 0.0 and "redirect" in rs[0]["error"], f"record {rs[:1]!r}")
+    return "HTTP 300 with an unparsable Location: exit 5, 1 call, the record names the redirect, unbilled"
+
+
 # ── unittest wiring ──────────────────────────────────────────────────────────
 
 class AdversarialGuardTests(support.CaseTestCase):
@@ -343,7 +362,8 @@ class AdversarialGuardTests(support.CaseTestCase):
              t33_openrouter_schema_arm_requires_require_parameters,
              t34_think_blocks_are_stripped_before_parsing,
              t36_ledger_path_compared_case_insensitively_on_windows,
-             t37_no_ledger_note_and_warning_free_pinned_run)
+             t37_no_ledger_note_and_warning_free_pinned_run,
+             t74_unreadable_redirect_target_is_a_config_stop_not_a_crash)
 
     def setUp(self):
         STATE.reset()
