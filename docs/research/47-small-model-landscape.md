@@ -30,6 +30,11 @@ creative-text meaning. Open question 1 asks for a single name.
 
 ## TL;DR
 
+- **Measured in [doc 49](49-local-shortlist-measured.md) (2026-09-28).** Rows 1–3 and 9 of §6.1 ran on the llama.cpp b11146 Vulkan
+  sidecar. None beat doc 46's defaults with statistical support. The two MoE offload rows reached whole-record Fill pass^3 0.917 but
+  cost 6–25 s per call (warm p50) on the reference box. Qwen3-4B-2507 and Spark-X2.5-4B trailed on harder menus and Fill spans. The other rows
+  and the Bonsai probe were deferred under D044. Row status and verdicts: doc 49 §5.3. The bullets below are this doc's pre-run
+  research, unchanged.
 - **No new model is proven better than doc 44's four; a handful are better-shaped candidates.** The best new T1 candidate is
   **Qwen3-4B-Instruct-2507**: Apache-2.0, non-thinking by construction (so doc 44's "thinking on by default" trap cannot occur), 2.50 GB
   at Q4_K_M, and the highest-scoring Apache-2.0 non-thinking instruct model near 4B on the official BFCL V4 table (Live Simple 79.07,
@@ -662,7 +667,8 @@ Rules [I]:
 
 **See also (2026-09-28):** [D044](../decisions/D044-cloud-first-model-screening.md) (owner rule: a model that could run locally is
 screened in the cloud first, and tried locally only if promising) and [doc 50](50-free-llm-services-and-cloud-first-screening.md) §5
-(which rows have a same-weights host, and the proposed battery S, costs and promotion rule; the schedule is OWQ-27).
+(which rows have a same-weights host, and the proposed battery S, costs and promotion rule; the schedule is OWQ-27, answered
+2026-09-28 in D044's amendment note: the cloud backend lands after doc 49's run, and the Featherless-only rows go local directly).
 
 ### 6.1 Shortlist for the next `tools/local-qual` run
 
@@ -695,6 +701,11 @@ with about 22 blocks in RAM. Suites in order: fill, text, explain, pick-hard; th
 Priority A rows, starts with a `llama-bench` speed gate and a `--limit` sample, and takes roughly 1.5–2.5 hours per arm at the measured
 prompt speed (256 calls) [I]. The fork is unpacked into its own folder and never replaces the mainline build. Flags, pins and stop rules are in the
 shortlist JSON's `bonsai` block; the files are in Appendix A.
+
+**Measured in [doc 49](49-local-shortlist-measured.md) (2026-09-28).** Rows 1, 2, 3 and 9 (the 4B) ran, 484 calls each. The
+following were deferred under D044 and not downloaded: rows 4–8, the Spark 1.7B sibling, both carry-overs and the optional Bonsai
+probe. Doc 49 covers the per-row status and verdicts (§5.3), the §6.3 rules applied (§5.2) and the CUDA 12.4 comparison of §6.2
+item 2 (§3.3).
 
 ### 6.2 Protocol
 
@@ -761,7 +772,10 @@ shortlist JSON's `bonsai` block; the files are in Appendix A.
    Manager at all, even as bring-your-own. *Answered 2026-09-27 (OWQ-19 (a); D037): all three are "custom" only, never recommended
    (non-commercial ones labelled as such), until OSI approval or confirmed provenance.*
 7. **Reasoning-only models:** do they get any badge (for example Compose at Thorough effort), or are they excluded? [I]
-8. **Pascal and Vulkan:** how fast is MoE offload on the Vulkan build that Plotroom ships, against CUDA 12.x? [U]
+8. **Pascal and Vulkan:** how fast is MoE offload on the Vulkan build that Plotroom ships, against CUDA 12.x? [U] *Measured
+   2026-09-28 in doc 49 §3.2–§3.3 for Qwen3-30B-A3B-2507:*
+   - *Vulkan:* pp512 63–70 and tg128 4.1–5.2 tokens/s.
+   - *CUDA 12.4:* 2.4× faster prompt processing and 1.29× faster generation.
 9. **Runtime variants (§2.7):** should the Model Manager ever pin a second llama.cpp build for one model (a vendor fork as an opt-in
    "advanced runtime"), supervise a fork binary the user downloads themselves (as doc 13 §3 allows for an upstream CUDA build), or
    only accept such models through a bring-your-own server? Either way, should it refuse a GGUF whose tensor types or
@@ -1287,3 +1301,28 @@ names; none were found.
 - The "shortlist JSON" that §2.7, §6.1 and the notes above cite (its `bonsai` block holds the probe's flags, pins and stop rules)
   is committed as [`data/slm-test-shortlist.json`](data/slm-test-shortlist.json) (2026-09-27, as used for the doc 49 run; searched
   for local paths and private names before committing). Appendix A and §6.1 carry the same pins.
+
+### Owner answers to OWQ-24 to OWQ-27 (pointer, 2026-09-28)
+
+- §6's "See also" line, which named OWQ-27 as the open schedule question, now points to its answer in D044's amendment note (the
+  cloud backend lands after doc 49's run; no Featherless top-up). The plan and measurements are unchanged.
+
+### Measured in doc 49 (pointer, 2026-09-28)
+
+- **What changed.**
+  - **TL;DR:** a first bullet pointing to doc 49's results.
+  - **§6.1:** a note after the optional probe, listing which rows ran and which were deferred.
+  - **Open question 8:** doc 49's measured answer.
+  - **CSV:** the `verdict` column of [`data/slm-candidates.csv`](data/slm-candidates.csv) for the four measured rows
+    (Qwen3-4B-Instruct-2507, Qwen3-30B-A3B-Instruct-2507, Gemma 4 26B-A4B-it QAT, Spark-X2.5-4B), now starting "measured (doc 49)".
+- **What did not change.** This doc's research, fit scores, tables and §6.3 rules are unchanged; doc 49 §5.2 applies the rules. The
+  unmeasured rows keep their verdicts.
+- **Sources.** Doc 49 §1.2, §2, §3, §5.2 and §5.3 and its data file `data/local-shortlist-results.csv`, read after they were
+  written.
+
+### Doc 49 review (2026-09-28)
+
+- The TL;DR pointer's "6–25 s per call" now says "(warm p50)", and the Gemma 4 26B-A4B verdict in
+  [`data/slm-candidates.csv`](data/slm-candidates.csv) now reads "best or joint-best point estimates on most step kinds" (Gemma 4 E4B
+  QAT leads it on harder menus without cards; Qwen3-30B-A3B and Spark-X2.5-4B on explanations). Open question 8's answer and the
+  four verdicts were re-checked against the raw records and `llama-bench` output; the other numbers match.
