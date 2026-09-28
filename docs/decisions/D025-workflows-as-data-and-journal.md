@@ -58,3 +58,23 @@ External agents may list and start workflows over the v1 MCP server, but decisio
 `workflow.decide` ships after v1 (OWQ-15 (a); D036 item 6). Cross-publisher chains are allowed only in first-party and
 user-authored workflows, and a third-party pack workflow whose `requires` names another publisher's plugin is refused at load
 time (OWQ-16 = DG014 option B; D043). The header gained pointers; nothing above changed.
+
+### 2026-09-28: decision 1 refined by D051 (plans as data, after v1)
+
+A note under lifecycle item 5; [D051](D051-capability-ladder-freedom-by-qualification.md) governs, and the header is unchanged (no
+open part to mark). Doc 63 §8.7's option B was adopted under the owner's go-ahead of 2026-09-28 (lightly edited): "Tiny models with
+no cloud availability should be tested directly on PC. Either way, except for GPG signing, we can do everything else." Recommended
+option adopted under the owner's go-ahead; overrule on return.
+
+- **After v1**, decision 1 reads: "the model may propose a definition as data; only a user's save makes it runnable" (doc 63 §8.7).
+  The `planner` role (D051 item 9), bound to a setup with an FR8 grant, may propose a `PlanDraft` built only from registered units,
+  reached only when no workflow fits (`Dispatch::NotSupported`); the definition compiler checks it in dry-run mode; it runs only
+  after the user saves it as their own workflow, through the ordinary loader, with a click that carries `UserIntent` (in Auto too).
+  A plan that is not saved never runs.
+- **Unchanged:** Wilco has no tool that creates, saves or edits a definition; chat never redefines a workflow; a `PlanDraft` adds no
+  step kind, so decision 2's closed set of twelve kinds stands; its `when` may test only workflow inputs, `ask` answers and outputs
+  of `code` steps computed from trusted state, so untrusted text cannot change which units run; runs keep decisions 3–7.
+- **In v1** decision 1 applies as first written.
+- **Still open:** the `PlanDraft` format, its checks and where saved plans live
+  ([DG042](../design-gap-requests/DG042-plan-draft-format-and-saved-plans.md)); a bounded "repeat until" step, which would amend
+  decision 2 if adopted ([DG040](../design-gap-requests/DG040-bounded-repeat-until-step.md)).

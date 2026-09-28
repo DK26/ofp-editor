@@ -19,7 +19,8 @@ do the provider-terms entries (OWQ-24, OWQ-26).*
 
 OWQ-01 to OWQ-23 were answered by the owner on 2026-09-27; the "Answered" column gives the answer and the record that states the
 rule (the dated Answer line under each entry is authoritative). OWQ-24 to OWQ-27, added on 2026-09-28, were answered by the owner the
-same day.
+same day. OWQ-28, added on 2026-09-28 from doc 58's draft, was answered the same day under the owner's go-ahead (its recommended
+option; the owner may overrule it on return). OWQ-29 is open: its source gives no recommendation, so the go-ahead did not answer it.
 
 | ID | Question | Recommended (proposal) | Source | Answered (owner; 2026-09-27 unless marked) |
 | --- | --- | --- | --- | --- |
@@ -50,6 +51,8 @@ same day.
 | OWQ-25 | Aggregators (OpenRouter, the HF router) as first-class providers | Yes, with pinned routes, zero data retention and no data collection by default, and the serving host shown per call | doc 48 OQ10, §7.4; doc 50 §4 | 2026-09-28: (a) with the safeguards; downstream hosts filed as [DG039](../design-gap-requests/DG039-downstream-hosts-behind-aggregators.md) → [D046](D046-aggregators-as-first-class-providers.md) |
 | OWQ-26 | Testing models, and using services, whose policies ban military uses or violent content | Synthetic tests allowed, never recommended or preset; the NVIDIA trial and Z.ai not used at all | doc 48 OQ9; doc 50 §2.3; D037 | 2026-09-28: (a); the NVIDIA trial and Z.ai not used; no combat-flavoured items to hosts with violent-content clauses → [D047](D047-military-use-policy-models-and-services.md) |
 | OWQ-27 | Spend and schedule for cloud screening (D044) | Buy 10 OpenRouter credits once, screening key limited to $1 (about $0.22 used); land the cloud backend now | D044; doc 50 §5 | 2026-09-28: (b); the cloud backend lands after doc 49's run; round 1 stays deferred → [D044](D044-cloud-first-model-screening.md)'s amendment note (a one-off spend decision, no record of its own) |
+| OWQ-28 | Training small task models on Plotroom's own data | No training in v1; revisit a narrow post-v1 spike after doc 58's experiments E3 and E4 | doc 58 §7, Appendix A; doc 53 OQ6; D027 item 6; D048 | 2026-09-28, owner's go-ahead: (a) for v1, (b) revisited after E3 and E4 → [D027](D027-knowledge-stack.md)'s amendment note (overrule on return) |
+| OWQ-29 | Trial counts and spend for the larger freedom levels | None given (doc 63 has placeholders only) | doc 63 §4.3, §12, OQ4; D051 | Open |
 
 ## Legal and licensing
 
@@ -463,6 +466,47 @@ same day.
   tool's hard cap on every run; the cloud backend lands in `tools/local-qual` once the doc 49 run releases it. Round 1 stays deferred.
   Purchase and key: *not yet done* (owner action).
 
+## Models and the harness (added 2026-09-28)
+
+### OWQ-28: Training small task models on Plotroom's own data
+
+- **Question.** D027 item 6 ("No fine-tuning now") and D048 decision 3 ("Adapt the harness, do not train the model") rule out training.
+  Doc 58 finds that off-the-shelf components and the session model cover most touchpoints, but leaves gaps that a small trained model
+  could close: Russian span extraction, one-token Picks on sub-1B CPU models, and possibly a format adapter. May Plotroom train small,
+  non-generative task models or adapters on its own data after v1, and under which rules?
+- **Source.** Doc 58 §7, §3.4 and Appendix A (the draft of this entry); doc 53 OQ6; D027 item 6; D048 decision 3; D037; DG017.
+- **Options.** (a) **No training** (status quo): presets (D048), zero-shot scoring, kNN over qualified examples and code-computed
+  candidates only. (b) **A post-v1 spike, narrowly:** non-generative heads, extractors or LoRA format adapters on an OSI base of about
+  1B parameters or less; trained only on data Plotroom's own generators produce and code labels, with a provenance record per item;
+  training data and scripts published; shipped as separate pinned downloads, never in the installer; recommended only after
+  qualification against the untrained baseline (doc 58 §4.9); re-trained and re-qualified per base-model release. Generative
+  fine-tuning stays out. (c) **Training allowed broadly,** including generative models such as an SQS/SQF completion model.
+- **Recommended.** (a) for v1, and revisit (b) after experiments E3 and E4 show where the untrained components fall short. (c) is not
+  recommended: the redistributable script corpus is small, the public dialect is mostly the later games', and every base release
+  would need re-training.
+- **Costs to weigh.** Data creation and labelling; per-base and per-profile re-training; re-qualifying every dependent stage; one more
+  pinned artifact per component; the licence position of any cloud-generated training text [U, per provider]; whether trained weights
+  bring GPL source obligations for data and scripts [U, legal review].
+- **Blocks.** Nothing in v1. After v1: a Russian-capable extractor (doc 58 E3) and sub-1B Pick adapters (doc 53 OQ6).
+- **Answer (owner's go-ahead, 2026-09-28).** The go-ahead, in the owner's words (lightly edited): "Tiny models with no cloud
+  availability should be tested directly on PC. Either way, except for GPG signing, we can do everything else." Recommended option
+  adopted under the owner's go-ahead; overrule on return: (a) for v1, no training; (b) revisited after doc 58's experiments E3 and
+  E4; (c) not adopted. Recorded as [D027](D027-knowledge-stack.md)'s amendment note (item 6 kept; D048 decision 3 unchanged).
+
+### OWQ-29: Trial counts and spend for the larger freedom levels
+
+- **Question.** How many consecutive all-pass trials must a setup show to be granted each freedom level of
+  [D051](D051-capability-ladder-freedom-by-qualification.md) (item 4), and how much may be spent on the cloud drafts that FR6–FR8
+  qualification needs?
+- **Source.** Doc 63 §4.3, §4.5, §12 (cost note) and OQ4; D051; doc 21 §12.3 (14 consecutive passes support 80% at 95% confidence,
+  29 support 90%, 59 support 95%); OWQ-27 (a one-off spend decision of the same kind).
+- **Options.** Doc 63 proposes placeholder counts: n ≥ 14 at FR1–FR4, n ≥ 29 at FR5–FR6, and n ≥ 29 per scenario class at FR7–FR8
+  plus an end-to-end run with validity 100% and no clobbered human edits. For the spend it gives no option or estimate: "the spend is
+  an owner decision like OWQ-27's, not assumed here".
+- **Recommended.** None: doc 63 gives placeholders only, so the go-ahead of 2026-09-28 did not answer this question. Until it is
+  answered, the counts stay open parts of D051 and nothing is spent on FR6–FR8 qualification.
+- **Blocks.** Grant bars above doc 21 §12.3's existing qualification; any FR6–FR8 qualification run.
+
 ## Verification notes
 
 ### Consolidation pass (2026-09-27)
@@ -520,3 +564,21 @@ same day.
 - Still to do, tracked in the records' **Open parts**: the preset list and the providers' written answers (D045); DG039 (D046);
   the per-item and per-host flags (D047); OWQ-24's "Also asked" items (18+ wording, a Hugging Face OAuth app); the OpenRouter
   purchase and screening key (owner action, not yet done).
+
+### Owner go-ahead (2026-09-28)
+
+- The owner wrote on 2026-09-28 (lightly edited): "Tiny models with no cloud availability should be tested
+  directly on PC. Either way, except for GPG signing, we can do everything else." It was read as: proceed on every pending item with
+  its document's recommended option, record each one as decided by this go-ahead, and list them so that the owner can overrule any
+  of them on return; where a document gives no recommendation, file an owner question instead.
+- OWQ-28 was filed from doc 58 Appendix A with the draft's text (only the "(proposed)" label and the Appendix pointer changed) and
+  answered with its recommended option under the go-ahead; the Answer line says so. OWQ-29 was filed from doc 63 OQ4, which gives no
+  recommendation, and is open.
+- Records made under the same go-ahead, which are not owner questions here: [D050](D050-rate-limit-ux-standard-and-router.md)
+  (doc 52's UX standard and router), [D051](D051-capability-ladder-freedom-by-qualification.md) (doc 63's capability ladder), and
+  D044's second amendment note (the owner's answer on models with no cloud host). The full list is in the decisions README,
+  "Records of 2026-09-28 (owner go-ahead)".
+- Verification of the fold (2026-09-28): OWQ-28's options were reflowed into one paragraph, as the other entries write them; no
+  wording changed. The owner-level design-gap requests filed the same day, DG050 (doc 53 OQ2), DG052 (doc 58 OQ2), DG057 (doc 58
+  OQ3) and DG041's reviewer role, have no owner question yet (nor has DG039); filing them here is a follow-up, not done in this
+  step.

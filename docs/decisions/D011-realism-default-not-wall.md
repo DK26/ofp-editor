@@ -46,3 +46,9 @@ The realism levels are named by the design round in the names table the owner re
 item 3); doc 39 §5.1's Cinematic, Grounded and Doctrinal are the starting candidates. Generated moral-choice suggestions follow a
 short boundary list written in Standing Orders, and the user's own content is never filtered (OWQ-22 (a); D041). The header gained
 pointers; nothing above changed.
+
+### 2026-09-28: refined by D052 (pointer)
+
+A script region the user sets to Strict is gated like compiled code: a contract error stops Preview or export unless the user
+explicitly takes a visible exception ("Preview once without strict checks", or "Downgrade this region to Advisory" at export), so the
+user's explicit intent still wins and nothing is refused outright (D052). Levels stay the user's choice; nothing above changed.

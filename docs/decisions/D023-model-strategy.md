@@ -73,3 +73,23 @@ README; doc 02 TL;DR; doc 14 (TL;DR, §1, §6–§9); doc 16 (TL;DR, §4–§5);
 
 The header's **Open parts** points OWQ-19 to D037, the note above names D037 where it had a placeholder, and the provisional defaults
 now state doc 46's per-step results and its Google-file condition instead of a blanket "spike-checked". No decision changed.
+
+### 2026-09-28: decision 3 read with route lists (D050) and the capability ladder (D051)
+
+A note under lifecycle item 5: decision 3 stands as written, and the header is unchanged (no open part to mark). Both records were
+adopted under the owner's go-ahead of 2026-09-28 (lightly edited): "Tiny models with no cloud availability should be tested
+directly on PC. Either way, except for GPG signing, we can do everything else." Recommended option adopted under the owner's
+go-ahead; overrule on return.
+
+- **Route lists ([D050](D050-rate-limit-ux-standard-and-router.md) item 3; doc 52 OQ2).** A role may bind, per step kind, to an
+  ordered route list of setups that the user wrote or accepted, shown on the plan card with its cost. On a limit outcome (upstream
+  throttling, a spent allowance, a removed free model) the router may move a call to a later entry without a click per move. This is
+  the form in which doc 52's recommendation was adopted, so that it keeps decision 3:
+  - the list is the user's own visible choice, made before the run, so a move along it is a user choice and not a silent switch;
+  - every move is recorded and shown with its reason in the run panel, the decision inspector and the run report;
+  - the router never moves a call because a step failed its checks: a failed step is still split into smaller ones;
+  - it never reaches a setup outside the list, and uses the paid backstop only when the user enabled it with a hard cap.
+- **The ladder ([D051](D051-capability-ladder-freedom-by-qualification.md) item 6).** A step's level only goes down mid-run; a
+  larger step or a stronger model is a priced button, as decision 3 says.
+- **Not decided here:** escalation from a tiny model to another model on low confidence (doc 53 OQ2) is not a limit outcome and
+  stays open, filed as [DG050](../design-gap-requests/DG050-second-stage-escalation-on-low-confidence.md) (owner).

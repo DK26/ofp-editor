@@ -3,9 +3,10 @@
 > **Status:** accepted (the rule) · **Decided by:** owner (direction of 2026-09-27) · **Decided:** 2026-09-27 · **Recorded:** 2026-09-28
 > **Scope:** the order in which candidate models are evaluated before a local trial. Qualification and badges are unchanged (D022
 > item 4, D037). **Related:** D008, D021, D022, D023, D026, D037.
-> **Open parts:** the protocol below (proposal, doc 50 §5); how the rule applies to doc 49's rows already under way; OWQ-26 (models and
-> services whose policies ban military uses; answered 2026-09-28 → D047); OWQ-27 (spend and schedule, including when the cloud backend
-> of `tools/local-qual` lands; answered 2026-09-28 → the amendment note).
+> **Open parts:** the protocol below (proposal, doc 50 §5; P5 for models with no cloud host answered 2026-09-28 → the second
+> amendment note); how the rule applies to doc 49's rows already under way; OWQ-26 (models and services whose policies ban military
+> uses; answered 2026-09-28 → D047); OWQ-27 (spend and schedule, including when the cloud backend of `tools/local-qual` lands;
+> answered 2026-09-28 → the first amendment note).
 
 ## Context
 
@@ -93,3 +94,24 @@ here rather than as a record of its own.
   patch (`tools/local-qual/cloud/README.md`).
 - **Badges.** "A cloud result is never shown to users as a badge" covers screens. D045's per-step-kind qualification of a free cloud
   setup is that setup's own qualification (D022 item 4), not a screen of a local candidate.
+
+### 2026-09-28: models with no cloud host are tested directly on the PC (owner answer and go-ahead)
+
+A note under lifecycle item 5: it fills in P5 for models that no host serves and reverses nothing; the rule above stands, and the
+header's **Open parts** gained a pointer. It answers the question doc 53 put in §4.10 and its OQ1 (a proposed reading of P5).
+
+- **The owner's answer (2026-09-28, lightly edited):** "Tiny models with no cloud availability should be tested directly on PC.
+  Either way, except for GPG signing, we can do everything else."
+- **Settled by the answer.** A tiny model (about 2B parameters or less; a Q8_0 file of about 2 GB or less) with no same-weights
+  host skips the cloud screen and is tested directly on the owner's PC. For such models P5 is now the owner's rule, not a proposal.
+  Wherever a same-weights host exists, the model is still screened in the cloud first.
+- **Adopted under the go-ahead (doc 53 §4.10's recommended reading). Recommended option adopted under the owner's go-ahead;
+  overrule on return.** The other models with no same-weights host that P5 lists go local directly as well. Encoders, rerankers,
+  decision models and adapters (LoRA files pinned to one base file), which no host serves as the same file, are tested locally; the
+  letter-probability arms count as local by nature, because hosted fp8 or bf16 copies do not test the local Q8 or Q4 file and most
+  hosts return no log-probabilities. Tiny-model and helper screens run on the CPU (`-dev none`), never at the same time as a timed
+  job.
+- **Not covered.** Doc 53's stage S7 model, Granite 4.2-3B, has a same-weights host (DeepInfra through the Hugging Face router), so
+  the rule applies: doc 53 §4.10 option (a), a no-schema cloud screen first, unless the owner rules on return that S7 is local by
+  nature (option (b)). How the rule applies to doc 49's rows still under way stays open. Doc 53 is a draft; its pointer to this note
+  is a folding step.

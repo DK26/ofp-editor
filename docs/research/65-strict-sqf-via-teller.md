@@ -871,7 +871,7 @@ Crates follow crate-map (`plotroom-teller`, `plotroom-lower`, `plotroom-commands
   the engine can run"; if Strict applies to model output, both would read "a superset of what admission accepts for that origin" (§5.4).
 - **Doc 24 §5.2 L4 and F10**: nothing changes; §4.5 only states that the "fully checked" badge counts L4 sinks and F10 config
   expressions like raw unless they pass Strict. §4.4 item 6 follows doc 24 §5.3 rule 2 (no AI-proposed dynamic code).
-- **D011 and validation-and-lints §1 principle 2 and §3**: only SG1 options (a) and (b) would need an owner ruling; option (c) needs
+- **D011 and validation-and-lints §1 principle 2 and §3** (SG1 decided 2026-09-28 → D052: option (b), refined with a "Preview once" exception and an export-time downgrade): only SG1 options (a) and (b) would need an owner ruling; option (c) needs
   none.
 
 ## Sources
@@ -1068,3 +1068,7 @@ and "opt-in, never a wall" rules, and hygiene. Doc 64 is still not in `docs/rese
   private names); game and expansion names appear only nominatively.
 - **Not re-read:** the 724-slot type scan; the wiki data counts; the Dart and Elm readings; the second feedback-loop paper
   (arXiv 2508.00422); CloudAPIBench's body; every [M-local] number (owner-local, not reproducible here).
+
+### 2026-09-28, SG1 decided
+
+- SG1 (what a contract error in a user's Strict region does) is decided in D052 under the owner's delegation: option (b), with a one-run "Preview once without strict checks" exception at Preview and a visible, recorded "Downgrade this region to Advisory" at export; model and tool output get no exception.

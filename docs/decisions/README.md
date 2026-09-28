@@ -21,10 +21,13 @@ decision into it, or file a DG if the contradiction is real.
 | --- | --- | --- |
 | **owner** | Product scope, user-facing names, security and network boundaries, licensing and legal matters, public outreach (as in the DG README) | `accepted` |
 | **owner (`AGENTS.md`)** | Invariants the owner wrote into `AGENTS.md`; the record is a summary with consequences | `accepted` (invariant) |
+| **owner (go-ahead)** | Pending items the owner authorised in one message, each taking its document's recommended option without the owner reviewing each one (the go-ahead of 2026-09-28) | `accepted`; the record quotes the go-ahead and says "recommended option adopted under the owner's go-ahead; overrule on return" |
 | **research** | A research doc's recommendation adopted as the working baseline for implementation | `baseline` |
 
 A `baseline` record names what evidence would reopen it (**Revisit if:** a failed spike, benchmark or probe). Changing a baseline
-needs that evidence or an owner decision; changing an `accepted` record needs the owner.
+needs that evidence or an owner decision; changing an `accepted` record needs the owner. A go-ahead never covers an item whose
+document gives no recommendation: that item becomes an owner question. When the owner overrules a go-ahead decision, the overrule
+is a new record that supersedes it (lifecycle item 4), or a refinement (item 5) when it only narrows the decision.
 
 ## Lifecycle
 
@@ -60,7 +63,7 @@ needs that evidence or an owner decision; changing an `accepted` record needs th
 | A DG is decided and the decision sets a durable, project-level rule | The DG's "Decision record" section records the choice; a `Dnnn` states the rule going forward and cites the DG (DG013 → D024, DG028 → D008, DG033 items 3–4 → D029, DG002 → D034, DG029 → D035, DG030 → D038, DG014 → D043) |
 | A DG is decided and the answer is a local detail (a name, a threshold, one doc's wording) | The DG alone records it; no `Dnnn` is needed |
 | A DG is still open | Records that depend on it list it under **Open parts**; dependent work stays `proposal-only` or `blocked on DGnnn` |
-| An owner question is answered | The answer is dated in `OWNER-QUESTIONS.md`; it becomes a new `Dnnn` or a DG decision as above, and the Summary table's "Answered" column names the record (the answers of 2026-09-27 became D031–D043; those of 2026-09-28 became D045–D047 and D044's amendment note) |
+| An owner question is answered | The answer is dated in `OWNER-QUESTIONS.md`; it becomes a new `Dnnn` or a DG decision as above, and the Summary table's "Answered" column names the record (the answers of 2026-09-27 became D031–D043; those of 2026-09-28 became D045–D047 and D044's amendment note; OWQ-28, answered under the owner's go-ahead of 2026-09-28, became D027's amendment note) |
 
 ## Numbering and labels
 
@@ -74,7 +77,8 @@ needs that evidence or an owner decision; changing an `accepted` record needs th
 ```markdown
 # Dnnn: <title>
 
-> **Status:** accepted | baseline · **Decided by:** owner | owner (`AGENTS.md`) | research (doc NN) · **Decided:** <date>
+> **Status:** accepted | baseline · **Decided by:** owner | owner (`AGENTS.md`) | owner (go-ahead of <date>) | research (doc NN)
+> · **Decided:** <date>
 > **Recorded:** <date> · **Scope:** <what it governs> · **Refines:** <Dnnn, or omit> · **Related:** <Dnnn, …>
 > **Open parts:** <DGnnn, OWQ-nn, or none> · **Revisit if:** <baseline records only>
 
@@ -111,11 +115,11 @@ needs that evidence or an owner decision; changing an `accepted` record needs th
 | [D020](D020-templating-minijinja.md) | Templating with minijinja | owner | accepted | 2026-09-27 | 22 §2.1; 31 |
 | [D021](D021-provider-layer.md) | Provider layer: own the seam, rent the wires | research | baseline | 2026-09-26 | 12; 14 §7 |
 | [D022](D022-local-inference-and-model-manager.md) | Local inference path and the Model Manager; the managed `llama-server` sidecar is the primary runtime (amendment note, 2026-09-27) | owner, research | accepted (the runtime path was a baseline until the owner's 2026-09-27 amendment) | 2026-09-27 | 13; 14; 46; 47 |
-| [D023](D023-model-strategy.md) | Model strategy: no bundled weights, bring your own model, qualified local tiers | owner, research | accepted | 2026-09-26 | 14; 16 |
+| [D023](D023-model-strategy.md) | Model strategy: no bundled weights, bring your own model, qualified local tiers; decision 3 read with D050's route lists and D051's ladder (amendment note, 2026-09-28) | owner, research | accepted | 2026-09-26 | 14; 16 |
 | [D024](D024-effort-autonomy-role-binding.md) | Effort, autonomy and role binding are three separate dials | owner (DG013), research | accepted | 2026-09-27 | DG013; 21 §7 |
-| [D025](D025-workflows-as-data-and-journal.md) | Workflows are typed data; runs keep a decision journal | research | baseline | 2026-09-27 | 38 |
+| [D025](D025-workflows-as-data-and-journal.md) | Workflows are typed data; runs keep a decision journal; after v1 a model may propose a definition as data that runs only once the user saves it (D051; amendment note, 2026-09-28) | research | baseline | 2026-09-27 | 38 |
 | [D026](D026-token-economy.md) | Saving users' API costs is a usability requirement | owner, research | accepted | 2026-09-27 | 40 |
-| [D027](D027-knowledge-stack.md) | Knowledge stack: deterministic actions, Teller facts, a small primer | research | baseline | 2026-09-27 | 30 |
+| [D027](D027-knowledge-stack.md) | Knowledge stack: deterministic actions, Teller facts, a small primer; no training in v1 (OWQ-28, amendment note, 2026-09-28) | research; owner (OWQ-28 under the go-ahead of 2026-09-28) | baseline (item 6 accepted for v1) | 2026-09-27 | 30; 58 §7 |
 | [D028](D028-standing-orders-and-drill.md) | Standing Orders and Drill | owner | accepted | 2026-09-27 | 33 |
 | [D029](D029-easy-advanced-and-labels.md) | Keep the Easy/Advanced switch and the original labels | owner (DG033) | accepted | 2026-09-27 | DG033; 33 |
 | [D030](D030-mod-handling.md) | Mods: first-class mod sets; integrate, never host | research, owner (DG028) | baseline | 2026-09-27 | 27; 42 |
@@ -132,12 +136,15 @@ needs that evidence or an owner decision; changing an `accepted` record needs th
 | [D041](D041-moral-choice-suggestion-boundaries.md) | A short boundary list, in Standing Orders, for generated moral-choice suggestions; user content never filtered | owner (OWQ-22) | accepted | 2026-09-27 | 28 FP48, OQ8 |
 | [D042](D042-strategic-layer-commander-and-triage.md) | Strategic layer: commander design a campaign setting (plot armour default); triage disclosed in the debrief | owner (OWQ-23) | accepted | 2026-09-27 | 29 OQ5–OQ6; 36 cv07 |
 | [D043](D043-cross-plugin-chaining-in-workflows.md) | Cross-plugin chains only in first-party and user-authored workflows, with the egress card every time; never exposed externally | owner (OWQ-16 = DG014 B) | accepted | 2026-09-27 | DG014; 22 §3; 38 |
-| [D044](D044-cloud-first-model-screening.md) | Cloud-first screening: a local candidate is first tested on a hosted copy of its weights and tried locally only if promising; the protocol is a proposal; spend and schedule (OWQ-27) in its amendment note (2026-09-28) | owner (direction of 2026-09-27; OWQ-27 b) | accepted | 2026-09-27 | 50 §5; 47 §6; 48 §6.0 |
+| [D044](D044-cloud-first-model-screening.md) | Cloud-first screening: a local candidate is first tested on a hosted copy of its weights and tried locally only if promising; the protocol is a proposal; spend and schedule (OWQ-27) in its amendment note (2026-09-28); models with no cloud host tested directly on the PC (second note, 2026-09-28) | owner (direction of 2026-09-27; OWQ-27 b; answer and go-ahead of 2026-09-28) | accepted | 2026-09-27 | 50 §5; 47 §6; 48 §6.0; 53 §4.10 |
 | [D045](D045-free-model-offer-policy.md) | Free models: "connect a free model" presets on the user's own account (OpenRouter PKCE first); no Plotroom key, proxy or keyless default; offered only where terms allow and qualified per step kind, dated and re-qualified, with a clean fallback; preset list fixed at release | owner (OWQ-24 b; direction of 2026-09-27) | accepted | 2026-09-28 | 50 §1–§4, §6; 48 §7.4 |
 | [D046](D046-aggregators-as-first-class-providers.md) | Aggregators are first-class providers: pinned route, ZDR and no data collection by default, serving host shown per call, per-key host allow-list, re-probes; DG039 open | owner (OWQ-25 a) | accepted | 2026-09-28 | 48 §2.5–§2.6, §7.1, §7.4, OQ10; 50 §4 |
 | [D047](D047-military-use-policy-models-and-services.md) | Models and services whose policies ban military uses or violent content: synthetic tests only, never recommended or preset; the NVIDIA trial and Z.ai not used; no combat-flavoured items to hosts with violent-content clauses | owner (OWQ-26 a) | accepted | 2026-09-28 | 48 OQ9, O3; 50 §2.3, §5.9 |
-| [D049](D049-friction-review.md) | Friction review in every design and implementation change, for people, models and contributors: remove before explaining, measure, record in `docs/friction/`; invariants stay | owner (direction of 2026-09-28) | accepted | 2026-09-28 | AGENTS.md |
 | [D048](D048-per-model-harness-presets.md) | Per-model harness presets: the harness adapts to each model per step kind (how Wilco asks, never what code owns); no fine-tuning; tuned on a tuning split, accepted on held-out; bound to model file, runtime and template; badges per preset and step kind; visible and overridable; a general fallback preset | owner (direction of 2026-09-28) | accepted | 2026-09-28 | 44, 46, 49, 51, 53, 55 |
+| [D049](D049-friction-review.md) | Friction review in every design and implementation change, for people, models and contributors: remove before explaining, measure, record in `docs/friction/`; invariants stay | owner (direction of 2026-09-28) | accepted | 2026-09-28 | AGENTS.md |
+| [D050](D050-rate-limit-ux-standard-and-router.md) | Rate-limited operation meets UX1–UX9 (limit waits p90 ≤ 2 s, a card after 10 s, a labelled default at 60 s, a light session and a mission build within a day's free allowances, ≥ 99% answered, nothing silent); a quota-aware router over user-authored route lists that moves only on limit outcomes, each move shown; the free flow leads to two or more providers plus local; opt-in capped paid backstop; resume after a reset only if ticked | owner (go-ahead of 2026-09-28; doc 52's recommended options) | accepted | 2026-09-28 | 52 §4–§6 |
+| [D051](D051-capability-ladder-freedom-by-qualification.md) | Knowledge lives in the harness; models earn freedom by qualification: levels FR0–FR8, effective level = min(product ceiling, qualified level, effort ceiling, per-role cap); push always, pull by grant from FR5; down automatically, up only by the user; the floor holds at every level; after v1, a planner may propose a workflow as data that runs only once the user saves it | owner (direction of 2026-09-28; go-ahead of 2026-09-28 for doc 63 §14 and §8.7 B) | accepted | 2026-09-28 | 63 §2–§8, §14 |
+| [D052](D052-strict-script-regions-gate.md) | Strict script regions: a user region set to Strict reaches Preview or export with a contract error only by an explicit, visible exception ("Preview once" at Preview; "Downgrade this region to Advisory" at export); no exception for model or tool output (doc 65 SG1 option (b), refined) | owner delegation ("Figure out the best option for this use case", 2026-09-28) | accepted | 2026-09-28 | 65 §4.3–§4.5, §4.10 |
 
 ### Records refined on 2026-09-27
 
@@ -166,8 +173,44 @@ Each earlier record above carries the pointers in its header's **Open parts** an
 | D021 | D045, D046 | Free-model presets as provider data (OWQ-24); aggregators as first-class providers with safeguards (OWQ-25, doc 48 OQ10) |
 | D037 | D047 (D045 related) | Whether Plotroom's own evaluations may test models whose policies ban military uses (doc 48 OQ9 = OWQ-26); the same principle for services and presets |
 | D044 | D047 and D044's amendment note | OWQ-26; OWQ-27's spend and schedule |
+| D044 | D044's second amendment note | P5 for models with no cloud host: tested directly on the PC (the owner's answer and go-ahead) |
+| D023 | D050, D051 (and D023's amendment note) | Route lists move a call only on limit outcomes, each move shown; the ladder only goes down mid-run; decision 3 stands |
+| D025 | D051 (and D025's amendment note) | Decision 1 after v1: a model may propose a definition as data; only a user's save makes it runnable |
+| D027 | D051 and OWQ-28 (D027's amendment note) | Item 2: lookups from FR5 by grant; item 6: no training in v1, a narrow spike revisited after doc 58's E3 and E4 |
+| D024, D026 | D050 | A role binds to a route list per step kind (D024 item 4); quota counted like money, `QuotaLimited` (D026 item 2) |
+| D024, D037, D045, D048 | D051 | The level in effort's shape ceiling and a `planner` role after v1 (D024 items 1, 4); badges and free-model offers per level (D037, D045 item 4); a preset never raises a level (D048 item 2) |
+| D011 | D052 (and D011's amendment note) | What a contract error in a script region the user set to Strict does: a gate with an explicit, visible exception; none for model or tool output |
 
 D021 and D037 had no open part to mark, so each carries only a dated note at its end; D044's header **Open parts** gained pointers.
+For the go-ahead refinements, D023 and D025 carry dated notes, D027 a dated note and a status pointer, and D044 a header pointer and
+its second note; D011 carries a dated note for D052; the pointer notes on D024, D026, D037, D045 and D048 are a folding step not
+done yet.
+
+### Records of 2026-09-28 (owner go-ahead)
+
+On 2026-09-28 the owner wrote (lightly edited): "Tiny models with no cloud availability should be tested directly on PC. Either way,
+except for GPG signing, we can do everything else." Each item below took its document's recommended option under that go-ahead and
+says so; the owner may overrule any of them on return ("Kinds of decision and who decides").
+
+| Item | Where recorded | What was adopted | Source |
+| --- | --- | --- | --- |
+| Cloud-first rule for models with no cloud host | D044's second amendment note | The owner's answer: tiny models with no same-weights host are tested directly on the PC; under the go-ahead, doc 53's reading for encoders, rerankers, decision models, adapters and letter-probability arms (local, on the CPU); Granite 4.2-3B (doc 53 S7) is hosted, so the rule applies | 53 §4.10, OQ1 |
+| UX standard for rate-limited operation | D050 item 1 | UX1–UX9 as doc 52 §4 proposes | 52 OQ1 |
+| Route lists | D050 item 3; D023's note | In the visible, user-authored form: moves on limit outcomes only, each recorded and shown; a failed step still splits | 52 OQ2, RG1 |
+| Release free setup | D050 item 2 | Two or more free providers plus local; one provider is a taster; the providers stay D045 item 7's release list | 52 OQ3 |
+| Paid backstop | D050 item 5 | Opt-in on the user's own credits, hard daily cap, two hosts; never a default | 52 OQ4, RG8 |
+| Resume after a reset | D050 item 6 | Automatic only if ticked on the plan card for that run | 52 OQ10 |
+| Router design | D050 items 4 and 7 | Doc 52 §5.1–§5.2 and §5.4; type names and numbers are starting values | 52 §5 |
+| Capability ladder | D051 items 1–8 | Doc 63 §14's draft record | 63 §14 |
+| Plans as data | D051 item 9; D025's note | Doc 63 §8.7 option B, after v1; runs only after the user saves it; a `planner` role behind an FR8 grant | 63 OQ1–OQ3 |
+| Training task models | OWQ-28; D027's note | (a) no training in v1; (b) revisited after doc 58's E3 and E4 | 58 Appendix A |
+| Type-driven guidance for coding agents | `AGENTS.md` ("Error Design"; "Type Safety": lead paragraph, typestate in storage, witness and guard types, provenance names; "Diagnostics as Guidance"; "Negative Compile Tests"; "LLM / Agent Use Rules"); this row is its dated record, since `AGENTS.md` carries no dates | Doc 62 §8's proposed amendment in full (OQ1: "in full"), with duplicates merged into existing rules and doc 62 §5.5 item 2 added (a new guard API's misuse cases first). OQ1 lists "in full, in part, or after §9.1's results" without preferring one; §8 is the doc's proposal, so the owner may narrow it on return, and §9.1's evaluation may trim it | 62 §8, §5.5, OQ1 |
+
+Not answered under the go-ahead, because their documents give no recommendation: OWQ-29 (trial counts and spend for the larger
+freedom levels, doc 63 OQ4). Left open by these records: doc 52 OQ5–OQ9 and OQ11, doc 53 OQ2 (cross-model escalation, filed as
+DG050, owner), doc 63 OQ6–OQ10 (OQ5 is answered by `AGENTS.md`'s "Negative Compile Tests"). The design-gap candidates of docs
+51–63 were filed the same day as open requests DG043–DG058 where no record decides them, beside the dynamic-workflow requests
+DG040–DG042; none is decided by the go-ahead (design-gap README, "Go-ahead pass (2026-09-28)").
 
 ## Integration items this folder owns
 
@@ -268,3 +311,43 @@ These proposals from later research docs, aimed at earlier designs, are owned he
   §6's "See also" (OWQ-27 answered). Each doc's verification notes say so.
 - Relative links in this folder, `docs/design-gap-requests/` and docs 48 and 50 resolve (179 checked). `docs/README.md` still lists
   D001–D043, DG001–DG038 and OWQ-01–OWQ-23; updating it is left to the change that maintains that file.
+
+### Owner go-ahead (2026-09-28)
+
+- Written from the owner's go-ahead of 2026-09-28 (quoted in "Records of 2026-09-28 (owner go-ahead)") and from docs 52 (§4–§6, open
+  questions), 53 (§4.3, §4.10, OQ1, OQ2, OQ6), 58 (§7, open questions, Appendix A) and 63 (§2–§8, §10, §13, §14, open questions),
+  with D009, D023–D027, D044, D045 and D048 re-read the same day. Only recommended options were adopted; none was invented.
+- Form of each answer (lifecycle item 5): doc 52's answers add rules of their own, so they are a new record, D050; doc 63's draft
+  record became D051, which refines D025 decision 1 after v1 (doc 63 §8.7 option B); the no-cloud-host answer fills in D044's P5,
+  and OWQ-28 (a) keeps D027 item 6, so both are amendment notes.
+- Doc 52's route-list recommendation (OQ2) was adopted only in the form that keeps D023 decision 3: the list is written or accepted
+  by the user and shown before the run; the router moves along it only on limit outcomes, never because a step failed its checks;
+  every move is recorded and shown. D023's note says so.
+- Deliberate departures from the drafts: D051 names D009 under **Related**, not **Refines** as doc 63 §14 did, because D009 restates
+  an `AGENTS.md` invariant that a record may not widen or narrow ("Precedence"); D051 adds doc 63's answers to OQ2 (no "run once,
+  don't keep") and OQ3 (a `planner` role behind an FR8 grant), both the doc's recommendations. OWQ-28 keeps doc 58's draft text.
+- OWQ-29 was filed because doc 63 OQ4 gives no recommendation; it is open. Doc 53 S7 (Granite 4.2-3B) was not ruled on: it has a
+  same-weights host, so D044's rule applies as doc 53 §4.10 says, unless the owner rules otherwise on return.
+- Folding steps not done here: pointer notes on D024, D026, D037, D045 and D048; pointers in docs 38 (§4.6), 52, 53, 58 and 63 and in
+  `docs/README.md`; D049's friction lines are in D050's and D051's Consequences. No design-gap request was filed (doc 52 RG1–RG9,
+  doc 63 §13 candidates 1–12 stay listed in their docs). No git action, account, key or purchase.
+- The D048 and D049 index rows were put back in numeric order (a table-order fix; no text changed).
+
+### Verification of the go-ahead fold (2026-09-28)
+
+- Checked `AGENTS.md`, D023, D025, D027, D044, D050, D051, `OWNER-QUESTIONS.md`, the design-gap index (DG040–DG058) and docs 14 and
+  47 against each other and against docs 52, 53, 62 and 63. Every go-ahead item quotes the owner and says it may be overruled; D023
+  decision 3's "never silently moved" holds in D050 and D051. No decision changed.
+- Pointers added for requests filed the same day, after the records were written: D050's open parts (DG049, DG050, DG051), D051's
+  (DG042, DG044, DG053, DG054, DG055), D023's note (DG050), D025's note (DG042, DG040) and "Records of 2026-09-28" above, which no
+  longer says that no request was filed. D051 and that list now leave doc 63 OQ5 out, since `AGENTS.md`'s "Negative Compile Tests"
+  answers it.
+- Clarifications from the sources: D050 item 5 says an enabled paid backstop is the route list's last entry (doc 52 §5.2's
+  `RouteList`), so item 3's "never outside the list" and D023's note agree; D025's note names the `planner` role bound to a setup
+  with an FR8 grant, as D051 item 9 does; D027's status says item 6 was accepted under the go-ahead; the template lists "owner
+  (go-ahead)"; OWQ-28's options follow the other entries' one-paragraph form.
+- Added: the `AGENTS.md` type-guidance amendment (doc 62 §8) as a row of "Records of 2026-09-28", its only dated record, with the
+  caveat that doc 62 OQ1 prefers no option.
+- Relative links in `docs/` and `AGENTS.md` resolve (980 checked after these edits, anchors included). A hygiene search of the
+  fold's files found no private names, local paths or user names. D050 (87 lines) and D051 (75) exceed the "about 60 lines" guide,
+  as D045 (71) does; they were left whole.
