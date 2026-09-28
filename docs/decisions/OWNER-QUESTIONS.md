@@ -48,7 +48,7 @@ option; the owner may overrule it on return). OWQ-29 is open: its source gives n
 | OWQ-22 | Boundaries for generated moral choices | A documented list for suggestions only; user intent still wins | doc 28 OQ8; D011 | (a) → [D041](D041-moral-choice-suggestion-boundaries.md) |
 | OWQ-23 | Strategic layer: commander design, triage transparency | A campaign setting, plot armour by default; disclose triage in the debrief | doc 29 OQ5–6 | Commander (c), triage (a); to be reconfirmed after the first balance-lab runs → [D042](D042-strategic-layer-commander-and-triage.md) |
 | OWQ-24 | Which free LLM service, if any, Plotroom offers or preconfigures, and how | One-click "connect a free model" on the user's own account (OpenRouter PKCE first); no Plotroom key or proxy; the preset list fixed after a legal review and the providers' written answers | Owner direction 2026-09-27; doc 50 §1–§4 | 2026-09-28: (b); only free models whose terms allow the offer and that pass qualification for a step kind are offered for it, dated and re-qualified → [D045](D045-free-model-offer-policy.md) |
-| OWQ-25 | Aggregators (OpenRouter, the HF router) as first-class providers | Yes, with pinned routes, zero data retention and no data collection by default, and the serving host shown per call | doc 48 OQ10, §7.4; doc 50 §4 | 2026-09-28: (a) with the safeguards; downstream hosts filed as [DG039](../design-gap-requests/DG039-downstream-hosts-behind-aggregators.md) → [D046](D046-aggregators-as-first-class-providers.md) |
+| OWQ-25 | Aggregators (OpenRouter, the HF router) as first-class providers | Yes, with pinned routes, zero data retention and no data collection by default, and the serving host shown per call | doc 48 OQ10, §7.4; doc 50 §4 | 2026-09-28: (a) with the safeguards; downstream hosts filed as [DG039](../design-gap-requests/DG039-downstream-hosts-behind-aggregators.md) → [D046](D046-aggregators-as-first-class-providers.md); DG039 decided 2026-09-28 under the owner's delegation → [D053](D053-aggregator-downstream-hosts.md) |
 | OWQ-26 | Testing models, and using services, whose policies ban military uses or violent content | Synthetic tests allowed, never recommended or preset; the NVIDIA trial and Z.ai not used at all | doc 48 OQ9; doc 50 §2.3; D037 | 2026-09-28: (a); the NVIDIA trial and Z.ai not used; no combat-flavoured items to hosts with violent-content clauses → [D047](D047-military-use-policy-models-and-services.md) |
 | OWQ-27 | Spend and schedule for cloud screening (D044) | Buy 10 OpenRouter credits once, screening key limited to $1 (about $0.22 used); land the cloud backend now | D044; doc 50 §5 | 2026-09-28: (b); the cloud backend lands after doc 49's run; round 1 stays deferred → [D044](D044-cloud-first-model-screening.md)'s amendment note (a one-off spend decision, no record of its own) |
 | OWQ-28 | Training small task models on Plotroom's own data | No training in v1; revisit a narrow post-v1 spike after doc 58's experiments E3 and E4 | doc 58 §7, Appendix A; doc 53 OQ6; D027 item 6; D048 | 2026-09-28, owner's go-ahead: (a) for v1, (b) revisited after E3 and E4 → [D027](D027-knowledge-stack.md)'s amendment note (overrule on return) |
@@ -559,11 +559,12 @@ option; the owner may overrule it on return). OWQ-29 is open: its source gives n
   a new record rather than a D037 note, because it adds rules for tests and services that D037's scope does not cover). OWQ-27 is a
   one-off spend and schedule decision, recorded as [D044](D044-cloud-first-model-screening.md)'s amendment note.
 - The design-gap request OWQ-25's answer asked for is
-  [DG039](../design-gap-requests/DG039-downstream-hosts-behind-aggregators.md) (open, owner). OWQ-27's schedule differs from its
-  recommendation: the cloud backend lands after doc 49's run, not before its remaining rows.
-- Still to do, tracked in the records' **Open parts**: the preset list and the providers' written answers (D045); DG039 (D046);
-  the per-item and per-host flags (D047); OWQ-24's "Also asked" items (18+ wording, a Hugging Face OAuth app); the OpenRouter
-  purchase and screening key (owner action, not yet done).
+  [DG039](../design-gap-requests/DG039-downstream-hosts-behind-aggregators.md) (open, owner; decided later the same day under the
+  owner's delegation → [D053](D053-aggregator-downstream-hosts.md)). OWQ-27's schedule differs from its recommendation: the cloud
+  backend lands after doc 49's run, not before its remaining rows.
+- Still to do, tracked in the records' **Open parts**: the preset list and the providers' written answers (D045); DG039 (D046;
+  decided later the same day → D053); the per-item and per-host flags (D047); OWQ-24's "Also asked" items (18+ wording, a Hugging
+  Face OAuth app); the OpenRouter purchase and screening key (owner action, not yet done).
 
 ### Owner go-ahead (2026-09-28)
 
@@ -582,3 +583,13 @@ option; the owner may overrule it on return). OWQ-29 is open: its source gives n
   wording changed. The owner-level design-gap requests filed the same day, DG050 (doc 53 OQ2), DG052 (doc 58 OQ2), DG057 (doc 58
   OQ3) and DG041's reviewer role, have no owner question yet (nor has DG039); filing them here is a follow-up, not done in this
   step.
+
+### Owner delegation, design-gap pass (2026-09-28)
+
+- The follow-up above is no longer needed. Under the owner's delegation of 2026-09-28 (quoted in the decisions README, "Records of
+  2026-09-28 (owner delegation, design-gap pass)"), the five owner-level requests were decided without owner questions:
+  DG039 → [D053](D053-aggregator-downstream-hosts.md), DG041's reviewer role → [D054](D054-review-stage-for-creative-steps.md), DG050
+  (doc 53 OQ2; doc 58 OQ4) → [D055](D055-visible-second-stage-when-unsure.md), DG052 (doc 58 OQ2; doc 53 OQ3) →
+  [D056](D056-encoder-inference-out-of-process.md) and DG057 (doc 58 OQ3) → [D057](D057-bindable-badged-switchable-components.md).
+  The owner may overrule any of them on return. OWQ-25's Summary row gained a pointer to D053, and the note on OWQ-24 to OWQ-27
+  above gained the same pointer where it called DG039 open; no Answer line changed.

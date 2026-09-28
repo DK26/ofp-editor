@@ -1,6 +1,8 @@
 # DG039: Downstream hosts behind an aggregator: what "the model provider the user configured" covers
 
-> Design-gap request (`AGENTS.md`, "Design Authority"). Filed 2026-09-28 with the owner's answer to OWQ-25 (D046). Status: **open**.
+> Design-gap request (`AGENTS.md`, "Design Authority"). Filed 2026-09-28 with the owner's answer to OWQ-25 (D046). Status: **decided**
+> (owner's delegation, 2026-09-28): option B → D053. The configured provider is the aggregator plus the hosts the user accepted; a
+> response from any other host, or with no served host reported, is flagged, never admitted, and pauses the setup. Not yet folded.
 > **Decision by: owner** (network boundary: which parties the user's content may reach, and possibly `AGENTS.md`'s wording). Blocks:
 > the meaning of D046's per-key host allow-list and what the connect card and a setup must name beyond the pinned route's host, which
 > every option below names (doc 50 §4 steps 1 and 5–7); these stay `proposal-only` until decided. D046's other safeguards (pinned
@@ -63,7 +65,16 @@ content is part of the decision.
 
 ## Decision record
 
-Open.
+- **Decided 2026-09-28 under the owner's delegation: option B → [D053](../decisions/D053-aggregator-downstream-hosts.md).** The
+  configured provider is the aggregator together with the hosts of the setup's pinned route and the user's per-key allow-list, named
+  on the connect card before any call; adding a host is a user action with a new card; a response served by any other host, or with
+  no served host reported, is flagged in the run panel, never admitted, and pauses the setup until the user decides. The same rule
+  covers D045's presets and the Hugging Face router. The owner may overrule it on return.
+- **Reason.** B gives D046's allow-list a meaning and keeps the glass box (D010); doc 54's round 1 found every one of 3,494 answered
+  OpenRouter calls served by the pinned host, so the strict rule costs little. C is not adopted now: B fits `AGENTS.md`'s wording read
+  as covering the hosts shown and accepted at setup, which D008's note records; the owner may still choose C. D contradicts D046.
+- **Folding (what moves this request to `folded`).** Doc 50 §4 steps 1 and 5–7; doc 48 §7.1, §7.4 item 2 and OQ2 (pointers). The
+  notes on D008, D021, D045 and D046 and the pointers in D045's, D046's and D050's **Open parts** are done (2026-09-28).
 
 ## Verification notes
 
@@ -76,3 +87,9 @@ Open.
   reading; the Answer line is silent on that reading, so the bullet now says so. The header's "Blocks" now leaves out the serving
   host of the pinned route, which every option names and D045's card already shows. The quotes from docs 48 and 50 were checked
   against their sources; no option or recommendation changed.
+
+### Owner delegation, design-gap pass (2026-09-28)
+
+- Decided with the recommended option B under the owner's delegation of 2026-09-28 (quoted in D053). D053 was written from this
+  request, D008, D021, D045, D046, doc 48 (§2.6, §7.1, §7.4, OQ2), doc 50 §4 and doc 54 (TL;DR, §2.6, verification notes "Calls"),
+  re-read on 2026-09-28. The header, the decision record and the index row were updated; docs 48 and 50 were not edited.

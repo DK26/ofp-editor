@@ -89,3 +89,14 @@ since the three plain endpoints above were enough; the sidecar records file name
 The header's status and **Open parts** gained pointers (runtime path → this note; OWQ-19 → D037), the note above names D037 where it
 had a placeholder, and its doc 46 figures now carry doc 46's own qualifiers. No decision changed. Consequences line 2 ("proposal;
 OWQ-19") is settled by D037 decision 2.
+
+### 2026-09-28: refined by D056 (encoders stay out of process)
+
+A note under lifecycle item 5; [D056](D056-encoder-inference-out-of-process.md) governs (DG052), decided under the owner's delegation;
+the owner may overrule it on return. Item 2's out-of-process rule, and the architecture's "embedded inference always out of process"
+resolution, cover encoder components too: no encoder runs its model inside the editor process. For now, encoders are only the
+rerankers and embedders the pinned sidecar serves; a helper process with a telemetry-free, reproducible ONNX Runtime build (doc 58
+tier H) is admitted for other encoders only if spike S-ENC meets doc 58's evidence bar, recorded as a note on D056; until then encoder
+arms are offline research only (doc 53 §4.9). The Alternatives' reasons against `ort` and candle were about generative engines (doc
+58 finding 3); D056 states the encoder case. Item 1(3), the in-process generative backend, is not decided by D056. The header has no
+open part to mark; nothing above changed.

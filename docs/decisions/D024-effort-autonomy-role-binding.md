@@ -47,3 +47,23 @@ Docs 25 §5.2 and 14 §8 let effort decide how often the user is consulted; doc 
 ## Sources
 
 DG013; doc 21 (§7.1–§7.3); doc 25 §5.2; doc 14 §8; doc 38 (§3.1, §5.2, §5.4, §8.1, OQ12).
+
+## Amendment notes
+
+### 2026-09-28: item 4 refined by D054, D055 and D057 (pointers)
+
+A note under lifecycle item 5; each record governs its part. All three were decided under the owner's delegation, and the owner may
+overrule them on return.
+
+- **A `reviewer` role → [D054](D054-review-stage-for-creative-steps.md)** (DG041 option B). It joins the closed role list, as D051
+  item 9 added `planner`: bound by the user, never to the setup that wrote the candidates, used only by the advisory review stage at
+  Thorough or Max, and it never admits, rejects, edits or repairs. Being advisory, it leaves item 1's checks unchanged.
+- **A second stage per role → [D055](D055-visible-second-stage-when-unsure.md)** (DG050 option B). A role may bind a user-authored
+  second stage that answers only when the first stage's calibrated margin is below the pair's threshold, for a pair that passed doc
+  53's R6 bar; it is shown and priced on the plan card and recorded per step with the stage and margin.
+- **Component bindings → [D057](D057-bindable-badged-switchable-components.md)** (DG057 option B). Component kinds (doc 58 §1.2) are
+  bindable beside the roles, each with a badge, a plan-card line, an "answered by" line and a kill switch that returns the code-owned
+  fallback.
+
+Item 4's rule that a step never runs on a setup other than the one shown holds for all three. The header has no open part to mark;
+nothing above changed.

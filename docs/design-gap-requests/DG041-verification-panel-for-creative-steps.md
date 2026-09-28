@@ -2,7 +2,8 @@
 
 > Design-gap request (`AGENTS.md`, "Design Authority"). Filed 2026-09-28 under the owner's go-ahead of 2026-09-28 ("Either way,
 > except for GPG Signing, we can do everything else"), as one of three dynamic-workflow additions discussed with the owner (DG040,
-> DG041, DG042). Status: **open**.
+> DG041, DG042). Status: **decided** (owner's delegation, 2026-09-28): option B → D054. An advisory review stage inside `sample`, off
+> by default, only at Thorough or Max with a user-bound `reviewer` setup that is never the writer's own. Not yet folded.
 > **Decision by: technical** (design round); **owner** for adding a reviewer role to D024 item 4's closed role list, as D051 item 9
 > did for `planner`. Blocks: any model review of creative candidates beyond doc 25 §7.3's optional advisory judge; doc 38 §3.3's
 > `rank` keeps its unspecified "optional advisory judge" until decided.
@@ -70,7 +71,14 @@ Doc 25 (§2.5, §7.3); doc 38 (§3.3, §5.2, §5.3); doc 21 §1.4; doc 56 §9; d
 
 ## Decision record
 
-Open.
+- **Decided 2026-09-28 under the owner's delegation: option B → [D054](../decisions/D054-review-stage-for-creative-steps.md).** A
+  review stage inside `sample` with all five rules of the recommended resolution above; a `reviewer` role joins D024 item 4's closed
+  list (the owner-level part), bound by the user and never the writer's own setup; off by default. Which milestone implements it is
+  the roadmap's call, not v1 scope by this decision. The owner may overrule it on return.
+- **Reason.** Advisory by construction, so effort may enable it without changing the checks (D024 item 1) and it is never a default
+  cost (D026). C amends D025 decision 2 for what B does inside `sample`; D contradicts doc 25 §2.5 and §7.2.
+- **Folding (what moves this request to `folded`).** Doc 25 §7.3 item 3; doc 38 §3.3 (`review` key), §5.2 and §5.3. The notes on
+  D024, D025 and D026 are done (2026-09-28).
 
 ## Verification notes
 
@@ -79,3 +87,9 @@ Open.
 - Filed from the owner's dynamic-workflow additions, as the go-ahead of 2026-09-28 allowed. Doc 25 (§2.5, §7.2, §7.3), doc 38 §3.3,
   doc 21 §1.4, doc 56 §9, doc 59 §2.7, D024, D026, D051 and doc 63 §4.2 were re-read on 2026-09-28.
 - No research doc proposes a panel. Options B–D are this request's reading of the doctrine above; nothing here is decided.
+
+### Owner delegation, design-gap pass (2026-09-28)
+
+- Decided with the recommended option B under the owner's delegation of 2026-09-28 (quoted in D054), which also covers the reviewer
+  role that the header names as the owner's part. D054 was written from this request, doc 25 (§2.5, §7.2, §7.3), doc 38 §3.3, doc 56
+  §9, D024, D025, D026 and D051 item 9, re-read on 2026-09-28. Docs 25 and 38 were not edited.

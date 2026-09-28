@@ -1,7 +1,8 @@
 # DG057: Bindings, badges and kill switches for non-generative components
 
 > Design-gap request (`AGENTS.md`, "Design Authority"). Filed 2026-09-28 in the go-ahead pass (design-gap candidates of docs 51–63).
-> Status: **open**.
+> Status: **decided** (owner's delegation, 2026-09-28): option B → D057. Component kinds are bindable beside D024's roles, each with a
+> badge, a plan-card line, an "answered by" line and a kill switch. Not yet folded.
 > **Decision by: owner** (D024 item 4's closed role list; doc 58 OQ3). Blocks: every doc 58 component in the product; the "answered
 > by" display and component badges stay `proposal-only`.
 
@@ -49,10 +50,25 @@ D023; D024; D037; D051; doc 55 (knob table); doc 58 (§1.2, §4.9–§4.11, OQ3)
 
 ## Decision record
 
-Open. Owner-level: needs an owner question (doc 58 OQ3 asks it).
+- **Decided 2026-09-28 under the owner's delegation: option B → [D057](../decisions/D057-bindable-badged-switchable-components.md).**
+  Component kinds become bindable beside D024's roles, each with a badge per component kind (D037), a plan-card line, an "answered by"
+  line in the inspector and a kill switch that returns the code-owned fallback with the same accepted result class; qualification
+  suites per component kind; a harness preset never names a component (C rejected). No owner question was filed; the owner may
+  overrule it on return.
+- **Reason.** The glass box and user choice work for components as for models (D010, D024 item 4); A leaves the user unable to see
+  which artifact serves a seam before a run; C conflicts with doc 55's knob table (D023 decision 3).
+- **Related decisions of the same day.** DG052 → D056 (the encoder runtime); DG050 → D055 (escalation between generative stages).
+- **Folding (what moves this request to `folded`).** Doc 58 §1.2 and §4.9; the plan card and inspector (doc 38 §5.2–§5.3); Settings →
+  Models (doc 63 §7). The notes on D024 and D037 are done (2026-09-28).
 
 ## Verification notes
 
 ### Filing (2026-09-28)
 
 - Filed from doc 58 §4.11 items 1 and 5, re-read on 2026-09-28 with doc 58 §1.2 and OQ3, D024 and D051.
+
+### Owner delegation, design-gap pass (2026-09-28)
+
+- Decided with the recommended option B under the owner's delegation of 2026-09-28 (quoted in D057), without an owner question. D057
+  was written from this request, doc 58 (§1.2, §4.9–§4.11, OQ3), D023, D024, D037, D048 and D051, re-read on 2026-09-28. Doc 58
+  gained only an answered-marker at OQ3.

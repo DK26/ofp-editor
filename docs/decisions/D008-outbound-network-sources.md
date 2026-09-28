@@ -58,3 +58,12 @@ The owner or a named maintainer asks each channel, and non-objection is a writte
 days after an acknowledging reply (OWQ-12 = DG029 option A; D035 item 4); the Community catalog connector still waits for those
 answers. The directory is refreshed at each release, plus the opt-in connector's live refresh, and no third-party metadata enters
 the registry (DG030 item 2; D038 item 2). The header gained pointers; nothing above changed.
+
+### 2026-09-28: item 1 read for aggregators by D053 (pointer)
+
+A note under lifecycle item 5; [D053](D053-aggregator-downstream-hosts.md) governs (DG039 option B), decided under the owner's
+delegation; the owner may overrule it on return. For an aggregator, "the model provider the user configured" (item 1; `AGENTS.md`)
+is read as the aggregator together with the hosts shown and accepted at setup: the hosts of the setup's pinned route and of the user's
+per-key allow-list, named on the connect card before any call. A response from any other host, or with no served host reported, is
+flagged, never admitted, and pauses the setup. `AGENTS.md` is unchanged (DG039 option C not adopted). The header has no open part to
+mark; nothing above changed.

@@ -6,8 +6,9 @@
 > **Related:** D004, D008, D010, D022, D023, D026, D031, D037, D044, D046, D047.
 > **Open parts:** the preset list itself (fixed at release, item 7); the qualification bar and identity of a cloud setup (doc 48 §7.4
 > item 1), the re-qualification cadence (doc 48 OQ11) and its triggers (DG012); who curates the dated preset data and how it is
-> refreshed (doc 50 §6, a design-gap candidate); DG039 (downstream hosts); the wording for 18+ providers and a Hugging Face OAuth app
-> (asked with OWQ-24, not answered by it); doc 50 OQ5 (whether Modular's policy covers ModelRun) and the spikes of OQ6–OQ8.
+> refreshed (doc 50 §6, a design-gap candidate); DG039 (downstream hosts; answered 2026-09-28 → D053); the wording for 18+ providers
+> and a Hugging Face OAuth app (asked with OWQ-24, not answered by it); doc 50 OQ5 (whether Modular's policy covers ModelRun) and the
+> spikes of OQ6–OQ8.
 
 ## Context
 
@@ -69,3 +70,13 @@
 
 Owner direction of 2026-09-27; `OWNER-QUESTIONS.md` OWQ-24 (Answer of 2026-09-28); doc 50 (§1–§4, §2.3–§2.5, §6); doc 48 (§6.0,
 §7.1, §7.4, OQ11); D004; D008; D021 (amendment notes); D022; D023; D031; D037; D044.
+
+## Amendment notes
+
+### 2026-09-28: DG039 decided by D053 (pointer)
+
+A note under lifecycle item 5; [D053](D053-aggregator-downstream-hosts.md) governs (DG039 option B), decided under the owner's
+delegation; the owner may overrule it on return. Item 3's disclosure card names the aggregator and every host the preset's setup may
+reach before any call; the setup reaches only those hosts, adding one is a user action with a new card, and a response from any other
+host, or with no served host reported, is flagged, never admitted, and pauses the setup until the user decides. The header's **Open
+parts** gained a pointer; nothing above changed.

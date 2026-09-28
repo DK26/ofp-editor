@@ -22,18 +22,20 @@ decision into it, or file a DG if the contradiction is real.
 | **owner** | Product scope, user-facing names, security and network boundaries, licensing and legal matters, public outreach (as in the DG README) | `accepted` |
 | **owner (`AGENTS.md`)** | Invariants the owner wrote into `AGENTS.md`; the record is a summary with consequences | `accepted` (invariant) |
 | **owner (go-ahead)** | Pending items the owner authorised in one message, each taking its document's recommended option without the owner reviewing each one (the go-ahead of 2026-09-28) | `accepted`; the record quotes the go-ahead and says "recommended option adopted under the owner's go-ahead; overrule on return" |
+| **owner delegation** | Choices the owner delegated ("Figure out the best option for this use case", 2026-09-28, beside the go-ahead): where one option is sound, the design round decides it and lists it, even when the document gives no recommendation; balanced, irreversible or outward-facing choices still go to the owner (the practice that follows from the owner's friction-review direction, D049) | `accepted`; the record quotes the delegation and says it was decided under the owner's delegation and may be overruled by the owner on return (D053–D057 in those words; D052 predates this wording) |
 | **research** | A research doc's recommendation adopted as the working baseline for implementation | `baseline` |
 
 A `baseline` record names what evidence would reopen it (**Revisit if:** a failed spike, benchmark or probe). Changing a baseline
 needs that evidence or an owner decision; changing an `accepted` record needs the owner. A go-ahead never covers an item whose
-document gives no recommendation: that item becomes an owner question. When the owner overrules a go-ahead decision, the overrule
-is a new record that supersedes it (lifecycle item 4), or a refinement (item 5) when it only narrows the decision.
+document gives no recommendation: that item becomes an owner question, unless the owner's delegation covers it and one option is
+sound (D056). When the owner overrules a go-ahead or delegated decision, the overrule is a new record that supersedes it (lifecycle
+item 4), or a refinement (item 5) when it only narrows the decision.
 
 ## Lifecycle
 
 | State | Meaning |
 | --- | --- |
-| `accepted` | Decided by the owner, directly or as an `AGENTS.md` invariant |
+| `accepted` | Decided by the owner, directly, as an `AGENTS.md` invariant, or under the owner's go-ahead or delegation |
 | `baseline` | Adopted from research; stands until named evidence contradicts it |
 | `superseded by Dnnn` | A later record replaced it; the header gets the date and a pointer, the text stays |
 | `withdrawn` | The decision turned out to be unnecessary; the header gives the reason |
@@ -60,7 +62,7 @@ is a new record that supersedes it (lifecycle item 4), or a refinement (item 5) 
 
 | Situation | What happens |
 | --- | --- |
-| A DG is decided and the decision sets a durable, project-level rule | The DG's "Decision record" section records the choice; a `Dnnn` states the rule going forward and cites the DG (DG013 → D024, DG028 → D008, DG033 items 3–4 → D029, DG002 → D034, DG029 → D035, DG030 → D038, DG014 → D043) |
+| A DG is decided and the decision sets a durable, project-level rule | The DG's "Decision record" section records the choice; a `Dnnn` states the rule going forward and cites the DG (DG013 → D024, DG028 → D008, DG033 items 3–4 → D029, DG002 → D034, DG029 → D035, DG030 → D038, DG014 → D043; under the owner's delegation, DG039 → D053, DG041 → D054, DG050 → D055, DG052 → D056, DG057 → D057) |
 | A DG is decided and the answer is a local detail (a name, a threshold, one doc's wording) | The DG alone records it; no `Dnnn` is needed |
 | A DG is still open | Records that depend on it list it under **Open parts**; dependent work stays `proposal-only` or `blocked on DGnnn` |
 | An owner question is answered | The answer is dated in `OWNER-QUESTIONS.md`; it becomes a new `Dnnn` or a DG decision as above, and the Summary table's "Answered" column names the record (the answers of 2026-09-27 became D031–D043; those of 2026-09-28 became D045–D047 and D044's amendment note; OWQ-28, answered under the owner's go-ahead of 2026-09-28, became D027's amendment note) |
@@ -77,7 +79,8 @@ is a new record that supersedes it (lifecycle item 4), or a refinement (item 5) 
 ```markdown
 # Dnnn: <title>
 
-> **Status:** accepted | baseline · **Decided by:** owner | owner (`AGENTS.md`) | owner (go-ahead of <date>) | research (doc NN)
+> **Status:** accepted | baseline · **Decided by:** owner | owner (`AGENTS.md`) | owner (go-ahead of <date>) | owner delegation
+> (<date>, quoted) | research (doc NN)
 > · **Decided:** <date>
 > **Recorded:** <date> · **Scope:** <what it governs> · **Refines:** <Dnnn, or omit> · **Related:** <Dnnn, …>
 > **Open parts:** <DGnnn, OWQ-nn, or none> · **Revisit if:** <baseline records only>
@@ -115,7 +118,7 @@ is a new record that supersedes it (lifecycle item 4), or a refinement (item 5) 
 | [D020](D020-templating-minijinja.md) | Templating with minijinja | owner | accepted | 2026-09-27 | 22 §2.1; 31 |
 | [D021](D021-provider-layer.md) | Provider layer: own the seam, rent the wires | research | baseline | 2026-09-26 | 12; 14 §7 |
 | [D022](D022-local-inference-and-model-manager.md) | Local inference path and the Model Manager; the managed `llama-server` sidecar is the primary runtime (amendment note, 2026-09-27) | owner, research | accepted (the runtime path was a baseline until the owner's 2026-09-27 amendment) | 2026-09-27 | 13; 14; 46; 47 |
-| [D023](D023-model-strategy.md) | Model strategy: no bundled weights, bring your own model, qualified local tiers; decision 3 read with D050's route lists and D051's ladder (amendment note, 2026-09-28) | owner, research | accepted | 2026-09-26 | 14; 16 |
+| [D023](D023-model-strategy.md) | Model strategy: no bundled weights, bring your own model, qualified local tiers; decision 3 read with D050's route lists and D051's ladder (amendment note, 2026-09-28); with a bound second stage on a calibrated margin (D055; amendment note, 2026-09-28) | owner, research | accepted | 2026-09-26 | 14; 16 |
 | [D024](D024-effort-autonomy-role-binding.md) | Effort, autonomy and role binding are three separate dials | owner (DG013), research | accepted | 2026-09-27 | DG013; 21 §7 |
 | [D025](D025-workflows-as-data-and-journal.md) | Workflows are typed data; runs keep a decision journal; after v1 a model may propose a definition as data that runs only once the user saves it (D051; amendment note, 2026-09-28) | research | baseline | 2026-09-27 | 38 |
 | [D026](D026-token-economy.md) | Saving users' API costs is a usability requirement | owner, research | accepted | 2026-09-27 | 40 |
@@ -138,13 +141,18 @@ is a new record that supersedes it (lifecycle item 4), or a refinement (item 5) 
 | [D043](D043-cross-plugin-chaining-in-workflows.md) | Cross-plugin chains only in first-party and user-authored workflows, with the egress card every time; never exposed externally | owner (OWQ-16 = DG014 B) | accepted | 2026-09-27 | DG014; 22 §3; 38 |
 | [D044](D044-cloud-first-model-screening.md) | Cloud-first screening: a local candidate is first tested on a hosted copy of its weights and tried locally only if promising; the protocol is a proposal; spend and schedule (OWQ-27) in its amendment note (2026-09-28); models with no cloud host tested directly on the PC (second note, 2026-09-28) | owner (direction of 2026-09-27; OWQ-27 b; answer and go-ahead of 2026-09-28) | accepted | 2026-09-27 | 50 §5; 47 §6; 48 §6.0; 53 §4.10 |
 | [D045](D045-free-model-offer-policy.md) | Free models: "connect a free model" presets on the user's own account (OpenRouter PKCE first); no Plotroom key, proxy or keyless default; offered only where terms allow and qualified per step kind, dated and re-qualified, with a clean fallback; preset list fixed at release | owner (OWQ-24 b; direction of 2026-09-27) | accepted | 2026-09-28 | 50 §1–§4, §6; 48 §7.4 |
-| [D046](D046-aggregators-as-first-class-providers.md) | Aggregators are first-class providers: pinned route, ZDR and no data collection by default, serving host shown per call, per-key host allow-list, re-probes; DG039 open | owner (OWQ-25 a) | accepted | 2026-09-28 | 48 §2.5–§2.6, §7.1, §7.4, OQ10; 50 §4 |
+| [D046](D046-aggregators-as-first-class-providers.md) | Aggregators are first-class providers: pinned route, ZDR and no data collection by default, serving host shown per call, per-key host allow-list, re-probes; the allow-list an enforced boundary (DG039 → D053; amendment note, 2026-09-28) | owner (OWQ-25 a) | accepted | 2026-09-28 | 48 §2.5–§2.6, §7.1, §7.4, OQ10; 50 §4 |
 | [D047](D047-military-use-policy-models-and-services.md) | Models and services whose policies ban military uses or violent content: synthetic tests only, never recommended or preset; the NVIDIA trial and Z.ai not used; no combat-flavoured items to hosts with violent-content clauses | owner (OWQ-26 a) | accepted | 2026-09-28 | 48 OQ9, O3; 50 §2.3, §5.9 |
 | [D048](D048-per-model-harness-presets.md) | Per-model harness presets: the harness adapts to each model per step kind (how Wilco asks, never what code owns); no fine-tuning; tuned on a tuning split, accepted on held-out; bound to model file, runtime and template; badges per preset and step kind; visible and overridable; a general fallback preset | owner (direction of 2026-09-28) | accepted | 2026-09-28 | 44, 46, 49, 51, 53, 55 |
 | [D049](D049-friction-review.md) | Friction review in every design and implementation change, for people, models and contributors: remove before explaining, measure, record in `docs/friction/`; invariants stay | owner (direction of 2026-09-28) | accepted | 2026-09-28 | AGENTS.md |
 | [D050](D050-rate-limit-ux-standard-and-router.md) | Rate-limited operation meets UX1–UX9 (limit waits p90 ≤ 2 s, a card after 10 s, a labelled default at 60 s, a light session and a mission build within a day's free allowances, ≥ 99% answered, nothing silent); a quota-aware router over user-authored route lists that moves only on limit outcomes, each move shown; the free flow leads to two or more providers plus local; opt-in capped paid backstop; resume after a reset only if ticked | owner (go-ahead of 2026-09-28; doc 52's recommended options) | accepted | 2026-09-28 | 52 §4–§6 |
-| [D051](D051-capability-ladder-freedom-by-qualification.md) | Knowledge lives in the harness; models earn freedom by qualification: levels FR0–FR8, effective level = min(product ceiling, qualified level, effort ceiling, per-role cap); push always, pull by grant from FR5; down automatically, up only by the user; the floor holds at every level; after v1, a planner may propose a workflow as data that runs only once the user saves it | owner (direction of 2026-09-28; go-ahead of 2026-09-28 for doc 63 §14 and §8.7 B) | accepted | 2026-09-28 | 63 §2–§8, §14 |
+| [D051](D051-capability-ladder-freedom-by-qualification.md) | Knowledge lives in the harness; models earn freedom by qualification: levels FR0–FR8, effective level = min(product ceiling, qualified level, effort ceiling, per-role cap); push always, pull by grant from FR5; down automatically, up only by the user; the floor holds at every level; after v1, a planner may propose a workflow as data that runs only once the user saves it; item 6 read with D055's second stage (amendment note, 2026-09-28) | owner (direction of 2026-09-28; go-ahead of 2026-09-28 for doc 63 §14 and §8.7 B) | accepted | 2026-09-28 | 63 §2–§8, §14 |
 | [D052](D052-strict-script-regions-gate.md) | Strict script regions: a user region set to Strict reaches Preview or export with a contract error only by an explicit, visible exception ("Preview once" at Preview; "Downgrade this region to Advisory" at export); no exception for model or tool output (doc 65 SG1 option (b), refined) | owner delegation ("Figure out the best option for this use case", 2026-09-28) | accepted | 2026-09-28 | 65 §4.3–§4.5, §4.10 |
+| [D053](D053-aggregator-downstream-hosts.md) | Aggregator downstream hosts: the configured provider is the aggregator plus the hosts the user accepted (the pinned route's and the per-key allow-list's, named on the connect card before any call); adding a host is a user action; a response from any other host, or with no host reported, is flagged, never admitted, and pauses the setup (DG039 option B) | owner delegation ("Figure out the best option for this use case", 2026-09-28) | accepted | 2026-09-28 | DG039; 48 §2.6, §7.4, OQ2; 50 §4; 54 |
+| [D054](D054-review-stage-for-creative-steps.md) | A review stage for creative steps inside `sample`: advisory (never admits, rejects, edits or repairs), off by default, only at Thorough or Max with a user-bound `reviewer` setup that is never the writer's own; several reviewers side by side, no vote; milestone left to the roadmap (DG041 option B) | owner delegation ("Figure out the best option for this use case", 2026-09-28) | accepted | 2026-09-28 | DG041; 25 §2.5, §7.3; 38 §3.3; 56 §9 |
+| [D055](D055-visible-second-stage-when-unsure.md) | A visible, user-authored second stage per role, used only on a calibrated margin for a pair that passed doc 53's R6 bar, never on self-reported confidence; priced on the plan card, recorded per step; option A until a pair passes (DG050 option B) | owner delegation ("Figure out the best option for this use case", 2026-09-28) | accepted | 2026-09-28 | DG050; 53 §4.3, R6, OQ2; 55 §7; 56 §10 |
+| [D056](D056-encoder-inference-out-of-process.md) | Encoder components: inference stays out of process (no tier I); sidecar only now; a telemetry-free ONNX Runtime helper (tier H) only if spike S-ENC meets doc 58's bar; encoder arms offline research until then (DG052) | owner delegation ("Figure out the best option for this use case", 2026-09-28) | accepted | 2026-09-28 | DG052; 53 §4.9; 58 §4, §6.0, OQ2 |
+| [D057](D057-bindable-badged-switchable-components.md) | Non-generative components: bindable beside D024's roles, a badge per component kind, a plan-card line, "answered by" in the inspector, a kill switch to the code-owned fallback; suites per kind; never named by a preset (DG057 option B) | owner delegation ("Figure out the best option for this use case", 2026-09-28) | accepted | 2026-09-28 | DG057; 58 §1.2, §4.9–§4.11, OQ3 |
 
 ### Records refined on 2026-09-27
 
@@ -180,11 +188,17 @@ Each earlier record above carries the pointers in its header's **Open parts** an
 | D024, D026 | D050 | A role binds to a route list per step kind (D024 item 4); quota counted like money, `QuotaLimited` (D026 item 2) |
 | D024, D037, D045, D048 | D051 | The level in effort's shape ceiling and a `planner` role after v1 (D024 items 1, 4); badges and free-model offers per level (D037, D045 item 4); a preset never raises a level (D048 item 2) |
 | D011 | D052 (and D011's amendment note) | What a contract error in a script region the user set to Strict does: a gate with an explicit, visible exception; none for model or tool output |
+| D046, D008, D045, D050 (D021 related) | D053 (and their amendment notes) | D046 item 2's per-key host allow-list is an enforced boundary; D008 item 1's "the model provider the user configured" read for aggregators as the aggregator plus the hosts shown and accepted at setup; D045's and D050's open part DG039 (DG039) |
+| D024, D025, D026 | D054 (and their amendment notes) | A `reviewer` role in D024 item 4; no new step kind (a `review` key of `sample`); the cost preview includes the review, never a default cost (DG041) |
+| D023, D024, D026, D050, D051 | D055 (and their amendment notes) | D023 decision 3 read with an authored, visible second stage on a calibrated margin; a two-stage binding per role; D026: priced on the plan card, a code-computed margin and no learned router; D050's open part on cross-model confidence escalation; D051 item 6 kept: the second stage answers at the step's effective level, never higher, priced before the run in place of the button (DG050) |
+| D022 | D056 (and D022's amendment note) | Item 2's out-of-process rule covers encoders; sidecar only now; tier H only if S-ENC meets doc 58's bar (DG052) |
+| D024, D037 | D057 (and their amendment notes) | Component kinds bindable beside the roles; badges per component kind (DG057) |
 
 D021 and D037 had no open part to mark, so each carries only a dated note at its end; D044's header **Open parts** gained pointers.
 For the go-ahead refinements, D023 and D025 carry dated notes, D027 a dated note and a status pointer, and D044 a header pointer and
-its second note; D011 carries a dated note for D052; the pointer notes on D024, D026, D037, D045 and D048 are a folding step not
-done yet.
+its second note; D011 carries a dated note for D052; the pointer notes on D024, D026, D037, D045 and D048 for D050 and D051 are a
+folding step not done yet. For the delegation refinements (D053–D057), D008, D021, D022, D023, D024, D025, D026, D037, D045, D046,
+D050 and D051 carry dated notes, and D045, D046 and D050 also gained header pointers on their **Open parts**.
 
 ### Records of 2026-09-28 (owner go-ahead)
 
@@ -208,9 +222,26 @@ says so; the owner may overrule any of them on return ("Kinds of decision and wh
 
 Not answered under the go-ahead, because their documents give no recommendation: OWQ-29 (trial counts and spend for the larger
 freedom levels, doc 63 OQ4). Left open by these records: doc 52 OQ5–OQ9 and OQ11, doc 53 OQ2 (cross-model escalation, filed as
-DG050, owner), doc 63 OQ6–OQ10 (OQ5 is answered by `AGENTS.md`'s "Negative Compile Tests"). The design-gap candidates of docs
-51–63 were filed the same day as open requests DG043–DG058 where no record decides them, beside the dynamic-workflow requests
-DG040–DG042; none is decided by the go-ahead (design-gap README, "Go-ahead pass (2026-09-28)").
+DG050, owner; decided later the same day under the owner's delegation → D055), doc 63 OQ6–OQ10 (OQ5 is answered by `AGENTS.md`'s
+"Negative Compile Tests"). The design-gap candidates of docs 51–63 were filed the same day as open requests DG043–DG058 where no
+record decides them, beside the dynamic-workflow requests DG040–DG042; none is decided by the go-ahead (design-gap README, "Go-ahead
+pass (2026-09-28)"). DG039, DG041, DG050, DG052 and DG057 were decided later the same day under the owner's delegation (below).
+
+### Records of 2026-09-28 (owner delegation, design-gap pass)
+
+On 2026-09-28 the owner also wrote (lightly edited): "Go ahead without the GPG passphrase. I will not be near the PC for hours. We
+are working remote", and, for a choice between design options, "Figure out the best option for this use case". Under that
+delegation, with the practice that follows from the owner's friction-review direction (D049), each owner-level request below with a
+sound best option was decided and recorded as such, without an owner question. The owner may overrule any of them on return ("Kinds
+of decision and who decides").
+
+| Item | Where recorded | What was chosen | Source |
+| --- | --- | --- | --- |
+| Downstream hosts behind an aggregator | D053; notes on D008, D021, D045, D046 and D050 | DG039 option B: the aggregator plus the hosts the user accepted, named before any call; any other or unreported host flagged, never admitted, the setup paused; option C (an `AGENTS.md` edit) not adopted now | DG039; 54 verification notes ("Calls") |
+| A review stage for creative steps | D054; notes on D024, D025 and D026 | DG041 option B with its five rules; a `reviewer` role; off by default; Thorough or Max only; never the writer's own setup; milestone left to the roadmap | DG041 |
+| A second stage when the first is unsure | D055; notes on D023, D024, D026, D050 and D051 | DG050 option B: authored, calibrated, per pair that passed R6, at the step's effective level; option A until a pair passes | DG050; 53 OQ2; 58 OQ4 |
+| Encoder runtime | D056; D022's note | DG052: the out-of-process rule covers encoders (no tier I); sidecar only now; tier H only if S-ENC meets doc 58's bar. The sources gave no recommendation; the conservative option was chosen | DG052; 58 OQ2, finding 6 |
+| Component bindings | D057; notes on D024 and D037 | DG057 option B: bindable, badged, a plan-card line, "answered by", a kill switch; suites per kind; never named by a preset | DG057; 58 OQ3 |
 
 ## Integration items this folder owns
 
@@ -292,7 +323,8 @@ These proposals from later research docs, aimed at earlier designs, are owned he
 - Pointers: D021 and D037 gained dated notes (they had no open part to mark); D044 gained header pointers and its note;
   `OWNER-QUESTIONS.md`'s Summary names the records; docs 48 and 50 gained dated pointers beside their open questions and
   recommendations. D022 and D023 are related, not refined, and were not edited. DG039 (downstream hosts behind an aggregator) was
-  filed as OWQ-25's answer asked; D046 lists it as open and does not decide it.
+  filed as OWQ-25's answer asked; D046 lists it as open and does not decide it. (DG039 was decided later the same day under the
+  owner's delegation: D053; see "Records of 2026-09-28 (owner delegation, design-gap pass)".)
 - Plotroom's D047 is unrelated to Iron Curtain's decision D047, which docs 12, 13, 14, 17 and 34 cite by path or as "D047" in
   context ("Numbering and labels").
 - Not legal advice. No provider was contacted, no account or key was created, and nothing was bought.
@@ -351,3 +383,33 @@ These proposals from later research docs, aimed at earlier designs, are owned he
 - Relative links in `docs/` and `AGENTS.md` resolve (980 checked after these edits, anchors included). A hygiene search of the
   fold's files found no private names, local paths or user names. D050 (87 lines) and D051 (75) exceed the "about 60 lines" guide,
   as D045 (71) does; they were left whole.
+
+### Owner delegation, design-gap pass (2026-09-28)
+
+- D053–D057 were written from DG039, DG041, DG050, DG052 and DG057 and the records and research sections each one cites, re-read on
+  2026-09-28, under the owner's delegation quoted in "Records of 2026-09-28 (owner delegation, design-gap pass)". Four take their
+  request's recommended option; DG052 had none, so D056 says it chose the conservative option. Each record says "decided under the
+  owner's delegation; the owner may overrule it on return".
+- Form of each answer (lifecycle item 5): every answer adds rules of its own, so each is a new record; the earlier records gained
+  dated pointer notes (D008, D021, D022, D023, D024, D025, D026, D037, D045, D046, D050, D051) and, where an open part is now
+  settled, header pointers (D045, D046, D050). The "Kinds of decision" table gained an "owner delegation" row, and the go-ahead rule
+  that an item with no recommendation becomes an owner question now names the delegation's exception (D056). The template lists the
+  kind.
+- `OWNER-QUESTIONS.md` gained a pointer on OWQ-25's Summary row and a dated note, since none of the five had an owner question.
+  Docs 53 (OQ2) and 58 (OQ2–OQ4) gained answered-markers; no other research doc, `docs/README.md` or architecture doc was edited, so
+  the folding steps each record lists remain. No git action, account, key or purchase.
+- Plotroom's D056 and D057 are unrelated to Iron Curtain's decisions D056 (replay import) and D057 (skill library), which docs 12,
+  17 and 34 cite by path or, in doc 17 and doc 34, as "D057" or "D056" in context ("Numbering and labels").
+- Review of the pass (2026-09-28), with the five choices unchanged: D055 item 6 now keeps D051 item 6 (the second stage answers at
+  the step's effective level, never higher, priced before the run in place of the button), so D055 names D051 (and D026, whose
+  note it already had) under **Refines** and D051 gained its first amendment note; D053 names D045's and D050's open part under **Refines**, gives the pause's choices for an
+  unreported host and lists the router's behaviour during a pause as an open part; D056 limits its "one rule" to encoders (D022 item
+  1(3) is unchanged), says S-ENC needs an ONNX Runtime helper arm for item 3's bar, leaves the sidecar's classifier heads and doc 58
+  OQ6 open and cites doc 53 OQ3; D054's citations of doc 56 tension 4 and doc 59 §4.2 were corrected; D057 restates product scope
+  and D023 decision 5; the five records cite this README's "owner delegation" kind instead of D049 for the practice; the summaries
+  of DG052 say "only if S-ENC meets doc 58's bar". The index rows of D053–D057 quote the delegation as D052's does; the lifecycle's
+  `accepted` row names go-ahead and delegated records; D023's and D051's index rows name their new notes; the notes on OWQ-24 to
+  OWQ-27 here and in `OWNER-QUESTIONS.md` gained D053 pointers where they call DG039 open. Doc 53 OQ3 gained no answered-marker
+  (outside this pass's research-doc edits); it is a folding step of D056.
+- D053 (67 lines), D054 (66), D055 (75), D056 (74) and D057 (66) exceed the "about 60 lines" guide, mostly through the quoted
+  delegation in the header; they were left whole.

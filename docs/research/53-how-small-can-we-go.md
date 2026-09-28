@@ -695,8 +695,11 @@ equals its accuracy; compare it with arm (b) on accuracy and on majority, and wi
    run is local by nature or needs a DeepInfra no-schema screen first (§4.10).
 2. **Cross-model escalation (owner):** may a user-authored two-stage role binding escalate from a tiny model to the session model or
    cloud, visibly and priced, or does escalation stay limited to the user, code's default and a same-model re-run (§4.3)?
+   *Answered 2026-09-28 under the owner's delegation: D055.*
 3. **Encoder runtime (technical, D022-level):** ONNX Runtime or candle for GLiNER2, HHEM and LettuceDetect, or llama.cpp-served helpers
    only (§4.9)?
+   *Answered 2026-09-28 under the owner's delegation: D056 (llama.cpp-served helpers now; an out-of-process ONNX Runtime helper
+   only if spike S-ENC passes; never inside the editor process).*
 4. **The leading `why` (technical):** does doc 25 §4.3's bounded `why` stay for tiny tiers, given the one-pass readout (§5 rule R7)?
 5. **Qwen3.5-0.8B and 2B use statement (owner, D037):** binding field-of-use limit or not? (The same line is on both cards.)
 6. **Format adapters post-v1 (owner, D027 item 6; D048 decision 3):** D048 chose adapting the harness over training models; may a

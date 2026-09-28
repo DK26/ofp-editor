@@ -4,8 +4,9 @@
 > **Scope:** model providers that forward a request to a host the user did not name, today OpenRouter and the Hugging Face router.
 > **Refines:** D021 (its amendment note's aggregator proposals, and doc 48 OQ10, which that note called not yet filed).
 > **Related:** D008, D010, D026, D044, D045, D047.
-> **Open parts:** DG039 (what "the model provider the user configured" covers for the downstream host); whether the served host is
-> reported in the response (doc 48 OQ2); the identity of a cloud setup and the re-probe cadence (doc 48 §7.4 item 1, OQ11).
+> **Open parts:** DG039 (what "the model provider the user configured" covers for the downstream host; answered 2026-09-28 → D053);
+> whether the served host is reported in the response (doc 48 OQ2); the identity of a cloud setup and the re-probe cadence (doc 48
+> §7.4 item 1, OQ11).
 
 ## Context
 
@@ -52,3 +53,15 @@
 
 `OWNER-QUESTIONS.md` OWQ-25 (Answer of 2026-09-28); doc 48 (TL;DR, §2.5, §2.6, §7.1, §7.4 items 1–3, OQ2, OQ10, OQ11); doc 50 (§2.2,
 §4); D008; D010; D021 (amendment note of 2026-09-27); DG039.
+
+## Amendment notes
+
+### 2026-09-28: item 2's allow-list refined by D053 (pointer)
+
+A note under lifecycle item 5; [D053](D053-aggregator-downstream-hosts.md) governs. DG039 was decided with its option B under the
+owner's delegation; the owner may overrule it on return. Item 2's per-key host allow-list is an enforced boundary, not a display: a
+setup may reach only the aggregator, the pinned route's hosts and the hosts on that list, all named on the connect card before any
+call; adding a host is a user action with a new card. A response served by any other host, or with no served host reported, is
+flagged in the run panel, never admitted, and pauses the setup until the user decides, so no further call on that setup carries user
+content meanwhile. This settles item 3 and the Consequences' question about calls whose host is not reported. The header's **Open
+parts** gained a pointer; nothing above changed.

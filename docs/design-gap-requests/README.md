@@ -22,6 +22,9 @@ may point to engine requests, for example when a doc routed engine defects to th
   public outreach. Only the owner moves such a request to `decided`. Owner-level requests are asked in
   [`docs/decisions/OWNER-QUESTIONS.md`](../decisions/OWNER-QUESTIONS.md); the owner's dated answer there is written into the request's
   header and "Decision record" section.
+- The owner may delegate such a choice. A request decided under the owner's delegation says so in its header and "Decision record"
+  section, names the record that states the choice, and may be overruled by the owner on return (DG039, DG041, DG050, DG052 and
+  DG057 on 2026-09-28).
 - A decided request whose answer sets a durable, project-level rule also gets a decision record (`Dnnn`, see
   [`docs/decisions/README.md`](../decisions/README.md)); the request's "Decision record" section then summarises that record and links
   to it. Either way the "Decision record" section is never left reading "Open" once the header says `decided`.
@@ -116,9 +119,9 @@ and the folding steps that move the request to `folded`.>
 | [DG036](DG036-atmosphere-sibling-corrections.md) | Atmosphere and audio corrections to docs 32, 34, 35 and the catalog | technical | open | 41 §2.5, §5.2; 34 ed12; 35 rc08, rc43 |
 | [DG037](DG037-director-feature-names.md) | One word, six features: names for the "Director" features | design round (OWQ-08 answered: the owner delegated pending names and reviews the names table) | open | 39 review "Names"; 41 §3; 32 §3.3; 33 §5.4; 34 ed18 |
 | [DG038](DG038-sl11-engine-random-exceptions.md) | Engine `random` and SL11: the play-seed bootstrap and opt-in re-roll on restart | technical (OWQ-21 answered: re-roll (a), no exception in v1) | open | 43 §3.2, §2.5, OQ2–OQ3; 29 SL11; 36 OQ2 |
-| [DG039](DG039-downstream-hosts-behind-aggregators.md) | Downstream hosts behind an aggregator: what "the model provider the user configured" covers | **owner** (network boundary) | open | 48 §7.4 item 2, §7.1, §2.6, OQ2; 50 §4; D008; D046 |
+| [DG039](DG039-downstream-hosts-behind-aggregators.md) | Downstream hosts behind an aggregator: what "the model provider the user configured" covers | **owner** (network boundary) | decided 2026-09-28 (owner's delegation: option B; D053) | 48 §7.4 item 2, §7.1, §2.6, OQ2; 50 §4; D008; D046 |
 | [DG040](DG040-bounded-repeat-until-step.md) | A bounded "repeat until" step with a code-checked condition and a hard maximum | technical (the owner reviews; amends D025 decision 2) | open | the owner's dynamic-workflow additions; 38 §3.2, §4.5, §7; D025; 21 §1.4, §8.2; 56 WR5 |
-| [DG041](DG041-verification-panel-for-creative-steps.md) | A verification panel for strong models on creative work, opt-in by effort | technical; **owner** for a reviewer role | open | the owner's dynamic-workflow additions; 25 §2.5, §7.3; 38 §3.3; 21 §1.4; D024; D026 |
+| [DG041](DG041-verification-panel-for-creative-steps.md) | A verification panel for strong models on creative work, opt-in by effort | technical; **owner** for a reviewer role | decided 2026-09-28 (owner's delegation: option B; D054) | the owner's dynamic-workflow additions; 25 §2.5, §7.3; 38 §3.3; 21 §1.4; D024; D026 |
 | [DG042](DG042-plan-draft-format-and-saved-plans.md) | Dynamic authoring, static execution: the `PlanDraft` format, its checks and where saved plans live | technical (the principle is [D051](../decisions/D051-capability-ladder-freedom-by-qualification.md) item 9) | open | the owner's dynamic-workflow additions; 63 §8, §13 items 9–10; 38 §6.1 |
 | [DG043](DG043-repair-turn-shape-and-content.md) | The repair turn: capsule shape, which finding goes in, and repair versus resample | technical (measure) | open | 51 §4.6, §6.1 item 9; 57 TE-G3, §6.3; 61 §6 items 1, 3, 7, 13; 62 §10 item 8 |
 | [DG044](DG044-wording-and-profile-hashes-in-keys.md) | Question wording, model profile and language in the qualification and calibration keys | technical | open | 60 §4 items 1, 10; 55 §7 item 1; 63 §13 item 3; 51 §4.8; D051 item 4; DG012 |
@@ -127,14 +130,14 @@ and the folding steps that move the request to `folded`.>
 | [DG047](DG047-decompositions-and-forms-for-pick-fill.md) | Authored decompositions and question forms for Pick and Fill | technical | open | 55 §7 item 2; 59 §7 items 1, 7; 60 §4 items 3–5 |
 | [DG048](DG048-answer-schema-identity-and-compiler.md) | Answer schema identity per harness preset, and one schema compiler | technical | open | 55 §7 items 3, 6; 51 §6.1 items 8, 14; DG015; DG024 |
 | [DG049](DG049-named-capsule-layouts.md) | A small set of named capsule layouts that harness presets choose from | technical (measure) | open | 55 §7 item 5; 51 §6.1 item 11; 57 TE-G1; 52 RG6; 60 §4 items 6–7; DG019 |
-| [DG050](DG050-second-stage-escalation-on-low-confidence.md) | Escalation to a second bound stage when the first is unsure | **owner** | open | 53 §4.3, OQ2; 55 §7 item 9; 56 §10 item 6; 58 OQ4; D023; D050 |
+| [DG050](DG050-second-stage-escalation-on-low-confidence.md) | Escalation to a second bound stage when the first is unsure | **owner** | decided 2026-09-28 (owner's delegation: option B; D055) | 53 §4.3, OQ2; 55 §7 item 9; 56 §10 item 6; 58 OQ4; D023; D050 |
 | [DG051](DG051-provider-seam-outcome-taxonomy.md) | One outcome taxonomy at the provider seam | technical | open | 51 §4.5–§4.7, §6.1 items 2–5; 52 §5.2, RG2; D050 item 4; DG016 |
-| [DG052](DG052-encoder-runtime-for-components.md) | A runtime for non-generative encoder components | **owner** (after spike S-ENC) | open | 53 §4.9; 58 §4.11 item 2, OQ2; D022 |
+| [DG052](DG052-encoder-runtime-for-components.md) | A runtime for non-generative encoder components | **owner** (after spike S-ENC) | decided 2026-09-28 (owner's delegation: option A now, tier H only if S-ENC meets doc 58's bar; D056) | 53 §4.9; 58 §4.11 item 2, OQ2; D022 |
 | [DG053](DG053-journal-record-kinds-and-ownership.md) | New journal record kinds, and one owner per journal | technical | open | 56 §10 items 2, 4; 57 TE-G4–G5; 58 §4.11 item 4; 59 §7 item 4; 63 §13 item 6; DG017 |
 | [DG054](DG054-stakes-floors-per-decision-kind.md) | Stakes floors per `DecisionKind` that no preset can lower | technical (who sets them: owner or technical) | open | 60 §2.8, P-09, §4 item 2, OQ2; D048 item 2; D051 item 3 |
 | [DG055](DG055-grant-witness-name-and-crate.md) | The grant witness: one name, one scope, one crate | technical | open | 63 §9.2, §9.4, §13 item 7; 62 §6.3, §10 item 7; D051 |
 | [DG056](DG056-model-facing-result-envelope.md) | One envelope, sanitiser and diagnostic contract for model-facing tool output | technical | open | 57 TE-G9, TM1–TM3; 61 §6 item 2; 62 §10 item 4 |
-| [DG057](DG057-component-bindings-and-visibility.md) | Bindings, badges and kill switches for non-generative components | **owner** | open | 58 §4.11 items 1, 5, OQ3; D024 item 4 |
+| [DG057](DG057-component-bindings-and-visibility.md) | Bindings, badges and kill switches for non-generative components | **owner** | decided 2026-09-28 (owner's delegation: option B; D057) | 58 §4.11 items 1, 5, OQ3; D024 item 4 |
 | [DG058](DG058-endpoint-verification.md) | Endpoint verification: behavioural probes, "Check this endpoint" and "last verified" | technical | open | 51 §6.1 item 10, K1–K4, K20, OQ12; 48 §7.4 items 3–4; 50 §6; D045 item 5 |
 
 ## Candidates noticed but not filed in this pass
@@ -249,7 +252,7 @@ under the owner's go-ahead; the owner may overrule those on return.
 
 - Filed **DG039** (owner; network boundary) from doc 48 §7.4 item 2, as the owner's answer to OWQ-25 asked when it made aggregators
   first-class providers ([D046](../decisions/D046-aggregators-as-first-class-providers.md)). D046 lists DG039 as an open part and does
-  not decide it.
+  not decide it. (DG039 was decided later the same day under the owner's delegation: D053; see "Owner delegation, design-gap pass".)
 - Not filed in this step, and still candidates: doc 48 §7.4 item 1 (cloud artifact identity) and items 3–5, and doc 50 §6's two
   (free-provider preset data and its refresh; a "screened, not qualified" state in the model catalogue). D045 and D046 list the
   cloud artifact identity, and D045 the preset data's refresh, as open parts.
@@ -260,8 +263,9 @@ under the owner's go-ahead; the owner may overrule those on return.
   covered filing the three dynamic-workflow requests discussed with the owner: DG040 (a bounded "repeat until" step), DG041 (a
   verification panel for strong models on creative work, opt-in by effort) and DG042 (dynamic authoring with static execution). The
   go-ahead chose no option among them and no research doc recommends DG040's or DG041's shape, so both stay **open** for the owner
-  to decide on return. DG042 covers only what [D051](../decisions/D051-capability-ladder-freedom-by-qualification.md) item 9 (plans
-  as data after v1, adopted the same day under the go-ahead) leaves open: doc 63 §13 items 9–10.
+  to decide on return. (DG041 was decided later the same day under the owner's delegation: D054; DG040 stays open.) DG042 covers
+  only what [D051](../decisions/D051-capability-ladder-freedom-by-qualification.md) item 9 (plans as data after v1, adopted the same
+  day under the go-ahead) leaves open: doc 63 §13 items 9–10.
 - **Candidates of docs 51–63.** Every design-gap candidate listed in docs 51, 52, 53, 55, 56, 57, 58, 59, 60, 61, 62 and 63 was
   collected (119 items; doc 54 was out of scope) and deduplicated across docs. Filed as open requests, each with the source
   docs' recommended option marked as a proposal where they give one: DG043 (51 item 9, 57 TE-G3, 61 items 1, 3, 7, 13, 62 item 8),
@@ -275,8 +279,30 @@ under the owner's go-ahead; the owner may overrule those on return.
   both adopted under the go-ahead. Candidates they decide were not filed (doc 52 RG1, RG3, RG4, RG8; doc 55 §7 item 1; doc 63 §13
   items 1–3 in part), and DG042, DG044, DG050, DG051, DG054 and DG055 cite them as decided.
 - **Owner-level requests.** DG050, DG052 and DG057 (and DG041's reviewer role) need owner questions (doc 53 OQ2, doc 58 OQ2 and
-  OQ3 ask them). `docs/decisions/OWNER-QUESTIONS.md` is outside this folder and was not edited by this step.
+  OQ3 ask them). `docs/decisions/OWNER-QUESTIONS.md` is outside this folder and was not edited by this step. (All four were decided
+  later the same day under the owner's delegation, without owner questions: D055, D056, D057 and D054.)
 - **Earlier leftovers.** DG058 also covers doc 48 §7.4 items 3–4 and doc 50 §6's "screened, not qualified" state from the previous
   step's list; doc 48 §7.4 items 1 and 5 and doc 50 §6's preset-data refresh (with doc 52 RG9) remain candidates.
 - No research doc, decision record or file outside this folder was edited. Every source section cited in DG040–DG058 was re-read on
   2026-09-28 unless its own verification note says otherwise. The next free number is DG059.
+
+### Owner delegation, design-gap pass (2026-09-28)
+
+- The owner wrote on 2026-09-28 (lightly edited): "Go ahead without the GPG passphrase. I will not be near the PC for hours. We are
+  working remote", beside the go-ahead quoted above and, for a choice between design options, "Figure out the best option for this
+  use case". Under that delegation, with the standing practice that follows from the owner's friction-review direction (D049) (decide
+  where one option is sound, list it so the owner can overrule it on return, and ask only when options are balanced or the step is
+  irreversible or outward-facing), five owner-level requests were decided without owner questions:
+  DG039 option B ([D053](../decisions/D053-aggregator-downstream-hosts.md)), DG041 option B
+  ([D054](../decisions/D054-review-stage-for-creative-steps.md)), DG050 option B
+  ([D055](../decisions/D055-visible-second-stage-when-unsure.md)), DG052 option A now with tier H only if spike S-ENC meets doc
+  58's bar ([D056](../decisions/D056-encoder-inference-out-of-process.md); its sources gave no recommendation, so the conservative
+  option was chosen) and DG057 option B ([D057](../decisions/D057-bindable-badged-switchable-components.md)).
+- Each file's header, "Decision record" and verification notes, and the index rows above, were updated; the lifecycle list gained a
+  line on delegated decisions; the notes of the go-ahead pass and of the OWQ-24 to OWQ-27 step gained pointers where they call these
+  requests open. DG042's Context now says DG041 is decided; DG042 stays open. None of the five is `folded`: each decision record lists
+  its folding steps, which are edited outside this folder. No git action, account, key or purchase.
+- Review of the pass (2026-09-28): the summaries of DG052 here, in DG052 and in the decisions README now say tier H is admitted only
+  if S-ENC meets doc 58's bar, not "after S-ENC"; DG052's decision names the ONNX Runtime helper arm S-ENC needs for that bar
+  (D056 item 3); DG057's decision record gained its reason; DG050's folding line names the notes on D026 and D051, since D055 item 6
+  now keeps D051 item 6 (the second stage answers at the step's effective level, never higher). The five choices are unchanged.

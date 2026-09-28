@@ -27,7 +27,9 @@
   hash-pinned trust (Trusted, Modified, Untrusted); never loads workflows from mission or campaign folders. §5.2: "Always run without
   the card" only for built-in and installed pack workflows. §6.3: runs pin a definition snapshot.
 - **D043.** User-authored workflows, like first-party ones, may chain plugins of different publishers, with the egress card each time.
-- **DG007** (one definition format) and **DG040/DG041** (a `repeat` step; a review stage in `sample`) are open.
+- **DG007** (one definition format) and **DG040** (a `repeat` step) are open. **DG041** (a review stage in `sample`) was decided on
+  2026-09-28 under the owner's delegation ([D054](../decisions/D054-review-stage-for-creative-steps.md)); whether a plan may use it
+  is still gap 4 below.
 
 ## The gap
 
@@ -81,3 +83,9 @@ Open. The owner-level part is decided in D051 item 9 (2026-09-28, under the owne
 - Filed from the owner's dynamic-workflow additions and doc 63 §13 items 9–10, re-reading D051, D025's 2026-09-28 note, D043, doc 63
   §8 and §11, and doc 38 §2, §5.2 and §6.1–§6.3 on 2026-09-28. Written after D051 appeared the same day; this request covers only
   what D051 lists as open (doc 63's design-gap candidates).
+
+### Owner delegation, design-gap pass (2026-09-28)
+
+- DG041 was decided the same day ([D054](../decisions/D054-review-stage-for-creative-steps.md)), so the Context bullet on DG040 and
+  DG041 now says so. Option 4A is unchanged; under it a plan may use D054's review only once doc 63 §8.3 is amended with it. This
+  request stays open.

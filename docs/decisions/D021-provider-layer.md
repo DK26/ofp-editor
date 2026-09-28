@@ -87,3 +87,10 @@ seam and the adapter choice; the header has no open part to mark.
   layer carries "connect a free model" presets on the user's own account as dated data, and a free model is offered for a step kind
   only if its provider's terms allow it and it passed Plotroom's qualification for that step kind.
 - The deferral of round 1 above stands (OWQ-27; [D044](D044-cloud-first-model-screening.md)'s amendment note).
+
+### 2026-09-28: DG039 decided by D053 (pointer)
+
+The note above calls DG039 open. It was decided on 2026-09-28 with its option B, under the owner's delegation; the owner may
+overrule it on return ([D053](D053-aggregator-downstream-hosts.md)). An aggregator setup reaches only the aggregator and the hosts the
+user accepted (the pinned route's hosts and the per-key allow-list), and the aggregator adapter behind this record's seam flags, does
+not admit, and pauses the setup on a response served by any other host or with no served host reported. Nothing above changed.

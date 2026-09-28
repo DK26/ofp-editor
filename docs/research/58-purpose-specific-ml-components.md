@@ -874,10 +874,11 @@ about a post-v1 format-adapter spike. This section lays the question out; it dec
 1. **Text hygiene in v1 (owner):** should spelling, grammar and language ID ship in v1 as AI-off advisory lints (G1, G2)?
 2. **Encoder runtime (owner and technical, D022-level):** sidecar only; plus in-process pure Rust under §4.4 (an exception to the
    architecture's "embedded inference always out of process" resolution); plus the helper process with a telemetry-free ONNX Runtime
-   build and `fxtranslate` (§4.5)? Spike S-ENC informs it.
+   build and `fxtranslate` (§4.5)? Spike S-ENC informs it. *Answered 2026-09-28 under the owner's delegation: D056.*
 3. **Component bindings (owner):** do component kinds become bindable roles beside D024's six, with their own badges and kill switches
-   (design-gap candidate 1)?
+   (design-gap candidate 1)? *Answered 2026-09-28 under the owner's delegation: D057.*
 4. **Cross-model escalation (owner, doc 53 OQ2):** may a tiny CPU stage escalate visibly to the session model or cloud?
+   *Answered 2026-09-28 under the owner's delegation: D055.*
 5. **Specialists' delivery (owner):** translation, TTS and ASR as first-party helpers (tier H) or strictly as T2 plugins (doc 22 places
    Radio Voice and the stringtable translator there; a local T2 server must be one the user runs)?
 6. **Data versus weights (owner, D023 decision 1):** may deterministic statistical tables (lingua's n-grams), dictionaries, calibration

@@ -1,7 +1,8 @@
 # DG052: A runtime for non-generative encoder components
 
 > Design-gap request (`AGENTS.md`, "Design Authority"). Filed 2026-09-28 in the go-ahead pass (design-gap candidates of docs 51–63).
-> Status: **open**.
+> Status: **decided** (owner's delegation, 2026-09-28): option A now, option B (tier H) only if spike S-ENC meets doc 58's evidence
+> bar, option C not adopted → D056. The out-of-process rule covers encoders. Not yet folded.
 > **Decision by: owner** (D022-level: a second supply chain and an exception to an architecture rule; doc 58 OQ2), informed by spike
 > S-ENC (doc 58 §6). Blocks: every encoder component (extractors, checkers, NLI, encoder rerankers) in the product; until decided,
 > encoder arms are offline research only (doc 53 §4.9).
@@ -53,7 +54,18 @@ D022; D023 decision 1; D037; architecture README (§7, §8); `docs/architecture/
 
 ## Decision record
 
-Open. Owner-level: needs an owner question (doc 58 OQ2 asks it).
+- **Decided 2026-09-28 under the owner's delegation: option A now, option B only if S-ENC meets doc 58's bar →
+  [D056](../decisions/D056-encoder-inference-out-of-process.md).** The out-of-process rule covers encoders (doc 58 finding 6), so
+  tier I (option C) is not adopted. Now: sidecar only (rerankers and embedders served by the pinned llama.cpp sidecar). Tier H is the
+  only path for other encoders, and only if S-ENC, run with an ONNX Runtime helper arm, meets doc 58's evidence bar (D056 item 3),
+  recorded as a note on D056. Until then doc 53 §4.9's interim rule holds. No owner question was filed; the sources gave no
+  recommendation, so D056 chose the conservative option under the "figure out the best option" delegation, and the owner may
+  overrule it on return.
+- **Reason.** One rule for contributors, crash and supply-chain isolation, and no `trust_remote_code` path; tier H's second supply
+  chain waits for evidence.
+- **Folding (what moves this request to `folded`).** Architecture README §7–§8 and agent-runtime §3 (the rule's scope); crate-map §2.3
+  and §10 (only if tier H is admitted); doc 53 §4.9 and OQ3; doc 58 §4.1, §4.4–§4.5 and §6.0 (S-ENC's ONNX Runtime helper arm).
+  D022's note is done (2026-09-28).
 
 ## Verification notes
 
@@ -61,3 +73,10 @@ Open. Owner-level: needs an owner question (doc 58 OQ2 asks it).
 
 - Filed from doc 53 §4.9 and doc 58 §4.11 item 2 (one candidate in two docs), re-read on 2026-09-28 with doc 58 OQ2 and findings.
   The architecture README's rows were not re-read for this filing; their numbers are cited as doc 58 gives them.
+
+### Owner delegation, design-gap pass (2026-09-28)
+
+- Decided under the owner's delegation of 2026-09-28 (quoted in D056), without an owner question. D056 was written from this request,
+  D022, doc 53 §4.9, doc 58 (§4.1–§4.5, §6.0, OQ2, findings 3 and 6) and the architecture README's §7 row 13 and §8 item 7, re-read on
+  2026-09-28; the README's rows match doc 58's citations. No architecture or research doc was edited apart from the answered-marker
+  at doc 58 OQ2.

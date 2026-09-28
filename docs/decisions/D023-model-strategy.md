@@ -93,3 +93,15 @@ go-ahead; overrule on return.
   larger step or a stronger model is a priced button, as decision 3 says.
 - **Not decided here:** escalation from a tiny model to another model on low confidence (doc 53 OQ2) is not a limit outcome and
   stays open, filed as [DG050](../design-gap-requests/DG050-second-stage-escalation-on-low-confidence.md) (owner).
+
+### 2026-09-28: decision 3 read with a bound second stage (D055)
+
+A note under lifecycle item 5; [D055](D055-visible-second-stage-when-unsure.md) governs. DG050, which the note above leaves open, was
+decided with its option B under the owner's delegation; the owner may overrule it on return. A role may bind a user-authored second
+stage; a call moves to it only when the first stage's calibrated margin is below the pair's threshold, only for a (first stage, second
+stage, `DecisionKind`) pair that passed doc 53's R6 bar with routing scores calibrated on held-out data, and never on self-reported
+confidence; the move is priced on the plan card and recorded per step with the stage and margin. Like a route list, the second stage
+is the user's visible choice made before the run, so a move to it is not a silent switch; a step that fails its checks is still
+split, never moved. The ladder note above still holds (D051 item 6): the second stage answers at the step's effective level, never a
+higher one, and the plan card prices it before the run in place of the button. Until a pair passes, a low margin goes to the user, to
+code's default or (DG022) to one same-model re-run. The header has no open part to mark; nothing above changed.

@@ -9,7 +9,7 @@
 > DG021), lean capsules (RG6 → DG019, DG025, DG049), retry accounting (RG2 → DG016; the limit-outcome taxonomy → DG051), packing
 > (RG7, not adopted); the release preset list, including Hugging Face's monthly credits (doc 52 OQ11), and the providers' written
 > answers (D045 item 7; doc 52 OQ5); who curates the dated limit data (RG9, D045's open part); cross-model confidence escalation (doc
-> 53 OQ2 → DG050, owner); DG039.
+> 53 OQ2 → DG050, owner; answered 2026-09-28 → D055); DG039 (answered 2026-09-28 → D053).
 
 ## Context
 
@@ -85,3 +85,20 @@
 
 Owner's question of 2026-09-27 and go-ahead of 2026-09-28; doc 52 (TL;DR, §2–§6, open questions); `tools/quota-sim/`; doc 40 §7;
 doc 53 §4.3; D008; D021; D023; D024; D026; D045; D046; D048.
+
+## Amendment notes
+
+### 2026-09-28: open parts answered by D053 and D055 (pointers)
+
+A note under lifecycle item 5; both records were decided under the owner's delegation, and the owner may overrule them on return.
+
+- **Cross-model confidence escalation (doc 53 OQ2, DG050) → [D055](D055-visible-second-stage-when-unsure.md):** a user-authored
+  second stage per role, used only when the first stage's calibrated margin is below the pair's threshold, for a pair that passed
+  doc 53's R6 bar. An unsure first stage is not a limit outcome, so item 3's router still moves along a route list only on limit
+  outcomes; the second stage is a separate, authored binding with its own plan-card line and per-step record.
+- **DG039 → [D053](D053-aggregator-downstream-hosts.md):** a route-list entry that goes through an aggregator reaches only the hosts
+  the user accepted; a response from any other host, or with no served host reported, is flagged, never admitted, and pauses that
+  setup until the user decides. A pause is not a limit outcome, so whether the router may continue on the next entry meanwhile is
+  an open part of D053.
+
+The header's **Open parts** gained pointers; nothing above changed.

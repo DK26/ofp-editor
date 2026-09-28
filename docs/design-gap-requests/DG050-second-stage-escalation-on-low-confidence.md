@@ -1,7 +1,8 @@
 # DG050: Escalation to a second bound stage when the first is unsure
 
 > Design-gap request (`AGENTS.md`, "Design Authority"). Filed 2026-09-28 in the go-ahead pass (design-gap candidates of docs 51–63).
-> Status: **open**.
+> Status: **decided** (owner's delegation, 2026-09-28): option B → D055. A user-authored second stage per role, used only on a
+> calibrated margin for a pair that passed doc 53's R6 bar; option A holds until a pair passes. Not yet folded.
 > **Decision by: owner** (the reading of D023 decision 3 and D024 item 4; doc 53 OQ2; doc 58 OQ4). Blocks: doc 53 §4.3's two-stage
 > role binding; doc 55's `bound_second_stage` route (its staged checker refuses it until decided); the CPU-only session plans of doc
 > 52 §5.2 and doc 58 §5.2 that assume the tiny cascade.
@@ -56,7 +57,16 @@ doc 58 (§5.2, OQ4); DG022; DG057.
 
 ## Decision record
 
-Open. Owner-level: needs an owner question (doc 53 OQ2 and doc 58 OQ4 ask it).
+- **Decided 2026-09-28 under the owner's delegation: option B → [D055](../decisions/D055-visible-second-stage-when-unsure.md).** A
+  user-authored two-stage binding per role; the call moves to the bound second stage only on a calibrated margin below the pair's
+  threshold, only for a (first stage, second stage, `DecisionKind`) pair that passed doc 53's R6 bar with routing scores calibrated on
+  held-out data, never on self-reported confidence; priced on the plan card and recorded per step with stage and margin. Until a pair
+  passes, option A holds (doc 55 §7 item 9). No owner question was filed; the owner may overrule it on return.
+- **Reason.** Every move is authored and visible, as D050 item 3 does for limit outcomes, so it is not the "automatic escalation" doc
+  21 §1.4 rejects; C puts a card on every unsure menu.
+- **Folding (what moves this request to `folded`).** Doc 53 §4.3; doc 55's route knob; doc 21 §1.4 (a note); the plan card and run
+  record (doc 38 §5.2–§5.3). The notes on D023, D024, D026, D050 and D051 are done (2026-09-28); D055 item 6 keeps D051 item 6
+  (the second stage answers at the step's effective level, never higher).
 
 ## Verification notes
 
@@ -64,3 +74,9 @@ Open. Owner-level: needs an owner question (doc 53 OQ2 and doc 58 OQ4 ask it).
 
 - Filed from doc 53 §4.3, doc 55 §7 item 9, doc 56 §10 item 6 and doc 58 OQ4 (one candidate across four docs), re-read on 2026-09-28
   with D023, D050 and D051. Written after D050 appeared the same day; route lists on limit outcomes are cited as decided there.
+
+### Owner delegation, design-gap pass (2026-09-28)
+
+- Decided with the recommended option B under the owner's delegation of 2026-09-28 (quoted in D055), without an owner question. D055
+  was written from this request, doc 53 (§4.2, §4.3, §5.5 R6, OQ2), doc 55 §7 item 9, doc 56 §10 item 6, doc 58 OQ4, D023, D024 and
+  D050, re-read on 2026-09-28. Docs 53 and 58 gained only answered-markers at their open questions; no other research doc was edited.

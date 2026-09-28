@@ -73,3 +73,13 @@
 
 Owner direction and go-ahead of 2026-09-28; doc 63 (TL;DR, §2, §4–§8, §13, §14, open questions); doc 62 §6.3; docs 21 (§3.3,
 §12.3), 30 (§3.4, §4.3), 53, 55; D009; D023; D024; D025; D027; D037; D044; D045; D048.
+
+## Amendment notes
+
+### 2026-09-28: item 6 read with a bound second stage (D055, pointer)
+
+A note under lifecycle item 5; [D055](D055-visible-second-stage-when-unsure.md) governs (DG050 option B), decided under the owner's
+delegation; the owner may overrule it on return. A role may bind a user-authored second stage that answers when the first stage's
+calibrated margin is below the pair's threshold, only for a pair that passed doc 53's R6 bar. Item 6 stands: the second stage
+answers the same `DecisionKind` at the step's effective level, never a higher one; the plan card prices it before the run in place
+of the button; a failed or over-budget step still splits down. The header has no open part to mark; nothing above changed.

@@ -56,3 +56,14 @@ doc 25 §5, §11; doc 38 §4.
 - 2026-09-27 (consistency review): the "one visible escalation on the same model" in decision item 1 restates doc 40 R6 as proposed.
   Whether it is allowed at all is DG022 (listed under Open parts, and in D024); this record does not decide it (decisions README,
   lifecycle item 2). Until DG022 is decided, the architecture offers a stronger model only as a visible button with its cost.
+
+## Amendment notes
+
+### 2026-09-28: D054 and D055 on the plan card (pointers)
+
+A note under lifecycle item 5; both records were decided under the owner's delegation, and the owner may overrule them on return.
+[D054](D054-review-stage-for-creative-steps.md)'s review stage is off by default and runs only when the user binds a reviewer and
+picks Thorough or Max, with its calls and cost on the plan card, so decision 2's cost preview includes it and decision 3's "no paid
+judge by default" holds. [D055](D055-visible-second-stage-when-unsure.md)'s bound second stage is priced on the plan card too; its
+margin is computed by code from the first stage's own scores and calibrated (doc 53 §4.2), not a learned router (decision 3; doc 40
+§8), and its moves are recorded and shown, so none is a silent switch. The header is unchanged; nothing above changed.

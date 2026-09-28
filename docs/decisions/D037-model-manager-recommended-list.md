@@ -66,3 +66,11 @@ A note under lifecycle item 5 (`docs/decisions/README.md`). The decisions above 
 - **Free cloud presets → [D045](D045-free-model-offer-policy.md)** (OWQ-24 (b) and the owner's direction of 2026-09-27). Cloud
   endpoints stay outside this record's scope; D045 follows the same idea as decision 1 for them: a free model is offered for a step
   kind only if its provider's terms allow it and it passed Plotroom's qualification for that step kind.
+
+### 2026-09-28: refined by D057 (badges per component kind)
+
+A note under lifecycle item 5; [D057](D057-bindable-badged-switchable-components.md) governs (DG057 option B), decided under the
+owner's delegation; the owner may overrule it on return. Non-generative components (doc 58 §1.2) carry a badge per component kind,
+set by Plotroom's own qualification suites for that kind (doc 58 §4.9), beside the badges per model setup and step kind; as for
+models, a badge comes from Plotroom's instruments, never from vendor claims. The decisions above are unchanged, and the header has no
+open part to mark.

@@ -78,3 +78,10 @@ option adopted under the owner's go-ahead; overrule on return.
 - **Still open:** the `PlanDraft` format, its checks and where saved plans live
   ([DG042](../design-gap-requests/DG042-plan-draft-format-and-saved-plans.md)); a bounded "repeat until" step, which would amend
   decision 2 if adopted ([DG040](../design-gap-requests/DG040-bounded-repeat-until-step.md)).
+
+### 2026-09-28: D054's review stage adds no step kind (pointer)
+
+A note under lifecycle item 5; [D054](D054-review-stage-for-creative-steps.md) governs (DG041 option B), decided under the owner's
+delegation; the owner may overrule it on return. The advisory review of creative candidates is a `review` key of `sample`, not a new
+step kind, so decision 2's closed set of twelve kinds stands (DG041 option C, a `panel` kind, was not adopted); a reviewer never
+admits, rejects, edits or repairs, so only a code gate still says "done". The header is unchanged; nothing above changed.
