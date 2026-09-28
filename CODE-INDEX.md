@@ -3,8 +3,9 @@
 Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: Cold War Assault / Operation Flashpoint**, required by
 `AGENTS.md` ("Source Code Navigation Index"). It tells a human or an LLM agent where things are, and where they will be.
 
-> **Status (2026-09-27): there is no Rust code yet.** The repository holds design documents, two skills, a prompt pack and two Python
-> research tools. Every crate, module and newtype below is **planned**: it comes from the proposal in
+> **Status (2026-09-27): there is no product Rust code yet.** The repository holds design documents, two skills, a prompt pack and
+> research tools; since 2026-09-28 one of them, `tools/rust-weak-models`, is a standalone Cargo workspace of research crates (doc
+> 64's experiment), not product code. Every crate, module and newtype below is **planned**: it comes from the proposal in
 > [`docs/architecture/crate-map.md`](docs/architecture/crate-map.md) and is not decided. Crate names become final only when the change
 > set that creates the crate records it here (D002 item 4). That change set also fills the row's path and flips its status to
 > **landed**.
@@ -24,6 +25,7 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 | Look up editor concepts and engine facts | [`skills/standing-orders/`](skills/standing-orders/SKILL.md), [`skills/mission-primer/`](skills/mission-primer/SKILL.md), docs 03, 04 and 18 |
 | Measure a local or cloud model (free OpenRouter models included), the harness's uplift, reasoning scaffolds, a harness preset, a small-to-large cascade, or model cost | [`tools/local-qual/`](tools/local-qual/README.md), [`tools/cost-model/`](tools/cost-model/cost_model.py) |
 | Simulate free-tier rate limits and upstream 429s over a user day | [`tools/quota-sim/`](tools/quota-sim/README.md) |
+| Re-run doc 64's experiment (PLAIN vs GUIDED Rust APIs for small models: harness, tasks, pilot driver, analyses) | [`tools/rust-weak-models/`](tools/rust-weak-models/README.md) |
 
 ## 2. Repository layout (current)
 
@@ -54,7 +56,7 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 │   └── standing-orders/   SKILL.md + references/ (32 concept entries; formerly skills/field-manual/)
 ├── prompts/
 │   └── design-sensibility/  v0.2 taste pack: core.md, lenses/ (8), rubric.md, code-owned-principles.md, EVALUATION.md
-├── tools/                 Python research tools, standard library only; not product code
+├── tools/                 research tools, not product code: Python standard library, plus one standalone Cargo workspace
 │   ├── local-qual/        README.md (usage, suites, metrics, tests, verification); run.py (runner) with run_cli.py (flags,
 │   │                      refusals), run_records.py and run_preset.py (--preset: a harness preset's knobs to flags);
 │   │                      presets/ (harness-preset schema, draft presets, lint.py checker; D048, doc 55 §3);
@@ -69,15 +71,22 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 │   │                      text, knowledge .json + the open-arm sidecar); tests/ (unittest suite: mock servers, fixtures,
 │   │                      goldens; run python -m unittest discover -s tools/local-qual/tests); results/ is git-ignored
 │   ├── cost-model/        cost_model.py (its JSON output is git-ignored; feeds docs/research/data/cost-model.csv)
-│   └── quota-sim/         README.md, quota_sim.py (day replay, strategies S0-S6, CLI), quota_pools.py (pools, congestion,
-│                          endpoints), quota_report.py (metrics, grid, Markdown), test_quota_sim.py, data/ (workload.json,
-│                          limits.json: inputs); results go to a path the caller names
+│   ├── quota-sim/         README.md, quota_sim.py (day replay, strategies S0-S6, CLI), quota_pools.py (pools, congestion,
+│   │                      endpoints), quota_report.py (metrics, grid, Markdown), test_quota_sim.py, data/ (workload.json,
+│   │                      limits.json: inputs); results go to a path the caller names
+│   └── rust-weak-models/  doc 64's experiment, a standalone Cargo workspace (never a member of a root workspace, §3):
+│                          README.md; crates/ (mb-spec, mb-core, mb-plain, mb-guided, mb-oracle); tasks/ (T01-T30) and
+│                          pilot/ (P01-P04) sources; prompts/; design.json (pre-registration draft); runner.py with rwm/
+│                          (harness, cargo runner, listing, hygiene checks); test_rwm.py; power_sim.py; diag-probe/;
+│                          live/ (llama-server pilot driver, arms.json); analysis/ (pilot analyses); the generated task
+│                          crates, Cargo.lock, target/ and results/ are git-ignored (python runner.py scaffold rebuilds them)
 └── private/               git-ignored local notes; never cite, link or copy from it
 ```
 
 **Verification commands** (`AGENTS.md`, "Local Repo-Specific Rules"), once a Cargo workspace exists:
 `cargo test --workspace --locked`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `cargo fmt --all --check`,
-`cargo check`. Agents never run `cargo build` or `cargo run` unless the user asks. There is no `Cargo.toml` yet.
+`cargo check`. Agents never run `cargo build` or `cargo run` unless the user asks. There is no root `Cargo.toml` yet;
+`tools/rust-weak-models/Cargo.toml` is the research workspace's own manifest, verified with the commands in its README.
 
 ## 3. Planned workspace rules (from the architecture, proposal)
 
@@ -94,6 +103,11 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 - **One `Error` enum per crate** in `src/error.rs`; format crates keep a thin `src/read.rs` over `plotroom-bytes`' cursor.
 - **Directory layout** of the workspace (for example whether crates live under `crates/`) is not decided; the M0 change that creates
   the workspace sets it and records it here.
+- **Research workspaces stay out.** `tools/rust-weak-models` is a standalone Cargo workspace (doc 64). The root `Cargo.toml` must
+  carry `exclude = ["tools/rust-weak-models"]` and never name a path below it as a member: with cargo 1.98.1 a glob that matches the
+  folder fails loudly, but a member path that reaches a crate inside it is adopted silently (root lock file, profiles and lints),
+  and an explicit path wins over `exclude`. A root `rust-toolchain.toml` or `.cargo/config.toml` reaches it too.
+  `tools/rust-weak-models/test_rwm.py` (`EnclosingWorkspace`) fails, naming the fix, when any of these appears.
 
 ## 4. Crate map (all planned)
 
@@ -267,7 +281,8 @@ Not newtypes: `DiagCode` is a generated enum (`plotroom-diag`, from the DG005 re
 1. **Order:** `AGENTS.md` → this file → [`docs/README.md`](docs/README.md) §4 → one decision record, one architecture file, the cited
    research sections. Do not load whole research docs (30–127 KB each): read the header and TL;DR, list the `##` headings, read the
    cited sections.
-2. **No code yet.** Searching for `.rs` files or `Cargo.toml` finds nothing. Questions about "how the code does X" are answered by
+2. **No product code yet.** The only `.rs` files and `Cargo.toml` files are in `tools/rust-weak-models/`, doc 64's research
+   experiment, whose crates are stimuli, not product code. Questions about "how the code does X" are answered by
    `docs/architecture/`, marked proposal.
 3. **Names in this file are the planned names.** Research docs use working names (`ofp-*`, `ofpe-*`, `.ofpeditor/`); the mapping to
    `plotroom-*` is [crate-map §15](docs/architecture/crate-map.md). Never invent a crate name; add or change one only through the
@@ -284,8 +299,8 @@ Not newtypes: `DiagCode` is a generated enum (`plotroom-diag`, from the DG005 re
    ids `Cwa199`, `Cwr`, `Ce` are data values, D003); no private project names anywhere; nothing from `/private/`.
 8. **Opt-in local tests** use `PLOTROOM_CORPUS_DIR` and `PLOTROOM_GAME_DIR` (planned; [testing-strategy §15](docs/architecture/testing-strategy.md));
    CI never depends on a game install or proprietary data.
-9. **Tools** in `tools/` are research harnesses in Python's standard library. Their raw outputs are git-ignored; only derived CSVs
-   under `docs/research/data/` are committed.
+9. **Tools** in `tools/` are research harnesses in Python's standard library; `tools/rust-weak-models` adds a standalone research
+   Cargo workspace. Their raw outputs are git-ignored; only derived CSVs under `docs/research/data/` are committed.
 10. **Skills and prompts** are product content for Wilco (the editor's own AI), loaded by the editor, not instructions for coding
     agents. Their tool names are provisional.
 
@@ -388,3 +403,15 @@ Not newtypes: `DiagCode` is a generated enum (`plotroom-diag`, from the DG005 re
   (`cloud_guard.redirect_host`, t74 in `tests/test_cloud_guards.py`), and a label planted in the key record's date
   fields reached a free run's console and records (`free_key.key_summary`, t75 in `tests/test_free_mode_review.py`).
 - No crate, module boundary of the planned workspace or newtype changed.
+
+### `tools/rust-weak-models` (2026-09-28)
+
+- Doc 64's experiment harness moved into the repository from a scratch folder (friction register FR-C-013): the five research
+  crates, the 34 tasks' hand-written sources, prompts, the pre-registration draft, the runner and its `rwm/` package, the tests,
+  the power simulation, the diagnostic probes, the live pilot driver and the pilot analyses. Generated task crates, `Cargo.lock`,
+  `target/` and `results/` are git-ignored. §1, §2, §3 and §6 now name it; the status line and tip 2 say "no product code" instead
+  of "no code".
+- It is a standalone Cargo workspace; §3 records the rule that keeps it out of the future root workspace, from a probe with cargo
+  1.98.1 on a nested copy. Its crates are not planned product crates: §4 and §5 do not list them (the `GUIDED` ids are experiment
+  stimuli, not project newtypes).
+- Evidence and the changes made in the move are in its README. No crate, module boundary of the planned workspace or newtype changed.

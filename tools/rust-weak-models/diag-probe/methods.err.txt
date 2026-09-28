@@ -1,0 +1,57 @@
+error[E0277]: no waypoint can follow CYCLE: this plan was already closed by `.cycle()`
+  --> methods.rs:84:54
+   |
+84 |     let _ = PlanA::new().move_to().move_to().cycle().move_to();
+   |                                                      ^^^^^^^ this plan is `Cycled`, so it takes no more waypoints
+   |
+help: the trait `AcceptsWaypoints` is not implemented for `Cycled`
+  --> methods.rs:9:1
+   |
+ 9 | pub struct Cycled;
+   | ^^^^^^^^^^^^^^^^^
+   = note: fix: add every waypoint first, then call `.cycle()` last
+help: the trait `AcceptsWaypoints` is implemented for `Open`
+  --> methods.rs:17:1
+   |
+17 | impl AcceptsWaypoints for Open {}
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `PlanA::<State>::move_to`
+  --> methods.rs:27:16
+   |
+25 |     pub fn move_to(self) -> Self
+   |            ------- required by a bound in this associated function
+26 |     where
+27 |         State: AcceptsWaypoints,
+   |                ^^^^^^^^^^^^^^^^ required by this bound in `PlanA::<State>::move_to`
+
+error[E0599]: no method named `move_to` found for struct `PlanB<Cycled>` in the current scope
+  --> methods.rs:87:54
+   |
+41 | pub struct PlanB<State> {
+   | ----------------------- method `move_to` not found for this struct
+...
+87 |     let _ = PlanB::new().move_to().move_to().cycle().move_to();
+   |                                                      ^^^^^^^ method not found in `PlanB<Cycled>`
+   |
+   = note: the method was found for `PlanB<Open>`
+
+error[E0308]: mismatched types
+  --> methods.rs:92:29
+   |
+92 |     let _ = Trigger.sync_to(&g);
+   |                     ------- ^^ expected `&GroupRef<'_>`, found `&Option<GroupRef<'_>>`
+   |                     |
+   |                     arguments to this method are incorrect
+   |
+   = note: expected reference `&GroupRef<'_>`
+              found reference `&Option<GroupRef<'_>>`
+note: method defined here
+  --> methods.rs:78:12
+   |
+78 |     pub fn sync_to(self, _g: &GroupRef<'_>) -> Self {
+   |            ^^^^^^^       -----------------
+
+error: aborting due to 3 previous errors
+
+Some errors have detailed explanations: E0277, E0308, E0599.
+For more information about an error, try `rustc --explain E0277`.

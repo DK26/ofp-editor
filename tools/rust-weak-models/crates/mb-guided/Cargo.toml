@@ -1,0 +1,12 @@
+[package]
+name = "mb-guided"
+description = "GUIDED variant: typestate/witness/newtype mission-builder API (shown to the model as crate `mb`)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+mb-spec = { path = "../mb-spec" }
+mb-core = { path = "../mb-core" }

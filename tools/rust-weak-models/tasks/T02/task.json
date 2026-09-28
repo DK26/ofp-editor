@@ -1,0 +1,1 @@
+{"id": "T02", "title": "Two-point move", "tier": "A", "spec_module": "t02", "traps": ["BOUNDS", "SEQ-EXPORT"], "refusals": ["OutOfMap"], "friction": false, "scored": true}

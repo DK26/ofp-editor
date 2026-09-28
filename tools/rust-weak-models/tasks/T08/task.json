@@ -1,0 +1,1 @@
+{"id": "T08", "title": "Mounted assault", "tier": "B", "spec_module": "t08", "traps": ["SEQ-MOUNT", "REF-VEHICLE"], "refusals": ["UnknownVehicle"], "friction": false, "scored": true}

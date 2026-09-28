@@ -1,0 +1,19 @@
+[
+  {
+    "name": "hold_at_ambush",
+    "category": "SEQ-HOLD",
+    "note": "Models 'waits at the ambush point' as HOLD, then moves on.",
+    "plain": [
+      [
+        "let wait = m.add_waypoint(g, Waypoint::Move(input.ambush))",
+        "let wait = m.add_waypoint(g, Waypoint::Hold(input.ambush))"
+      ]
+    ],
+    "guided": [
+      [
+        "Plan::new().move_to(pos(input.ambush)?).move_to(pos(input.extraction)?)",
+        "Plan::new().hold(pos(input.ambush)?).move_to(pos(input.extraction)?)"
+      ]
+    ]
+  }
+]

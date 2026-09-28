@@ -1,0 +1,1 @@
+{"id": "T30", "title": "One bad element", "tier": "D", "spec_module": "t30", "traps": ["SEQ-CYCLE", "SEQ-MOUNT", "REF-SYNC", "REF-VEHICLE", "EMPTY-GROUP", "TIMER-ORDER", "BOUNDS", "ACT-RULE"], "refusals": ["all"], "friction": false, "scored": true}

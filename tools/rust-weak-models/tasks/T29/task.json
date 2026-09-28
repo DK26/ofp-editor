@@ -1,0 +1,1 @@
+{"id": "T29", "title": "Second wave", "tier": "D", "spec_module": "t29", "traps": ["ID-MIX", "REF-VEHICLE", "SEQ-CYCLE"], "refusals": ["UnknownVehicle"], "friction": true, "scored": true}

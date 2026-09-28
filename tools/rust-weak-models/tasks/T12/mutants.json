@@ -1,0 +1,19 @@
+[
+  {
+    "name": "position_as_unit_id",
+    "category": "ID-MIX",
+    "note": "Uses the unit's position in its group as its id.",
+    "plain": [
+      [
+        "        for u in &grp.units {\n            let id = m.add_unit(g, u.class, &u.label, u.pos, u.rank).map_err(|_| Refusal::OutOfMap)?;",
+        "        for (i, u) in grp.units.iter().enumerate() {\n            m.add_unit(g, u.class, &u.label, u.pos, u.rank).map_err(|_| Refusal::OutOfMap)?;\n            let id = i as u32;"
+      ]
+    ],
+    "guided": [
+      [
+        "        for u in &grp.units {\n            let pos = Pos::new(u.pos.x, u.pos.z).map_err(|_| Refusal::OutOfMap)?;\n            let id = m.add_unit(g, u.class, &u.label, pos, u.rank);",
+        "        for (i, u) in grp.units.iter().enumerate() {\n            let pos = Pos::new(u.pos.x, u.pos.z).map_err(|_| Refusal::OutOfMap)?;\n            m.add_unit(g, u.class, &u.label, pos, u.rank);\n            let id = i as u32;"
+      ]
+    ]
+  }
+]

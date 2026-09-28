@@ -1,0 +1,46 @@
+{
+  "note": "The three arms of doc 64's pilot (2026-09-28), in run order. 'gguf' is relative to --models-dir or RWM_MODELS_DIR, laid out as <repo>/<file>; to use other locations, copy this file to arms.local.json (git-ignored), which the driver prefers. repo, revision, size and sha256 match tools/local-qual/presets/drafts. Sampler rule (design.json prompting.sampler): temperature 0.6 for every model; each vendor's non-thinking top_p/top_k/min_p; a value the vendor does not give is disabled (top_p 1.0, top_k 0, min_p 0). 'resume' was true for Qwen because an earlier run of that arm was interrupted; on a fresh output folder it changes nothing. 'label' is the model name recorded in every run header, and --resume refuses a file with another.",
+  "ctx": 24576,
+  "llama_cpp_release": "b11146",
+  "arms": [
+    {
+      "tag": "qwen35-4b-q4km",
+      "label": "qwen3.5-4b-q4km",
+      "repo": "unsloth/Qwen3.5-4B-GGUF",
+      "revision": "e87f176479d0855a907a41277aca2f8ee7a09523",
+      "gguf": "unsloth/Qwen3.5-4B-GGUF/Qwen3.5-4B-Q4_K_M.gguf",
+      "size": 2740937888,
+      "sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+      "top_p": "0.8",
+      "top_k": "20",
+      "min_p": "0",
+      "resume": true
+    },
+    {
+      "tag": "gemma4-e4b-qat",
+      "label": "gemma-4-e4b-it-qat-ud-q4kxl",
+      "repo": "unsloth/gemma-4-E4B-it-qat-GGUF",
+      "revision": "8c5a9e4fd5482e2be20fe0bf013b4c262a8f4265",
+      "gguf": "unsloth/gemma-4-E4B-it-qat-GGUF/gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf",
+      "size": 4215695776,
+      "sha256": "df0fd4ee07072c607c29a0a1cb4f98918426cca12f45a2776bdd6ee6d09a4de3",
+      "top_p": "0.95",
+      "top_k": "64",
+      "min_p": "0",
+      "resume": false
+    },
+    {
+      "tag": "granite41-3b-q4km",
+      "label": "granite-4.1-3b-q4km",
+      "repo": "ibm-granite/granite-4.1-3b-GGUF",
+      "revision": "ab4701481089b58a082ef63cc1cee738887293ff",
+      "gguf": "ibm-granite/granite-4.1-3b-GGUF/granite-4.1-3b-Q4_K_M.gguf",
+      "size": 2099501664,
+      "sha256": "662b0626cd58f443baea23559b469df6576a81d349649c59413b36a9fb32eb29",
+      "top_p": "1.0",
+      "top_k": "0",
+      "min_p": "0",
+      "resume": false
+    }
+  ]
+}

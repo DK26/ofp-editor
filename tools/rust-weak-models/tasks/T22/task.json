@@ -1,0 +1,1 @@
+{"id": "T22", "title": "Bearing and distance", "tier": "C", "spec_module": "t22", "traps": ["UNIT-MEASURE", "BOUNDS"], "refusals": ["OutOfMap"], "friction": false, "scored": true}

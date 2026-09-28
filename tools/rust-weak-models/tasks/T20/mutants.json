@@ -1,0 +1,31 @@
+[
+  {
+    "name": "edit_after_validation",
+    "category": "SEQ-EXPORT",
+    "note": "Validates the brief's mission, then adds the late trigger and exports without validating again.",
+    "plain": [
+      [
+        "    // Late addition.\n",
+        "    m.validate().map_err(|_| Refusal::TooFewWaypoints)?;\n    // Late addition.\n"
+      ],
+      [
+        "let timer = Timer::new(TimerKind::Countdown, late.min_s, late.mid_s, late.max_s).map_err(|_| Refusal::TimerOrder)?;",
+        "let timer = Timer { kind: TimerKind::Countdown, min: late.min_s, mid: late.mid_s, max: late.max_s };"
+      ],
+      [
+        "    // Validate the final mission, after every change.\n    m.validate().map_err(|_| Refusal::TimerOrder)?;\n",
+        ""
+      ]
+    ],
+    "guided": [
+      [
+        "    let m = m.validate().map_err(|_| Refusal::TooFewWaypoints)?;\n    let mut m = m.into_draft();\n",
+        "    let mut m = m.validate().map_err(|_| Refusal::TooFewWaypoints)?;\n"
+      ],
+      [
+        "    let m = m.validate().map_err(|_| Refusal::TimerOrder)?;\n    Ok(m.export())",
+        "    Ok(m.export())"
+      ]
+    ]
+  }
+]

@@ -1,0 +1,1 @@
+{"id": "T19", "title": "Merge two drafts", "tier": "C", "spec_module": "t19", "traps": ["ID-MIX", "REF-SYNC"], "refusals": [], "friction": true, "scored": true}

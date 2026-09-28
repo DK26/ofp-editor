@@ -1,0 +1,1 @@
+{"id": "P03", "title": "Base alarm", "tier": "pilot", "spec_module": "p03", "traps": ["ACT-RULE"], "refusals": [], "friction": false, "scored": false}

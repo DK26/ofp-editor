@@ -1,0 +1,19 @@
+[
+  {
+    "name": "detector_swapped",
+    "category": "ACT-RULE",
+    "note": "Swaps watcher and watched in the detection condition.",
+    "plain": [
+      [
+        "Activation::DetectedBy { detector: input.watcher, detected: input.watched }",
+        "Activation::DetectedBy { detector: input.watched, detected: input.watcher }"
+      ]
+    ],
+    "guided": [
+      [
+        "Activation::detected_by(input.watched, input.watcher)",
+        "Activation::detected_by(input.watcher, input.watched)"
+      ]
+    ]
+  }
+]

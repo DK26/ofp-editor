@@ -1,0 +1,1 @@
+{"id": "T04", "title": "Patrol loop", "tier": "A", "spec_module": "t04", "traps": ["SEQ-CYCLE", "ERR-HANDLING"], "refusals": ["TooFewWaypoints"], "friction": false, "scored": true}

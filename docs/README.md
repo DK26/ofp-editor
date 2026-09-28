@@ -362,6 +362,11 @@ Row counts are data rows (header excluded), counted with a CSV parser on 2026-09
 - [`quota-sim`](../tools/quota-sim/README.md): a seeded discrete-event replay of Wilco user days against free-tier limits (requests,
   tokens, neurons, credits), upstream 429 congestion and routing strategies S0–S6; Python standard library only, no network, no keys;
   31 unit tests; results are written only where the caller points and are not committed. Doc 52.
+- [`rust-weak-models`](../tools/rust-weak-models/README.md): doc 64's experiment, PLAIN vs GUIDED Rust APIs for small coding
+  models: a standalone research Cargo workspace (five crates, 34 tasks with reference solutions in both variants), a
+  standard-library Python runner for OpenAI-compatible endpoints, the llama-server pilot driver and the pilot analyses. Run records
+  are git-ignored. From its folder: `python -m unittest test_rwm`, then `python runner.py scaffold`, `python runner.py verify --tasks
+  all` and `cargo test --workspace --offline --locked`.
 
 ## 7. Integration items: ownership check
 

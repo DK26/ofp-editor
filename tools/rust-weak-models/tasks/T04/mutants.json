@@ -1,0 +1,23 @@
+[
+  {
+    "name": "cycle_error_unhandled",
+    "category": "ERR-HANDLING",
+    "note": "Does not handle the too-few-points case; GUIDED unwraps the cycle() Result (escape hatch), PLAIN skips the check and validation.",
+    "plain": [
+      [
+        "    if input.points.len() < 2 {\n        return Err(Refusal::TooFewWaypoints);\n    }\n",
+        ""
+      ],
+      [
+        "    m.validate().map_err(|_| Refusal::TooFewWaypoints)?;\n",
+        ""
+      ]
+    ],
+    "guided": [
+      [
+        "let plan = plan.cycle().map_err(|_| Refusal::TooFewWaypoints)?;",
+        "let plan = plan.cycle().unwrap();"
+      ]
+    ]
+  }
+]

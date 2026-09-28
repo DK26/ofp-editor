@@ -1,0 +1,443 @@
+{
+  "id": "rust-weak-models-prereg",
+  "version": "0.1.0-draft",
+  "date": "2026-09-28",
+  "status": "Pre-registration draft. Nothing has been run against a model. Two things were run for this design: a rustc 1.98.1 diagnostics probe (diag-probe/) and a pure-stdlib Monte Carlo power simulation (power_sim.py, power_sim_results.json). Everything else is proposal [I].",
+  "epistemic_legend": {
+    "V": "measured or read for this design (probe output, simulation output, cited public page)",
+    "V_per_doc": "taken from a sibling Plotroom research doc",
+    "I": "inference or proposal",
+    "U": "unknown until the pilot or main run"
+  },
+  "owner_theory": "With Rust, APIs can lead the user (human or LLM) into correct usage and states: bad states impossible, logical errors easy to spot (typestate, witness and guard types, newtypes, compile errors that name the fix, doc comments written as instructions), with the compiler as a verifier in the loop. So weaker models should punch above their weight at coding against such APIs.",
+  "research_questions": [
+    "RQ1: Against an unseen library, do small local models produce more correct programs when the API is GUIDED rather than PLAIN, with identical functionality?",
+    "RQ2: Does GUIDED reduce silent logical errors: programs that compile and pass the visible tests but violate a domain rule?",
+    "RQ3: Does GUIDED make the compiler/test feedback loop more effective, i.e. is the gain from up to 3 repair rounds larger under GUIDED?",
+    "RQ4: Punching above weight: does a small model with GUIDED reach a larger model's PLAIN level, and is the GUIDED gain larger for small models than for the larger comparator?",
+    "RQ5 (mechanism, exploratory): which ingredients carry the effect: static rejection (typestate/newtypes), forced handling (Option/Result witnesses), or instructive text (doc comments, on_unimplemented messages)? What does it cost in tokens?"
+  ],
+
+  "hypotheses": {
+    "confirmatory_order_note": "Fixed-sequence gatekeeping: H1 is tested at alpha 0.05 two-sided; H2 is tested only if H1 is rejected in the predicted direction; then H3, then H4. Everything not in this chain is exploratory. No alpha is split, and the chain stops at the first non-rejection.",
+    "H1": {
+      "claim": "hidden_pass at R<=3 is higher for GUIDED than PLAIN, pooled over the three small local models.",
+      "estimand": "mean over tasks i of d_i, where d_i = mean over small models j and samples s of [hidden_pass_GUIDED(i,j,s,R<=3) - hidden_pass_PLAIN(i,j,s,R<=3)]. Equal weight per task and per model.",
+      "test": "Sign-flip randomisation test on the 30 task-level d_i (100,000 random sign vectors, seed 20260928), two-sided, alpha 0.05.",
+      "interval": "Task-cluster percentile bootstrap, 10,000 resamples of tasks, 95%.",
+      "smallest_effect_of_interest_pp": 5,
+      "adoption_threshold_pp": 10
+    },
+    "H2": {
+      "claim": "accepted_but_wrong at R<=3 is lower for GUIDED than PLAIN (small models pooled).",
+      "definition": "Per episode: the final code compiles and passes every visible test (so the loop would report success), yet at least one hidden test fails or the oracle flags the export.",
+      "estimand": "Task-level paired difference of per-episode rates, same weighting as H1.",
+      "test": "Same sign-flip test and bootstrap as H1.",
+      "guard": "H2 is reported as support for the theory only if the H1 point estimate is not below -5 pp; a lower silent-error rate bought by failing more tasks outright is reported as a trade-off, not a win."
+    },
+    "H3": {
+      "claim": "The feedback loop helps GUIDED more than PLAIN.",
+      "estimand": "mean over tasks of [(G@R<=3 - G@R0) - (P@R<=3 - P@R0)] on hidden_pass, small models pooled.",
+      "test": "Sign-flip test and bootstrap as H1.",
+      "prediction_detail": "Under GUIDED many trap violations become compile errors at R0 (so G@R0 compile success may be LOWER than P@R0) and are repaired in later rounds; under PLAIN the same violations compile and pass visible tests, so the loop never sees them."
+    },
+    "H4": {
+      "claim": "For each small model, GUIDED@R<=3 is non-inferior to the comparator's PLAIN@R<=3.",
+      "margin_pp": -10,
+      "test": "Per small model, task-paired difference; non-inferior if the lower bound of the two-sided 90% task-bootstrap interval is above -10 pp. Holm across the three models inside H4.",
+      "companion_descriptive": "Gap closure = (small_G - small_P) / (large_P - small_P) per small model, with bootstrap interval; the variant x size interaction (is the GUIDED gain larger for small models than for the comparator?) is estimated and reported but not tested confirmatorily (low power)."
+    },
+    "predicted_pattern_by_trap_class": "GUIDED's reduction in trap failures is largest for class S traps (rejected statically by GUIDED), smaller for class F (GUIDED forces handling of an Option/Result, but .unwrap() escapes it), and about zero for class R (checked at run time in both variants; a control). If class R traps also improve, the gain is more likely the instructive text than the types.",
+    "two_sided_warning": "A harmful result is plausible and informative: typestate generics are rare in training data, and the probe shows some GUIDED misuse yields E0599/E0308 errors with no custom guidance. The tests are two-sided; decision rule DR3 covers harm."
+  },
+
+  "domain": {
+    "name": "mission-builder (synthetic)",
+    "fidelity_note": "A small, synthetic model loosely inspired by classic mission editors. It does not claim engine fidelity and cites no engine behaviour; the rules below are the experiment's own. Names avoid third-party marks (crates are mb-*).",
+    "entities": {
+      "side": ["West", "East", "Resistance", "Civilian"],
+      "unit": "class from a closed catalog (rifleman, machine_gunner, at_soldier, medic, officer, truck, jeep, apc), side, position (x, z) in metres, rank (Private..Colonel), skill 0.2..1.0. Vehicles are units with a vehicle class.",
+      "group": "side, unique callsign, at least one unit, all units of the group's side, leader (explicit or highest rank, first listed on ties), waypoint plan",
+      "waypoint": "MOVE, SEEK_AND_DESTROY, HOLD, GET_IN(vehicle), GET_OUT, CYCLE; a waypoint may be synchronised with waypoints of other groups and with triggers; a waypoint synced to a trigger waits until the trigger fires",
+      "trigger": "area (centre, a, b, angle in degrees); activation NONE | SIDE(side, PRESENT | NOT_PRESENT) | DETECTED_BY(detector, detected) | RADIO(ALPHA..JULIET); ONCE | REPEATEDLY; optional timer COUNTDOWN or TIMEOUT(min, mid, max seconds); type NONE | END(1..6) | LOSE; synced waypoints",
+      "export": "canonical text format ('mbx', synthetic), produced only by the library's export step"
+    },
+    "rules": [
+      "R1 CYCLE must be the last waypoint and needs at least two earlier MOVE or SEEK_AND_DESTROY waypoints.",
+      "R2 HOLD is terminal: nothing may follow HOLD.",
+      "R3 GET_OUT is valid only after a GET_IN earlier in the same plan with no GET_OUT between them.",
+      "R4 GET_IN targets an existing vehicle unit of the same side.",
+      "R5 Every sync reference (waypoint to waypoint, trigger to waypoint) must name an existing group and waypoint.",
+      "R6 Timers: min <= mid <= max, all in seconds, all >= 0.",
+      "R7 RADIO activation has no side condition; DETECTED_BY needs detector != detected.",
+      "R8 An END or LOSE trigger must be ONCE.",
+      "R9 Groups have at least one unit; callsigns are unique; all units share the group's side.",
+      "R10 Every position lies inside the map (0..12,800 m on both axes).",
+      "R11 Only a mission that passed validation, and was not changed after it, may be exported."
+    ],
+    "rules_sheet_policy": "The rules R1-R11 are given to the model as an identical 'Domain rules' sheet in BOTH variants, so PLAIN is never missing information; the variants differ only in the API listing (types, signatures, doc comments, diagnostics)."
+  },
+
+  "api_variants": {
+    "shared_contract": "Both crates implement the same operation set with the same semantics when used correctly, and produce byte-identical exports for equivalent missions (checked by a shared conformance suite before any model run). Differences are only in what misuse is expressible and how misuse is reported.",
+    "operation_set": [
+      "new mission", "add group(side, callsign)", "add unit(group, class, pos, rank, skill)", "set leader", "lookup group by callsign",
+      "lookup vehicle by label", "plan: move / seek-and-destroy / hold / get-in / get-out / cycle", "sync waypoint with waypoint",
+      "add trigger(area, activation, repeat, timer, type)", "sync trigger to waypoint", "validate", "export",
+      "data-driven plan building from a list of orders"
+    ],
+    "PLAIN": {
+      "style": "Idiomatic runtime-checked Rust, not a strawman: closed enums for kinds, a structured MissionError enum, Result-returning &mut self methods with local checks, #[must_use] on Results (default for Result), public plain-data fields on value types.",
+      "ids_and_units": "u32 ids (unit, group, trigger), usize waypoint indices, f32 seconds/metres/degrees documented in prose, positions as (f32, f32).",
+      "validation": "validate(&self) -> Result<(), Vec<MissionError>> checks R1-R10; export(&self) -> Exported does NOT re-validate (documented: 'call validate() first'), per the owner's trap list. A PLAIN-DEFENSIVE sub-variant (export validates internally) is listed as an optional ablation.",
+      "docs": "Generic one-line doc comments ('Adds a waypoint to the group.').",
+      "data_driven_path": "Plain loop over orders calling Result-returning methods."
+    },
+    "GUIDED": {
+      "typestate": "Mission<Draft> -> validate() -> Result<Mission<Validated>, ValidationReport>; mutation of a validated mission requires into_draft() and re-validation (R11). Plan<Open | Mounted | Closed>: move_to / seek_and_destroy where State: AcceptsWaypoints; get_out where State: IsMounted; cycle() -> Result<Plan<Closed>, TooFewWaypoints>; hold() -> Plan<Closed>. TriggerBuilder<NeedsActivation | Ready, Once | Repeating>; ends_mission(End) where R: FiresOnce (R8).",
+      "witness_and_guard_types": "GroupId, UnitId, VehicleId, WaypointRef, TriggerId are unforgeable newtypes: no public from_raw; obtainable only from add_* or lookup_*(label) -> Option<_>. Timer::new(min, mid, max) -> Result<Timer, TimerOrder> over Seconds. Activation::detected_by(a, b) -> Result<Activation, SameSide>.",
+      "newtypes": "Seconds (with from_minutes), Metres (with from_km), Degrees, Pos { x: Metres, z: Metres } via Pos::new -> Result<Pos, OutOfMap>.",
+      "diagnostics": "#[diagnostic::on_unimplemented] on every marker trait that encodes a sequence rule, with message, label and a 'fix:' note; the Exportable bound on export(); deliberate state names (Draft, Validated, Closed, Mounted) that read as the fix.",
+      "construction_rule_from_probe": "Every typestate restriction that has a fix to teach is written as a METHOD-level `where State: Trait` bound on a trait carrying #[diagnostic::on_unimplemented] (rustc 1.98.1 then emits E0277 with the custom message and note). Never as an impl-block bound (E0599: custom text dropped) or an inherent impl on one state only (E0599: 'method was found for Plan<Open>', no custom text). Witness mismatches surface as E0308 with no custom text, so their guidance must live in type names and doc comments.",
+      "docs": "Doc comments written as instructions: when to call, what must come before and after, what to do with the Result, which alternative to use ('Building from runtime data? Use AnyPlan::apply').",
+      "data_driven_path": "AnyPlan enum over the three plan states with apply(order) -> Result<AnyPlan, SequenceError>, so data-driven tasks need no type gymnastics. This keeps functionality identical and is the realistic 'typestate for static code, checked enum for data' pattern.",
+      "deviation_note": "Unforgeable ids deliberately omit the from_raw constructor that AGENTS.md's newtype convention asks for; for agent-facing APIs a public from_raw is an escape hatch. Record as a design note if results support it."
+    },
+    "fairness_controls": [
+      "Shared conformance suite: both variants export byte-identical text for 20+ scenarios before any model call.",
+      "Reference solutions in both variants for all 30 tasks pass every hidden test.",
+      "Idiomaticity review of PLAIN by an independent reviewer (a different model or contributor) blinded to the hypotheses, with a checklist: closed enums, structured errors, must_use, no gratuitous stringly typing; findings fixed before freezing.",
+      "Identical system prompt, rules sheet, task text, input definitions, visible tests and sampler; only the API listing differs.",
+      "API listing produced by the same generator for both variants (public items, signatures and doc comments, bodies elided); token counts per model tokenizer recorded; both listings capped at 7,000 tokens.",
+      "Task texts are API-neutral: they never mention validate, typestate, ids or any variant-specific item. An independent neutrality review checks this before freezing."
+    ]
+  },
+
+  "probe_findings": {
+    "toolchain": "rustc 1.98.1 (48a229cea 2026-09-01), cargo 1.98.1",
+    "files": ["diag-probe/guided.rs", "diag-probe/guided.err.txt", "diag-probe/methods.rs", "diag-probe/methods.err.txt"],
+    "results": [
+      {"misuse": "export() of Mission<Draft> through a free fn with an Exportable bound", "code": "E0277", "custom_text_shown": true, "note": "Custom message, label and 'fix:' note printed, plus 'the trait Exportable is implemented for Mission<Validated>'. [V]"},
+      {"misuse": "move_to() after cycle(), bound on the impl block", "code": "E0599", "custom_text_shown": false, "note": "'the method move_to exists for struct WaypointPlan<Cycled>, but its trait bounds were not satisfied'; on_unimplemented ignored. [V]"},
+      {"misuse": "move_to() after cycle(), bound in a method-level where clause", "code": "E0277", "custom_text_shown": true, "note": "'no waypoint can follow CYCLE ...' with 'fix: add every waypoint first, then call .cycle() last'. [V]"},
+      {"misuse": "move_to() after cycle(), inherent impl on the open state only", "code": "E0599", "custom_text_shown": false, "note": "'no method named move_to found for PlanB<Cycled>' + 'the method was found for PlanB<Open>'. [V]"},
+      {"misuse": "UnitId passed where GroupId expected", "code": "E0308", "custom_text_shown": false, "note": "'expected GroupId, found UnitId'. [V]"},
+      {"misuse": "Option<GroupRef> passed where &GroupRef expected (skipped existence check)", "code": "E0308", "custom_text_shown": false, "note": "No suggestion of ? or match; the likely weak-model 'fix' is .unwrap(), which turns a compile error into a runtime panic on the trap input. Track escape hatches. [V; I]"}
+    ],
+    "implication": "on_unimplemented only reaches the model through trait-bound obligations (E0277). The GUIDED crate must be built to the construction rule above, and the analysis logs next-round fix rates per diagnostic code (E0277-custom vs E0599 vs E0308)."
+  },
+
+  "trap_taxonomy": [
+    {"id": "SEQ-CYCLE", "rule": "R1", "class": "S", "guided_mechanism": "Plan<Closed> has no move_to (E0277 custom)"},
+    {"id": "SEQ-HOLD", "rule": "R2", "class": "S", "guided_mechanism": "hold() returns Plan<Closed>"},
+    {"id": "SEQ-MOUNT", "rule": "R3", "class": "S", "guided_mechanism": "get_out requires State: IsMounted"},
+    {"id": "SEQ-EXPORT", "rule": "R11", "class": "S", "guided_mechanism": "Exportable only for Mission<Validated>; mutation requires into_draft()"},
+    {"id": "ID-MIX", "rule": "R4/R5", "class": "S", "guided_mechanism": "distinct unforgeable newtypes (E0308)"},
+    {"id": "UNIT-MEASURE", "rule": "R6/R10", "class": "S/F", "guided_mechanism": "Seconds/Metres/Degrees newtypes with from_minutes/from_km; a raw number wrapped in the wrong unit still compiles"},
+    {"id": "REF-SYNC", "rule": "R5", "class": "F", "guided_mechanism": "lookup_group(label) -> Option<GroupId>; .unwrap() escapes"},
+    {"id": "REF-VEHICLE", "rule": "R4", "class": "F", "guided_mechanism": "lookup_vehicle(label) -> Option<VehicleId>"},
+    {"id": "EMPTY-GROUP", "rule": "R9", "class": "F", "guided_mechanism": "add_group returns a handle that must be manned before planning (Result on first plan call)"},
+    {"id": "ACT-RULE", "rule": "R7/R8", "class": "S/F", "guided_mechanism": "ends_mission requires FiresOnce (S); detected_by returns Result (F)"},
+    {"id": "TIMER-ORDER", "rule": "R6", "class": "R", "guided_mechanism": "Timer::new returns Result in both variants (control)"},
+    {"id": "BOUNDS", "rule": "R10", "class": "R", "guided_mechanism": "position check at run time in both variants (control)"},
+    {"id": "ERR-HANDLING", "rule": "task-stated refusals", "class": "R", "guided_mechanism": "none beyond Result types; return the stated Refusal, do not panic or skip (control)"}
+  ],
+  "trap_classes": {
+    "S": "rejected at compile time by GUIDED, compiles under PLAIN",
+    "F": "GUIDED forces the program to address an Option/Result; an escape hatch (.unwrap()) can defeat it",
+    "R": "checked at run time in both variants; control class"
+  },
+
+  "tasks": {
+    "count_scored": 30,
+    "count_pilot": 4,
+    "pilot_policy": "Pilot tasks P01-P04 are separate, never scored, and are the only tasks used to debug the harness and calibrate difficulty. No scored task is edited after any model has seen it.",
+    "entry_contract": "Every task asks for `pub fn solve(input: &mb_spec::tNN::Input) -> Result<Exported, mb_spec::Refusal>` in one file. Input types and the Refusal enum live in the shared mb-spec crate and are shown verbatim in the prompt. Exported has a private constructor in each variant, so only the library's export step can produce one (no hand-written export text).",
+    "refusal_policy": "Input-dependent invalid conditions are stated in the task text with the Refusal variant to return (fair to both variants). Sequence and unit traps are embedded in natural phrasing without warnings, as a real brief would be.",
+    "visible_tests": "1-2 per task, nominal inputs only, shown in the prompt and used in the feedback loop. They never exercise a trap.",
+    "hidden_tests": "5-10 per task: nominal, trap and edge cases; semantic assertions through the independent mb-oracle parser/validator (order-insensitive where the format is), never string equality on whole exports; 20 s timeout per test binary; run single-threaded.",
+    "mutation_check": "For every trap test, a PLAIN mutant solution that makes exactly that mistake must compile and fail exactly that test. The matching GUIDED mutant is compiled and its outcome recorded: the share of trap mutants GUIDED rejects at compile time is the model-free 'static catch rate' of the design.",
+    "controls": "T01 and T03 carry no trap (pure complexity-tax probes), and the class R categories TIMER-ORDER / BOUNDS / ERR-HANDLING are runtime-in-both controls. Seven friction tasks (T18, T19, T20, T23, T24, T27, T29) are included on purpose to measure the complexity tax of typestate on data-driven, generic and collection code.",
+    "list": [
+      {"id": "T01", "tier": "A", "title": "Single squad", "brief": "Create a West group 'Alpha' with the listed riflemen at the given positions; the sergeant leads; export.", "traps": [], "refusals": [], "friction": false},
+      {"id": "T02", "tier": "A", "title": "Two-point move", "brief": "A two-man East team moves through two points. Refuse with OutOfMap if any point lies outside the map.", "traps": ["BOUNDS", "SEQ-EXPORT"], "refusals": ["OutOfMap"], "friction": false},
+      {"id": "T03", "tier": "A", "title": "Move and hold", "brief": "The group moves through the listed points and holds at the last one.", "traps": [], "refusals": [], "friction": false},
+      {"id": "T04", "tier": "A", "title": "Patrol loop", "brief": "The group patrols the listed points in a loop. Refuse with TooFewWaypoints if fewer than two points are given.", "traps": ["SEQ-CYCLE", "ERR-HANDLING"], "refusals": ["TooFewWaypoints"], "friction": false},
+      {"id": "T05", "tier": "A", "title": "Radio ending", "brief": "Add a trigger that the player calls on radio Alpha; it ends the mission with ending 1.", "traps": ["ACT-RULE"], "refusals": [], "friction": false},
+      {"id": "T06", "tier": "A", "title": "Countdown in minutes", "brief": "When West is present in the area, count down between 1 and 3 minutes (typically 2) and then end the mission (ending 2).", "traps": ["UNIT-MEASURE", "ACT-RULE"], "refusals": [], "friction": false},
+      {"id": "T07", "tier": "B", "title": "Patrol with a stop", "brief": "Patrol A, B, C in a loop; the patrol should also stop by the fuel depot D.", "traps": ["SEQ-CYCLE"], "refusals": [], "friction": false},
+      {"id": "T08", "tier": "B", "title": "Mounted assault", "brief": "Infantry board the named truck, drive to the drop point, dismount and seek and destroy at the target. Refuse with UnknownVehicle if the truck is not in the roster.", "traps": ["SEQ-MOUNT", "REF-VEHICLE"], "refusals": ["UnknownVehicle"], "friction": false},
+      {"id": "T09", "tier": "B", "title": "Presence ending", "brief": "Whenever East enters the town the mission should end with ending 2. Refuse with RepeatingEnd if the brief asks for a repeating ending (flag in input).", "traps": ["ACT-RULE", "ERR-HANDLING"], "refusals": ["RepeatingEnd"], "friction": false},
+      {"id": "T10", "tier": "B", "title": "Detected by", "brief": "A trigger fires when the input's 'watched' side is detected by its 'watcher' side. Refuse with SameSide if they are equal.", "traps": ["ACT-RULE"], "refusals": ["SameSide"], "friction": false},
+      {"id": "T11", "tier": "B", "title": "Groups from a roster", "brief": "Build one group per callsign in the roster. Refuse with EmptyGroup if a callsign has no units and with DuplicateCallsign on repeats.", "traps": ["EMPTY-GROUP", "ERR-HANDLING"], "refusals": ["EmptyGroup", "DuplicateCallsign"], "friction": false},
+      {"id": "T12", "tier": "B", "title": "Leader by rank", "brief": "In each group the highest-ranked unit leads; ties go to the first listed.", "traps": ["ID-MIX"], "refusals": [], "friction": false},
+      {"id": "T13", "tier": "B", "title": "Two groups in step", "brief": "Alpha's second waypoint and Bravo's third waypoint are synchronised (callsigns and waypoint numbers from input). Refuse with UnknownGroup if a callsign is missing.", "traps": ["REF-SYNC", "ID-MIX"], "refusals": ["UnknownGroup"], "friction": false},
+      {"id": "T14", "tier": "B", "title": "Hold-true timer", "brief": "The condition must stay true between 30 and 90 seconds, typically 60; the three numbers arrive in the order max, min, typical. Refuse with TimerOrder if they cannot be ordered consistently (negative values).", "traps": ["TIMER-ORDER"], "refusals": ["TimerOrder"], "friction": false},
+      {"id": "T15", "tier": "C", "title": "Trigger releases a group", "brief": "Bravo waits at its second waypoint until the radio Bravo trigger fires. Refuse with UnknownGroup if Bravo is missing.", "traps": ["REF-SYNC", "ID-MIX"], "refusals": ["UnknownGroup"], "friction": false},
+      {"id": "T16", "tier": "C", "title": "Convoy", "brief": "Three trucks move in a column with an escort jeep; each infantry group boards its truck; the convoy's waypoints are synchronised. Refuse with WrongSide if a group is told to board another side's vehicle.", "traps": ["REF-VEHICLE", "SEQ-MOUNT", "ID-MIX"], "refusals": ["WrongSide", "UnknownVehicle"], "friction": false},
+      {"id": "T17", "tier": "C", "title": "Ambush then extract", "brief": "East waits at the ambush point until West is present in the kill zone, then moves to the extraction point.", "traps": ["SEQ-HOLD", "REF-SYNC"], "refusals": [], "friction": false},
+      {"id": "T18", "tier": "C", "title": "Orders from a list", "brief": "Build a group's plan from a list of orders (Move, Hunt, Board(label), Dismount, Hold, Loop). Refuse with InvalidSequence on any order after Hold or Loop, a Dismount without Board, or a Loop with fewer than two moves.", "traps": ["SEQ-CYCLE", "SEQ-HOLD", "SEQ-MOUNT", "ERR-HANDLING"], "refusals": ["InvalidSequence", "UnknownVehicle"], "friction": true},
+      {"id": "T19", "tier": "C", "title": "Merge two drafts", "brief": "Combine the groups of two input drafts into one mission; rename a duplicate callsign by adding '-2'; keep each draft's syncs pointing at its own groups.", "traps": ["ID-MIX", "REF-SYNC"], "refusals": [], "friction": true},
+      {"id": "T20", "tier": "C", "title": "Late addition", "brief": "Build the mission from the brief, then add the extra trigger described in 'late_trigger' and export. Refuse with TimerOrder if that trigger's timer is inconsistent.", "traps": ["SEQ-EXPORT", "TIMER-ORDER"], "refusals": ["TimerOrder"], "friction": true},
+      {"id": "T21", "tier": "C", "title": "Win and lose", "brief": "Lose if no West unit remains in the whole map; win (ending 1) when radio Alpha is called; neither may repeat.", "traps": ["ACT-RULE"], "refusals": [], "friction": false},
+      {"id": "T22", "tier": "C", "title": "Bearing and distance", "brief": "Place each unit at a bearing (degrees) and distance (km) from the anchor. Refuse with OutOfMap if any lands outside.", "traps": ["UNIT-MEASURE", "BOUNDS"], "refusals": ["OutOfMap"], "friction": false},
+      {"id": "T23", "tier": "D", "title": "Reusable clear-the-area", "brief": "Write a helper that appends 'move in, seek and destroy, move back' to any plan that can still take waypoints, and use it for three groups (one already aboard a vehicle). Refuse with InvalidSequence for a group whose plan is already closed.", "traps": ["SEQ-CYCLE", "SEQ-HOLD", "ERR-HANDLING"], "refusals": ["InvalidSequence"], "friction": true},
+      {"id": "T24", "tier": "D", "title": "Plans in a collection", "brief": "Keep one plan per group in a list, apply the edits in input order by group index, then close each plan with a loop or a hold as the input says.", "traps": ["SEQ-CYCLE", "ID-MIX"], "refusals": ["InvalidSequence"], "friction": true},
+      {"id": "T25", "tier": "D", "title": "Every problem at once", "brief": "Build the mission; if it is invalid, return Refusal::Many with every problem found, sorted by the given order, not just the first.", "traps": ["ERR-HANDLING", "SEQ-EXPORT"], "refusals": ["Many"], "friction": false},
+      {"id": "T26", "tier": "D", "title": "Full scenario", "brief": "Three groups (two West, one East), a West patrol, a convoy, and three triggers with syncs; timers in minutes; one ending and one loss.", "traps": ["SEQ-CYCLE", "UNIT-MEASURE", "REF-SYNC", "ACT-RULE", "SEQ-EXPORT"], "refusals": ["UnknownGroup"], "friction": false},
+      {"id": "T27", "tier": "D", "title": "Repair a broken draft", "brief": "The input is a raw draft with numeric references, some broken. Rebuild it: drop broken trigger syncs and list them in the export note; refuse with EmptyGroup if any group is empty.", "traps": ["REF-SYNC", "ID-MIX", "EMPTY-GROUP", "ERR-HANDLING"], "refusals": ["EmptyGroup"], "friction": true},
+      {"id": "T28", "tier": "D", "title": "Staged objectives", "brief": "Radio Alpha releases group A; when A reaches the bridge a trigger synced to that waypoint ends the mission after 2 to 4 minutes (typically 3).", "traps": ["REF-SYNC", "UNIT-MEASURE", "ACT-RULE"], "refusals": [], "friction": false},
+      {"id": "T29", "tier": "D", "title": "Second wave", "brief": "A second group repeats the first group's route with its own vehicle, 60 seconds later (a timer on the release trigger). Refuse with UnknownVehicle if its vehicle is missing.", "traps": ["ID-MIX", "REF-VEHICLE", "SEQ-CYCLE"], "refusals": ["UnknownVehicle"], "friction": true},
+      {"id": "T30", "tier": "D", "title": "One bad element", "brief": "A large brief; each hidden variant plants exactly one invalid element (one per trap class) and expects the matching Refusal; the valid variant must export correctly.", "traps": ["SEQ-CYCLE", "SEQ-MOUNT", "REF-SYNC", "REF-VEHICLE", "EMPTY-GROUP", "TIMER-ORDER", "BOUNDS", "ACT-RULE"], "refusals": ["all"], "friction": false}
+    ],
+    "coverage_check": "Tasks per trap category (from the list): SEQ-CYCLE, ID-MIX, REF-SYNC, ACT-RULE 8; ERR-HANDLING 7; SEQ-EXPORT, SEQ-MOUNT, REF-VEHICLE, UNIT-MEASURE 4; SEQ-HOLD, BOUNDS, EMPTY-GROUP, TIMER-ORDER 3. Every export under GUIDED also exercises the validate-before-export sequence implicitly. Per-category estimates are exploratory; the class-level (S, F, R) comparison pools them."
+  },
+
+  "prompting": {
+    "structure": [
+      "System: fixed role text: write Rust 2024, use only the API below and std, return the complete file in one ```rust block, no explanations required.",
+      "Domain rules sheet (identical in both variants).",
+      "API listing (variant-specific, generated).",
+      "mb-spec definitions for this task (Input type, Refusal, entry signature).",
+      "Task text (identical in both variants).",
+      "Visible tests (identical)."
+    ],
+    "stable_prefix": "System + rules sheet + API listing form a byte-stable prefix per variant, so llama-server's prompt cache (and cloud prompt caching) reuses it across tasks; --cache-ram is set explicitly (doc 49 found the default grows host memory).",
+    "shots": "Zero-shot in the main study. Floor rule: if in the pilot every small model's PLAIN@R<=3 is below 10%, add ONE worked example (the same pilot task, solved in each variant's API) to both variants before freezing.",
+    "sampler": "Thinking off (checked with /apply-template, as in doc 49). Temperature 0.6 for all models; each vendor's non-thinking top_k/top_p/min_p, a value the vendor does not give disabled (doc 49 section 1.4 rule). max_tokens 3,072 per generation; context 16,384; -np 1.",
+    "seeds": "Seed = hash(task, sample, round); the same seed for PLAIN and GUIDED.",
+    "extraction": "First ```rust (else first ```) block. No block = format failure for that round; in the loop it is fed back as 'No Rust code block was found; return the complete file in one ```rust block.'"
+  },
+
+  "feedback_loop": {
+    "rounds": "Up to 3 repair rounds after the first attempt (at most 4 generations per episode). The loop stops early when the code compiles and passes all visible tests.",
+    "nesting": "The 'no feedback' arm is the first attempt (R0) of the same episode: same prompt, sampler and seed, and the first prompt never mentions feedback, so R0 is distributed exactly as a no-loop run. This halves compute; outcomes are recorded at R0, R<=1, R<=2, R<=3 (last code carried forward after an early stop).",
+    "fed_back": "rustc diagnostics from `cargo test --no-run --offline --locked --color never` (errors first, then warnings, rendered human format, truncated at 6,000 characters on a diagnostic boundary); if it compiles, the visible-test failure output (test names, panic messages, assert left/right), same truncation. Followed by a fixed instruction: 'Fix the file. Return the complete corrected file in one ```rust block.'",
+    "never_fed_back": "Hidden tests, their names, the oracle's findings, trap labels.",
+    "conversation_form": "Multi-turn: previous code and feedback stay in context; if the context would exceed 16,384 tokens, the oldest failed attempt is replaced by '[earlier attempt omitted]'.",
+    "matched_resampling_control": "Exploratory: from the 6 independent R0 samples per (task, model, variant), compute exactly (over orderings) the chance that 'take the first of 4 fresh samples that passes the visible tests' passes the hidden tests, and compare it with the loop's R<=3 rate (the self-repair vs resampling question of Olausson et al. [4])."
+  },
+
+  "sandbox": {
+    "scope_note": "This is a research harness outside the product. Plotroom's in-product agent never executes code or shells; nothing here changes that.",
+    "rules": [
+      "The model writes one file, src/solution.rs, included by a fixed lib.rs that starts with #![forbid(unsafe_code)]. Cargo.toml and Cargo.lock are fixed; no build.rs, no proc-macro or extra dependencies.",
+      "Static scan before compiling: reject std::process, std::fs, std::net, std::env, include_*!, env!, extern, #[path], macro_rules defining items that shadow the entry point. A rejected file counts as 'bypass' (a failure) and the reason is fed back.",
+      "cargo runs --offline --locked with a per-worker CARGO_TARGET_DIR pre-warmed with the variant crate; hidden tests run with --test-threads=1 and a 20 s wall limit per binary.",
+      "Optional hardening: run workers inside a disposable VM or container without network."
+    ]
+  },
+
+  "arms": {
+    "factors": {
+      "model": "3 small local models + 1 larger comparator",
+      "api_variant": ["PLAIN", "GUIDED"],
+      "feedback": ["R0 (no loop)", "R<=3 (up to 3 rounds)"],
+      "note": "feedback is within-episode (see feedback_loop.nesting)"
+    },
+    "models": [
+      {"label": "Qwen3.5-4B Q4_K_M", "role": "small", "pin": "unsloth/Qwen3.5-4B-GGUF @ e87f176479d0855a907a41277aca2f8ee7a09523, Qwen3.5-4B-Q4_K_M.gguf, 2,740,937,888 bytes [V per doc 55]", "runtime": "llama.cpp b11146 llama-server, full GPU", "k": 6},
+      {"label": "Gemma 4 E4B QAT (UD-Q4_K_XL file, Q4_0 inside)", "role": "small", "pin": "doc 46 pin; GGUF licence tag caveat carried from doc 49 [V per doc 49]", "runtime": "same", "k": 6},
+      {"label": "Granite 4.1 3B Q4_K_M", "role": "small", "pin": "to be pinned (repo, commit, size, SHA-256) before freezing; so far measured only on Ollama (doc 44), so this is its first llama.cpp run [U]", "runtime": "same", "k": 6},
+      {"label": "Qwen3-30B-A3B-Instruct-2507", "role": "larger comparator", "options": [
+        {"where": "local", "pin": "unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF @ eea7b2be5805a5f151f8847ede8e5f9a9284bf77, UD-Q4_K_XL [V per doc 49]", "placement": "--cpu-moe (doc 49's better default), --cache-ram set explicitly", "k": 3, "cost": "about 17 h of machine time (see sample_size)"},
+        {"where": "cloud (preferred for time)", "pin": "same weights at the provider's precision; name the endpoint, record precision; a ZDR route", "tooling": "the budget-capped cloud backend of tools/local-qual (doc 48)", "k": 6, "cost": "about $1 estimated; hard cap $3"}
+      ]},
+      {"label": "optional frontier or coder ceiling", "role": "sanity ceiling", "k": 1, "note": "Only if the owner wants it; not in any hypothesis. Checks that tasks are solvable from the listing alone."}
+    ]
+  },
+
+  "metrics": {
+    "per_round": [
+      "compile_ok: cargo test --no-run succeeds",
+      "visible_pass: all visible tests pass",
+      "hidden_pass (primary): compile_ok and every hidden test passes and the oracle accepts every export and no bypass",
+      "hidden_frac: share of hidden tests passed (0 when not compiling)",
+      "accepted_but_wrong: visible_pass and not hidden_pass",
+      "trap_fail[c]: the hidden test(s) of trap category c fail",
+      "failure_mode: one of format, bypass, compile, visible, hidden_nominal, hidden_trap, panic, timeout"
+    ],
+    "per_episode": [
+      "rounds_used (0-3)",
+      "tokens: prompt (uncached and cached, from llama-server timings prompt_n/cache_n or the provider's usage), completion, total",
+      "tokens_per_success = total tokens / hidden_pass",
+      "wall time: generation and cargo, separately",
+      "escape_hatches: counts of .unwrap(), .expect(, panic!, unreachable!, todo!, clone-to-sidestep patterns, raw numeric casts of ids (static scan of the final file)",
+      "diagnostic codes seen per round and whether the next round removed them (fix rate per code: E0277-custom, E0599, E0308, E0382, others)"
+    ],
+    "model_free": [
+      "static_catch_rate: share of trap mutants rejected at compile time under GUIDED (from the mutation check)",
+      "listing_tokens per variant per tokenizer"
+    ],
+    "reliability": "pass^k-style consistency (all 6 samples pass) per task is reported descriptively [14]; pass@k uses the unbiased estimator of Chen et al. [15]."
+  },
+
+  "sample_size": {
+    "unit_of_inference": "Task (30). Models and samples are averaged inside a task; clustering by task follows Miller [13].",
+    "simulation": {
+      "file": "power_sim.py -> power_sim_results.json (500 reps per cell)",
+      "model": "logit p = mu + a_task + m_model + c_task_model + variant*(beta + b_task); mu -0.6 (PLAIN about 35%); sd(a) 1.5; sd(c) 0.5; model offsets 0, -0.3, -0.6; tau = sd(b) 0.5 or 1.0; t-test on task-level differences (sign-flip test behaves alike at these N).",
+      "results_power_at_alpha_0_05": [
+        {"tasks": 24, "k": 6, "diff_pp": 10.3, "power_tau_0_5": 0.83, "power_tau_1_0": 0.63},
+        {"tasks": 24, "k": 6, "diff_pp": 13.5, "power_tau_0_5": 0.97, "power_tau_1_0": 0.86},
+        {"tasks": 30, "k": 3, "diff_pp": 10.0, "power_tau_0_5": 0.68, "power_tau_1_0": 0.55},
+        {"tasks": 30, "k": 6, "diff_pp": 10.2, "power_tau_0_5": 0.91, "power_tau_1_0": 0.74},
+        {"tasks": 30, "k": 6, "diff_pp": 13.2, "power_tau_0_5": 0.99, "power_tau_1_0": 0.91},
+        {"tasks": 30, "k": 10, "diff_pp": 10.0, "power_tau_0_5": 0.96, "power_tau_1_0": 0.79},
+        {"tasks": 20, "k": 6, "diff_pp": 10.0, "power_tau_0_5": 0.72, "power_tau_1_0": 0.52}
+      ],
+      "type_I_check": "At beta = 0 the rate of rejections in the GUIDED-better direction was 0.018-0.058 across cells (nominal 0.025 per direction; the tau 1.0 cells carry a real +1 to +1.6 pp marginal difference from the logit link, which inflates them slightly) [V].",
+      "reading": "Task count, not samples, is the lever once k is about 6: going from k 6 to 10 adds little when the effect varies across tasks (tau 1.0). Hence the top of the 20-30 range."
+    },
+    "chosen": {
+      "tasks": 30,
+      "k_small": 6,
+      "k_comparator": "6 in the cloud or 3 locally",
+      "minimum_detectable_effect": "about +10 pp on hidden_pass@R<=3 at 74-91% power (tau 1.0-0.5), about +13 pp at 91-99%. Effects under about 7 pp are not reliably detectable; with H1 not rejected, equivalence (TOST, +/-5 pp) will usually be out of reach too, and the result is then 'inconclusive', not 'no effect'.",
+      "episodes": "small models: 30 x 6 x 2 x 3 = 1,080 episodes; comparator: 360 (cloud, k 6) or 180 (local, k 3); pilot: 4 x 2 x 2 x 3 = 48",
+      "compute_estimate": "Assume 2.5 generations per episode, about 700 output tokens at 40-58 tokens/s and 1-2.5k uncached prompt tokens at about 270-300 tokens/s (Vulkan) with a cached prefix (doc 49 speeds), plus 5-15 s of cargo per round: about 30 s per round, so about 2,700 generations and 20-25 hours for the three small models (about 7-8 h each, unattended, in three overnight sessions). The CUDA build shortens prompt time (doc 49). Local comparator at 4-8 tokens/s: about 2.5-4 min per generation, about 17 h for k 3.",
+      "cloud_budget": "Comparator in the cloud: about 900 generations x (9k in + 0.8k out) = 8.1M input and 0.7M output tokens; at an illustrative $0.10 / $0.50 per MTok (doc 48's cheap tier) about $1.2 before prompt caching. Hard cap $3 on the key and in the backend."
+    }
+  },
+
+  "analysis": {
+    "frozen_script": "analyze.py (Python standard library only; the host has no numpy), frozen with the lock file before the first scored call.",
+    "confirmatory": "H1 -> H2 -> H3 -> H4 as in hypotheses.",
+    "robustness": [
+      "Logistic GLMM hidden_pass ~ variant * round + model + (1 + variant | task) + (1 | task:model), if a statistics stack is available; reported, not decisive.",
+      "Leave-one-model-out: H1 estimate with each small model removed.",
+      "Per-model H1 estimates with Holm across the three models (exploratory)."
+    ],
+    "exploratory": [
+      "Per tier (A-D), friction vs non-friction tasks, per trap category and per trap class (S, F, R): the predicted S > F > R ordering.",
+      "R0 compile_ok per variant (the complexity tax before feedback).",
+      "Next-round fix rate per diagnostic code; custom on_unimplemented (E0277) vs E0599 vs E0308.",
+      "Escape-hatch counts per variant and their association with trap failures.",
+      "Loop vs matched resampling (feedback_loop.matched_resampling_control).",
+      "Tokens per success and cost-normalised success (hidden_pass per 10k tokens).",
+      "Variant x model-size interaction (small vs comparator)."
+    ],
+    "equivalence": "If H1 is not rejected: TOST on the H1 estimand with +/-5 pp margins at alpha 0.05. Equivalent -> DR4; otherwise -> DR5.",
+    "missing_and_errors": "Infrastructure failures (server crash, cargo lock, host out of memory) re-run the episode with the same seed, up to 3 times; still failing -> excluded and listed. Model-caused problems (no code, overlong output, timeouts, panics) are failures, never missing data.",
+    "run_order": "Within each model, (task, variant, sample) episodes run in a random interleaved order (seeded), so thermal throttling and desktop contention (seen in doc 49) spread evenly across variants.",
+    "no_interim_looks": "All episodes run; no early stopping on results; no post hoc pooling with a later extension."
+  },
+
+  "decision_rules": [
+    {"id": "DR1", "if": "H1 rejected with estimate >= +10 pp, and H2 not worse (point estimate <= 0)", "then": "Record the theory as supported for 3-4B models on this domain. Proposals: (a) AGENTS.md gains the diagnostic-shape rule (method-level where-clause bounds with on_unimplemented; unforgeable ids for agent-facing APIs); (b) Plotroom's typed command layer and the planned no-code/script compiler emit diagnostics that name the fix, fed back to weak models in the verifier loop; (c) run Stage 2 to split types from text."},
+    {"id": "DR1b", "if": "H1 rejected with estimate between +5 and +10 pp", "then": "Supported but small: adopt only the cheap parts (diagnostic shape, instructive docs), run Stage 2 before any costlier API redesign."},
+    {"id": "DR2", "if": "H1 rejected at R<=3 but GUIDED R0 hidden_pass <= PLAIN R0 (loop-dependent gain; H3 supported)", "then": "Guided APIs pay off only together with the verifier loop: any weak-model coding or scripting path must always run the compile/validate loop (doc 21's verifier doctrine); per-model harness presets (doc 55) carry the round budget."},
+    {"id": "DR3", "if": "H1 point estimate < 0 with the 95% interval below 0", "then": "The complexity tax dominates for these models: do not push typestate into agent-facing surfaces; keep guidance in validators and docs; inspect the friction tasks and diagnostic codes that drove it."},
+    {"id": "DR4", "if": "H1 not rejected and TOST shows equivalence within +/-5 pp", "then": "The theory is not supported for these models here; keep the AGENTS.md type-safety rules as human code-quality rules and stop citing them as a weak-model lever."},
+    {"id": "DR5", "if": "H1 not rejected and not equivalent", "then": "Inconclusive. Any follow-up is a new pre-registration (more tasks, not more samples, per the simulation); no pooling with this run."},
+    {"id": "DR6", "if": "H4 non-inferiority holds for a small model", "then": "'Punches above its weight' may be stated for that model, this domain and this loop; otherwise report the gap-closure fraction only."},
+    {"id": "DR7", "if": "GUIDED tokens per success > 1.5x PLAIN", "then": "Flag the token-economy trade-off; decide on cost-normalised success, and prefer trimming the GUIDED listing (docs) over dropping types, pending Stage 2."},
+    {"id": "DR8", "if": "Effects differ by model (per-model intervals disagree in sign)", "then": "Record per-model knobs in the harness presets (feed raw vs summarised diagnostics, rounds) rather than one global rule."}
+  ],
+
+  "stage2_ablation": {
+    "trigger": "Run only if H1 is rejected (DR1/DR1b/DR2).",
+    "design": "2 x 2 over the same 30 tasks: type structure {plain, guided} x guidance text {generic docs + default diagnostics, instructive docs + on_unimplemented}. Stage 1's cells are the diagonal; Stage 2 adds PLAIN+TEXT (plain types, instructive docs) and GUIDED-TEXT (guided types, generic docs, typestate bounds via inherent impls so rustc prints E0599/E0308 only).",
+    "models_and_k": "The two small models with the largest Stage 1 effect, k 4.",
+    "status": "Exploratory unless separately pre-registered with its own frozen lock."
+  },
+
+  "optional_arms": [
+    "PLAIN-DEFENSIVE: export validates internally (removes the SEQ-EXPORT trap from PLAIN; tests whether GUIDED's gain is mostly 'forgot to validate').",
+    "Clippy in the loop (cargo clippy diagnostics added to feedback).",
+    "Thinking on for Qwen3.5-4B (a budgeted reasoning arm).",
+    "Generative compilation / type-constrained decoding as a later arm, following Mündler et al. [1] and Mündler-Sasahara et al. [2] (compiler feedback during generation).",
+    "A worked example in the prompt (few-shot) as its own factor.",
+    "Small coder-specialist model row (for example a 3-7B coder model) if one fits the 8 GB card."
+  ],
+
+  "threats_to_validity": [
+    "Author allegiance: the tasks and both APIs are written by people who expect GUIDED to win. Mitigations: API-neutral task text, independent idiomaticity and neutrality reviews, shared rules sheet, frozen hashes, mutation checks, reference solutions in both variants.",
+    "PLAIN strawman risk vs GUIDED over-engineering risk: both reviewed against a checklist; PLAIN-DEFENSIVE optional arm.",
+    "Listing length: GUIDED's listing is likely longer (more types, longer docs), which costs tokens and may distract; recorded and analysed (DR7, Stage 2).",
+    "One synthetic domain and single-file tasks; no multi-file repositories, no agentic tool use; results may not transfer to repository work (compare RustRepoTrans [8], where compile errors dominated failures when translating to Rust).",
+    "Training-data familiarity: typestate idioms are rarer than plain structs; this is part of the effect being measured, not a confound to remove.",
+    "Quantisation, sampler and thinking-off settings are fixed per model; results describe these setups (doc 49 section 4 caveat).",
+    "rustc version: diagnostic text changes across releases; pinned to 1.98.1.",
+    "Error-message wording may matter less than expected: a human study found LLM-enhanced error messages beat stock compiler messages in only 1 of 6 tasks [18]; this is why the diagnostic-text factor is isolated in Stage 2 rather than assumed.",
+    "Self-repair can be bottlenecked by the model's own feedback quality [4]; here feedback is compiler/test output, not self-critique, but small models may still fail to act on it.",
+    "Visible tests shape behaviour; they never cover traps, by design, which makes accepted_but_wrong measurable but also means PLAIN has no in-loop signal for traps. That asymmetry IS the hypothesis (types move trap detection into the loop), stated up front."
+  ],
+
+  "integrity": {
+    "freeze": "prereg.lock.json with SHA-256 of: rules sheet, mb-spec, mb-oracle, mb-plain, mb-guided, listing generator and both generated listings, 30 task texts, visible and hidden tests, reference solutions, mutants, prompts, harness, analyze.py, model file hashes, rustc version. Written before the first scored call.",
+    "publication": "This design (as a research doc) is written before the run; results doc later cites the lock hash.",
+    "deviations_log": "Every change after freezing is dated, justified and listed in the results doc; any change to a scored task invalidates that task's data for confirmatory use.",
+    "pilot_separation": "Pilot tasks and pilot outputs are never used for confirmatory analysis.",
+    "reporting_schema": "Report the setting as a machine-readable block following Dai et al. [16]: task unit, initial input, tool access, repair-time feedback, final validation, resource budget.",
+    "hygiene": "Experiment code lives only in the scratch workspace outside the repository; any repository write-up names no private projects, local paths or user names, and paraphrases model outputs."
+  },
+
+  "execution_plan": [
+    {"step": 1, "what": "Freeze the rules sheet and operation table; write mb-spec (inputs, Refusal) and mb-oracle (independent parser and validator), before either variant exists.", "effort": "0.5-1 day"},
+    {"step": 2, "what": "Implement mb-plain and mb-guided against the shared conformance suite; apply the probe's construction rule to every typestate bound; independent PLAIN idiomaticity review.", "effort": "1.5-2 days"},
+    {"step": 3, "what": "Write 30 scored + 4 pilot tasks (API-neutral), neutrality review, reference solutions in both variants, visible and hidden tests, mutants; compute the model-free static catch rate.", "effort": "2-3 days"},
+    {"step": 4, "what": "Listing generator; token counts per tokenizer; enforce the 7,000-token cap.", "effort": "0.5 day"},
+    {"step": 5, "what": "Harness: episode driver (llama-server OpenAI-compatible API; cloud through the budget-capped backend), sandboxed cargo runner with pre-warmed target dirs, scorer, analyze.py; unit tests for scorer and statistics.", "effort": "1.5 days"},
+    {"step": 6, "what": "Pin the Granite 4.1 3B GGUF; pilot on P01-P04 (48 episodes); apply the floor rule if needed; write the lock file.", "effort": "0.5 day + 1 h GPU"},
+    {"step": 7, "what": "Main run: three small models (about 20-25 h GPU, three nights), comparator (cloud about 2 h wall, or local about 17 h).", "effort": "3-4 nights"},
+    {"step": 8, "what": "Frozen analysis, deviations log, results doc with a CSV in the research data folder; decision per DR1-DR8.", "effort": "1 day"}
+  ],
+
+  "workspace_layout": {
+    "root": "rust-weak-models/ (scratch Cargo workspace, outside the repository)",
+    "items": [
+      "Cargo.toml (workspace), rust-toolchain.toml pinning 1.98.1",
+      "crates/mb-spec, crates/mb-oracle, crates/mb-plain, crates/mb-guided, crates/mb-listing",
+      "tasks/Tnn/{task.md, visible.rs, hidden.rs, ref_plain.rs, ref_guided.rs, mutants/}",
+      "pilot/Pnn/ (same shape)",
+      "harness/{run.py, sandbox.py, score.py, analyze.py, test_*.py}",
+      "power_sim.py, power_sim_results.json, diag-probe/",
+      "prereg.lock.json, deviations.md (local), results/ (raw records stay local)"
+    ]
+  },
+
+  "relevance_to_plotroom": [
+    "The in-product agent does not write Rust, but the same mechanism, a typed surface whose checker rejects bad states and names the fix, applies to Plotroom's typed command layer and the planned no-code / scripting ladder that compiles to engine scripts: a positive result argues for investing in fix-naming validator diagnostics fed back to weak models (doc 21 verifier loop).",
+    "Contributors using small local coding models on this repository: AGENTS.md's type-safety rules would gain an evidence base and the diagnostic-shape rule.",
+    "Per-model harness presets (doc 55): whether to feed raw diagnostics and how many repair rounds per model.",
+    "Token economy: tokens per success decides whether richer guided listings pay for themselves.",
+    "Prior art in this direction: the owner's public strict-path crate [19] withholds AsRef<Path>/Deref so that neither humans nor LLMs can build an unvalidated path, the same 'make the wrong call inexpressible' idea this experiment measures."
+  ],
+
+  "related_docs": [
+    "docs/research/21-agent-doctrine.md (verifier loop, product bar)",
+    "docs/research/25-weak-model-friendly-campaign-harness.md",
+    "docs/research/38-harness-workflows.md",
+    "docs/research/44-local-model-qualification-spike.md (Granite 4.1 3B on Ollama)",
+    "docs/research/46-llamacpp-huggingface-and-ud-quant-spike.md (defaults, pins)",
+    "docs/research/48-cloud-providers-and-harness-uplift.md (budget-capped cloud backend)",
+    "docs/research/49-local-shortlist-measured.md (speeds, offload, sampler rule, paired-test limits)",
+    "docs/research/55-per-model-harness-presets.md (Qwen3.5-4B pin, per-model knobs)",
+    "docs/research/60-lessons-from-typesafe-ai.md (question text is the program)",
+    "docs/research/61, 62, 63: not present in the working tree on 2026-09-28; this design is meant to feed doc 62 (type-driven guidance)"
+  ],
+
+  "sources": [
+    {"n": 1, "ref": "Mündler, He, Wang, Sen, Song, Vechev. Type-Constrained Code Generation with Language Models. PLDI 2025.", "url": "https://arxiv.org/abs/2504.09246", "used_for": "Type-constrained decoding cut compilation errors by more than half and raised functional correctness (TypeScript, HumanEval/MBPP), incl. open models over 30B."},
+    {"n": 2, "ref": "Mündler-Sasahara, Venev, Song, Vechev, He. Generative Compilation: On-the-Fly Compiler Feedback as AI Generates Code. arXiv, 2026-07-15.", "url": "https://arxiv.org/abs/2607.13921", "used_for": "Rust chosen for its rich static semantics; compiler feedback on partial programs reduced non-compiling outputs vs post-generation feedback. Optional later arm."},
+    {"n": 3, "ref": "Deligiannis, Lal, Mehrotra, Poddar, Rastogi. RustAssistant: Using LLMs to Fix Compilation Errors in Rust Code. ICSE 2025.", "url": "https://www.microsoft.com/en-us/research/publication/rustassistant-using-llms-to-fix-compilation-errors-in-rust-code/", "used_for": "LLM-compiler loop reached about 74% peak accuracy on real-world Rust compile errors."},
+    {"n": 4, "ref": "Olausson, Inala, Wang, Gao, Solar-Lezama. Is Self-Repair a Silver Bullet for Code Generation? ICLR 2024.", "url": "https://arxiv.org/abs/2306.09896", "used_for": "Repair gains are modest once cost is counted; the matched-resampling control."},
+    {"n": 5, "ref": "Chen, Lin, Schärli, Zhou. Teaching Large Language Models to Self-Debug. ICLR 2024.", "url": "https://arxiv.org/abs/2304.05128", "used_for": "Execution feedback improves accuracy by up to 12% where unit tests exist."},
+    {"n": 6, "ref": "Zhou, Alon, Xu, Wang, Jiang, Neubig. DocPrompting: Generating Code by Retrieving the Docs. ICLR 2023.", "url": "https://arxiv.org/abs/2207.05987", "used_for": "Documentation in context lets models use unseen functions: the premise of an unseen library taught by its listing."},
+    {"n": 7, "ref": "RustEvo2: An Evolving Benchmark for API Evolution in LLM-based Rust Code Generation. 2025.", "url": "https://arxiv.org/abs/2503.16922", "used_for": "Rust API knowledge after the training cutoff drops success (56.1% vs 32.5%); retrieval recovers about 13.5 points."},
+    {"n": 8, "ref": "RustRepoTrans: Repository-level Code Translation Benchmark Targeting Rust.", "url": "https://arxiv.org/abs/2411.13990", "used_for": "Compilation errors were 92.3% of failures when translating into Rust: external-validity caveat."},
+    {"n": 9, "ref": "Coblenz et al. Can Advanced Type Systems Be Usable? An Empirical Study of Ownership, Assets, and Typestate in Obsidian. OOPSLA 2020.", "url": "https://arxiv.org/abs/2003.12209", "used_for": "Human precedent: typestate users completed more tasks and the compiler caught bugs the control group inserted."},
+    {"n": 10, "ref": "Announcing Rust 1.78.0 (diagnostic namespace, #[diagnostic::on_unimplemented]).", "url": "https://blog.rust-lang.org/2024/05/02/Rust-1.78.0/"},
+    {"n": 11, "ref": "The Rust Reference: Diagnostic attributes.", "url": "https://doc.rust-lang.org/reference/attributes/diagnostics.html"},
+    {"n": 12, "ref": "Announcing Rust 1.85.0 and Rust 2024 (#[diagnostic::do_not_recommend]).", "url": "https://blog.rust-lang.org/2025/02/20/Rust-1.85.0/"},
+    {"n": 13, "ref": "Miller. Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations. 2024.", "url": "https://arxiv.org/abs/2411.00640", "used_for": "Clustered errors, paired differences, power planning."},
+    {"n": 14, "ref": "Yao, Shinn, Razavi, Narasimhan. tau-bench. 2024.", "url": "https://arxiv.org/abs/2406.12045", "used_for": "pass^k reliability metric."},
+    {"n": 15, "ref": "Chen et al. Evaluating Large Language Models Trained on Code. 2021.", "url": "https://arxiv.org/abs/2107.03374", "used_for": "Unbiased pass@k estimator."},
+    {"n": 16, "ref": "Dai, Cai, Luo, Tseng. Experimental Settings in LLM-Based Program Repair: A Study of Inputs, Tool Access, Feedback, and Validation. arXiv, 2026-09-16.", "url": "https://arxiv.org/abs/2609.17993", "used_for": "Report the setting (inputs, tool access, repair-time feedback, validation, budget) in a machine-readable schema."},
+    {"n": 17, "ref": "Zhuo et al. Identifying and Mitigating API Misuse in Large Language Models.", "url": "https://arxiv.org/abs/2503.22821", "used_for": "LLM API misuse (hallucination, intent misalignment) is common; motivates trap design."},
+    {"n": 18, "ref": "Not the Silver Bullet: LLM-enhanced Programming Error Messages are Ineffective in Practice. 2024.", "url": "https://arxiv.org/abs/2409.18661", "used_for": "Better-worded messages beat stock compiler messages in only 1 of 6 tasks for students: do not assume custom diagnostic text helps."},
+    {"n": 19, "ref": "strict-path crate (crates.io / docs.rs).", "url": "https://crates.io/crates/strict-path", "used_for": "Example of an API designed to prevent human and LLM misuse by withholding AsRef<Path>/Deref."},
+    {"n": 20, "ref": "Designing Empirical Studies on LLM-Based Code Generation: Towards a Reference Framework. 2025.", "url": "https://arxiv.org/abs/2510.03862", "used_for": "Study-design checklist background."}
+  ]
+}

@@ -1,0 +1,1 @@
+{"id": "T09", "title": "Presence ending", "tier": "B", "spec_module": "t09", "traps": ["ACT-RULE", "ERR-HANDLING"], "refusals": ["RepeatingEnd"], "friction": false, "scored": true}

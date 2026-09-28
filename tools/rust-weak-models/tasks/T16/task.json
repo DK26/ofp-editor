@@ -1,0 +1,1 @@
+{"id": "T16", "title": "Convoy", "tier": "C", "spec_module": "t16", "traps": ["REF-VEHICLE", "SEQ-MOUNT", "ID-MIX"], "refusals": ["WrongSide", "UnknownVehicle"], "friction": false, "scored": true}

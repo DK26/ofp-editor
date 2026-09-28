@@ -1,0 +1,1 @@
+{"id": "T26", "title": "Full scenario", "tier": "D", "spec_module": "t26", "traps": ["SEQ-CYCLE", "UNIT-MEASURE", "REF-SYNC", "ACT-RULE", "SEQ-EXPORT"], "refusals": ["UnknownGroup"], "friction": false, "scored": true}

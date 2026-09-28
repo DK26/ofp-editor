@@ -1,0 +1,1 @@
+{"id": "T14", "title": "Hold-true timer", "tier": "B", "spec_module": "t14", "traps": ["TIMER-ORDER"], "refusals": ["TimerOrder"], "friction": false, "scored": true}

@@ -1,0 +1,19 @@
+[
+  {
+    "name": "whenever_means_repeating",
+    "category": "ACT-RULE",
+    "note": "Reads 'whenever' as a repeating trigger on an ending.",
+    "plain": [
+      [
+        "    t.effect = Effect::End(Ending::Two);\n",
+        "    t.effect = Effect::End(Ending::Two);\n    t.repeat = mb::Repeat::Repeatedly;\n"
+      ]
+    ],
+    "guided": [
+      [
+        "        .activation(Activation::present(Side::East))\n        .ends_mission(Ending::Two);",
+        "        .activation(Activation::present(Side::East))\n        .repeating()\n        .ends_mission(Ending::Two);"
+      ]
+    ]
+  }
+]

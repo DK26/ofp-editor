@@ -1,0 +1,1 @@
+{"id": "T07", "title": "Patrol with a stop", "tier": "B", "spec_module": "t07", "traps": ["SEQ-CYCLE"], "refusals": [], "friction": false, "scored": true}

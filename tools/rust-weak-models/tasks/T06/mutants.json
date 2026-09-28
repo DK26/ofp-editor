@@ -1,0 +1,19 @@
+[
+  {
+    "name": "minutes_as_seconds",
+    "category": "UNIT-MEASURE",
+    "note": "Passes the minute values where seconds are expected.",
+    "plain": [
+      [
+        "input.minutes_min * 60.0,\n        input.minutes_typical * 60.0,\n        input.minutes_max * 60.0,",
+        "input.minutes_min,\n        input.minutes_typical,\n        input.minutes_max,"
+      ]
+    ],
+    "guided": [
+      [
+        "Seconds::from_minutes(input.minutes_min),\n        Seconds::from_minutes(input.minutes_typical),\n        Seconds::from_minutes(input.minutes_max),",
+        "Seconds::new(input.minutes_min),\n        Seconds::new(input.minutes_typical),\n        Seconds::new(input.minutes_max),"
+      ]
+    ]
+  }
+]

@@ -1,0 +1,1 @@
+{"id": "P04", "title": "Taxi ride", "tier": "pilot", "spec_module": "p04", "traps": ["SEQ-MOUNT", "REF-VEHICLE"], "refusals": ["UnknownVehicle"], "friction": false, "scored": false}

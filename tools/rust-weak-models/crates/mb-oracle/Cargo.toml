@@ -1,0 +1,12 @@
+[package]
+name = "mb-oracle"
+description = "Independent mbx parser and rule checker used only by the task tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# Deliberately no dependency on mb-core or either variant: the oracle re-derives
+# every rule from the exported text, so a library bug cannot hide from the tests.
+[dependencies]

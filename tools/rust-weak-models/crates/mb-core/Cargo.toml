@@ -1,0 +1,11 @@
+[package]
+name = "mb-core"
+description = "Hidden shared mission model, rule checker and mbx writer behind both API variants"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+mb-spec = { path = "../mb-spec" }

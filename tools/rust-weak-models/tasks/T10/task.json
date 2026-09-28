@@ -1,0 +1,1 @@
+{"id": "T10", "title": "Detected by", "tier": "B", "spec_module": "t10", "traps": ["ACT-RULE"], "refusals": ["SameSide"], "friction": false, "scored": true}

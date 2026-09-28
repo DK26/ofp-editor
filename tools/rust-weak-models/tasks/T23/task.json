@@ -1,0 +1,1 @@
+{"id": "T23", "title": "Reusable clear-the-area", "tier": "D", "spec_module": "t23", "traps": ["SEQ-CYCLE", "SEQ-HOLD", "ERR-HANDLING"], "refusals": ["InvalidSequence"], "friction": true, "scored": true}

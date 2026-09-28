@@ -1,0 +1,1 @@
+{"id": "T27", "title": "Repair a broken draft", "tier": "D", "spec_module": "t27", "traps": ["REF-SYNC", "ID-MIX", "EMPTY-GROUP", "ERR-HANDLING"], "refusals": ["EmptyGroup"], "friction": true, "scored": true}

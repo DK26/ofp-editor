@@ -1,0 +1,1 @@
+{"id": "T25", "title": "Every problem at once", "tier": "D", "spec_module": "t25", "traps": ["ERR-HANDLING", "SEQ-EXPORT"], "refusals": ["Many"], "friction": false, "scored": true}

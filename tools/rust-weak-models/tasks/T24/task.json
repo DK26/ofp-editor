@@ -1,0 +1,1 @@
+{"id": "T24", "title": "Plans in a collection", "tier": "D", "spec_module": "t24", "traps": ["SEQ-CYCLE", "ID-MIX"], "refusals": ["InvalidSequence"], "friction": true, "scored": true}

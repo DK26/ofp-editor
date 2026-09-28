@@ -1,0 +1,53 @@
+[
+  {
+    "name": "fallback_vehicle_id",
+    "category": "REF-VEHICLE",
+    "note": "Falls back to a default id when the truck is missing instead of refusing.",
+    "plain": [
+      [
+        "let truck = m.vehicle_by_label(&input.truck).ok_or(Refusal::UnknownVehicle)?;",
+        "let truck = m.vehicle_by_label(&input.truck).unwrap_or(0);"
+      ]
+    ],
+    "guided": [
+      [
+        "let truck = m.vehicle(&input.truck).ok_or(Refusal::UnknownVehicle)?;",
+        "let truck = m.vehicle(&input.truck).unwrap_or(0);"
+      ]
+    ]
+  },
+  {
+    "name": "unwrap_vehicle_lookup",
+    "category": "REF-VEHICLE",
+    "note": "Unwraps the vehicle lookup (escape hatch in both variants).",
+    "plain": [
+      [
+        "let truck = m.vehicle_by_label(&input.truck).ok_or(Refusal::UnknownVehicle)?;",
+        "let truck = m.vehicle_by_label(&input.truck).unwrap();"
+      ]
+    ],
+    "guided": [
+      [
+        "let truck = m.vehicle(&input.truck).ok_or(Refusal::UnknownVehicle)?;",
+        "let truck = m.vehicle(&input.truck).unwrap();"
+      ]
+    ]
+  },
+  {
+    "name": "dismount_without_boarding",
+    "category": "SEQ-MOUNT",
+    "note": "Forgets the GET_IN before the ride and dismount.",
+    "plain": [
+      [
+        "        Waypoint::GetIn(truck),\n",
+        ""
+      ]
+    ],
+    "guided": [
+      [
+        "Plan::new().get_in(truck).move_to(drop)",
+        "Plan::new().move_to(drop)"
+      ]
+    ]
+  }
+]

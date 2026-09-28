@@ -1,0 +1,19 @@
+[
+  {
+    "name": "numbers_as_indices",
+    "category": "ID-MIX",
+    "note": "Uses the brief's 1-based waypoint numbers as 0-based indices.",
+    "plain": [
+      [
+        "Ok((g, w.number.saturating_sub(1)))",
+        "Ok((g, w.number))"
+      ]
+    ],
+    "guided": [
+      [
+        "m.waypoint(g, w.number.saturating_sub(1))",
+        "m.waypoint(g, w.number)"
+      ]
+    ]
+  }
+]

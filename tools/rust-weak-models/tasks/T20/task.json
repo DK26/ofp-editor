@@ -1,0 +1,1 @@
+{"id": "T20", "title": "Late addition", "tier": "C", "spec_module": "t20", "traps": ["SEQ-EXPORT", "TIMER-ORDER"], "refusals": ["TimerOrder"], "friction": true, "scored": true}

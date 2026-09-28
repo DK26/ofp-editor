@@ -1,0 +1,1 @@
+{"id": "T11", "title": "Groups from a roster", "tier": "B", "spec_module": "t11", "traps": ["EMPTY-GROUP", "ERR-HANDLING"], "refusals": ["EmptyGroup", "DuplicateCallsign"], "friction": false, "scored": true}

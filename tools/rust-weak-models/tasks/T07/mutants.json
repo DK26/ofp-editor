@@ -1,0 +1,23 @@
+[
+  {
+    "name": "depot_after_cycle",
+    "category": "SEQ-CYCLE",
+    "note": "Adds the depot stop after the loop, in brief order.",
+    "plain": [
+      [
+        "for p in [input.a, input.b, input.c, input.depot] {",
+        "for p in [input.a, input.b, input.c] {"
+      ],
+      [
+        "    m.add_waypoint(g, Waypoint::Cycle).map_err(|_| Refusal::InvalidSequence)?;\n",
+        "    m.add_waypoint(g, Waypoint::Cycle).map_err(|_| Refusal::InvalidSequence)?;\n    m.add_waypoint(g, Waypoint::Move(input.depot)).map_err(|_| Refusal::OutOfMap)?;\n"
+      ]
+    ],
+    "guided": [
+      [
+        "        .move_to(pos(input.depot)?)\n        .cycle()\n        .map_err(|_| Refusal::InvalidSequence)?;",
+        "        .cycle()\n        .map_err(|_| Refusal::InvalidSequence)?\n        .move_to(pos(input.depot)?);"
+      ]
+    ]
+  }
+]

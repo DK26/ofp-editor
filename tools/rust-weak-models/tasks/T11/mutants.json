@@ -1,0 +1,27 @@
+[
+  {
+    "name": "no_empty_check_no_validation",
+    "category": "EMPTY-GROUP",
+    "note": "Neither checks for empty entries nor validates before exporting.",
+    "plain": [
+      [
+        "        if e.units.is_empty() {\n            return Err(Refusal::EmptyGroup);\n        }\n",
+        ""
+      ],
+      [
+        "    m.validate().map_err(|_| Refusal::EmptyGroup)?;\n",
+        ""
+      ]
+    ],
+    "guided": [
+      [
+        "        if e.units.is_empty() {\n            return Err(Refusal::EmptyGroup);\n        }\n",
+        ""
+      ],
+      [
+        "    let m = m.validate().map_err(|_| Refusal::EmptyGroup)?;\n",
+        ""
+      ]
+    ]
+  }
+]

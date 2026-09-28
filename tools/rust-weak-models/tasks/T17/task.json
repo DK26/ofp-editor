@@ -1,0 +1,1 @@
+{"id": "T17", "title": "Ambush then extract", "tier": "C", "spec_module": "t17", "traps": ["SEQ-HOLD", "REF-SYNC"], "refusals": [], "friction": false, "scored": true}

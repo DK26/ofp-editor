@@ -1,0 +1,1 @@
+{"id": "T18", "title": "Orders from a list", "tier": "C", "spec_module": "t18", "traps": ["SEQ-CYCLE", "SEQ-HOLD", "SEQ-MOUNT", "ERR-HANDLING"], "refusals": ["InvalidSequence", "UnknownVehicle"], "friction": true, "scored": true}

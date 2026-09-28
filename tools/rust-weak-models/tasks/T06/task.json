@@ -1,0 +1,1 @@
+{"id": "T06", "title": "Countdown in minutes", "tier": "A", "spec_module": "t06", "traps": ["UNIT-MEASURE", "ACT-RULE"], "refusals": [], "friction": false, "scored": true}

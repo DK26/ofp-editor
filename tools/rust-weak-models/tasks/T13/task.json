@@ -1,0 +1,1 @@
+{"id": "T13", "title": "Two groups in step", "tier": "B", "spec_module": "t13", "traps": ["REF-SYNC", "ID-MIX"], "refusals": ["UnknownGroup"], "friction": false, "scored": true}
