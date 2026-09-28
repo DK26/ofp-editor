@@ -4,7 +4,7 @@ Design documentation for **Plotroom — Mission & Campaign Editor for Arma: Cold
 
 > **Status:** index, created 2026-09-27. This is the entry point to `docs/` that `AGENTS.md` names under "Design Authority". It
 > decides nothing: it routes each question to the file that owns it. Where a line here summarises a decision, the linked record
-> wins. Research docs 01–52, 56–58 and 60–63 are final; docs 53, 55 and 59 are drafts with experiments pending; docs 54 and 64–66 are in progress; the architecture and the roadmap are proposals (baseline 2026-09-27).
+> wins. Research docs 01–52, 54, 56–58 and 60–63 are final; docs 53, 55 and 59 are drafts with experiments pending; docs 64–66 are in progress; the architecture and the roadmap are proposals (baseline 2026-09-27).
 > The owner answered all 23 owner questions on 2026-09-27.
 
 ## 1. What Plotroom is
