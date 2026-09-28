@@ -1,0 +1,5 @@
+# run.py records each suite's SHA-256 (suite_sha) and score.py compares it with the file on disk, byte for byte; the
+# test goldens freeze digests of requests built from these files. Keep them LF on every checkout (a Windows checkout
+# with core.autocrlf=true would otherwise change the bytes, mark every record stale and fail the golden checks).
+suites/*.json text eol=lf
+tests/golden/*.json text eol=lf

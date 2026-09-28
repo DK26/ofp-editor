@@ -1,0 +1,2567 @@
+{
+ "about": "Per-run digests of the request bodies, records (volatile fields removed) and dry-run prints of dump_bodies.py's grid (test a01). Frozen from the tool before the scaffold arms; see make_goldens.py.",
+ "bodies": [
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "34601123b979cb7c90d96a5d37923385a15a896f4305f445cb9e5d258ac57b20"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "659f3dcdf8ade1dfd0b0c262c7668fab5d7ebf726dfe0168e2520695b5017c01"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick",
+    "--condition",
+    "none",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "18049a15bd6cd5b03bbcffb138f37854fc43a18ad8247b81356ceab5ffe3e86a"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--condition",
+    "none",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "f315767c8ee32948b0cb2bb94872513dfcb26d29f1b67f99d1ec087da11006e0"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "5640b860e565979c93ed116057b14719e85a8af1d14d692ffa248a0a0defd495"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "e972022c63cb733e5d07a3a8b7b8c09c02d5b292c560a98306a6dc33728adf8e"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick",
+    "--condition",
+    "cards",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "f9c00ecfb9197df78c06beb4f75381e7066dccf7fad585e431ee0b63b5b2ffd9"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--condition",
+    "cards",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "4a07404e95b7e22952da517a3b85a3fa8f7f6dd2537aa13172ffad49f8011a9e"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "be20c54e5459d4042fa5db3e6fc327e2aa85fd5b2f806274f3de6df5bbf0ca44"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "5db2af74d12d4e22c76d1fa99f6c7ab09f361d429f1eb2c5b3ad65fda1cec580"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "none",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "8dbb1c62b411732b63813a6aa08a811ba18100aaa10542989d0566856641423e"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "none",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "a1fdb32dbdc7103420b6e96d2306c7a4a993397951e826647a2bec51aeed6985"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "b54482bfb88d4acfcb122b8d7a9246c1a74f569bb78b70ce935e6930d5de08c9"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "e440047ed212dc4db73615b58f9af5880e04a5cdf0b6cdf336c2341da9dd8e46"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "cards",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "73f14510a1d42d9454fd09b8debf532db98de51d560331a591933db68a768a58"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "cards",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "56d0060992fc10017cae9ff5afc2d1de2ef5006b439955d71a9e2dce8270bb73"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "fill",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "85393dd3de45236a511179440e9e776a903f935124072dc90cc7e5cc9e46ec46"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "98ccdc19d5c64936e4072e967a424c11110621c783d5026de153b7e7aaf8b611"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "fill",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "85393dd3de45236a511179440e9e776a903f935124072dc90cc7e5cc9e46ec46"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "98ccdc19d5c64936e4072e967a424c11110621c783d5026de153b7e7aaf8b611"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "explain",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "22bf9c294a79826997ff2d7ea123df9a1c6aeb59e2fd1875e9105c1fe272f555"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "explain",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "b18a7da8678315432ebf2028a2c31fc5e43cb12d754af3b8a41177cc3a276321"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "explain",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "90cbb268800e122e776e450c79d5e76515db8018204b1ba4ef5c074f5fe52b0a"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "explain",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "fe9e4d3219674b53d37adc8daf11114710f27335340f7dee4c3d345bda0b7c1b"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "text",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "6bf0389b52687c7fc4f945d8ade036003f1ae32ca764f5b2bcbdc0f0e5d2091d"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "text",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "90549e5f39ddbf8f3e49df23ffa2902d7cc4a515c1728c2f2ca57f759604847c"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "text",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "c70dd4978e7a06f0d05afefff9ee50531d8c685c02f5d0d96def285ee847f62d"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "text",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "acded5b44e3ea326e186e74728792a560c405eacbefdeed4fc35a14cde16f7ac"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "knowledge",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "12a24ac1796eb402eb7b4d455e6dafa6bd5ee9d5496b65dc4d9083a7ab02c3a4"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "knowledge",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "491c282a8f613bdd96cd30e4a77047c8439cb3f2becb96e37e5bf58cc7067013"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "knowledge",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "c6ecf7b4b3b446e4220a9746207f0d9c304dc47cd3d2e6b9571e65955c3714b0"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "knowledge",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "2cdd5a400a2484aac9b04db1281374df91233e610ed5c4122fced4f24ab0d503"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick",
+    "--variant",
+    "open",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "2913b8aeb2ac4dabbc72fb9c4c109d0574f97e9ead564f7c7f8fdabc55a43177"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick-hard",
+    "--variant",
+    "labels",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "abc28f53e3a19c4479d189756b065c7f572646b3784163c017ab364b95674c4d"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick",
+    "--variant",
+    "noschema",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "68942094a132a2e865f5cbd4fea56a8427b193feeeaf8b509a8969336ecfdd16"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "fill",
+    "--variant",
+    "noschema",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "d93d574305ac98bd7102a60a65a8f6b6a5fd07f4d2be3994ff42adf8128e5ba2"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "fill",
+    "--variant",
+    "schematext",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "f41155d7c3e1f647b963f89cf4dae32da341d2ea279cad820647f94f81cfd35a"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "text",
+    "--variant",
+    "bare",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "9a3c26df505b2ab71e58375110139d87e710a0ac8c87d9188a13a3d790439ed4"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick",
+    "--condition",
+    "open",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "9e4f0a9f9b92e1b26ef75e34d72d968d8057521e496b69212da5c3a9e9c0c50d"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick",
+    "--schema-mode",
+    "none",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "8d06162b7c6b103a605b33f0f3900d20ec54b98fb08df1001ff25c9af3c3f2b2"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "fill",
+    "--schema-mode",
+    "text",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "c7ece058ffea1197a2ff59cd6700924d23834a21a5c4f12bca1b0069c8e062f1"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first"
+   ],
+   "n": 3,
+   "sha256": "3387d62be2cc941db2438e40858956711b8035e66f36b43100e5fddd34fd7ebd"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first",
+    "--variant",
+    "noschema"
+   ],
+   "n": 3,
+   "sha256": "3fbe482446d838299c5379df7f40d34d4bd4446e5a6bb8236b811caf213ce2bd"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "fill",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first"
+   ],
+   "n": 3,
+   "sha256": "7f2c38f84c779fdd7e97d00eb44e228721d79476e8a837ab7f2eb8af02701148"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "fill",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first",
+    "--variant",
+    "schematext"
+   ],
+   "n": 3,
+   "sha256": "eb5eacafea0d4992643b314be30e5fa019fff8052d37317f8979e1719ce8bfe7"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--variant",
+    "open",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "38ffa668fc080f8dc50d11d733466e8c15f48ce1add1ccbc5f4afac28fba7970"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick-hard",
+    "--variant",
+    "labels",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "0ff435d7e88e11c63c654b0f5b23fbf48a0bd3f271d01f592788ad5293139d66"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--variant",
+    "noschema",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "ef81236570edf20dcc8cb001d92ae413fb9251acdc9c4689dc8b3ddff575f04c"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--variant",
+    "noschema",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "91be5fc40ed030784890c614047e25936a574cd6b42833a9c5b2d66942844878"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--variant",
+    "schematext",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "f43dbc75e736ecddb1e1f879a8e48ffbf226594898ef513899129d5b521736c5"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "text",
+    "--variant",
+    "bare",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "14e1167e24099fb97f4bcfe397c624fc89e98d2c182ebfc4d3b0ca9892d8471e"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--condition",
+    "open",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "e2f8718448019eae8e3bf36725c46fc74dd4bd5ed5d4a5876cc703e5907f15d7"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--schema-mode",
+    "none",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "18193d8964a70240da8a211e2f1cd182a42e9803310478988483dc5b984aec4d"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--schema-mode",
+    "text",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "7fda3aaf5e2c98be47118c3c623790372d7bab02cd114ba1bb7f1ecb93bf75eb"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first"
+   ],
+   "n": 3,
+   "sha256": "bfdf9e0f1f0d157691bfb7173eb2b43dda81f28f003558c0a68732928a5ab896"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first",
+    "--variant",
+    "noschema"
+   ],
+   "n": 3,
+   "sha256": "cce18ebb15b32ef83ff823774b0b99313b132dd16ef007dc0ee634d4ec8cebe1"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first"
+   ],
+   "n": 3,
+   "sha256": "cfb7d872abb5b709aee742f462d389269fb5abd93cd81b73db1ec8c3fb54e184"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first",
+    "--variant",
+    "schematext"
+   ],
+   "n": 3,
+   "sha256": "94c075278b2c7bcb7ba86d30f6797ff2c28ccf97466f476b0e121a66d27b46da"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "hf.co/u/r:Q4",
+    "--think-mode",
+    "omit",
+    "--num-ctx",
+    "4096",
+    "--suite",
+    "pick",
+    "--k",
+    "2",
+    "--top-k",
+    "20",
+    "--top-p",
+    "0.95",
+    "--min-p",
+    "0.0",
+    "--presence-penalty",
+    "1.5",
+    "--repeat-penalty",
+    "1.1",
+    "--temperature",
+    "0.3",
+    "--num-predict",
+    "99"
+   ],
+   "n": 60,
+   "sha256": "07e313ce4278fc0b82e3f2a8117717509902e372d4cd05a781a4788722d04f82"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--model",
+    "router-name",
+    "--think-mode",
+    "omit",
+    "--suite",
+    "pick",
+    "--k",
+    "2",
+    "--top-k",
+    "20",
+    "--top-p",
+    "0.95",
+    "--min-p",
+    "0.0",
+    "--presence-penalty",
+    "1.5",
+    "--repeat-penalty",
+    "1.1",
+    "--temperature",
+    "0.3",
+    "--num-predict",
+    "99"
+   ],
+   "n": 60,
+   "sha256": "7bc86c48c5490cdbb5ddcd609f20554d663c8d99c05211f4791eb824b28a8255"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "hf.co/u/r:Q4",
+    "--think-mode",
+    "omit",
+    "--num-ctx",
+    "4096",
+    "--suite",
+    "fill",
+    "--k",
+    "2",
+    "--top-k",
+    "20",
+    "--top-p",
+    "0.95",
+    "--min-p",
+    "0.0",
+    "--presence-penalty",
+    "1.5",
+    "--repeat-penalty",
+    "1.1",
+    "--temperature",
+    "0.3",
+    "--num-predict",
+    "99"
+   ],
+   "n": 24,
+   "sha256": "369662b7fed16ac3d4053a38de993846575593df7ae8ed920b71080bddb6299c"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--model",
+    "router-name",
+    "--think-mode",
+    "omit",
+    "--suite",
+    "fill",
+    "--k",
+    "2",
+    "--top-k",
+    "20",
+    "--top-p",
+    "0.95",
+    "--min-p",
+    "0.0",
+    "--presence-penalty",
+    "1.5",
+    "--repeat-penalty",
+    "1.1",
+    "--temperature",
+    "0.3",
+    "--num-predict",
+    "99"
+   ],
+   "n": 24,
+   "sha256": "ef33f7c1c46f66ebc73e89f4029449828f6c7649806fd64629276b7847ea42ab"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "hf.co/u/r:Q4",
+    "--think-mode",
+    "omit",
+    "--num-ctx",
+    "4096",
+    "--suite",
+    "text",
+    "--k",
+    "2",
+    "--top-k",
+    "20",
+    "--top-p",
+    "0.95",
+    "--min-p",
+    "0.0",
+    "--presence-penalty",
+    "1.5",
+    "--repeat-penalty",
+    "1.1",
+    "--temperature",
+    "0.3",
+    "--num-predict",
+    "99"
+   ],
+   "n": 20,
+   "sha256": "d090b75a9c52ee8e4a1092806cd990c7b61535baa88b75f5462536a3ef2bb086"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--model",
+    "router-name",
+    "--think-mode",
+    "omit",
+    "--suite",
+    "text",
+    "--k",
+    "2",
+    "--top-k",
+    "20",
+    "--top-p",
+    "0.95",
+    "--min-p",
+    "0.0",
+    "--presence-penalty",
+    "1.5",
+    "--repeat-penalty",
+    "1.1",
+    "--temperature",
+    "0.3",
+    "--num-predict",
+    "99"
+   ],
+   "n": 20,
+   "sha256": "c5cfb3d4a2c5ccf4e8cf33da727b359a3798c89aad7c6f7de9676f60505586bf"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "<mock>",
+    "--suite",
+    "pick-hard",
+    "--pick-mode",
+    "logprob",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 9,
+   "sha256": "f44553c491e24f4749dd5d2d8aac36984c68eff046447bc7b838c5de03fc3408"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "<mock>",
+    "--suite",
+    "pick-hard",
+    "--pick-mode",
+    "logprob",
+    "--k",
+    "1",
+    "--limit",
+    "3",
+    "--permute",
+    "3"
+   ],
+   "n": 21,
+   "sha256": "3e0db4a6ccfa9d9c698725c0ec49f155536a6e6be6ae492ea7a5ff34777a1e6f"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "<mock>",
+    "--suite",
+    "pick-hard",
+    "--pick-mode",
+    "logprob",
+    "--k",
+    "1",
+    "--limit",
+    "3",
+    "--condition",
+    "cards",
+    "--n-probs",
+    "40"
+   ],
+   "n": 9,
+   "sha256": "fc6763645f4740297ac5fa497ecb7c45761ad7fb529e75905848e58c4faa64a4"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--suite",
+    "pick",
+    "--k",
+    "1",
+    "--limit",
+    "2"
+   ],
+   "n": 2,
+   "sha256": "907c405e8563d45d06bf88d586a51afe8aac67d1cf0f728015d606f76175db15"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--suite",
+    "pick",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "--api-key",
+    "argv-key-456"
+   ],
+   "n": 2,
+   "sha256": "3fa2b5f5c6c90b0d65eaedc271cd46293d92a53d8f943c824b605f9f32268e19"
+  }
+ ],
+ "records": [
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "0c2cbde5c4ff0bace4456f9f31d0f91ad15cef70d2420155ccabc25df83925d8"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "42588738a6f7404b22897864174c0c15873ae3000f6b48266587349e8ba4fdf1"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick",
+    "--condition",
+    "none",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "4736d93a67d7be43137edf81df0ad958325152060ec18a2c6a9c2582a065691f"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--condition",
+    "none",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "f9b46a83128475393e24dfc5dfbb212c812c8efb9e6afaf919f775907243c3e6"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "233d0412bcd4cdaebb032a06595aedfe5e5b403cd5f618efbb4e7ba89cb7f2c9"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "89aee4418affc401097f58f0e57306f0a078d274ca00978a4cae16fba931b199"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick",
+    "--condition",
+    "cards",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "423779344919f4ef96c6e626dd0b712929d2cd2ada8a0b38f7f8a7604b2094e0"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--condition",
+    "cards",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "38431667e039f9b181a193718f36ca6b225911970e64b35a295b2f69d5c6a7bf"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "b4f95ee66eb397252334af6c18f74b07d8f2317437614f28db0df30d696332df"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "da744143bdc34768da52dcb24c73468ffa6d181eceaf32a5dec65c518dbeb795"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "none",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "78554e770f066122ab335f23e6047692a1e8fbdde3d88adbb1e3cb16f74005cf"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "none",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "bf99aa11b83ee288a6a1371f5ca6bef527f00fcbd9339faea7cdb082c9c08151"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "c6bb142b8c7e3385a5e21ecba4fd69f8f055af82ffe452d857c3a3cfdec53e88"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 60,
+   "sha256": "1edd6634f783df407ffac47ee2ba9d966bcaec723ea34da99d29f6d11ee26682"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "cards",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "2f8f02b4235f1cdda22a916234b29c45fcee792a8b17d54ca8f7b8d3cc3180d6"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick-hard",
+    "--condition",
+    "cards",
+    "--k",
+    "2",
+    "--why"
+   ],
+   "n": 60,
+   "sha256": "ad1810fad21a357b72255274c1e5743cf42f03a61b5bc08b6628eb8e44869223"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "fill",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "9a85f214c2aeee9cfd2b821a23ab8040c0263835d4374bc8ee2ab353f6dd42c3"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "962d07c7c76d6e2f1ad3e9abe732576e28a25ca2e698e81393753eb233916006"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "fill",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "dc101fd7a3f5c692de612e306bedcda703cf9042c5c7c47861f95f448dbb81d4"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "567534aaf9cf746980b7c8989121f9ca4b466eb1232ccce7b73b518eb54b4c05"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "explain",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "87bbc9bb68484e33416375cac9b6a6eeb783dcc031906b0f852d5bdbdccfa06b"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "explain",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "5f2d7b9b30af6c1341f5eab9ccf93c1777b4521b58a5317cc0a55b1e6f858f5a"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "explain",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "25f0e2996375842fa950a3e6cd23eee0d24424a6133af15ad4d741541a6ad7ee"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "explain",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "59ddf48b96311926b4f1fe1f907003119b93c12328054ce354abaf13bb10fa0b"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "text",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "66e062e44862602defc923ae471d48dd45973d038cb49bcd0a70931079653408"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "text",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "f24484669d8956365316afd2c1a818ea57ae7bf66394dd77e7f2941d88ead3dc"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "text",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "9f7c0d5fffbbc9f5ca340cadd673233ac51dcd0b06401b0250d7a6ad6e8f3f40"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "text",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 20,
+   "sha256": "d90d3633d154d8633687117d2cebcd10923ae7d4b4403c25cfe5f3c7bd966d51"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "knowledge",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "975bdc3e09a53340c7ec96cfe59dedcf77d594a1e09da91e5b50c91c4eaf99e2"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "knowledge",
+    "--condition",
+    "none",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "a391436ed73153a88a4ab51434c0462286e2c6be532b7e019824162c39710dae"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "qwen3.5:4b-q4_K_M",
+    "--suite",
+    "knowledge",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "f83232406e342e6c28a19ed6c18550a2df1851801000c353f5d46bc450781a54"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "knowledge",
+    "--condition",
+    "cards",
+    "--k",
+    "2"
+   ],
+   "n": 24,
+   "sha256": "59f8026fe07e592f4c9bc8aa26929a6c13a004766ca238ae85f6913f7d39c80c"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick",
+    "--variant",
+    "open",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "d7b234a2f7fb1c847671103ea1988b24d73926b003f7838bf09d4274e442d595"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick-hard",
+    "--variant",
+    "labels",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "06d3a3ac3bf802c9a738f9bad1980f372593d62d16b0d2cf91f57a2f7d77513e"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick",
+    "--variant",
+    "noschema",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "f54342e53a5ac73feab178787615fa2ebfc71e8e110aa9aeacc309b6c24966ec"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "fill",
+    "--variant",
+    "noschema",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "c6d8e15a714ce292cda93b10d1bcdc6d605b4a2c3f67aa9c7951dbf846fb3bbe"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "fill",
+    "--variant",
+    "schematext",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "c5c7a74dc0f28981620ab7eacafd63afb4e96961d891133dad71e6512306e2b6"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "text",
+    "--variant",
+    "bare",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "72ddb2eacfc1129297ebc94b0924b6ad7f0e9e8c8496a80d0a97770635dbf759"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick",
+    "--condition",
+    "open",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "4257328cc6cd4abb939702335727c81b86c3451d890b2a8d3dfd41992324389d"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick",
+    "--schema-mode",
+    "none",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "ea90aea80aeaedf2c42f292431c018fc247cd091607da087ecd5a0118b4dd47d"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "fill",
+    "--schema-mode",
+    "text",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "e8fcef7154b486d7ee46ef5f471390e9d23d796a68fbf307de18ca6708018f96"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first"
+   ],
+   "n": 2,
+   "sha256": "046f44e131ed559fa78706333ef52152123ef8eba60e6fea385870a6bd283fa8"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "pick",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first",
+    "--variant",
+    "noschema"
+   ],
+   "n": 2,
+   "sha256": "f696b232c68016ce12c2ca202dd7ff5577b79e360c3fd7a7331872ea9c2ee900"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "fill",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first"
+   ],
+   "n": 2,
+   "sha256": "df314579ff0b75fd01c3c5fa7c9931acba278d85eb74f395a5e684657b167ce6"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "m",
+    "--suite",
+    "fill",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first",
+    "--variant",
+    "schematext"
+   ],
+   "n": 2,
+   "sha256": "77f8d1c76ab17ee0b6c32c75838169895cb39e00eb86543f84b31451503e6088"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--variant",
+    "open",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "aa7d40d2b85f94e763445a6b8045f7844470cfb548d4758c31132cdc0fcb6fb9"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick-hard",
+    "--variant",
+    "labels",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "b7098a26668e3d7c2595b3cee918df62beea8bdf07ef25b70b5fa7581624653f"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--variant",
+    "noschema",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "f8b20a55f1af6b8c07ff8fc9fc56d1e954b09595c0518b5fd7e13677086615c8"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--variant",
+    "noschema",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "914bb63e41987934cedc97dff523ec7deeadbe8f2fd9bb4cf4982c3cf3b77350"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--variant",
+    "schematext",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "3b9b879fbe9749fc891be9c629257f5b880fb9f3c5e02426097aaeae12d348d2"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "text",
+    "--variant",
+    "bare",
+    "--k",
+    "1",
+    "--limit",
+    "4"
+   ],
+   "n": 4,
+   "sha256": "48f69ec4478e8134582bb2caef395d833e7f9a5169092a94c17415c89148fbee"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--condition",
+    "open",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "f228f5788ec7666e9cfb92223d579aa3f1a542f4f90d2d80aec6331379cf04a5"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--schema-mode",
+    "none",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "f86b2a474882a95ac0692c4af999b37f8d5b6e3c86a37285272f2240d3ac3ce2"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--schema-mode",
+    "text",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "265ef39649d679dc4531b46579f8fb03b427d1713a5df33745ee838d83e457c7"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first"
+   ],
+   "n": 2,
+   "sha256": "424662919aad7a0bac66032aaf0c4020a63f5e3baf1a3fc23d38848cc91615db"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "pick",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first",
+    "--variant",
+    "noschema"
+   ],
+   "n": 2,
+   "sha256": "7ae68cd9b7cfd3995fee2e0483b3e17a251a31c1b878a4755de76f36be689d3e"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first"
+   ],
+   "n": 2,
+   "sha256": "b1e3c2697c44e3919643787986a751ae34093974d3962554c8c8e3e7f4cb7c24"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "http://127.0.0.1:8080",
+    "--suite",
+    "fill",
+    "--repair",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "#fail-first",
+    "--variant",
+    "schematext"
+   ],
+   "n": 2,
+   "sha256": "0e1482a2384329b80969b45e95c4a66170de2100e2f62f03d363c974f7b0f068"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "hf.co/u/r:Q4",
+    "--think-mode",
+    "omit",
+    "--num-ctx",
+    "4096",
+    "--suite",
+    "pick",
+    "--k",
+    "2",
+    "--top-k",
+    "20",
+    "--top-p",
+    "0.95",
+    "--min-p",
+    "0.0",
+    "--presence-penalty",
+    "1.5",
+    "--repeat-penalty",
+    "1.1",
+    "--temperature",
+    "0.3",
+    "--num-predict",
+    "99"
+   ],
+   "n": 60,
+   "sha256": "f60d22eb63daf56670890c1160c2c555d3a4eb9d05b4b54654a8c6f42957eed5"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--model",
+    "router-name",
+    "--think-mode",
+    "omit",
+    "--suite",
+    "pick",
+    "--k",
+    "2",
+    "--top-k",
+    "20",
+    "--top-p",
+    "0.95",
+    "--min-p",
+    "0.0",
+    "--presence-penalty",
+    "1.5",
+    "--repeat-penalty",
+    "1.1",
+    "--temperature",
+    "0.3",
+    "--num-predict",
+    "99"
+   ],
+   "n": 60,
+   "sha256": "d32eeff52ce519d25d0062efff43c8f46f63f71fd99d4b9e8ed16b937d78b7e1"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "hf.co/u/r:Q4",
+    "--think-mode",
+    "omit",
+    "--num-ctx",
+    "4096",
+    "--suite",
+    "fill",
+    "--k",
+    "2",
+    "--top-k",
+    "20",
+    "--top-p",
+    "0.95",
+    "--min-p",
+    "0.0",
+    "--presence-penalty",
+    "1.5",
+    "--repeat-penalty",
+    "1.1",
+    "--temperature",
+    "0.3",
+    "--num-predict",
+    "99"
+   ],
+   "n": 24,
+   "sha256": "b372fa4935e6ca72d26a69eb80e09ce6c3b0050c8bc16213b5c92fe9ec5def22"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--model",
+    "router-name",
+    "--think-mode",
+    "omit",
+    "--suite",
+    "fill",
+    "--k",
+    "2",
+    "--top-k",
+    "20",
+    "--top-p",
+    "0.95",
+    "--min-p",
+    "0.0",
+    "--presence-penalty",
+    "1.5",
+    "--repeat-penalty",
+    "1.1",
+    "--temperature",
+    "0.3",
+    "--num-predict",
+    "99"
+   ],
+   "n": 24,
+   "sha256": "ef43ce5be971f348037e534f9f3053be0b7bab29ecacb100c0c550964d4d317b"
+  },
+  {
+   "argv": [
+    "--backend",
+    "ollama",
+    "--model",
+    "hf.co/u/r:Q4",
+    "--think-mode",
+    "omit",
+    "--num-ctx",
+    "4096",
+    "--suite",
+    "text",
+    "--k",
+    "2",
+    "--top-k",
+    "20",
+    "--top-p",
+    "0.95",
+    "--min-p",
+    "0.0",
+    "--presence-penalty",
+    "1.5",
+    "--repeat-penalty",
+    "1.1",
+    "--temperature",
+    "0.3",
+    "--num-predict",
+    "99"
+   ],
+   "n": 20,
+   "sha256": "7b941bbd58e223c3be99276b2fc9976fdfb91196fb5b53403268d05502466660"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--model",
+    "router-name",
+    "--think-mode",
+    "omit",
+    "--suite",
+    "text",
+    "--k",
+    "2",
+    "--top-k",
+    "20",
+    "--top-p",
+    "0.95",
+    "--min-p",
+    "0.0",
+    "--presence-penalty",
+    "1.5",
+    "--repeat-penalty",
+    "1.1",
+    "--temperature",
+    "0.3",
+    "--num-predict",
+    "99"
+   ],
+   "n": 20,
+   "sha256": "851d0026f8a650e765e3386c22dbd8c5fcd2f992fa97c026e1e8cda5dda7fe6b"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "<mock>",
+    "--suite",
+    "pick-hard",
+    "--pick-mode",
+    "logprob",
+    "--k",
+    "1",
+    "--limit",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "ee6c705377a3a09b5e8c4fbcd78c91a2fd98fc840ef3806a907b06f1b1e292cd"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "<mock>",
+    "--suite",
+    "pick-hard",
+    "--pick-mode",
+    "logprob",
+    "--k",
+    "1",
+    "--limit",
+    "3",
+    "--permute",
+    "3"
+   ],
+   "n": 3,
+   "sha256": "f9b872c3aba13d07c3f177c785e228813f279c4f313811d9fcb29ccb9f239a67"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--base-url",
+    "<mock>",
+    "--suite",
+    "pick-hard",
+    "--pick-mode",
+    "logprob",
+    "--k",
+    "1",
+    "--limit",
+    "3",
+    "--condition",
+    "cards",
+    "--n-probs",
+    "40"
+   ],
+   "n": 3,
+   "sha256": "c0949b4424a5c71fc361266ef373f9f401bb9c0b86634b9189c6007ba306d608"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--suite",
+    "pick",
+    "--k",
+    "1",
+    "--limit",
+    "2"
+   ],
+   "n": 2,
+   "sha256": "f4227527055d1c9ab8c6eab7397035770e20ebb7956c1ae10e162dc032aa2562"
+  },
+  {
+   "argv": [
+    "--backend",
+    "llamacpp",
+    "--suite",
+    "pick",
+    "--k",
+    "1",
+    "--limit",
+    "2",
+    "--api-key",
+    "argv-key-456"
+   ],
+   "n": 2,
+   "sha256": "f4227527055d1c9ab8c6eab7397035770e20ebb7956c1ae10e162dc032aa2562"
+  }
+ ],
+ "dry_runs": [
+  {
+   "first_line": "== --backend ollama --model m --suite pick-hard --condition cards --dry-run -> 0",
+   "sha256": "6de61c5c47558740ee44114b43007327796f979acff28c0479364e393a041a4c"
+  },
+  {
+   "first_line": "== --backend llamacpp --suite fill --dry-run -> 0",
+   "sha256": "9688a96fc4bfb656982a7e7f0518a2a3e0083ee87463fe0671e41b08761e6a6d"
+  },
+  {
+   "first_line": "== --backend llamacpp --base-url --suite pick --pick-mode logprob --dry-run -> 0",
+   "sha256": "a588b86823e65b1705d3fcc91ee12e2dacb8d7eaac19a893f80d51fae0b6171a"
+  }
+ ],
+ "total_bodies": 1653,
+ "total_records": 1615
+}

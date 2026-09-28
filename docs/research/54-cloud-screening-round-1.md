@@ -554,6 +554,10 @@ of 36 or pass^3 at least 9 of 12, and for offload models pass^3 at least 10 of 1
   - a non-BYOK usage block whose upstream equals `cost` settles once;
   - a BYOK block settles `cost` plus upstream;
   - a call at 60% of its reservation does not trip the anomaly guard.
+- **Status (2026-09-28): fixed as the backend landed.** `budget.py` adds the upstream figure only when `usage.is_byok` is the
+  JSON value true. The three cases are tests t59–t61 in `tools/local-qual/tests/test_cloud.py`; each failed on the patch as
+  screened (costs booked twice; the 60% call stopped as a cost anomaly) and passes now. The ledgers of this round keep their
+  doubled figures; the billed sums above are the ones to use.
 
 ### 4.3 The one guard stop was a false positive [V]
 

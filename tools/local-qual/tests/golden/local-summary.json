@@ -1,0 +1,1931 @@
+{
+ "about": "score.py's summary of the records the local command lines of dump_payloads.py wrote, latency keys removed (tests t02 and t38), and the record fields that tool version wrote (t02 projects the current records onto them). Frozen from the tool before the cloud backend; see make_goldens.py.",
+ "latency_keys_removed": [
+  "latency_p50_ms",
+  "latency_p90_ms"
+ ],
+ "old_record_keys": [
+  "backend",
+  "chosen_key",
+  "chosen_letter",
+  "condition",
+  "correct",
+  "correct_key",
+  "correct_letter",
+  "correct_pos",
+  "done_reason",
+  "error",
+  "eval_count",
+  "eval_duration",
+  "item_id",
+  "latency_ms",
+  "letter_to_key",
+  "load_duration",
+  "model",
+  "model_file",
+  "n_options",
+  "num_ctx",
+  "num_predict",
+  "options_order",
+  "parse_mode",
+  "parse_ok",
+  "parsed",
+  "prompt_eval_count",
+  "prompt_eval_duration",
+  "quant",
+  "raw",
+  "run_id",
+  "runtime_version",
+  "sample",
+  "sampler_sent",
+  "seed",
+  "server_sampler_defaults",
+  "suite",
+  "suite_sha",
+  "temperature",
+  "think_sent",
+  "thinking_chars",
+  "thinking_kwarg_changes_prompt",
+  "total_duration",
+  "total_slots",
+  "ts",
+  "variant",
+  "why"
+ ],
+ "groups": [
+  {
+   "calls": 24,
+   "items": 12,
+   "parse_rate": 1.0,
+   "schema_valid_rate": 0.0,
+   "field_accuracy": 0.0,
+   "field_accuracy_by_field": {
+    "archetype": 0.0,
+    "place": 0.0,
+    "side": 0.0,
+    "size": 0.0,
+    "target": 0.0,
+    "task": 0.0,
+    "time_of_day": 0.0
+   },
+   "all_fields_correct_rate": 0.0,
+   "all_fields_correct_by_item": {
+    "F01": 0.0,
+    "F02": 0.0,
+    "F03": 0.0,
+    "F04": 0.0,
+    "F05": 0.0,
+    "F06": 0.0,
+    "F07": 0.0,
+    "F08": 0.0,
+    "F09": 0.0,
+    "F10": 0.0,
+    "F11": 0.0,
+    "F12": 0.0
+   },
+   "quote_check_pass_rate": 0.0,
+   "validators_all_pass_rate": 0.0,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "hf.co/u/r:Q4",
+   "suite": "fill",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0,
+   "accuracy": 0.0
+  },
+  {
+   "calls": 60,
+   "items": 30,
+   "k": 2,
+   "parse_rate": 1.0,
+   "accuracy": 0.1167,
+   "accuracy_per_sample": {
+    "0": 0.1,
+    "1": 0.1333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.0,
+   "majority_ties": 24,
+   "accuracy_by_category": {
+    "arc": 0.1667,
+    "cutscene": 0.125,
+    "module": 0.1,
+    "mood": 0.1667,
+    "routing": 0.2,
+    "trigger": 0.1,
+    "waypoint": 0.0
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 7,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 14,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 9,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 13,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 11,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 4,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 2,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 60
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1909,
+   "first_option_baseline": 0.1167,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "hf.co/u/r:Q4",
+   "suite": "pick",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 20,
+   "items": 10,
+   "parse_rate": 0.0,
+   "constraint_pass_rate": 0.0,
+   "pass_rate_by_check": {
+    "banned_words": 0.0,
+    "max_words": 0.0,
+    "min_words": 0.0,
+    "names_subset": 0.0,
+    "no_digits": 0.0
+   },
+   "mean_words": null,
+   "quality": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "hf.co/u/r:Q4",
+   "suite": "text",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 30,
+   "items": 10,
+   "parse_rate": 1.0,
+   "schema_valid_rate": 0.0,
+   "sentence_cap_pass_rate": 1.0,
+   "forbidden_pattern_rate": 0.0,
+   "grade": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "explain",
+   "condition": "cards",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 30,
+   "items": 10,
+   "parse_rate": 1.0,
+   "schema_valid_rate": 0.0,
+   "sentence_cap_pass_rate": 1.0,
+   "forbidden_pattern_rate": 0.0,
+   "grade": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "explain",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 36,
+   "items": 12,
+   "parse_rate": 1.0,
+   "schema_valid_rate": 0.0,
+   "field_accuracy": 0.0,
+   "field_accuracy_by_field": {
+    "archetype": 0.0,
+    "place": 0.0,
+    "side": 0.0,
+    "size": 0.0,
+    "target": 0.0,
+    "task": 0.0,
+    "time_of_day": 0.0
+   },
+   "all_fields_correct_rate": 0.0,
+   "all_fields_correct_by_item": {
+    "F01": 0.0,
+    "F02": 0.0,
+    "F03": 0.0,
+    "F04": 0.0,
+    "F05": 0.0,
+    "F06": 0.0,
+    "F07": 0.0,
+    "F08": 0.0,
+    "F09": 0.0,
+    "F10": 0.0,
+    "F11": 0.0,
+    "F12": 0.0
+   },
+   "quote_check_pass_rate": 0.0,
+   "validators_all_pass_rate": 0.0,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "fill",
+   "condition": "cards",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0,
+   "accuracy": 0.0
+  },
+  {
+   "calls": 36,
+   "items": 12,
+   "parse_rate": 1.0,
+   "schema_valid_rate": 0.0,
+   "field_accuracy": 0.0,
+   "field_accuracy_by_field": {
+    "archetype": 0.0,
+    "place": 0.0,
+    "side": 0.0,
+    "size": 0.0,
+    "target": 0.0,
+    "task": 0.0,
+    "time_of_day": 0.0
+   },
+   "all_fields_correct_rate": 0.0,
+   "all_fields_correct_by_item": {
+    "F01": 0.0,
+    "F02": 0.0,
+    "F03": 0.0,
+    "F04": 0.0,
+    "F05": 0.0,
+    "F06": 0.0,
+    "F07": 0.0,
+    "F08": 0.0,
+    "F09": 0.0,
+    "F10": 0.0,
+    "F11": 0.0,
+    "F12": 0.0
+   },
+   "quote_check_pass_rate": 0.0,
+   "validators_all_pass_rate": 0.0,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "fill",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0,
+   "accuracy": 0.0
+  },
+  {
+   "calls": 36,
+   "items": 12,
+   "parse_rate": 1.0,
+   "mean_answer_chars": 15,
+   "grade": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "knowledge",
+   "condition": "cards",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 36,
+   "items": 12,
+   "parse_rate": 1.0,
+   "mean_answer_chars": 15,
+   "grade": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "knowledge",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1556,
+   "accuracy_per_sample": {
+    "0": 0.1,
+    "1": 0.1333,
+    "2": 0.2333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.1,
+   "majority_ties": 13,
+   "accuracy_by_category": {
+    "arc": 0.2222,
+    "cutscene": 0.0833,
+    "module": 0.1333,
+    "mood": 0.2222,
+    "routing": 0.1333,
+    "trigger": 0.1333,
+    "waypoint": 0.2
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 14,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 19,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 15,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 17,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 6,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 3,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1909,
+   "first_option_baseline": 0.1556,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "pick",
+   "condition": "cards",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1556,
+   "accuracy_per_sample": {
+    "0": 0.1,
+    "1": 0.1333,
+    "2": 0.2333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.1,
+   "majority_ties": 13,
+   "accuracy_by_category": {
+    "arc": 0.2222,
+    "cutscene": 0.0833,
+    "module": 0.1333,
+    "mood": 0.2222,
+    "routing": 0.1333,
+    "trigger": 0.1333,
+    "waypoint": 0.2
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 14,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 19,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 15,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 17,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 6,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 3,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1909,
+   "first_option_baseline": 0.1556,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "pick",
+   "condition": "cards",
+   "variant": "why",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 94,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1489,
+   "accuracy_per_sample": {
+    "0": 0.0882,
+    "1": 0.1333,
+    "2": 0.2333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.1,
+   "majority_ties": 11,
+   "accuracy_by_category": {
+    "arc": 0.2222,
+    "cutscene": 0.0833,
+    "module": 0.1333,
+    "mood": 0.2222,
+    "routing": 0.1333,
+    "trigger": 0.1333,
+    "waypoint": 0.1579
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 14,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 21,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 17,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 17,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 6,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 3,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 94
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1906,
+   "first_option_baseline": 0.1489,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "pick",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1556,
+   "accuracy_per_sample": {
+    "0": 0.1,
+    "1": 0.1333,
+    "2": 0.2333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.1,
+   "majority_ties": 13,
+   "accuracy_by_category": {
+    "arc": 0.2222,
+    "cutscene": 0.0833,
+    "module": 0.1333,
+    "mood": 0.2222,
+    "routing": 0.1333,
+    "trigger": 0.1333,
+    "waypoint": 0.2
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 14,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 19,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 15,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 17,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 6,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 3,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1909,
+   "first_option_baseline": 0.1556,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "pick",
+   "condition": "none",
+   "variant": "why",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1222,
+   "accuracy_per_sample": {
+    "0": 0.1333,
+    "1": 0.1,
+    "2": 0.1333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.0333,
+   "majority_ties": 20,
+   "accuracy_by_category": {
+    "campaign": 0.0,
+    "cutscene": 0.0,
+    "module": 0.0833,
+    "mood": 0.1111,
+    "replayability": 0.1667,
+    "routing": 0.0833,
+    "trigger": 0.2,
+    "waypoint": 0.2667
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 11,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 10,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 9,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 11,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 8,
+     "accuracy": 0.0
+    },
+    "G": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 9,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1429,
+   "first_option_baseline": 0.1222,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "pick-hard",
+   "condition": "cards",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1222,
+   "accuracy_per_sample": {
+    "0": 0.1333,
+    "1": 0.1,
+    "2": 0.1333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.0333,
+   "majority_ties": 20,
+   "accuracy_by_category": {
+    "campaign": 0.0,
+    "cutscene": 0.0,
+    "module": 0.0833,
+    "mood": 0.1111,
+    "replayability": 0.1667,
+    "routing": 0.0833,
+    "trigger": 0.2,
+    "waypoint": 0.2667
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 11,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 10,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 9,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 11,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 8,
+     "accuracy": 0.0
+    },
+    "G": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 9,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1429,
+   "first_option_baseline": 0.1222,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "pick-hard",
+   "condition": "cards",
+   "variant": "why",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1222,
+   "accuracy_per_sample": {
+    "0": 0.1333,
+    "1": 0.1,
+    "2": 0.1333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.0333,
+   "majority_ties": 20,
+   "accuracy_by_category": {
+    "campaign": 0.0,
+    "cutscene": 0.0,
+    "module": 0.0833,
+    "mood": 0.1111,
+    "replayability": 0.1667,
+    "routing": 0.0833,
+    "trigger": 0.2,
+    "waypoint": 0.2667
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 11,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 10,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 9,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 11,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 8,
+     "accuracy": 0.0
+    },
+    "G": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 9,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1429,
+   "first_option_baseline": 0.1222,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "pick-hard",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1222,
+   "accuracy_per_sample": {
+    "0": 0.1333,
+    "1": 0.1,
+    "2": 0.1333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.0333,
+   "majority_ties": 20,
+   "accuracy_by_category": {
+    "campaign": 0.0,
+    "cutscene": 0.0,
+    "module": 0.0833,
+    "mood": 0.1111,
+    "replayability": 0.1667,
+    "routing": 0.0833,
+    "trigger": 0.2,
+    "waypoint": 0.2667
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 11,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 10,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 9,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 11,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 8,
+     "accuracy": 0.0
+    },
+    "G": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 9,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1429,
+   "first_option_baseline": 0.1222,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "pick-hard",
+   "condition": "none",
+   "variant": "why",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 30,
+   "items": 10,
+   "parse_rate": 0.0,
+   "constraint_pass_rate": 0.0,
+   "pass_rate_by_check": {
+    "banned_words": 0.0,
+    "max_words": 0.0,
+    "min_words": 0.0,
+    "names_subset": 0.0,
+    "no_digits": 0.0
+   },
+   "mean_words": null,
+   "quality": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "text",
+   "condition": "cards",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 30,
+   "items": 10,
+   "parse_rate": 0.0,
+   "constraint_pass_rate": 0.0,
+   "pass_rate_by_check": {
+    "banned_words": 0.0,
+    "max_words": 0.0,
+    "min_words": 0.0,
+    "names_subset": 0.0,
+    "no_digits": 0.0
+   },
+   "mean_words": null,
+   "quality": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "m",
+   "suite": "text",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 30,
+   "items": 10,
+   "parse_rate": 1.0,
+   "schema_valid_rate": 0.0,
+   "sentence_cap_pass_rate": 1.0,
+   "forbidden_pattern_rate": 0.0,
+   "grade": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "explain",
+   "condition": "cards",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 30,
+   "items": 10,
+   "parse_rate": 1.0,
+   "schema_valid_rate": 0.0,
+   "sentence_cap_pass_rate": 1.0,
+   "forbidden_pattern_rate": 0.0,
+   "grade": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "explain",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 36,
+   "items": 12,
+   "parse_rate": 1.0,
+   "schema_valid_rate": 0.0,
+   "field_accuracy": 0.0,
+   "field_accuracy_by_field": {
+    "archetype": 0.0,
+    "place": 0.0,
+    "side": 0.0,
+    "size": 0.0,
+    "target": 0.0,
+    "task": 0.0,
+    "time_of_day": 0.0
+   },
+   "all_fields_correct_rate": 0.0,
+   "all_fields_correct_by_item": {
+    "F01": 0.0,
+    "F02": 0.0,
+    "F03": 0.0,
+    "F04": 0.0,
+    "F05": 0.0,
+    "F06": 0.0,
+    "F07": 0.0,
+    "F08": 0.0,
+    "F09": 0.0,
+    "F10": 0.0,
+    "F11": 0.0,
+    "F12": 0.0
+   },
+   "quote_check_pass_rate": 0.0,
+   "validators_all_pass_rate": 0.0,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "fill",
+   "condition": "cards",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0,
+   "accuracy": 0.0
+  },
+  {
+   "calls": 36,
+   "items": 12,
+   "parse_rate": 1.0,
+   "schema_valid_rate": 0.0,
+   "field_accuracy": 0.0,
+   "field_accuracy_by_field": {
+    "archetype": 0.0,
+    "place": 0.0,
+    "side": 0.0,
+    "size": 0.0,
+    "target": 0.0,
+    "task": 0.0,
+    "time_of_day": 0.0
+   },
+   "all_fields_correct_rate": 0.0,
+   "all_fields_correct_by_item": {
+    "F01": 0.0,
+    "F02": 0.0,
+    "F03": 0.0,
+    "F04": 0.0,
+    "F05": 0.0,
+    "F06": 0.0,
+    "F07": 0.0,
+    "F08": 0.0,
+    "F09": 0.0,
+    "F10": 0.0,
+    "F11": 0.0,
+    "F12": 0.0
+   },
+   "quote_check_pass_rate": 0.0,
+   "validators_all_pass_rate": 0.0,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "fill",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0,
+   "accuracy": 0.0
+  },
+  {
+   "calls": 36,
+   "items": 12,
+   "parse_rate": 1.0,
+   "mean_answer_chars": 15,
+   "grade": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "knowledge",
+   "condition": "cards",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 36,
+   "items": 12,
+   "parse_rate": 1.0,
+   "mean_answer_chars": 15,
+   "grade": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "knowledge",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1556,
+   "accuracy_per_sample": {
+    "0": 0.1,
+    "1": 0.1333,
+    "2": 0.2333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.1,
+   "majority_ties": 13,
+   "accuracy_by_category": {
+    "arc": 0.2222,
+    "cutscene": 0.0833,
+    "module": 0.1333,
+    "mood": 0.2222,
+    "routing": 0.1333,
+    "trigger": 0.1333,
+    "waypoint": 0.2
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 14,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 19,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 15,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 17,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 6,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 3,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1909,
+   "first_option_baseline": 0.1556,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "pick",
+   "condition": "cards",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1556,
+   "accuracy_per_sample": {
+    "0": 0.1,
+    "1": 0.1333,
+    "2": 0.2333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.1,
+   "majority_ties": 13,
+   "accuracy_by_category": {
+    "arc": 0.2222,
+    "cutscene": 0.0833,
+    "module": 0.1333,
+    "mood": 0.2222,
+    "routing": 0.1333,
+    "trigger": 0.1333,
+    "waypoint": 0.2
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 14,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 19,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 15,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 17,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 6,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 3,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1909,
+   "first_option_baseline": 0.1556,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "pick",
+   "condition": "cards",
+   "variant": "why",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1556,
+   "accuracy_per_sample": {
+    "0": 0.1,
+    "1": 0.1333,
+    "2": 0.2333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.1,
+   "majority_ties": 13,
+   "accuracy_by_category": {
+    "arc": 0.2222,
+    "cutscene": 0.0833,
+    "module": 0.1333,
+    "mood": 0.2222,
+    "routing": 0.1333,
+    "trigger": 0.1333,
+    "waypoint": 0.2
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 14,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 19,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 15,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 17,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 6,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 3,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1909,
+   "first_option_baseline": 0.1556,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "pick",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1556,
+   "accuracy_per_sample": {
+    "0": 0.1,
+    "1": 0.1333,
+    "2": 0.2333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.1,
+   "majority_ties": 13,
+   "accuracy_by_category": {
+    "arc": 0.2222,
+    "cutscene": 0.0833,
+    "module": 0.1333,
+    "mood": 0.2222,
+    "routing": 0.1333,
+    "trigger": 0.1333,
+    "waypoint": 0.2
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 14,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 19,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 15,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 17,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 6,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 3,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1909,
+   "first_option_baseline": 0.1556,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "pick",
+   "condition": "none",
+   "variant": "why",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1222,
+   "accuracy_per_sample": {
+    "0": 0.1333,
+    "1": 0.1,
+    "2": 0.1333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.0333,
+   "majority_ties": 20,
+   "accuracy_by_category": {
+    "campaign": 0.0,
+    "cutscene": 0.0,
+    "module": 0.0833,
+    "mood": 0.1111,
+    "replayability": 0.1667,
+    "routing": 0.0833,
+    "trigger": 0.2,
+    "waypoint": 0.2667
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 11,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 10,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 9,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 11,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 8,
+     "accuracy": 0.0
+    },
+    "G": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 9,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1429,
+   "first_option_baseline": 0.1222,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "pick-hard",
+   "condition": "cards",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1222,
+   "accuracy_per_sample": {
+    "0": 0.1333,
+    "1": 0.1,
+    "2": 0.1333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.0333,
+   "majority_ties": 20,
+   "accuracy_by_category": {
+    "campaign": 0.0,
+    "cutscene": 0.0,
+    "module": 0.0833,
+    "mood": 0.1111,
+    "replayability": 0.1667,
+    "routing": 0.0833,
+    "trigger": 0.2,
+    "waypoint": 0.2667
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 11,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 10,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 9,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 11,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 8,
+     "accuracy": 0.0
+    },
+    "G": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 9,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1429,
+   "first_option_baseline": 0.1222,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "pick-hard",
+   "condition": "cards",
+   "variant": "why",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1222,
+   "accuracy_per_sample": {
+    "0": 0.1333,
+    "1": 0.1,
+    "2": 0.1333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.0333,
+   "majority_ties": 20,
+   "accuracy_by_category": {
+    "campaign": 0.0,
+    "cutscene": 0.0,
+    "module": 0.0833,
+    "mood": 0.1111,
+    "replayability": 0.1667,
+    "routing": 0.0833,
+    "trigger": 0.2,
+    "waypoint": 0.2667
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 11,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 10,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 9,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 11,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 8,
+     "accuracy": 0.0
+    },
+    "G": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 9,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1429,
+   "first_option_baseline": 0.1222,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "pick-hard",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 90,
+   "items": 30,
+   "k": 3,
+   "parse_rate": 1.0,
+   "accuracy": 0.1222,
+   "accuracy_per_sample": {
+    "0": 0.1333,
+    "1": 0.1,
+    "2": 0.1333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.0333,
+   "majority_ties": 20,
+   "accuracy_by_category": {
+    "campaign": 0.0,
+    "cutscene": 0.0,
+    "module": 0.0833,
+    "mood": 0.1111,
+    "replayability": 0.1667,
+    "routing": 0.0833,
+    "trigger": 0.2,
+    "waypoint": 0.2667
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 11,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 10,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 9,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 11,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 8,
+     "accuracy": 0.0
+    },
+    "G": {
+     "n": 16,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 9,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 90
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1429,
+   "first_option_baseline": 0.1222,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "pick-hard",
+   "condition": "none",
+   "variant": "why",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 30,
+   "items": 10,
+   "parse_rate": 0.0,
+   "constraint_pass_rate": 0.0,
+   "pass_rate_by_check": {
+    "banned_words": 0.0,
+    "max_words": 0.0,
+    "min_words": 0.0,
+    "names_subset": 0.0,
+    "no_digits": 0.0
+   },
+   "mean_words": null,
+   "quality": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "text",
+   "condition": "cards",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 30,
+   "items": 10,
+   "parse_rate": 0.0,
+   "constraint_pass_rate": 0.0,
+   "pass_rate_by_check": {
+    "banned_words": 0.0,
+    "max_words": 0.0,
+    "min_words": 0.0,
+    "names_subset": 0.0,
+    "no_digits": 0.0
+   },
+   "mean_words": null,
+   "quality": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "qwen3.5:4b-q4_K_M",
+   "suite": "text",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 24,
+   "items": 12,
+   "parse_rate": 1.0,
+   "schema_valid_rate": 0.0,
+   "field_accuracy": 0.0,
+   "field_accuracy_by_field": {
+    "archetype": 0.0,
+    "place": 0.0,
+    "side": 0.0,
+    "size": 0.0,
+    "target": 0.0,
+    "task": 0.0,
+    "time_of_day": 0.0
+   },
+   "all_fields_correct_rate": 0.0,
+   "all_fields_correct_by_item": {
+    "F01": 0.0,
+    "F02": 0.0,
+    "F03": 0.0,
+    "F04": 0.0,
+    "F05": 0.0,
+    "F06": 0.0,
+    "F07": 0.0,
+    "F08": 0.0,
+    "F09": 0.0,
+    "F10": 0.0,
+    "F11": 0.0,
+    "F12": 0.0
+   },
+   "quote_check_pass_rate": 0.0,
+   "validators_all_pass_rate": 0.0,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "router-name",
+   "suite": "fill",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0,
+   "accuracy": 0.0
+  },
+  {
+   "calls": 60,
+   "items": 30,
+   "k": 2,
+   "parse_rate": 1.0,
+   "accuracy": 0.1167,
+   "accuracy_per_sample": {
+    "0": 0.1,
+    "1": 0.1333
+   },
+   "pass_k": 0.0,
+   "majority_accuracy": 0.0,
+   "majority_ties": 24,
+   "accuracy_by_category": {
+    "arc": 0.1667,
+    "cutscene": 0.125,
+    "module": 0.1,
+    "mood": 0.1667,
+    "routing": 0.2,
+    "trigger": 0.1,
+    "waypoint": 0.0
+   },
+   "accuracy_by_correct_letter": {
+    "A": {
+     "n": 7,
+     "accuracy": 1.0
+    },
+    "B": {
+     "n": 14,
+     "accuracy": 0.0
+    },
+    "C": {
+     "n": 9,
+     "accuracy": 0.0
+    },
+    "D": {
+     "n": 13,
+     "accuracy": 0.0
+    },
+    "E": {
+     "n": 11,
+     "accuracy": 0.0
+    },
+    "F": {
+     "n": 4,
+     "accuracy": 0.0
+    },
+    "X": {
+     "n": 2,
+     "accuracy": 0.0
+    }
+   },
+   "chosen_letter_counts": {
+    "A": 60
+   },
+   "escape_rate": 0.0,
+   "escape_item_accuracy": 0.0,
+   "random_valid_baseline": 0.1909,
+   "first_option_baseline": 0.1167,
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "router-name",
+   "suite": "pick",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  },
+  {
+   "calls": 20,
+   "items": 10,
+   "parse_rate": 0.0,
+   "constraint_pass_rate": 0.0,
+   "pass_rate_by_check": {
+    "banned_words": 0.0,
+    "max_words": 0.0,
+    "min_words": 0.0,
+    "names_subset": 0.0,
+    "no_digits": 0.0
+   },
+   "mean_words": null,
+   "quality": "ungraded",
+   "tokens_per_s": 1000000000.0,
+   "mean_prompt_tokens": 1,
+   "mean_eval_tokens": 1,
+   "done_reason_length": 0,
+   "model": "router-name",
+   "suite": "text",
+   "condition": "none",
+   "variant": "plain",
+   "errors": 0,
+   "stale_suite_records": 0
+  }
+ ]
+}

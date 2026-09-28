@@ -17,6 +17,10 @@ The two runtimes run.py can talk to, behind one small interface:
   model's own Jinja chat template reads (not every template reads it; the
   probe records whether this one does).
 
+The third client, ``OpenAICompatBackend`` for OpenAI-compatible cloud
+endpoints under a hard budget, has the same interface and lives in
+cloud_backend.py (cloud_guard.py and budget.py import ``SAMPLER_KEYS`` from here).
+
 How it fits
 -----------
 run.py builds the prompt, the schema and the seed for one call; a backend turns

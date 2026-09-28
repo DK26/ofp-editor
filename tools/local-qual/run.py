@@ -3,353 +3,160 @@
 
 What it does
 ------------
-Sends the spike suites (suites/*.json) to one model served by a local runtime
-and writes one JSONL record per call. It measures whether a small local model
-can carry the co-pilot's code-owned step shapes (doc 21 §3.1): a Pick from a
-code-computed menu, a small typed Fill, a grounded two-sentence explanation, a
-short flavour line, and the doc 30 knowledge tasks with and without a
-reference card.
+Sends the spike suites (suites/*.json) to one model and writes one JSONL
+record per decision. It measures whether a model can carry the co-pilot's
+code-owned step shapes (doc 21 §3.1): a Pick from a code-computed menu, a small
+typed Fill, a grounded two-sentence explanation, a short flavour line, and the
+doc 30 knowledge tasks with and without a reference card.
 
-Two runtimes are supported (``--backend``, clients in backends.py):
-``ollama`` (the default, native /api/chat, as measured in doc 44) and
-``llamacpp`` (llama.cpp's llama-server through its OpenAI-compatible
-/v1/chat/completions, the runtime doc 13 plans as the managed sidecar). With
-llama-server any GGUF file works, including one pulled straight from Hugging
-Face (``llama-server -hf <user>/<repo>:<quant>``).
+Three runtimes are supported (``--backend``): ``ollama`` (the default, native
+/api/chat, as measured in doc 44) and ``llamacpp`` (llama.cpp's llama-server
+through its OpenAI-compatible /v1/chat/completions, the runtime doc 13 plans
+as the managed sidecar), both in backends.py, and ``openai`` (any
+OpenAI-compatible endpoint, for example OpenRouter or a provider's own API),
+in cloud_backend.py. With llama-server any GGUF file works, including one
+pulled straight from Hugging Face (``llama-server -hf <user>/<repo>:<quant>``).
+The ``openai`` backend spends money, so it refuses to start without a hard
+budget (``--max-usd`` with ``--price-in``/``--price-out``, enforced by
+budget.py) and reads its key only from the environment variable named by
+``--api-key-env`` (cloud_run.py holds its flags and run-time guards).
+``--free-only`` runs OpenRouter's ``:free`` models with a cap of 0, rate caps
+and a zero-spend check on every response (free_mode.py; runbook in
+cloud/README.md).
 
 How it fits
 -----------
-run.py only collects raw evidence. score.py turns the JSONL into summary
-tables; knowledge, explain and text quality are graded later by LLM graders
-from the grading sheet score.py exports. Nothing here is product code: it is a
-research tool, standard library only, so it runs on any machine with Python 3
-and one of the two servers.
+run.py only collects raw evidence: prompts.py decides what each call asks,
+a backend sends it, and run.py writes the records. Its command line and the
+refusals checked before anything is sent live in run_cli.py; turning a reply
+into a record (parsing, the repair call, --resume) lives in run_records.py.
+score.py turns the JSONL
+into summary tables; knowledge, explain and text quality are graded later by
+LLM graders from the grading sheet score.py exports; the free-form answers of
+the open Pick arms are mapped to option keys by grade_open.py; uplift.py
+compares arms. Nothing here is product code: it is a research tool, standard
+library only, so it runs on any machine with Python 3.
 
 Design notes
 ------------
 * Pick menus are permuted per (item id, sample) with a seeded RNG, so the
-  correct option lands on different letters across samples, and the "none" and
-  "cards" conditions see the same permutation (paired comparison). The escape
-  option is always last as X (doc 21 §3.2).
+  correct option lands on different letters across samples, and every
+  condition and variant sees the same permutation (paired comparison). The
+  escape option is always last as X (doc 21 §3.2).
 * Structured steps pass the item's JSON schema to the server (Ollama's
-  ``format``, llama-server's ``response_format`` json_schema), which constrains
+  ``format``, ``response_format`` json_schema elsewhere), which constrains
   decoding with a grammar, exactly as a product harness would.
+* Harness-uplift variants (``--variant``) remove one harness mechanism at a
+  time, with every other byte of the prompt unchanged: ``open`` hides the Pick
+  menu, ``labels`` shows only the option names, ``noschema`` drops the
+  response schema (and, for Fill, the schema text), ``schematext`` keeps the
+  schema text but not the response schema, ``bare`` drops Text's constraint
+  list; ``--repair`` adds at most one repair call when a code check fails. The
+  default (``plain``) requests are byte-identical to earlier versions.
 * Thinking is switched off (these steps are meant to be answered directly):
   ``think: false`` for Ollama, ``chat_template_kwargs.enable_thinking=false``
-  for llama-server. If the server rejects the field, the call is retried once
-  without it and the record says so (``think_sent``); ``thinking_chars`` shows
-  whether any thinking text came back anyway.
+  for llama-server, and an explicit ``--reasoning`` setting (for example
+  ``none``) for the ``openai`` backend. A local server that rejects its field
+  gets the call again without it and the record says so (``think_sent``);
+  ``thinking_chars`` shows whether any thinking text came back anyway.
 * Each call is independent (no chat history), as in the harness design of a
-  fresh capsule per decision.
+  fresh capsule per decision; a repair call is the only exception (it shows
+  the model its own rejected answer).
 * Every record names the backend, the runtime version, the model file and the
   quantisation the server reports, so runs of two quants or two runtimes can be
   told apart and paired item by item.
+* ``--pick-mode logprob`` (Pick suites on llama-server) reads the probability
+  of every menu letter from one forward pass instead of sampling one letter,
+  optionally averaged over rotated option orders (``--permute``) and
+  temperature-scaled (``--calibration``); see logprob_pick.py. Its records are
+  variant ``logprob`` and carry the whole distribution; cascade.py replays them
+  offline as the first stage of a small-to-large cascade.
+* ``--scaffold <arm>`` (doc 59) adds harness reasoning computed by code from
+  the item's answer-blind view (scaffolds.py): one-call arms (why, diff, rule;
+  Fill quote-first) change only the request; the multi-call arms (eliminate,
+  pairwise, subq, prefill) run in scaffold_run.py. Records get variant
+  ``scaffold-<arm>`` and a per-call ledger under ``scaffold``; without the flag
+  (or with ``--scaffold none``) every request is byte-identical to before.
+* ``--suite-file`` runs a suite kept outside suites/ (the staged pools), and
+  ``--split`` keeps one half of a suite whose items carry a split; the held-out
+  half needs ``--confirm-heldout``.
 """
-import argparse
 import datetime as _dt
-import hashlib
 import json
 import os
-import random
-import re
 import sys
 import time
+import urllib.parse
+import uuid
 
+import cloud_run
+import logprob_pick
+import run_cli
+import scaffold_run
+import scaffolds
+# The local backend classes are looked up in this module's namespace when main() creates one, so a test harness can
+# swap them (tests/dump_payloads.py and dump_bodies.py replace them with recording stand-ins).
 from backends import LlamaServerBackend, OllamaBackend, SAMPLER_KEYS, normalize_host, quant_from_filename
+# Re-exported: earlier scripts imported the prompt helpers (and strip_think) from run.py.
+from prompts import (ESCAPE_LETTER, NUM_PREDICT, OPEN_VARIANTS, PICK_LETTERS, REPAIRABLE,  # noqa: F401
+                     SCHEMA_MODE_VARIANT, SUITE_SHAPE, SUITES, SUITES_DIR, SYSTEM, SYSTEM_OPEN, TEMPERATURE,
+                     VARIANTS, build_call, build_explain, build_fill, build_knowledge, build_pick, build_pick_open,
+                     build_text, card_block, check_failure, compact, extract_json, load_sidecar, load_suite,
+                     open_stem, permute_options, repair_message, sample_seed, strip_think)
+# Re-exported too: these lived in run.py before the command line and the record helpers moved out.
+from run_cli import load_suite_file, resolve_scaffold, resolve_variant, select_split  # noqa: F401
+from run_records import FIRST_FIELDS, done_keys, interpret, merge_repair, slug  # noqa: F401
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SUITES_DIR = os.path.join(HERE, "suites")
 RESULTS_DIR = os.path.join(HERE, "results")
-# Suite name -> step shape. The shape picks the prompt builder, the schema, the temperature, the output cap
-# and the system prompt, so several suites can share one shape: `pick-hard` (doc 44 §5.4 item 4) is a harder
-# instrument for the same Pick step. Records and output files keep the suite's own name, so the two Pick
-# suites score separately.
-SUITE_SHAPE = {"knowledge": "knowledge", "pick": "pick", "pick-hard": "pick", "fill": "fill", "explain": "explain",
-               "text": "text"}
-SUITES = tuple(SUITE_SHAPE)
-
-# Temperatures from the spike plan: sampled steps (pick/fill/text) run warmer
-# because the harness draws K candidates and votes or validates; knowledge and
-# explanations run cooler because they should be stable facts.
-TEMPERATURE = {"pick": 0.6, "fill": 0.6, "text": 0.6, "knowledge": 0.2, "explain": 0.2}
-# Output caps (tokens). Generous enough for each shape; a cap stops a small
-# model that loops from burning minutes of GPU time. Override with --num-predict.
-NUM_PREDICT = {"pick": 64, "pick_why": 200, "fill": 320, "text": 120, "knowledge": 700, "explain": 320}
-PICK_LETTERS = "ABCDEFG"  # at most 7 real options per menu (doc 21 §3.2)
-ESCAPE_LETTER = "X"
-
-SYSTEM = {
-    "knowledge": "Answer briefly; if unsure, say so.",
-    "pick": ("You are the decision step of a mission editor for Arma: Cold War Assault (Operation Flashpoint). "
-             "Code has already computed a menu of valid options. Choose the single best option for the request. "
-             "If no option fits, choose X. Answer with JSON only."),
-    "fill": ("You fill one small typed record for a mission editor for Arma: Cold War Assault. Use only what the "
-             "request says; never invent. Answer with JSON only."),
-    "explain": ("You explain one editor finding to a mission maker for Arma: Cold War Assault. Use only the finding, "
-                "the mission facts and the reference card if one is given. Do not invent commands or behaviour. "
-                "Answer with JSON only."),
-    "text": ("You write one short line of in-world text for a Cold War military mission set in 1985. Follow every "
-             "constraint exactly. Answer with JSON only."),
-}
 
 
-# ── Suite loading and seeding ────────────────────────────────────────────────
-
-def load_suite(name):
-    """Load suites/<name>.json and return (suite dict, sha256 of the file)."""
-    path = os.path.join(SUITES_DIR, name + ".json")
-    with open(path, "rb") as f:
-        raw = f.read()
-    return json.loads(raw.decode("utf-8")), hashlib.sha256(raw).hexdigest()[:16]
-
-
-def sample_seed(item_id, sample):
-    """Stable 31-bit seed per (item, sample); identical across conditions so runs pair up."""
-    digest = hashlib.sha256(f"{item_id}|{sample}".encode("utf-8")).hexdigest()
-    return int(digest[:8], 16) & 0x7FFFFFFF
-
-
-def permute_options(item, sample):
-    """Return the item's real options in a seeded order (escape excluded).
-
-    random.Random seeded with a str hashes it with SHA-512 (seed version 2), so
-    the order is reproducible across machines and Python 3 versions.
-    """
-    opts = list(item["options"])
-    random.Random(f"perm|{item['id']}|{sample}").shuffle(opts)
-    return opts
-
-
-# ── Prompt builders (one per suite) ──────────────────────────────────────────
-
-def compact(obj):
-    return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
-
-
-def card_block(item, condition):
-    card = item.get("card")
-    if condition == "cards" and card:
-        return "\n\n[REFERENCE CARD]\n" + card
-    return ""
-
-
-def build_pick(item, condition, sample, why):
-    opts = permute_options(item, sample)
-    letters = PICK_LETTERS[: len(opts)]
-    letter_to_key = {letter: opt["key"] for letter, opt in zip(letters, opts)}
-    letter_to_key[ESCAPE_LETTER] = item["escape"]["key"]
-    menu = "\n".join(f"{letter}) {opt['label']}: {opt['desc']}" for letter, opt in zip(letters, opts))
-    menu += f"\n{ESCAPE_LETTER}) {item['escape']['label']}"
-    enum = list(letters) + [ESCAPE_LETTER]
-    if why:
-        # Doc 21 §3.2: a short bounded reason comes before the answer.
-        schema = {"type": "object",
-                  "properties": {"why": {"type": "string", "maxLength": 160},
-                                 "choice": {"type": "string", "enum": enum}},
-                  "required": ["why", "choice"]}
-        reply = 'Reply as {"why": "<one short reason>", "choice": "<letter>"}.'
-    else:
-        schema = {"type": "object", "properties": {"choice": {"type": "string", "enum": enum}},
-                  "required": ["choice"]}
-        reply = 'Reply as {"choice": "<letter>"}.'
-    user = f"Request: {item['request']}{card_block(item, condition)}\n\nOptions:\n{menu}\n\n{reply}"
-    answer = item["answer"]
-    if answer == item["escape"]["key"]:
-        correct_letter, correct_pos = ESCAPE_LETTER, len(opts)
-    else:
-        correct_pos = [o["key"] for o in opts].index(answer)
-        correct_letter = letters[correct_pos]
-    extra = {"letter_to_key": letter_to_key, "options_order": [o["key"] for o in opts],
-             "n_options": len(opts), "correct_key": answer, "correct_letter": correct_letter,
-             "correct_pos": correct_pos}
-    return user, schema, extra
-
-
-def build_fill(item, condition):
-    user = (f"Request: \"{item['request']}\"{card_block(item, condition)}\n\n{item['instructions']}\n\n"
-            f"JSON schema:\n{compact(item['schema'])}")
-    return user, item["schema"], {}
-
-
-def build_explain(item, condition):
-    user = (f"Finding {item['code']} ({item['severity']}): {item['message']}\n"
-            f"Mission facts: {item['context']}{card_block(item, condition)}\n\n"
-            "Explain what is wrong and why in one sentence (explanation), and the fix in one sentence (fix). "
-            "At most two sentences in total.\n\n"
-            f"JSON schema:\n{compact(item['schema'])}")
-    return user, item["schema"], {}
-
-
-def build_text(item, condition):
-    c = item["constraints"]
-    lines = [f"- at most {c['max_words']} words"]
-    if c.get("names_check", True):
-        names = ", ".join(c["allowed_names"]) if c["allowed_names"] else "none"
-        lines.append(f"- names, callsigns and places you may use: {names}; use no other names")
-    if c.get("no_digits"):
-        lines.append("- no digits")
-    lines.append(f"- era: {c['era']}")
-    lines.append(f"- tone: {c['tone']}")
-    user = (f"Slot: {item['slot']}\nContext: {item['context']}{card_block(item, condition)}\n\nConstraints:\n"
-            + "\n".join(lines) + f"\n\nJSON schema:\n{compact(item['schema'])}")
-    return user, item["schema"], {}
-
-
-def build_knowledge(item, condition):
-    return item["prompt"] + card_block(item, condition), None, {}
-
-
-def build_call(suite, item, condition, sample, why):
-    if suite == "pick":
-        return build_pick(item, condition, sample, why)
-    if suite == "fill":
-        return build_fill(item, condition)
-    if suite == "explain":
-        return build_explain(item, condition)
-    if suite == "text":
-        return build_text(item, condition)
-    return build_knowledge(item, condition)
-
-
-# ── Response parsing ─────────────────────────────────────────────────────────
-
-def extract_json(text):
-    """Parse a JSON object from model text.
-
-    Returns (obj or None, mode). Grammar-constrained output is normally plain
-    JSON ("strict"); the fallback finds the first balanced {...} span, for
-    runtimes or models that wrap output in a code fence ("extracted").
-    """
-    s = (text or "").strip()
-    try:
-        obj = json.loads(s)
-        return (obj, "strict") if isinstance(obj, dict) else (None, "not_object")
-    except (ValueError, TypeError):
-        pass
-    start = s.find("{")
-    while start != -1:
-        depth, in_str, esc = 0, False, False
-        for pos, ch in enumerate(s[start:], start):
-            if in_str:
-                if esc:
-                    esc = False
-                elif ch == "\\":
-                    esc = True
-                elif ch == '"':
-                    in_str = False
-            elif ch == '"':
-                in_str = True
-            elif ch == "{":
-                depth += 1
-            elif ch == "}":
-                depth -= 1
-                if depth == 0:
-                    try:
-                        obj = json.loads(s[start:pos + 1])
-                        if isinstance(obj, dict):
-                            return obj, "extracted"
-                    except ValueError:
-                        pass
-                    break
-        start = s.find("{", start + 1)
-    return None, "failed"
-
-
-# ── Main loop ────────────────────────────────────────────────────────────────
-
-def slug(text):
-    return re.sub(r"[^A-Za-z0-9._-]+", "-", text).strip("-")
-
-
-def done_keys(path):
-    """Keys of successful records already in `path` (for --resume)."""
-    keys = set()
-    if not os.path.exists(path):
-        return keys
-    with open(path, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                r = json.loads(line)
-            except ValueError:
-                continue
-            if not r.get("error"):
-                keys.add((r["model"], r["suite"], r["item_id"], r["condition"], r["variant"], r["sample"]))
-    return keys
-
+# ── Main ─────────────────────────────────────────────────────────────────────
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Run a local-qual suite against a local model (Ollama or llama-server).")
-    ap.add_argument("--backend", default="ollama", choices=("ollama", "llamacpp"),
-                    help="'ollama' (default): native /api/chat; 'llamacpp': llama-server's /v1/chat/completions")
-    ap.add_argument("--model", default=None,
-                    help="ollama: the model name (required), e.g. qwen3.5:4b-q4_K_M or hf.co/<user>/<repo>:<quant>; "
-                         "llamacpp: a label for records and file names (default: the served GGUF's file name "
-                         "without .gguf), also sent as the request's model for router mode")
-    ap.add_argument("--suite", required=True, choices=SUITES)
-    ap.add_argument("--condition", default="none", choices=("none", "cards"),
-                    help="'cards' appends the item's reference card when it has one")
-    ap.add_argument("--k", type=int, default=3, help="samples per item (default 3)")
-    ap.add_argument("--offset", type=int, default=0,
-                    help="skip the first N items (after --items, before --limit); with --limit, runs a chunk")
-    ap.add_argument("--limit", type=int, default=None, help="only the first N items (after --items and --offset)")
-    ap.add_argument("--items", default=None, help="comma-separated item ids to run")
-    ap.add_argument("--out", default=None, help="JSONL output (default results/<model>__<suite>__<condition>[__why].jsonl)")
-    ap.add_argument("--base-url", default=None,
-                    help="server URL (default: --host for ollama, http://127.0.0.1:8080 for llamacpp)")
-    ap.add_argument("--host", default=os.environ.get("OLLAMA_HOST", "http://localhost:11434"),
-                    help="ollama only, kept for older command lines: the Ollama server (default OLLAMA_HOST)")
-    ap.add_argument("--api-key", default=os.environ.get("LLAMA_API_KEY"),
-                    help="llamacpp only: bearer key if llama-server runs with --api-key (default LLAMA_API_KEY)")
-    ap.add_argument("--quant", default=None,
-                    help="quantisation label for the records when the server cannot report it")
-    ap.add_argument("--why", action="store_true", help="pick only: ask for a short 'why' before the choice")
-    ap.add_argument("--temperature", type=float, default=None, help="override the per-suite temperature")
-    # Sampler pins. Unset means the server's or the build's default; set them to compare two runtimes
-    # or two builds with the same sampler (doc 44 §1.6).
-    ap.add_argument("--top-k", type=int, default=None)
-    ap.add_argument("--top-p", type=float, default=None)
-    ap.add_argument("--min-p", type=float, default=None)
-    ap.add_argument("--presence-penalty", type=float, default=None)
-    ap.add_argument("--repeat-penalty", type=float, default=None)
-    ap.add_argument("--num-ctx", type=int, default=8192,
-                    help="ollama: context per request; llamacpp: fixed by the server's -c, only checked")
-    ap.add_argument("--num-predict", type=int, default=None, help="override the per-suite output token cap")
-    ap.add_argument("--keep-alive", default="10m", help="ollama only")
-    ap.add_argument("--think-mode", default="false", choices=("false", "omit"),
-                    help="'false' (default) switches thinking off (ollama think=false; llamacpp "
-                         "chat_template_kwargs.enable_thinking=false); 'omit' leaves the field out")
-    ap.add_argument("--timeout", type=float, default=600.0, help="per-request timeout in seconds")
-    ap.add_argument("--wait", type=float, default=180.0,
-                    help="llamacpp only: seconds to wait for /health while the server loads the model")
-    ap.add_argument("--warmup", action="store_true",
-                    help="send the first selected call once, unrecorded, before the run (use on the first job "
-                         "after a model load, so load and first-use costs stay out of the latency figures)")
-    ap.add_argument("--resume", action="store_true", help="skip calls already recorded without error in --out")
-    ap.add_argument("--dry-run", action="store_true", help="print the first request payload and exit")
+    ap = run_cli.build_parser()
     args = ap.parse_args(argv)
-    shape = SUITE_SHAPE[args.suite]
+    file_suite = None
+    if args.suite_file is not None:
+        file_suite = load_suite_file(ap, args)
+        shape = file_suite[0]["shape"]
+    elif args.suite is None:
+        ap.error("--suite is required (or --suite-file)")
+    else:
+        shape = SUITE_SHAPE[args.suite]
+    cloud = args.backend == "openai"
+    if args.free_only and not cloud:
+        ap.error("--free-only applies to --backend openai (OpenRouter's :free models)")
+    condition, base_variant, variant = resolve_variant(ap, args, shape)
+    arm = resolve_scaffold(ap, args, shape, condition, base_variant)
+    keep = (args.scaffold_keep or 3) if arm in scaffolds.LOGPROB_ARMS else None
+    channel = (args.prefill_channel or "content") if arm == "prefill" else None
+    if arm is not None:
+        variant = "scaffold-" + arm + (f"-k{keep}" if keep not in (None, 3) else "") + (
+            f"-{channel}" if channel not in (None, "content") else "")
+    variant, logprob_settings = logprob_pick.resolve(ap, args, shape, variant)
+    sidecar, sidecar_sha = load_sidecar() if base_variant in OPEN_VARIANTS else (None, None)
 
-    if args.why and shape != "pick":
-        ap.error("--why applies to the Pick suites only (pick, pick-hard)")
     if args.backend == "ollama" and not args.model:
         ap.error("--model is required with --backend ollama")
     if args.backend == "ollama":
         base_url = normalize_host(args.base_url or args.host)
         backend = OllamaBackend(base_url, args.timeout, args.think_mode, args.keep_alive)
-    else:
+    elif args.backend == "llamacpp":
         base_url = normalize_host(args.base_url or "http://127.0.0.1:8080", default_port="8080")
-        backend = LlamaServerBackend(base_url, args.timeout, args.think_mode, args.api_key)
+        api_key = args.api_key if args.api_key is not None else os.environ.get("LLAMA_API_KEY")
+        backend = LlamaServerBackend(base_url, args.timeout, args.think_mode, api_key)
+    else:
+        backend, cloud_settings = cloud_run.make_backend(ap, args)
+        base_url = backend.base
     sampler = {k: getattr(args, k) for k in SAMPLER_KEYS}
 
-    suite, suite_sha = load_suite(args.suite)
+    suite, suite_sha = file_suite if file_suite is not None else load_suite(args.suite)
     # A suite file may name its shape ("shape": "pick" in pick-hard.json); it must agree with SUITE_SHAPE,
     # which score.py reads from the same field.
     if suite.get("shape", args.suite) != shape:
         ap.error(f"suites/{args.suite}.json declares shape {suite.get('shape')!r}; run.py expects {shape!r}")
-    items = suite["items"]
+    items = select_split(ap, args, suite["items"])
     if args.items:
         wanted = [s.strip() for s in args.items.split(",") if s.strip()]
         by_id = {it["id"]: it for it in items}
@@ -365,21 +172,69 @@ def main(argv=None):
     if args.limit is not None:
         items = items[: args.limit]
 
-    variant = "why" if args.why else "plain"
     temperature = args.temperature if args.temperature is not None else TEMPERATURE[shape]
-    cap_key = "pick_why" if args.why else shape
+    cap_key = "pick_why" if args.why or arm == "why" else ("pick_open" if base_variant in OPEN_VARIANTS else shape)
     num_predict = args.num_predict if args.num_predict is not None else NUM_PREDICT[cap_key]
+    if arm == "quote-first" and args.num_predict is None:
+        num_predict = scaffolds.QUOTE_CAP
+    elif arm == "prefill" and args.num_predict is None:
+        num_predict = scaffolds.PREFILL_CAP
+    system = SYSTEM_OPEN if base_variant in OPEN_VARIANTS else SYSTEM[shape]
+    picker = runner = None
+    if logprob_settings is not None:
+        # The logprob mode generates exactly one token at temperature 0; the records say what was sent.
+        temperature, num_predict = 0.0, 1
+        picker = logprob_pick.LogprobPicker(backend, system, **logprob_settings)
+    if arm in scaffolds.PROCEDURE_ARMS:
+        # Several calls per decision (scaffold_run.py); each call's cap is its phase's unless --num-predict is set.
+        runner = scaffold_run.ScaffoldRunner(backend, system, arm, temperature, args.num_ctx, sampler,
+                                             num_predict=args.num_predict, keep=keep or 3, channel=channel or "content")
+    # The endpoint named in a one-call scaffold arm's ledger entry.
+    runner_endpoint = "/api/chat" if backend.name == "ollama" else "/v1/chat/completions"
 
     def make_payload(item, sample, model):
         """Build the backend's request body for one (item, sample); returns (payload, seed, extra record fields)."""
-        user, schema, extra = build_call(shape, item, args.condition, sample, args.why)
+        user, schema, extra = build_call(shape, item, condition, sample, args.why, base_variant, sidecar)
+        if arm in scaffolds.PROMPT_ARMS:
+            # One-call scaffold arm: the request text and schema come from the answer-blind builders; `extra` keeps the
+            # plain request's scoring fields (same seeded menu), plus the scaffold's text, hash and details.
+            opts = permute_options(item, sample) if shape == "pick" else None
+            user, schema, info = scaffolds.build_prompt_arm(arm, item, condition, opts)
+            extra = dict(extra, scaffold=info)
         seed = sample_seed(item["id"], sample)
-        messages = [{"role": "system", "content": SYSTEM[shape]}, {"role": "user", "content": user}]
+        messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
         # The schema name is the shape, so a pick-hard request differs from a pick request only in its content.
         payload = backend.payload(model, messages, schema, temperature, seed, num_predict, args.num_ctx, sampler,
                                   schema_name=shape)
         return payload, seed, extra
 
+    # A strict-schema arm on OpenRouter must be routed only to endpoints that honour response_format; refused
+    # here, before the dry run too, so nothing is ever sent unconstrained by mistake.
+    if cloud:
+        schema_sent = bool(items) and "response_format" in make_payload(items[0], 0, args.model)[0]
+        refusal = cloud_run.routing_refusal(urllib.parse.urlsplit(backend.base).hostname or "",
+                                            cloud_settings["extra_body"], schema_sent)
+        if refusal:
+            ap.error(refusal)
+
+    if args.dry_run and picker is not None:
+        # The logprob mode's two requests of the first order; the rendered prompt needs the server, so it is shown
+        # as a placeholder.
+        if not items:
+            ap.error("no items selected")
+        for what, body in picker.dry_run(items[0], condition, 0, sample_seed(items[0]["id"], 0), args.model):
+            print(what)
+            print(json.dumps(body, ensure_ascii=False, indent=1))
+        return 0
+    if args.dry_run and runner is not None:
+        # A procedure arm's first request(s); later phases depend on the replies and are only named.
+        if not items:
+            ap.error("no items selected")
+        for what, body in runner.dry_run(items[0], condition, 0, sample_seed(items[0]["id"], 0), args.model):
+            print(what)
+            if body:
+                print(json.dumps(body, ensure_ascii=False, indent=1))
+        return 0
     if args.dry_run:
         # Print the first request without touching the network or the output file.
         if not items:
@@ -388,6 +243,8 @@ def main(argv=None):
         print(json.dumps(payload, ensure_ascii=False, indent=1))
         if extra:
             print(json.dumps(extra, ensure_ascii=False, indent=1))
+        if cloud:
+            cloud_run.print_estimate(args, payload)
         return 0
 
     # ── Ask the server what it is running (once per run) ─────────────────────
@@ -413,13 +270,57 @@ def main(argv=None):
     if args.backend == "llamacpp":
         run_info.update({k: info.get(k) for k in ("thinking_kwarg_changes_prompt", "total_slots",
                                                   "server_sampler_defaults")})
-    print(f"backend {backend.name} at {base_url}: model {model}, file {run_info['model_file']}, quant {quant}, "
-          f"runtime {run_info['runtime_version']}, context {num_ctx}"
+    label = args.label or model
+    if cloud:
+        label, fields = cloud_run.run_info(args, backend, model, cloud_settings, sampler)
+        run_info.update(fields)
+    if sidecar is not None:
+        run_info["open_sidecar_sha"] = sidecar_sha
+    print(f"backend {backend.name} at {run_info.get('base_host') or base_url}: model {model}"
+          + (f" (label {label})" if label != model else "")
+          + f", file {run_info['model_file']}, quant {quant}, runtime {run_info['runtime_version']}, context {num_ctx}"
           + (f", template reads enable_thinking: {info.get('thinking_kwarg_changes_prompt')}"
              if args.backend == "llamacpp" else ""), flush=True)
+    if picker is not None:
+        cal = picker.calibration
+        if cal is not None and cal["model"] is not None and cal["model"] != label:
+            print(f"the calibration file was fitted on {cal['model']!r}, not {label!r}; refit it with cascade.py "
+                  f"calibrate on this model's records", file=sys.stderr)
+            return 2
+        # One tiny completion first: a build that ignores n_probs stops here, not once per item.
+        why_not = picker.preflight(model)
+        if why_not:
+            print(f"--pick-mode logprob: {why_not}", file=sys.stderr)
+            return 3
+        if items:
+            # Does the answer prefix end where this model's tokenizer would split? Recorded in every record; a
+            # letter read across a merged token is warned about, not refused (see logprob_pick.boundary_check).
+            boundary = picker.boundary_check(items[0], condition, model)
+            run_info["logprob_boundary"] = boundary
+            if not boundary.get("checked"):
+                print(f"note: --pick-mode logprob could not check the answer-prefix token boundary "
+                      f"({boundary.get('reason')})", file=sys.stderr)
+            elif boundary["noncanonical"] or not boundary["junction_ok"]:
+                print(f"warning: --pick-mode logprob: the answer prefix is not a token boundary of this model for "
+                      f"letter(s) {', '.join(boundary['noncanonical']) or '-'} (pieces "
+                      f"{ {k: boundary['letter_pieces'].get(k) for k in boundary['noncanonical']} }; prefix joins "
+                      f"the template cleanly: {boundary['junction_ok']}); those letters are read after a split the "
+                      f"model never saw, so their probabilities are biased", file=sys.stderr)
+    if args.suite_file is not None:
+        run_info.update(suite_file=os.path.basename(args.suite_file), split=args.split)
+    if runner is not None and items:
+        # One check before the first record: a build without n_probs (eliminate, pairwise) or a template the prefill
+        # channel cannot use stops here, not once per item.
+        why_not = runner.preflight(items[0], condition, model)
+        if why_not:
+            print(f"--scaffold {arm}: {why_not}", file=sys.stderr)
+            return 3
+        boundary = runner.boundary_check(items[0], condition, model)
+        if boundary is not None:
+            run_info["logprob_boundary"] = boundary
 
     out = args.out or os.path.join(
-        RESULTS_DIR, f"{slug(model)}__{args.suite}__{args.condition}{'__why' if args.why else ''}.jsonl")
+        RESULTS_DIR, f"{slug(label)}__{args.suite}__{condition}{'' if variant == 'plain' else '__' + variant}.jsonl")
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     skip = done_keys(out) if args.resume else set()
     run_id = _dt.datetime.now(_dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -430,74 +331,191 @@ def main(argv=None):
         # prompt on a GTX 1070 under Vulkan the first time a build ran, 1.3-3.8 s on later starts,
         # against 0.8 s warm). Doc 44 excluded load time the same way, with one unrecorded call per model.
         t0 = time.perf_counter()
-        res = backend.chat(make_payload(items[0], 0, model)[0])
+        if picker is not None:
+            res = picker.decide(items[0], condition, 0, sample_seed(items[0]["id"], 0), model)[0]
+        elif runner is not None:
+            res = runner.decide(items[0], condition, 0, sample_seed(items[0]["id"], 0), model)
+        else:
+            res = backend.chat(make_payload(items[0], 0, model)[0])
         print(f"warm-up call: {(time.perf_counter() - t0) * 1000.0:.0f} ms"
               + (f" (error: {res['error']})" if res["error"] else ""), flush=True)
 
+    redact = backend.redact if cloud else (lambda s: s)
+    stop_fields = {"run_id": run_id, "model": label, "suite": args.suite, "condition": condition, "variant": variant}
     n_done = n_err = 0
     # Samples form the outer loop so an interrupted run still covers every item evenly.
     with open(out, "a", encoding="utf-8", newline="\n") as fout:
-        for sample in range(args.k):
-            for item in items:
-                key = (model, args.suite, item["id"], args.condition, variant, sample)
-                if key in skip:
-                    continue
-                payload, seed, extra = make_payload(item, sample, model)
 
-                t0 = time.perf_counter()
-                res = backend.chat(payload)
-                latency_ms = round((time.perf_counter() - t0) * 1000.0, 1)
+        def write_row(row):
+            """Append one JSON line (with the key redacted, belt and braces) and flush it at once."""
+            fout.write(redact(json.dumps(row, ensure_ascii=False)) + "\n")
+            fout.flush()
 
-                error, content = res["error"], res["content"]
-                # Field names and units follow Ollama's (durations in ns), so score.py reads both backends.
-                rec = {
-                    "run_id": run_id, "ts": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
-                    "model": model, "suite": args.suite, "suite_sha": suite_sha, "item_id": item["id"],
-                    "condition": args.condition, "variant": variant, "sample": sample, "seed": seed,
-                    "temperature": temperature, "num_ctx": num_ctx, "num_predict": num_predict,
-                    "think_sent": res["think_sent"], "error": error, "raw": content,
-                    "thinking_chars": res["thinking_chars"],
-                    "latency_ms": latency_ms,
-                    "prompt_eval_count": res["prompt_eval_count"],
-                    "eval_count": res["eval_count"],
-                    "eval_duration": res["eval_duration"],
-                    "prompt_eval_duration": res["prompt_eval_duration"],
-                    "load_duration": res["load_duration"],
-                    "total_duration": res["total_duration"],
-                    "done_reason": res["done_reason"],
-                }
-                rec.update(run_info)
-                rec.update({k: v for k, v in res["extra"].items() if v is not None})
-                if shape == "knowledge":
-                    rec["parse_ok"] = bool(content.strip()) and not error
-                    rec["parse_mode"] = "text"
-                    rec["parsed"] = content.strip() if rec["parse_ok"] else None
-                else:
-                    parsed, mode = extract_json(content) if not error else (None, "no_response")
-                    rec["parse_ok"] = parsed is not None
-                    rec["parse_mode"] = mode
-                    rec["parsed"] = parsed
-                rec.update(extra)
-                if shape == "pick":
-                    choice = rec["parsed"].get("choice") if rec["parse_ok"] else None
-                    chosen_letter = choice.strip().upper() if isinstance(choice, str) else None
-                    rec["chosen_letter"] = chosen_letter
-                    rec["chosen_key"] = extra["letter_to_key"].get(chosen_letter) if chosen_letter else None
-                    rec["correct"] = rec["chosen_key"] == extra["correct_key"]
-                    if args.why and rec["parse_ok"]:
-                        rec["why"] = rec["parsed"].get("why")
+        def call_once(payload):
+            """One backend call (under the budget for openai); returns (result, latency ms, call id)."""
+            call_id = uuid.uuid4().hex[:16] if cloud else None
+            t0 = time.perf_counter()
+            res = backend.chat(payload, budget=session.budget, call_id=call_id) if cloud else backend.chat(payload)
+            return res, round((time.perf_counter() - t0) * 1000.0, 1), call_id
 
-                fout.write(json.dumps(rec, ensure_ascii=False) + "\n")
-                fout.flush()
-                n_done += 1
-                n_err += 1 if error else 0
-                status = f"ERROR {error}" if error else (
-                    f"{rec.get('chosen_letter')} ({'correct' if rec.get('correct') else 'wrong, want ' + extra['correct_letter']})"
-                    if shape == "pick" else ("parsed" if rec["parse_ok"] else "PARSE FAIL"))
-                print(f"[{args.suite}/{args.condition}/{variant}] {item['id']} s{sample} -> {status} "
-                      f"{latency_ms:.0f} ms, {rec['eval_count']} tok", flush=True)
+        session = None
+        # One try/finally from the session's creation on: finish() releases the ledger lock on every exit path
+        # (a stop, an exception, Ctrl+C), so only a killed process can leave a lock behind.
+        try:
+            if cloud:
+                try:
+                    session = cloud_run.Session(args, backend, out, write_row)
+                except cloud_run.LedgerLocked as e:
+                    print(f"stop (LedgerLocked): {e}", file=sys.stderr)
+                    return cloud_run.EXIT_CONFIG
+                except ValueError as e:
+                    print(f"budget: {e}", file=sys.stderr)
+                    return cloud_run.EXIT_CONFIG
+                # One request body lets the free start checks compare every parameter sent with the endpoint's list.
+                code = session.start(stop_fields, run_info,
+                                     payload=make_payload(items[0], 0, model)[0] if items else None)
+                if code is not None:
+                    return code
+            for sample in range(args.k):
+                for item in items:
+                    key = (label, args.suite, item["id"], condition, variant, sample)
+                    if key in skip:
+                        continue
+                    if picker is not None:
+                        # One logprob decision: an /apply-template and a /completion per option order.
+                        payload, seed, call_id = None, sample_seed(item["id"], sample), None
+                        res, extra = picker.decide(item, condition, sample, seed, model)
+                        latency_ms = res["latency_ms"]
+                    elif runner is not None:
+                        # One procedure-arm decision (several calls). The record's scoring fields are the plain
+                        # request's for this (item, sample), computed here from the full item, after the decision.
+                        payload, seed, call_id = None, sample_seed(item["id"], sample), None
+                        res = runner.decide(item, condition, sample, seed, model)
+                        extra = build_call(shape, item, condition, sample, False, "plain", None)[2]
+                        latency_ms = res["latency_ms"]
+                    else:
+                        payload, seed, extra = make_payload(item, sample, model)
+                        res, latency_ms, call_id = call_once(payload)
+                    if cloud and res.get("fatal") and not res["extra"].get("attempts"):
+                        # Nothing was sent (the cap, the day's request allowance or a key poll refused the first
+                        # attempt): no call record, only the stop, which names the next item for --resume.
+                        reason = cloud_run.FATAL_STOP.get(res["fatal"], "ConfigFault")
+                        session.write_stop(reason, **stop_fields, next_item=item["id"], next_sample=sample,
+                                           detail=res["error"])
+                        print(f"stop ({reason}): {res['error']}", file=sys.stderr)
+                        return session.end_check(stop_fields, cloud_run.FATAL_EXIT.get(res["fatal"],
+                                                                                        cloud_run.EXIT_CONFIG))
 
-    print(f"done: {n_done} calls, {n_err} errors -> {out}")
+                    error, content = res["error"], res["content"]
+                    # Field names and units follow Ollama's (durations in ns), so score.py reads every backend.
+                    rec = {
+                        "run_id": run_id, "ts": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
+                        "model": label, "suite": args.suite, "suite_sha": suite_sha, "item_id": item["id"],
+                        "condition": condition, "variant": variant, "sample": sample, "seed": seed,
+                        "temperature": temperature, "num_ctx": num_ctx, "num_predict": num_predict,
+                        "think_sent": res["think_sent"], "error": error, "raw": content,
+                        "thinking_chars": res["thinking_chars"],
+                        "latency_ms": latency_ms,
+                        "prompt_eval_count": res["prompt_eval_count"],
+                        "eval_count": res["eval_count"],
+                        "eval_duration": res["eval_duration"],
+                        "prompt_eval_duration": res["prompt_eval_duration"],
+                        "load_duration": res["load_duration"],
+                        "total_duration": res["total_duration"],
+                        "done_reason": res["done_reason"],
+                    }
+                    rec.update(run_info)
+                    rec.update({k: v for k, v in res["extra"].items() if v is not None})
+                    if call_id is not None:
+                        rec["call_id"] = call_id
+                    if picker is not None:
+                        logprob_pick.interpret(rec, res, extra)
+                    elif runner is not None:
+                        scaffold_run.interpret(rec, res, extra)
+                    else:
+                        interpret(rec, content, error, extra, shape, base_variant, args.why or arm == "why")
+                    if arm in scaffolds.PROMPT_ARMS:
+                        # One-call arm: the ledger has the one call; quote-first also gets code's verbatim check,
+                        # and the scored record loses its "_quote" fields (score.py validates the item's own schema).
+                        rec["scaffold"] = dict(rec["scaffold"], n_calls=1, model_calls=1,
+                                               truncated_calls=int(res["done_reason"] == "length"),
+                                               calls=[dict(scaffold_run.call_entry("answer", runner_endpoint, res,
+                                                                                   latency_ms), cap=num_predict)])
+                        rec["n_calls"] = 1
+                        if arm == "quote-first" and rec.get("parse_ok"):
+                            record, detail = scaffolds.quote_first_post(rec["parsed"], scaffolds.blind_fill(item))
+                            rec["parsed_with_quotes"], rec["parsed"] = rec["parsed"], record
+                            rec["scaffold"]["quote_first"] = detail
+                    fatal = res.get("fatal")
+                    if cloud and "response_format" in payload and not error:
+                        # Did the endpoint really enforce the schema? (the canary counts the answers that were not)
+                        rec["schema_conformant"] = cloud_run.schema_conformant(payload, rec)
+
+                    # ── Optional repair: one more call when a code check fails ──
+                    if args.repair and not error and not fatal:
+                        failure = check_failure(shape, item, suite, rec["parsed"], extra)
+                        rec["repair_used"] = failure is not None
+                        rec["first_check_failed"] = failure
+                        if failure is not None:
+                            rep = dict(payload)
+                            rep["messages"] = list(payload["messages"]) + [
+                                {"role": "assistant", "content": content},
+                                {"role": "user", "content": repair_message(shape, failure)}]
+                            res2, lat2, call_id2 = call_once(rep)
+                            fatal = res2.get("fatal")
+                            merge_repair(rec, res2, lat2, call_id, call_id2)
+                            rec["repair_message"] = repair_message(shape, failure)
+                            interpret(rec, res2["content"], res2["error"], extra, shape, base_variant, args.why)
+                            error = res2["error"]
+                    if cloud:
+                        rec["spent_usd"] = round(session.budget.spent(), 12)
+
+                    write_row(rec)
+                    n_done += 1
+                    n_err += 1 if error else 0
+                    if shape == "pick" and base_variant in OPEN_VARIANTS:
+                        status = f"ERROR {error}" if error else f"\"{(rec.get('open_answer') or '')[:60]}\" (ungraded)"
+                    else:
+                        status = f"ERROR {error}" if error else (
+                            f"{rec.get('chosen_letter')} ({'correct' if rec.get('correct') else 'wrong, want ' + extra['correct_letter']})"
+                            if shape == "pick" else ("parsed" if rec["parse_ok"] else "PARSE FAIL"))
+                    if rec.get("repair_used"):
+                        status += " [after repair]"
+                    if picker is not None and rec.get("confidence") is not None:
+                        status += f" p {rec['confidence']:.3f}"
+                    elif picker is not None and not error:
+                        status += " (no menu letter among the listed tokens)"
+                    if runner is not None and not error:
+                        status += (f" [{rec.get('n_calls')} calls, "
+                                   f"{(rec.get('scaffold') or {}).get('decided_by', '-')}]")
+                    cost_note = f", {rec.get('cost_usd', 0.0):.6f} USD (spent {rec['spent_usd']:.6f})" if cloud else ""
+                    print(f"[{args.suite}/{condition}/{variant}] {item['id']} s{sample} -> {redact(status)} "
+                          f"{rec['latency_ms']:.0f} ms, {rec['eval_count']} tok{cost_note}", flush=True)
+
+                    # ── Stops (paid endpoints only): fatal results, then the canary window. In free mode each one
+                    #    reads the key once more first (session.end_check): a rise turns any stop into exit 9 ──
+                    if fatal:
+                        reason = cloud_run.FATAL_STOP.get(fatal, fatal)
+                        session.write_stop(reason, **stop_fields, detail=error or fatal)
+                        print(f"stop ({reason}): {redact(error or fatal)}", file=sys.stderr)
+                        return session.end_check(stop_fields, cloud_run.FATAL_EXIT.get(fatal, cloud_run.EXIT_CONFIG))
+                    if cloud:
+                        detail = session.canary(rec, payload, error)
+                        if detail:
+                            session.write_stop("CanaryAbort", **stop_fields, detail=detail)
+                            print(f"stop (CanaryAbort): {detail}", file=sys.stderr)
+                            return session.end_check(stop_fields, cloud_run.EXIT_CANARY)
+            if session is not None:
+                # Free mode: one more key read after the last call; a usage rise is a stop (exit 9).
+                code = session.end_check(stop_fields)
+                if code is not None:
+                    return code
+        finally:
+            if session is not None:
+                session.finish()
+
+    print(f"done: {n_done} calls, {n_err} errors -> {out}"
+          + (f"; spent {session.budget.spent():.6f} of {session.budget.cap_usd:.6f} USD" if session else ""))
     return 0 if n_err == 0 else 2
 
 

@@ -19,14 +19,25 @@ variant):
 * explain: schema validity, the two-sentence cap and forbidden-pattern flags;
   the grade itself stays "ungraded";
 * knowledge: "ungraded" (answer length only);
-* all suites: latency p50/p90, generation tokens per second, token counts.
+* all suites: latency p50/p90, generation tokens per second, token counts;
+  for paid endpoints the summed cost, the cost per call and the mean
+  reasoning tokens.
+
+Harness-uplift variants (run.py ``--variant``) group separately, because the
+variant is part of the group key. The open Pick arms (``open``, ``labels``)
+answer with a name, not a letter: ``--open-grades`` reads the grade file
+grade_open.py wrote and scores its mapped keys (``accuracy`` with the alias
+mapping only, ``judge_mapped_accuracy`` with judge rows for the unmapped
+answers). An open group with answers that have no grade gets no accuracy at
+all, rather than a misleading one. ``--repair`` records add ``repair_rate``.
 
 It writes a flat summary CSV and a nested JSON, and optionally a grading sheet
 (JSONL) for the LLM graders of knowledge, explain and text quality.
 
 Scores are recomputed from raw fields against the current suite files; a
 record whose suite_sha differs from the current file is counted and reported
-(the suite changed after the run).
+(the suite changed after the run). Budget rows written by the cloud backend
+(``budget_event``) are skipped.
 """
 import argparse
 import csv
@@ -39,20 +50,28 @@ import statistics
 import sys
 from collections import Counter, defaultdict
 
+# The answer checks live in score_checks.py; they are re-exported here because uplift.py, prompts.py and cloud_run.py
+# import them from score.py (one set of checks, so repair, scoring and the arm comparisons agree).
+from score_checks import (NAME_TOKEN_RE, WORD_RE, banned_hits, check_validator, name_violations,  # noqa: F401
+                          norm_span, sentence_count, text_checks, validate_schema, words)
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 SUITES_DIR = os.path.join(HERE, "suites")
 RESULTS_DIR = os.path.join(HERE, "results")
 
-WORD_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9'\-]*")
-NAME_TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z'\-]*")
+# run.py variants whose Pick answers are names, mapped to keys by grade_open.py.
+OPEN_VARIANTS = ("open", "labels")
 
 
 # ── Loading ──────────────────────────────────────────────────────────────────
 
-def load_suites():
-    """Return {suite: (suite dict, {item id: item}, sha)} for every suite file present."""
+def load_suites(extra_files=()):
+    """Return {suite: (suite dict, {item id: item}, sha)} for every suite file present.
+
+    `extra_files` adds suite files outside suites/ (run.py --suite-file, for example the staged pools), keyed by
+    their own "suite" name like the others."""
     out = {}
-    for path in sorted(glob.glob(os.path.join(SUITES_DIR, "*.json"))):
+    for path in sorted(glob.glob(os.path.join(SUITES_DIR, "*.json"))) + list(extra_files):
         with open(path, "rb") as f:
             raw = f.read()
         suite = json.loads(raw.decode("utf-8"))
@@ -78,6 +97,12 @@ def load_records(patterns):
     return recs
 
 
+def apply_open_grades(recs, patterns, suites):
+    """Put grade_open.py's mapped keys onto the open-arm Pick records (in place); see grade_open.apply_grades."""
+    from grade_open import apply_grades  # sibling module; imported here so score.py loads without it otherwise
+    return apply_grades(recs, patterns, {name: s[1] for name, s in suites.items()})
+
+
 # ── Small helpers ────────────────────────────────────────────────────────────
 
 def percentile(values, q):
@@ -95,112 +120,6 @@ def percentile(values, q):
 
 def rate(num, den):
     return round(num / den, 4) if den else None
-
-
-def norm_span(text):
-    """Normalise a span for comparison: lower case, collapse spaces, trim punctuation and quotes."""
-    s = re.sub(r"\s+", " ", str(text or "")).strip().lower()
-    return s.strip(" .,;:!?\"'`")
-
-
-def words(text):
-    return WORD_RE.findall(text or "")
-
-
-def validate_schema(value, schema, path="$"):
-    """Validate `value` against the JSON-schema subset the suites use.
-
-    Supports type, enum, properties, required, additionalProperties (bool),
-    minLength/maxLength, items, minItems/maxItems. Returns a list of errors.
-    """
-    errs = []
-    typ = schema.get("type")
-    types = typ if isinstance(typ, list) else ([typ] if typ else [])
-    py = {"object": dict, "array": list, "string": str, "boolean": bool, "null": type(None)}
-
-    def is_type(t):
-        if t == "integer":
-            return isinstance(value, int) and not isinstance(value, bool)
-        if t == "number":
-            return isinstance(value, (int, float)) and not isinstance(value, bool)
-        return isinstance(value, py.get(t, object))
-
-    if types and not any(is_type(t) for t in types):
-        return [f"{path}: expected {typ}, got {type(value).__name__}"]
-    if "enum" in schema and value not in schema["enum"]:
-        errs.append(f"{path}: {value!r} not in enum")
-    if isinstance(value, str):
-        if "maxLength" in schema and len(value) > schema["maxLength"]:
-            errs.append(f"{path}: length {len(value)} > {schema['maxLength']}")
-        if "minLength" in schema and len(value) < schema["minLength"]:
-            errs.append(f"{path}: length {len(value)} < {schema['minLength']}")
-    if isinstance(value, dict):
-        props = schema.get("properties", {})
-        for req in schema.get("required", []):
-            if req not in value:
-                errs.append(f"{path}: missing {req}")
-        if schema.get("additionalProperties") is False:
-            for extra in value:
-                if extra not in props:
-                    errs.append(f"{path}: unexpected {extra}")
-        for k, sub in props.items():
-            if k in value:
-                errs.extend(validate_schema(value[k], sub, f"{path}.{k}"))
-    if isinstance(value, list):
-        if "maxItems" in schema and len(value) > schema["maxItems"]:
-            errs.append(f"{path}: {len(value)} items > {schema['maxItems']}")
-        if "minItems" in schema and len(value) < schema["minItems"]:
-            errs.append(f"{path}: {len(value)} items < {schema['minItems']}")
-        if "items" in schema:
-            for i, v in enumerate(value):
-                errs.extend(validate_schema(v, schema["items"], f"{path}[{i}]"))
-    return errs
-
-
-def banned_hits(text, banned):
-    low = (text or "").lower()
-    return [b for b in banned if re.search(r"(?<![a-z0-9])" + re.escape(b.lower()) + r"(?![a-z0-9])", low)]
-
-
-def name_violations(text, allowed, allowlist):
-    """Capitalised tokens that are not allowed names.
-
-    Checked: every capitalised token that does not start a sentence; every
-    all-caps token of two or more letters; and a sentence-initial token that is
-    directly followed by a comma (an address such as "Ivan, move"). Other
-    sentence-initial tokens are exempt, because ordinary words are capitalised
-    there; this is a known blind spot (see README).
-    """
-    ok = {a.lower() for a in allowed} | {a.lower() for a in allowlist}
-    bad = []
-    s = text or ""
-    for m in NAME_TOKEN_RE.finditer(s):
-        tok = m.group(0)
-        if not tok[0].isupper():
-            continue
-        before = s[: m.start()].rstrip(" \"'([")
-        sentence_start = before == "" or before[-1] in ".!?:;\n" or before.endswith(("--", "—"))
-        after = s[m.end():]
-        address = after.startswith(",")
-        all_caps = len(tok) >= 2 and tok.isupper()
-        if sentence_start and not all_caps and not address:
-            continue
-        if tok.lower() not in ok:
-            bad.append(tok)
-    return bad
-
-
-def sentence_count(text):
-    """Count sentences: a break is [.!?] + whitespace + a capital letter or opening quote.
-
-    Requiring the capital keeps SQS code such as "? !alive leader1 : exit" from
-    counting as a sentence break.
-    """
-    t = (text or "").strip()
-    if not t:
-        return 0
-    parts = [p for p in re.split(r"(?<=[.!?])\s+(?=[A-Z\"'(“])", t) if p.strip()]
-    return len(parts)
 
 
 # ── Per-suite scoring ────────────────────────────────────────────────────────
@@ -226,7 +145,8 @@ def score_pick(recs, items):
         pos_stats[pos][0] += ok
         pos_stats[pos][1] += 1
         letter_counts[r.get("chosen_letter") or "(none)"] += 1
-        escape_chosen += r.get("chosen_letter") == "X"
+        # The escape by key, so a mapped open answer counts too (X always carries the escape key).
+        escape_chosen += (r.get("chosen_key") == item["escape"]["key"]) if item else r.get("chosen_letter") == "X"
         n_opts = r.get("n_options") or (len(item["options"]) if item else None)
         if n_opts:
             rand_base.append(1.0 / n_opts)
@@ -270,35 +190,10 @@ def score_pick(recs, items):
         "escape_item_accuracy": rate(escape_items[0], escape_items[1]),
         "random_valid_baseline": round(statistics.mean(rand_base), 4) if rand_base else None,
         "first_option_baseline": round(statistics.mean(first_base), 4) if first_base else None,
+        # Share of calls that named a real option or the escape (a letter outside the menu, an unparsable
+        # reply or an unmapped open answer does not).
+        "valid_choice_rate": rate(sum(1 for r in recs if r.get("chosen_key") is not None), n),
     }
-
-
-def check_validator(v, value, request, banned):
-    """Apply one fill validator. Returns True/False, or None when it does not apply."""
-    chk = v["check"]
-    if chk == "enum":
-        return None  # covered by the schema check; kept in the suite for readers
-    if not isinstance(value, str):
-        return False
-    if chk == "quote_in_request":
-        if value.strip() == "":
-            return bool(v.get("allow_empty"))
-        return norm_span(value) in norm_span(request)
-    if chk == "max_chars":
-        return len(value) <= v["value"]
-    if chk == "max_words":
-        return len(words(value)) <= v["value"]
-    if chk == "non_empty":
-        return value.strip() != ""
-    if chk == "no_digits":
-        return not re.search(r"\d", value)
-    if chk == "banned_words":
-        return not banned_hits(value, banned)
-    if chk == "names_from_request":
-        # Proper names in the text must come from the request (facts come from code or the user).
-        req_tokens = {t.lower() for t in NAME_TOKEN_RE.findall(request)}
-        return not name_violations(value, req_tokens, [])
-    return None
 
 
 def score_fill(recs, items, suite):
@@ -351,21 +246,6 @@ def score_fill(recs, items, suite):
         "quote_check_pass_rate": rate(quote_ok, quote_n),
         "validators_all_pass_rate": rate(val_all, n),
     }
-
-
-def text_checks(item, text, suite):
-    c = item["constraints"]
-    nw = len(words(text))
-    checks = {
-        "max_words": nw <= c["max_words"],
-        "min_words": nw >= c.get("min_words", 1),
-        "banned_words": not banned_hits(text, suite.get("banned_words", [])),
-    }
-    if c.get("no_digits"):
-        checks["no_digits"] = not re.search(r"\d", text)
-    if c.get("names_check", True):
-        checks["names_subset"] = not name_violations(text, c["allowed_names"], suite.get("name_allowlist", []))
-    return checks, nw
 
 
 def score_text(recs, items, suite):
@@ -421,8 +301,13 @@ def score_explain(recs, items):
             "forbidden_pattern_rate": rate(flagged, n), "grade": "ungraded"}
 
 
+def answer_text(r):
+    """A knowledge answer as graded: ``raw``, or the parsed answer when run.py removed a <think> block from it."""
+    return (r.get("parsed") or "") if r.get("think_stripped") else (r.get("raw") or "")
+
+
 def score_knowledge(recs):
-    lens = [len(r.get("raw") or "") for r in recs if r.get("parse_ok")]
+    lens = [len(answer_text(r)) for r in recs if r.get("parse_ok")]
     n = len(recs)
     return {"calls": n, "items": len({r["item_id"] for r in recs}),
             "parse_rate": rate(sum(1 for r in recs if r.get("parse_ok")), n),
@@ -436,6 +321,9 @@ def perf(recs):
     dur = sum(r["eval_duration"] for r in ev) / 1e9
     pe = [r["prompt_eval_count"] for r in recs if r.get("prompt_eval_count") is not None]
     ec = [r["eval_count"] for r in recs if r.get("eval_count") is not None]
+    # Paid endpoints: every record's cost counts, failed ones included (they may have been billed).
+    costs = [r["cost_usd"] for r in recs if isinstance(r.get("cost_usd"), (int, float))]
+    reasoning = [r["reasoning_tokens"] for r in recs if isinstance(r.get("reasoning_tokens"), (int, float))]
     return {
         "latency_p50_ms": round(percentile(lat, 50), 1) if lat else None,
         "latency_p90_ms": round(percentile(lat, 90), 1) if lat else None,
@@ -443,6 +331,9 @@ def perf(recs):
         "mean_prompt_tokens": round(statistics.mean(pe), 1) if pe else None,
         "mean_eval_tokens": round(statistics.mean(ec), 1) if ec else None,
         "done_reason_length": sum(1 for r in recs if r.get("done_reason") == "length"),
+        "cost_usd_total": round(sum(costs), 8) if costs else None,
+        "cost_usd_per_call": round(sum(costs) / len(recs), 8) if costs else None,
+        "reasoning_tokens_mean": round(statistics.mean(reasoning), 1) if reasoning else None,
     }
 
 
@@ -458,7 +349,8 @@ def grading_rows(recs, suites):
         if item is None:
             continue
         row = {"suite": suite, "item_id": r["item_id"], "model": r["model"], "condition": r["condition"],
-               "sample": r["sample"], "answer": r.get("parsed") if suite != "knowledge" else r.get("raw")}
+               "variant": r.get("variant", "plain"), "sample": r["sample"],
+               "answer": r.get("parsed") if suite != "knowledge" else answer_text(r)}
         if suite == "knowledge":
             row.update(prompt=item["prompt"], ground_truth=item["ground_truth"], grading=item["grading"])
         elif suite == "explain":
@@ -477,7 +369,10 @@ CSV_COLS = ["model", "suite", "condition", "variant", "calls", "items", "k", "er
             "all_fields_correct_rate", "quote_check_pass_rate", "validators_all_pass_rate",
             "constraint_pass_rate", "sentence_cap_pass_rate", "forbidden_pattern_rate", "grade",
             "latency_p50_ms", "latency_p90_ms", "tokens_per_s", "mean_prompt_tokens", "mean_eval_tokens",
-            "done_reason_length"]
+            "done_reason_length",
+            # Added with the cloud backend and the harness-uplift variants (empty for older runs).
+            "valid_choice_rate", "open_ungraded", "map_exact", "map_substring", "map_escape", "map_unmapped",
+            "judge_mapped_accuracy", "repair_rate", "cost_usd_total", "cost_usd_per_call", "reasoning_tokens_mean"]
 
 
 def main(argv=None):
@@ -487,10 +382,17 @@ def main(argv=None):
     ap.add_argument("--csv", default=os.path.join(RESULTS_DIR, "summary.csv"))
     ap.add_argument("--json", default=os.path.join(RESULTS_DIR, "summary.json"))
     ap.add_argument("--grading-out", default=None, help="write a JSONL grading sheet for LLM graders")
+    ap.add_argument("--open-grades", nargs="*", default=None,
+                    help="grade files from grade_open.py for the open Pick arms (default "
+                         "results/grades/open-grades.jsonl when it exists)")
+    ap.add_argument("--suite-file", action="append", default=[],
+                    help="a suite file outside suites/ whose records are scored too (run.py --suite-file); repeatable")
     args = ap.parse_args(argv)
 
-    suites = load_suites()
+    suites = load_suites(args.suite_file)
     recs = load_records(args.inputs)
+    # Budget rows (reserve, settle, stop) written by the cloud backend are bookkeeping, not calls.
+    recs = [r for r in recs if "budget_event" not in r]
     # Keep only run.py call records. A grading sheet written by an earlier
     # `--grading-out results/grading.jsonl` matches the default results/*.jsonl
     # glob; its rows carry model/suite/item_id but no run_id or seed, and scoring
@@ -504,6 +406,16 @@ def main(argv=None):
     if not recs:
         print("no records found", file=sys.stderr)
         return 1
+
+    if any(r.get("variant") in OPEN_VARIANTS for r in recs):
+        default_grades = os.path.join(RESULTS_DIR, "grades", "open-grades.jsonl")
+        grade_paths = args.open_grades if args.open_grades is not None else (
+            [default_grades] if os.path.exists(default_grades) else [])
+        stats = apply_open_grades(recs, grade_paths, suites) if grade_paths else Counter()
+        if not grade_paths:
+            print("note: open-arm Pick records found but no grade file; run grade_open.py first", file=sys.stderr)
+        elif stats:
+            print("open-arm grades: " + ", ".join(f"{k} {v}" for k, v in sorted(stats.items())), file=sys.stderr)
 
     groups = defaultdict(list)
     for r in recs:
@@ -532,6 +444,23 @@ def main(argv=None):
                  stale_suite_records=sum(1 for r in grp if sha and r.get("suite_sha") not in (None, sha)))
         if shape == "fill":
             m["accuracy"] = m["field_accuracy"]
+        if shape == "pick" and variant in OPEN_VARIANTS:
+            # Open answers score only through their grades; without a grade for every answer, no accuracy.
+            ungraded = sum(1 for r in ok if not r.get("_graded"))
+            m["open_ungraded"] = ungraded
+            for mode in ("exact", "substring", "escape", "unmapped"):
+                m[f"map_{mode}"] = sum(1 for r in ok if r.get("_graded") and r.get("map_mode") == mode)
+            if ungraded:
+                for field in ("accuracy", "accuracy_per_sample", "pass_k", "majority_accuracy",
+                              "accuracy_by_category", "escape_rate", "escape_item_accuracy", "valid_choice_rate"):
+                    m[field] = None
+                print(f"warning: {model} {suite} {condition} {variant}: {ungraded} open answers have no grade; "
+                      f"no accuracy reported (run grade_open.py)", file=sys.stderr)
+            elif any("_judge_key" in r for r in ok):
+                judged = [dict(r, chosen_key=r["_judge_key"]) if "_judge_key" in r else r for r in ok]
+                m["judge_mapped_accuracy"] = score_pick(judged, items)["accuracy"]
+        if variant == "repair" or variant.endswith("-repair"):
+            m["repair_rate"] = rate(sum(1 for r in ok if r.get("repair_used")), len(ok))
         summary.append(m)
 
     for path in (args.csv, args.json):
