@@ -1,4 +1,18 @@
-# Safe free-model testing on OpenRouter
+# Safe free-model testing: OpenRouter, Groq and Cloudflare Workers AI
+
+Three providers, one pattern: each key is stored once, DPAPI-encrypted for your Windows user, and `run-cloud.ps1`
+decrypts it into one `run.py` process; `run.py` keeps each provider's free limits on the client side and stops before
+anything could be billed. Sections 1–10 below are OpenRouter's runbook; [Groq](#groq-free-plan) and
+[Cloudflare Workers AI](#cloudflare-workers-ai-daily-free-allocation) follow it (D058 item 3).
+
+| Provider | Store the key | Check it (no quota) | Run flag |
+| --- | --- | --- | --- |
+| OpenRouter | `set-openrouter-key.ps1` | `run-cloud.ps1 --key-status` | `--free-only` |
+| Groq | `set-groq-key.ps1` | `run-cloud.ps1 --provider groq --key-status` | `--provider groq` |
+| Cloudflare Workers AI | `set-cloudflare-token.ps1` (token and account id) | `run-cloud.ps1 --provider cloudflare --key-status` | `--provider cloudflare` |
+
+`set-provider-key.ps1 -Provider <name>` and `remove-provider-key.ps1 -Provider <name>` run the matching store and remove
+scripts, for one command to remember.
 
 This is the runbook for the account owner. It covers running the local-qual suites against OpenRouter's **free**
 model variants (ids ending in `:free`) with no way to spend money, a key that never sits in plaintext, and the free
@@ -137,8 +151,8 @@ day (shown as `none`), and the record itself marks the field deprecated; it is n
 free-model limits count per account, so the report says so on the same line
 ([HTTP 429](#http-429-which-limit-and-who-shares-it)).
 
-The launcher accepts `--key-status` without `--free-only`, because the command cannot spend; it still refuses `sk-or-`
-and `--api-key` in the arguments. Adding `--key-status` to any run line (step 6) works too: `run.py` then only reads
+The launcher accepts `--key-status` without `--free-only`, because the command cannot spend; it still refuses any key
+prefix (`sk-or-`, `gsk_`, `cfat_`, `cfut_`, `cfk_`) and `--api-key` in the arguments. Adding `--key-status` to any run line (step 6) works too: `run.py` then only reads
 the key and names the flags it skipped. Without the launcher, `python tools/local-qual/run.py --key-status
 --api-key-env OPENROUTER_API_KEY` does the same; `--base-url` defaults to OpenRouter's API for an `sk-or-` key, and
 any other key needs `--base-url`.
@@ -156,9 +170,9 @@ any other key needs `--base-url`.
 `run-cloud.ps1` decrypts the key into the environment of the one `python run.py` process it starts (variable
 `OPENROUTER_API_KEY`), never into your PowerShell session, a command line, a file or the console. It passes every
 other argument to `run.py` and adds `--api-key-env` itself. It refuses to run without `--free-only` (or `--key-status`,
-step 5), refuses any
-argument containing `sk-or-` or `--api-key`, and refuses a key file readable by anyone else or holding anything but
-a DPAPI blob. Pass JSON as a file
+step 5), refuses any argument containing a key prefix of any provider (`sk-or-`, `gsk_`, `cfat_`, `cfut_`, `cfk_`),
+`--api-key`, or a key stored for another provider in the same folder, and refuses a key file readable by anyone else or
+holding anything but a DPAPI blob. Pass JSON as a file
 (`--extra-body @file.json`): quotes do not survive `powershell -File`. Name the output file with `--output` (the same
 option as `run.py`'s `--out`): `powershell -File` reads `--out` as an abbreviation of its own `-OutVariable` and
 `-OutBuffer` and stops with "the parameter name 'out' is ambiguous" before the launcher starts.
@@ -279,6 +293,210 @@ stay shared across them.
   cannot be wiped). DPAPI protects the stored file from other Windows users and other machines, not from programs
   running as you.
 
+## Groq: free plan
+
+`--provider groq` runs the suites on Groq's Free plan. Groq has no key record and no cost field, so the guarantee that
+nothing is billed rests on the organisation staying on the Free plan; the tool checks every reply's limit headers
+against that plan and keeps the plan's limits on the client side. Facts below were read on 2026-09-28.
+
+**G1. The organisation.** Sign in at <https://console.groq.com> (Groq's terms require you to be 18 or older). Stay on
+the Free plan: add **no payment method** and do not upgrade. Upgrading to the Developer tier needs a card, a US bank
+account or a SEPA debit account, and only then can usage be billed; spend limits exist only on paid plans. If this
+organisation carries other work, create a separate one for these synthetic tests (limits count per organisation).
+
+**G2. Data controls.** Settings → Data Controls (<https://console.groq.com/settings/data-controls>), as an organisation
+admin: turn **Zero Data Retention** on. By default Groq keeps no inference data, but may log inputs and outputs for up
+to 30 days when troubleshooting errors or investigating abuse; with ZDR on it keeps none (batch and fine-tuning are then
+off, which the tool does not use). Groq's services agreement does not let it train on inputs or outputs.
+
+**G3. Check the limits.** Settings → Limits (<https://console.groq.com/settings/limits>) should show, for each model
+below, 30 requests a minute, 1K a day, 8K tokens a minute and 200K tokens a day. Higher figures mean a paid tier: stop
+and tell us before any run.
+
+**G4 (optional). A project.** Create a project (for example `plotroom-local-qual`) and select it before creating the key:
+keys belong to the project that is selected, and a project's limits can be set at or below the organisation's.
+
+**G5. The key.** Turn off Windows' clipboard sync first (Settings → System → Clipboard → "Sync across your devices").
+Then <https://console.groq.com/keys> → Create API Key, named for example `plotroom-local-qual-2026-09`. It is shown once:
+copy it straight into G6.
+
+**G6. Store it.**
+
+```text
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\set-groq-key.ps1
+```
+
+Hidden input; the key must start with `gsk_` followed by letters and digits. It is DPAPI-encrypted for your Windows
+user in `%LOCALAPPDATA%\plotroom-dev\secrets\groq.key` with a user-only access list, as in step 4. Afterwards copy
+something else over the clipboard and delete the key's entry from clipboard history (Win+V) if that is on.
+
+**G7. Check it (no model runs, no tokens used).**
+
+```text
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\run-cloud.ps1 --provider groq --key-status
+```
+
+One `GET https://api.groq.com/openai/v1/models` with the key. It prints `key: accepted`, each model of the free-plan
+table as listed or not (active, context window, output cap), the reply's `x-ratelimit-*` headers, and whether they show
+the Free plan. Whether Groq counts this read as a request is not documented; the first check will show whether it
+carries the headers. Exit codes as in step 5: 0 report, 2 refused before sending, 3 no answer or 5xx, 5 the key or the
+URL is wrong (401: create a new key and store it with `set-groq-key.ps1 -Force`), 10 a 429.
+
+**G8. Dry run, then one request.**
+
+```text
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\run-cloud.ps1 ^
+  --provider groq --model openai/gpt-oss-20b --reasoning low ^
+  --ledger tools/local-qual/results/groq-ledger.jsonl ^
+  --suite pick --items PW01 --k 1 --dry-run
+```
+
+The dry run prints the body without sending: `max_completion_tokens`, `reasoning_effort`, a strict-mode schema copy.
+Drop `--dry-run` for the first real request. Its record settles what Groq's pages leave open: the `model` string of a
+reply, the headers on a chat reply, and whether the strict schema is honoured (`schema_conformant`).
+
+**What the guard does** (`providers.py`, `provider_gate.py`):
+
+| Rule | Default | Why |
+| --- | --- | --- |
+| Model must be in `cloud/groq-free-limits.json` | the four below | Only models whose free limits were read are run; the table carries its source and date |
+| Requests in any 60 s, per model | 28 (plan: 30) | A burst over it costs a 429 and a retry; the gate waits for room |
+| Tokens in any 60 s, per model | 7,500 (plan: 8,000) | Prompt estimate plus the output cap reserved before sending, the reply's usage after; the reply's `x-ratelimit-remaining-tokens` is honoured too |
+| Requests in any 24 hours, per model | 950 (plan: 1,000) | How Groq resets its day is not documented, so the last 24 hours count, never looser than a calendar day |
+| Tokens in any 24 hours, per model | 190,000 (plan: 200,000) | No header reports tokens per day, so the ledger counts them |
+| Groq's own requests left today | stop at 5 | `x-ratelimit-remaining-requests` less `--daily-reserve` |
+| Limit headers above the Free plan, a reported cost, another model answering | exit 9 | The only live signs that the organisation could be billed |
+| 429 naming a per-day limit (RPD, TPD) | exit 10 | Terminal; the resume time is printed. RPM or TPM: wait `retry-after` and retry |
+
+Flags: `--rpm`, `--max-requests-per-day`, `--max-tokens-per-minute`, `--max-tokens-per-day` (never above the plan's
+figures), `--daily-reserve`, `--max-consecutive-429`. Use one `--ledger` for every Groq run: the counts are per model and
+organisation, and the ledger is how runs share them. One Groq run at a time per Windows user (`groq-run.lock` beside the
+key store; delete it only when no run is active). Records add `provider`, `provider_caps`, `provider_table` and, per
+call, `rate_gate` (requests and tokens in the minute and the last 24 hours, the server's counts left).
+
+| Model | Flags it needs | Notes |
+| --- | --- | --- |
+| `openai/gpt-oss-20b`, `openai/gpt-oss-120b` | `--reasoning low` (or medium, high) | Production models; they always reason, so `--reasoning none` is refused; strict schema |
+| `qwen/qwen3.8-27b` | `--reasoning none` works | Preview (may be removed at short notice); strict schema; efforts none, low, medium, high (sent with `reasoning_format: parsed`) |
+| `openai/gpt-oss-safeguard-20b` | `--schema-mode none` | Preview; best-effort JSON only, so strict arms are refused |
+
+The request follows Groq's OpenAI-compatible rules: `max_completion_tokens`, `reasoning_effort` instead of OpenRouter's
+`reasoning` object, a strict-mode schema copy (every property required, `additionalProperties: false`; answers are still
+checked against the suite's own schema), no `top_k`, `min_p` or `--repeat-penalty` (refused: Groq does not document
+them), never `logprobs`, `n` or `messages[].name` (400 on Groq). A temperature of 0 becomes 1e-8 on Groq's side.
+
+**Revoking.** Delete the key at <https://console.groq.com/keys>, then
+`powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\remove-groq-key.ps1`. Revoke at once if the
+key ever appears in a screenshot, log or chat.
+
+## Cloudflare Workers AI: daily free allocation
+
+`--provider cloudflare` runs the suites within Workers AI's free allocation of 10,000 neurons a day (reset at 00:00 UTC).
+Replies carry no neuron or cost figure, so the tool computes each call's neurons from its usage and a dated table
+(`cloud/cloudflare-neurons.json`), reserves every call's worst case before sending, and stops below the day's cap.
+Facts below were read on 2026-09-28.
+
+**C1. The plan.** Sign in at <https://dash.cloudflare.com> and keep the account on **Workers Free**; do not subscribe to
+Workers Paid. On Workers Free, calls past the allocation fail (error 3036). On Workers Paid every neuron past it is billed
+($0.011 per 1,000) and we found no spend cap: there the tool's own count is the only guard. If the account already has
+Workers Paid, tell us before any run.
+
+**C2. The account id.** Account home → Search (Ctrl+K) → "Copy account ID" (or Workers & Pages → Account details). It is
+not a password, but it names your account: never paste it into chat, an issue or the repository. The store script asks
+for it with hidden input.
+
+**C3. A least-privilege token.** Manage account → Account API tokens → Create Token → Custom token. Name it, for example,
+`plotroom-local-qual-2026-09`. Permissions: **Account · Workers AI · Read**, nothing else; account resources: this
+account only; optionally Client IP Address Filtering for your address; TTL: an end date a few weeks out. Copy the token
+once (it starts with `cfat_`), with clipboard sync off. Never use the Global API Key (`cfk_`: full access to the whole
+account); the scripts and `run.py` refuse it, and a legacy token without a prefix. If the first key check or the first
+request answers 403, edit the token and add Account · Workers AI · Edit (Cloudflare's REST guide names Read and Edit; the
+API reference accepts either). A user token (My Profile → API Tokens, `cfut_`) with the same permission works too.
+
+**C4. Store both.**
+
+```text
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\set-cloudflare-token.ps1
+```
+
+It asks for the account id, then the token, both with hidden input, and writes `cloudflare.key` and
+`cloudflare-account.key` (DPAPI blobs, user-only access) in `%LOCALAPPDATA%\plotroom-dev\secrets`. `run-cloud.ps1
+--provider cloudflare` decrypts both into the environment of the one `run.py` process (`CLOUDFLARE_API_TOKEN`,
+`CLOUDFLARE_ACCOUNT_ID`); the id never enters a command line, and every record, ledger row and console line has it
+replaced by `[ACCOUNT]`. Clear the clipboard afterwards as in G6.
+
+**C5. Check it (no neurons used).**
+
+```text
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\run-cloud.ps1 --provider cloudflare --key-status
+```
+
+It verifies the token (`GET /client/v4/accounts/<id>/tokens/verify` for an account token, `/user/tokens/verify` for a
+user token), then searches the account's Workers AI models once per table model. It prints the token's status and
+expiry, whether the account is reachable, which table models are listed, and the day's allocation. No model runs; each
+read counts toward Cloudflare's general limit of 1,200 API requests per five minutes. 403 names the missing permission
+(C3); 401 or an expired token: create a new one and store it with `set-cloudflare-token.ps1 -Force`.
+
+**C6. Dry run, then one request.** In PowerShell keep the model id in double quotes (a leading `@` is PowerShell's
+splatting sign); cmd passes it either way.
+
+```text
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\run-cloud.ps1 ^
+  --provider cloudflare --model "@cf/google/gemma-4-26b-a4b-it" --reasoning none ^
+  --ledger tools/local-qual/results/cloudflare-ledger.jsonl ^
+  --suite pick --items PW01 --k 1 --dry-run
+```
+
+Drop `--dry-run` for the first request. Its record settles what the pages leave open: whether Workers AI Read alone may
+run a chat completion, whether the model honours the JSON schema (`schema_conformant`; Workers AI "can't guarantee" it,
+and the canary stops a run whose answers do not conform), and the error body shape. For models that reason
+(`gpt-oss`, Qwen3.8) the tool sends `reasoning_effort`; the first request shows whether that field is taken.
+
+**What the guard does:**
+
+| Rule | Default | Why |
+| --- | --- | --- |
+| Model must be in `cloud/cloudflare-neurons.json` | 8 models | No rate, no worst case; the table carries its source and date |
+| Neurons per UTC day, every model of the account | 9,000 (allocation: 10,000) | `--max-neurons-per-day`, never above the allocation; worst case (prompt estimate × in-rate + output cap × out-rate, per million tokens) reserved before sending, the reply's usage priced after |
+| A reply priced above its worst case | exit 4 (CostAnomaly) | The table or the output cap does not hold; on Workers Paid the excess would be billed |
+| 3036 (the day's allocation is used up) | exit 10 | Terminal until 00:00 UTC (community reports say it can linger after the reset: do not loop on it) |
+| 3040 (capacity) | retried | Back off, then retry |
+| 5035, 5016, 3023 (paid-only model, model terms, account blocked) | exit 5 | Configuration: the message names it |
+| Requests a minute | 60 (limit: 300) | `--rpm`; whether Cloudflare counts per account or per model is not documented |
+
+Use one `--ledger` for every Cloudflare run; one run at a time per Windows user (`cloudflare-run.lock`). After each
+testing day, compare the Workers AI page's neurons with the tool's count (every run prints the day's count at its end,
+and every record carries it in `rate_gate.neurons_today`). The request
+always carries `max_tokens` (the default of 256 would silently cut answers); a seed of 0 goes as 1 (the range starts at
+1); `min_p` and `--repeat-penalty` are refused (not documented there).
+
+| Model | In / out neurons per million tokens | `--reasoning` |
+| --- | --- | --- |
+| `@cf/google/gemma-4-26b-a4b-it` | 9,091 / 27,273 | none (nothing is sent; a reply that reasons stops the run, exit 7) |
+| `@cf/openai/gpt-oss-20b`, `@cf/openai/gpt-oss-120b` | 18,182 / 27,273; 31,818 / 68,182 | low, medium or high |
+| `@cf/qwen/qwen3.8-27b` | 40,909 / 290,909 | low, medium or xhigh (reasoning dominates its cost) |
+| `@cf/zai-org/glm-4.7-flash`, `@cf/ibm-granite/granite-4.0-h-micro` | 5,500 / 36,400; 1,542 / 10,158 | none |
+| `@cf/mistralai/mistral-small-3.1-24b-instruct`, `@cf/qwen/qwen3-30b-a3b-fp8` | 31,876 / 50,488; 4,625 / 30,475 | none |
+
+Worked examples: a Gemma 4 call of 2,300 tokens in and 300 out is about 29 neurons; a Qwen3.8 call of 2,000 in and 2,000
+out about 664.
+
+**Data use.** Cloudflare does not use your content to train models on Workers AI or to improve its services without your
+explicit consent, and stores it only if you use a storage service with it.
+
+**Revoking.** Delete the token under Account API tokens (or My Profile → API Tokens), then
+`powershell -NoProfile -ExecutionPolicy Bypass -File tools\local-qual\cloud\remove-cloudflare-token.ps1` (both files).
+Cloudflare also revokes a `cfat_` or `cfut_` token found in a public GitHub repository.
+
+## Groq, Cloudflare and D047
+
+Both providers' terms carry violence wording (Groq's acceptable-use policy lists "violence, violent extremism or
+terrorism"; Cloudflare's developer-platform terms name content that "incites or exploits violence"). Under D047 item 3,
+until suite items carry their own flag, `run.py` refuses the text and knowledge suites for both (doc 50 §5.9 reads them
+as combat-flavoured): only pick, pick-hard, fill and explain run there, and only the synthetic items in `suites/`. Before
+any military-themed item goes to either host, decide whether to ask them in writing (Groq's exception route; Cloudflare
+has none we found): that is the pending outreach of OWQ-24.
+
 ## Sources (read 2026-09-27)
 
 - Limits (20 requests per minute; 50 or 1,000 a day by lifetime credits; per account, more keys do not raise them;
@@ -309,3 +527,43 @@ stay shared across them.
   HTML by default, JSON with `error_code`, `error_name`, `cloudflare_error`, `ray_id` and `retry_after` when the client asks
   for `application/json`, and 30 s `Retry-After` for 1015 (<https://developers.cloudflare.com/fundamentals/reference/error-responses/>);
   429 is the default status of a rate-limiting rule (<https://developers.cloudflare.com/waf/rate-limiting-rules/parameters/>).
+
+## Sources for Groq and Cloudflare (read 2026-09-28)
+
+Read through a summarising fetch; the quotes above were checked against the pages' wording as returned. Re-read a page
+before relying on a figure that matters: Cloudflare's developer-platform terms were updated on the day of reading.
+
+- Groq, OpenAI compatibility (base URL; `logprobs`, `logit_bias`, `top_logprobs` and `messages[].name` return 400; `n`
+  must be 1; temperature 0 becomes 1e-8): <https://console.groq.com/docs/openai>; API reference (`max_completion_tokens`,
+  `GET /openai/v1/models`): <https://console.groq.com/docs/api-reference>
+- Groq, rate limits (30 requests and 8K tokens a minute, 1K requests and 200K tokens a day per model on the Free plan;
+  per organisation; the `x-ratelimit-*` headers, requests per day and tokens per minute; `retry-after` on a 429):
+  <https://console.groq.com/docs/rate-limits>; models (production and preview): <https://console.groq.com/docs/models>
+- Groq, reasoning (`reasoning_effort`; Qwen3.8's `reasoning_format`, `raw` refused in JSON mode):
+  <https://console.groq.com/docs/reasoning>; structured outputs (strict mode's rules; gpt-oss-safeguard-20b best effort):
+  <https://console.groq.com/docs/structured-outputs>
+- Groq, billing and spend limits (a payment method and an upgrade before any bill; spend limits on paid plans only):
+  <https://console.groq.com/docs/billing-faqs>, <https://console.groq.com/docs/spend-limits>; data (no retention by
+  default, logs up to 30 days for troubleshooting or abuse, ZDR): <https://console.groq.com/docs/your-data>; acceptable
+  use: <https://console.groq.com/docs/legal/ai-policy>; the 18+ rule and no training on inputs or outputs:
+  <https://console.groq.com/docs/legal/services-agreement>
+- Groq's 429 message naming the window and the organisation (third-party quotes; Groq does not document the body):
+  <https://theneuralbase.com/groq/errors/groq-rate-limit-requests-per-day-exceeded/>; the `gsk_` prefix (secret
+  scanners; not in Groq's docs): <https://github.com/secretlint/secretlint/issues/1446>
+- Cloudflare Workers AI, OpenAI compatibility (`<root>/accounts/<account id>/ai/v1`, bearer token):
+  <https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/>; pricing (10,000 neurons a day
+  free, reset at 00:00 UTC; the neuron rates; $0.011 per 1,000 on Workers Paid):
+  <https://developers.cloudflare.com/workers-ai/platform/pricing/>; limits (300 requests a minute for text generation):
+  <https://developers.cloudflare.com/workers-ai/platform/limits/>; errors (3036, 3040, 5035, 5016, 3023):
+  <https://developers.cloudflare.com/workers-ai/platform/errors/>; JSON mode (not guaranteed; no streaming):
+  <https://developers.cloudflare.com/workers-ai/features/json-mode/>
+- Cloudflare tokens: formats (`cfat_`, `cfut_`, `cfk_`; leaked tokens revoked):
+  <https://developers.cloudflare.com/fundamentals/api/get-started/token-formats/>; creating one:
+  <https://developers.cloudflare.com/fundamentals/api/get-started/create-token/>; token verify (account and user):
+  <https://developers.cloudflare.com/api/resources/accounts/subresources/tokens/methods/verify/> and
+  <https://developers.cloudflare.com/api/resources/user/subresources/tokens/methods/verify/>; model search (Workers AI
+  Read or Write): <https://developers.cloudflare.com/api/resources/ai/subresources/models/methods/list/>; the account id:
+  <https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/>; API limits (1,200 requests per five
+  minutes): <https://developers.cloudflare.com/fundamentals/api/reference/limits/>
+- Cloudflare data use: <https://developers.cloudflare.com/workers-ai/platform/data-usage/>; developer-platform terms:
+  <https://www.cloudflare.com/service-specific-terms-developer-platform/>

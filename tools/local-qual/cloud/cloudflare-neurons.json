@@ -1,0 +1,21 @@
+{
+  "provider": "cloudflare",
+  "plan": "Workers Free allocation",
+  "source": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
+  "page_updated": "2026-09-17",
+  "read": "2026-09-28",
+  "free_neurons_per_day": 10000,
+  "reset": "00:00 UTC",
+  "unit": "neurons per 1,000,000 tokens (in: prompt tokens, out: completion tokens, reasoning included)",
+  "note": "Responses carry no neuron or cost field, so run.py computes each call's neurons from its usage and these rates: prompt tokens x in / 1e6 + output tokens x out / 1e6, cached prompt tokens counted as uncached. A model missing here is refused; add a row only after reading the pricing page again, and change 'read'. reasoning_efforts lists the efforts the model's page names (null: no reasoning setting, so only --reasoning none or omit).",
+  "models": {
+    "@cf/google/gemma-4-26b-a4b-it": {"in": 9091, "out": 27273, "reasoning_efforts": null},
+    "@cf/openai/gpt-oss-20b": {"in": 18182, "out": 27273, "reasoning_efforts": ["low", "medium", "high"]},
+    "@cf/openai/gpt-oss-120b": {"in": 31818, "out": 68182, "reasoning_efforts": ["low", "medium", "high"]},
+    "@cf/qwen/qwen3.8-27b": {"in": 40909, "out": 290909, "reasoning_efforts": ["low", "medium", "xhigh"]},
+    "@cf/zai-org/glm-4.7-flash": {"in": 5500, "out": 36400, "reasoning_efforts": null},
+    "@cf/ibm-granite/granite-4.0-h-micro": {"in": 1542, "out": 10158, "reasoning_efforts": null},
+    "@cf/mistralai/mistral-small-3.1-24b-instruct": {"in": 31876, "out": 50488, "reasoning_efforts": null},
+    "@cf/qwen/qwen3-30b-a3b-fp8": {"in": 4625, "out": 30475, "reasoning_efforts": null}
+  }
+}

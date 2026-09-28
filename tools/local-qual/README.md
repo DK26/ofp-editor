@@ -822,6 +822,41 @@ python tools/local-qual/run.py --key-status --api-key-env OPENROUTER_API_KEY [--
   JSON body is decoded first, so a copy written with `\u` escapes is found too, and a redirect's target host is
   scrubbed the same way.
 
+### Groq and Cloudflare Workers AI (`--provider`)
+
+`--provider groq` and `--provider cloudflare` run the suites on Groq's Free plan and within Workers AI's daily free
+allocation (D058 item 3), with the same key handling as OpenRouter: the owner stores each key once
+(`cloud/set-groq-key.ps1`, `cloud/set-cloudflare-token.ps1`, or `cloud/set-provider-key.ps1 -Provider <name>`), and
+`cloud/run-cloud.ps1 --provider <name>` decrypts it into the one `run.py` process. The runbook, with account settings,
+least-privilege keys and first runs, is [cloud/README.md](cloud/README.md). What `run.py` enforces (`providers.py`,
+`provider_gate.py`, `provider_backend.py`):
+
+- **Free tier only.** There is no paid path: the USD cap and prices are 0 (budget.py's zero-spend mode), OpenRouter's
+  flags (`--free-only`, `--key-check`, prices, `--max-usd`) are refused, and the base URL is the provider's (a loopback
+  test server is the only other one accepted). `--provider` implies `--backend openai`. The model must be in the dated
+  table: `cloud/groq-free-limits.json` (the free plan's limits per model) or `cloud/cloudflare-neurons.json` (neurons per
+  million tokens in and out, and the daily allocation), each with its source URL and read date.
+- **Groq.** Per model and organisation, at most 28 requests and 7,500 tokens in any 60 s and 950 requests and 190,000
+  tokens in any 24 hours (plan: 30, 8,000, 1,000, 200,000; how Groq resets its day is not documented, so the last 24
+  hours count). Tokens are reserved before sending (prompt estimate plus the output cap) and settled from the reply's
+  usage. The reply's `x-ratelimit-remaining-tokens` and `-remaining-requests` are honoured, the latter less
+  `--daily-reserve`. Limit headers above the Free plan, a reported cost or another model answering stop the run with
+  exit 9. A 429 naming a per-day limit ends it (exit 10, with the resume time); a per-minute one waits `retry-after`.
+  The request carries `max_completion_tokens`, `reasoning_effort` (and `reasoning_format: parsed` on Qwen3.8), and a
+  strict-mode schema copy; undocumented samplers are refused.
+- **Cloudflare.** Per UTC day and account, every call's worst case in neurons is reserved before sending and the reply's
+  usage priced after; the day stops at `--max-neurons-per-day` (default 9,000 of the 10,000 allocation; exit 10 with the
+  next 00:00 UTC). A reply priced above its worst case stops the run (CostAnomaly, exit 4). Error 3036 ends the run
+  (exit 10), 3040 is retried, 5035 is a configuration stop. The account id comes from `CLOUDFLARE_ACCOUNT_ID` (the
+  launcher sets it), goes into the URL, and is replaced by `[ACCOUNT]` everywhere the tool writes or prints.
+- **Shared.** A shared `--ledger` is required (its `quota` and `quota_settle` rows carry the provider, the model and the
+  tokens or neurons, and every run on it counts them); one run per provider at a time per Windows user
+  (`groq-run.lock`, `cloudflare-run.lock`). Redaction covers every provider's key shape on every path, and on the
+  provider path the account id and Groq's `org_...` ids. D047 item 3: the text and knowledge suites are refused on both
+  hosts. `--key-status --provider <name>` reads Groq's model list, or Cloudflare's token verify and model search, and
+  uses no quota (`provider_status.py`). Records add `provider`, `provider_caps`, `provider_table`,
+  `reasoning_requested`, and per call `rate_gate` (requests and tokens, or neurons).
+
 ## Limitations
 
 - **Small n.** 30 picks × k samples gives wide confidence intervals; treat differences under ~10 points as noise
@@ -879,16 +914,25 @@ python tools/local-qual/run.py --key-status --api-key-env OPENROUTER_API_KEY [--
 | `presets/drafts/*.preset.json` | Draft presets 0.1.0 (default, Qwen3.5-4B, Gemma 4 E4B QAT, Granite 4.1 3B): untested hypotheses |
 | `prompts.py` | What each call asks: suite shapes, temperatures, output caps, system prompts, seeds and menu permutations, one prompt builder per shape and variant, reasoning-block stripping and JSON extraction, repair checks and messages |
 | `backends.py` | The two local HTTP clients: Ollama `/api/chat` and llama-server `/v1/chat/completions` (both `stream: false`), plus the per-run server probe (version, model file, quant, context, template thinking check) |
-| `cloud_backend.py` | The OpenAI-compatible client (`stream: false`): strict `response_format`, retries with backoff, error classification, redaction of the key, usage and cost parsing, and the checks that stop a run |
+| `cloud_backend.py` | The OpenAI-compatible client (`stream: false`): strict `response_format`, retries with backoff, error classification, redaction of the key, and the checks that stop a run; three hooks (`_classify_429`, `_response_stop`, `redact`) that `provider_backend.py` overrides |
+| `cloud_reply.py` | Reading a reply: usage and cost fields, errors inside a 200, error texts, retryable statuses, `<think>` blocks, `Retry-After`; the key-shape scrub for every provider (`sk-or-`, `gsk_`, `cfat_`, `cfut_`, `cfk_`) |
 | `cloud_guard.py` | What a paid request may carry and how it travels: base URL, key and `--extra-body` checks, the `--schema-strip` whitelist, schema normalising, an opener that never follows redirects (and uses no proxy for a loopback server), the response-size cap |
-| `cloud_run.py` | The `openai` flags and their refusals, record fields for the endpoint and the start-of-run warnings (an unpinned OpenRouter run, `--repeat-penalty` on OpenRouter), and the per-run session: ledger and its lock (plus the per-user free-run lock), budget, key check, key readings written to the ledger, stop rows, canary (with the schema-conformance check), the key check on every stop of a free run, exit codes |
+| `cloud_flags.py` | The `openai` flags (with free mode's and the providers'), the `--reasoning` and `--extra-body` parsers, OpenRouter's routing advice and refusals, the canary's schema-conformance check |
+| `cloud_run.py` | The `openai` backend built from the flags (the provider client for `--provider`), record fields for the endpoint and the start-of-run warnings (an unpinned OpenRouter run, `--repeat-penalty` on OpenRouter), and the per-run session: ledger and its lock (plus the per-user free-run or provider lock), budget, key check, key readings written to the ledger, the provider's gate, stop rows, canary, the key check on every stop of a free run, exit codes |
+| `providers.py` | `--provider groq` and `--provider cloudflare`: presets (base URL, key variable and shape, the dated table, D047's host flag), flags, every offline check and the values it sets (base URL with Cloudflare's account id, zero spend, caps, the reasoning field each model takes), the start of a run |
+| `provider_gate.py` | The provider gates: Groq's requests and tokens per minute and per 24 hours with its `x-ratelimit-*` headers and free-plan check, Cloudflare's neurons per UTC day with the overrun stop; their `quota` and `quota_settle` ledger rows |
+| `provider_reply.py` | Reading what the providers send back, safe on hostile input: Go-style durations and integer headers, output tokens and neurons from usage, Cloudflare's error codes in both body shapes, the Groq and Cloudflare 429 classifiers (re-exported by `provider_gate.py`) |
+| `provider_backend.py` | The Groq and Cloudflare client: the key-shape check, each provider's request body (reasoning field, Cloudflare's seed range), the gate hooks, redaction of the account id and Groq's organisation ids |
+| `provider_status.py` | `--key-status` with `--provider groq` or `cloudflare`: Groq's model list with its limit headers; Cloudflare's token verify and model search; one next-step line per failure |
 | `budget.py` | The hard cap for paid endpoints: worst-case reservation per attempt, write-ahead ledger, settled costs, resume |
 | `free_mode.py` | `--free-only`: its flags, the free-model id rule, the live-catalogue check (exact-zero prices, text output, endpoint parameters), the per-response zero-spend check, the free-run lock's location, the start and end checks of a free run |
 | `free_key.py` | The OpenRouter key record in free mode: its non-secret fields (and the per-key rate limit), the refusals (management key, headroom, expiry, no daily counter), the usage-rise test, and the `key` ledger rows compared at the next start |
 | `key_status.py` | `--key-status`: one `GET <base>/key` and nothing else; the key record's non-secret fields in plain words with the free-only verdict, one next-step line per failure (401, 403, 404, 429, 5xx, a redirect, not a key record, no connection), bodies shown only redacted, the flags a run line carries but the command skips |
 | `rate_gate.py` | Client-side rate caps: requests per rolling minute, attempts per UTC day from the ledger, the account's remaining free requests less a reserve, the key poll hook, the 429 streak (HTTP 429 and 429 inside a 200); the 429 classifier (daily, per minute, upstream) and the daily cap's sane resume time |
-| `cloud/README.md` | Owner runbook for safe free-model testing on OpenRouter |
-| `cloud/set-openrouter-key.ps1`, `cloud/run-cloud.ps1`, `cloud/remove-openrouter-key.ps1`, `cloud/secret-common.ps1` | Windows key handling: store the key DPAPI-encrypted per user with a user-only access list (hidden input, never in a git working tree), run `run.py` with the key in that one child process's environment only (free-only rounds and `--key-status`; paid rounds with `-AllowPaid`), delete it; the plaintext never is a cmdlet argument (module logging), tracing is switched off and parameter defaults ignored when run in-process, and only DPAPI blobs are written or read |
+| `cloud/README.md` | Owner runbook for safe free-model testing on OpenRouter, Groq and Cloudflare Workers AI |
+| `cloud/set-openrouter-key.ps1`, `cloud/run-cloud.ps1`, `cloud/remove-openrouter-key.ps1`, `cloud/secret-common.ps1` | Windows key handling: store the key DPAPI-encrypted per user with a user-only access list (hidden input, never in a git working tree), run `run.py` with the key in that one child process's environment only (free-only rounds and `--key-status`; paid rounds with `-AllowPaid`; `--provider groq` or `cloudflare` selects that provider's key, and Cloudflare's account id into its own variable), delete it; the plaintext never is a cmdlet argument (module logging), tracing is switched off and parameter defaults ignored when run in-process, and only DPAPI blobs are written or read; every provider's key prefix, keys stored for other providers and the account id are refused in the arguments |
+| `cloud/set-groq-key.ps1`, `cloud/set-cloudflare-token.ps1`, `cloud/remove-groq-key.ps1`, `cloud/remove-cloudflare-token.ps1`, `cloud/set-provider-key.ps1`, `cloud/remove-provider-key.ps1` | The Groq key and the Cloudflare token (with its account id, also DPAPI-encrypted) stored and removed the same way; the `-provider` pair runs the matching script for `-Provider openrouter`, `groq` or `cloudflare` |
+| `cloud/groq-free-limits.json`, `cloud/cloudflare-neurons.json` | The dated tables `--provider` reads: Groq's free-plan limits per model, Cloudflare's neuron rates per model and the daily allocation, each with its source URL and read date |
 | `cloud/provider-zdr.json` | The tier-0 provider block for `--extra-body @...` (`zdr: true`, `data_collection: deny`) |
 | `score.py` | Scorer: summary CSV and JSON, console table, optional grading sheet; consumes open-arm grade files; `--suite-file` for suites outside `suites/` |
 | `score_checks.py` | The code checks shared by `score.py`, `uplift.py`, the repair check and the canary: the schema subset, quoted spans, Fill validators, Text constraints, names, words and sentences |
@@ -910,7 +954,7 @@ python tools/local-qual/run.py --key-status --api-key-env OPENROUTER_API_KEY [--
 | `suites/fill.json` | 12 Fill items: request, instructions, schema, expected values, validators; banned era words |
 | `suites/explain.json` | 10 findings: code, message, mission facts, card, schema, rubric (required facts, forbidden claims and patterns) |
 | `suites/text.json` | 10 flavour-text slots: context, constraints (word cap, allowed names, digits, era, tone), schema; name allowlist |
-| `tests/` | The offline test suite (see [Tests](#tests)): `test_*.py`, their shared fixtures (`support.py`, `cloud_support.py`, `logprob_support.py`, `scaffold_support.py`), the mock servers (`mock_server.py`, `mock_llama.py`, `mock_reason.py`), the payload dumps and goldens (`dump_payloads.py`, `dump_bodies.py`, `make_goldens.py`, `golden/`), and the key-script checks (`dpapi_round_trip.ps1`, `dpapi_trace.ps1`, `probe_env.py`) |
+| `tests/` | The offline test suite (see [Tests](#tests)): `test_*.py`, their shared fixtures (`support.py`, `cloud_support.py`, `provider_support.py`, `logprob_support.py`, `scaffold_support.py`), the mock servers (`mock_server.py`, `mock_llama.py`, `mock_reason.py`), the payload dumps and goldens (`dump_payloads.py`, `dump_bodies.py`, `make_goldens.py`, `golden/`), and the key-script checks (`dpapi_round_trip.ps1`, `dpapi_trace.ps1`, `probe_env.py`) |
 
 Each JSONL record holds the item id, model, suite, condition, variant, sample, seed, the raw content, `parse_ok`,
 `parsed`, latency, `prompt_eval_count`, `eval_count`, `eval_duration` and the other timings (in Ollama's field names
@@ -939,7 +983,10 @@ python -m unittest discover -s tools/local-qual/tests -k t59 -v                #
 | `test_cloud_review.py` | t63–t66 | Review of the merged tool: `--extra-body` fields billed at other rates, a thinking budget the worst case missed, a key JSON would escape, `--repeat-penalty` on OpenRouter |
 | `test_cloud_regression.py` | t01, t02, t38 | The local backends' request bodies and scores against the tool before the cloud backend (goldens) |
 | `test_free_mode.py` | t40–t50 | `--free-only`: refusals, catalogue traps, request shape, zero-spend guard, substitution, key rules, key poll, daily cap and day boundary, account quota, 429s, rate-gate units |
-| `test_free_mode_review.py` | t51–t58, t75 | Second review of free mode, and the DPAPI key scripts through PowerShell (t53: 15 steps, `--key-status` through the launcher among them); t75: a label planted in the key record's date fields |
+| `test_free_mode_review.py` | t51–t58, t75 | Second review of free mode, and the DPAPI key scripts through PowerShell (t53: 22 steps, `--key-status` through the launcher among them, and steps 16–22 for Groq and Cloudflare: stores, refusals, one key per child, the account id in its variable, `--provider` through `powershell -File`, removal; t58: tracing, the provider store included); t75: a label planted in the key record's date fields |
+| `test_provider_groq.py` | g01–g08 | `--provider groq`: request shape and base URL, refusals before sending, the minute and 24-hour caps on both sides, the header parsers, 429s by window (the organisation id redacted), exit 9 on paid-tier headers, a cost or another model, the shared ledger and the per-user lock |
+| `test_provider_cloudflare.py` | w01–w08 | `--provider cloudflare`: the account's `/ai/v1` path with no account id in any record, refusals, neuron arithmetic and the tables' checks, the daily neuron budget on both sides (per UTC day, per account), error codes 3036, 3040 and 5035 in both body shapes, the overrun stop, request bodies per provider and model, redaction of every provider secret |
+| `test_provider_status.py` | k01–k05 | `--key-status` for Groq and Cloudflare: the reports, every failure with its exit code and next step, refusals before sending, a run line with `--key-status` reading only |
 | `test_key_status.py` | t67–t73, t77 | `--key-status`: the report field by field, the key and label never shown (in bodies, record fields, redirect targets and `\u`-escaped copies), one next-step line per failure, refusals before sending, a run line with `--key-status` running only the key read, the limit that applies named; t77: a label holding a quote or a backslash scrubbed as written in a decoded error message, and a label nested below the record's own kept out of its date and period fields |
 | `test_rate_limit_source.py` | r01–r08 | 429 classification by `limit_source` first: the observed shared-pool body, daily-looking text and far resets that stay upstream, unchanged behaviour without the field, undocumented and non-string values, escaped labels in the recorded error, back-off through `chat()` including 429s inside an HTTP 200 |
 | `test_rate_limit_stops.py` | r09–r15 | Two 429 stops: a daily-cap 429 whose `X-RateLimit-Reset` is absurd (huge, past the year 3000, not a number, negative, in the past, over a day past midnight) resumes at the next 00:00 UTC, through `chat()` and as a free run (exit 10, unbilled, no traceback); 429s inside an HTTP 200 count toward the `--max-consecutive-429` streak (a free run stops as rate-limited after 3, an answer resets it, both forms share it) while paid gates retry as before; a daily-cap 429 that completes a streak still stops as the daily quota (r15) |
@@ -1288,3 +1335,13 @@ python -m unittest discover -s tools/local-qual/tests -k t59 -v                #
   error message, and keeping a label nested below the record's own out of the date and period fields. t77 was
   written for them; it fails on each of the two faulty copies and passes on the tool. All 176 checks pass, none
   skipped, in 273 s.
+- **Groq and Cloudflare Workers AI (`--provider`, 2026-09-28).** Built test first: the 21 new cases (g01–g08,
+  w01–w08, k01–k05) all failed before the code existed (10 failures, 11 errors) and pass now; t53 grew from 15 to 22
+  steps and t58 gained a third tracing mode. Offline only: every request went to the in-process mock on 127.0.0.1 with
+  random dummy keys, tokens and account ids; no Groq or Cloudflare endpoint was contacted and no real key was handled.
+  The goldens (t01, t02, t38, a01) are unchanged, so every default OpenRouter and local request body is byte-identical.
+  Six faults planted one at a time in a scratch copy are each caught: the account id left unredacted (w05, w08 and the
+  final sweep), Groq's day cap off by one (g04), the neuron overrun stop dropped (w06), D047's suite rule dropped (g02,
+  w02), the free-plan header check dropped (g05), and the launcher's account-id argument check dropped (t53). All 197
+  checks pass, none skipped, in 280 s on Windows 10 with Python 3.12. What a first live call must still settle is
+  listed in cloud/README.md (G7, G8, C5, C6).

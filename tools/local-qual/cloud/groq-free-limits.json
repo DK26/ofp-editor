@@ -1,0 +1,22 @@
+{
+  "provider": "groq",
+  "plan": "Free",
+  "source": "https://console.groq.com/docs/rate-limits",
+  "models_source": "https://console.groq.com/docs/models",
+  "read": "2026-09-28",
+  "note": "Free-plan limits per model and per organisation, as the rate-limits page lists them on the date read. rpm and rpd are requests per minute and per day, tpm and tpd tokens per minute and per day. The x-ratelimit-limit-requests header reports requests per day and x-ratelimit-limit-tokens tokens per minute; no header reports rpm or tpd, so run.py counts those locally. A header above these values means the organisation is not on the Free plan, and a run stops (exit 9). A model missing here is refused; add a row only after reading the limits page again, and change 'read'.",
+  "models": {
+    "openai/gpt-oss-20b": {"rpm": 30, "rpd": 1000, "tpm": 8000, "tpd": 200000, "status": "production",
+                           "max_completion_tokens": 65536, "reasoning_efforts": ["low", "medium", "high"],
+                           "reasoning_format": null, "strict_schema": true},
+    "openai/gpt-oss-120b": {"rpm": 30, "rpd": 1000, "tpm": 8000, "tpd": 200000, "status": "production",
+                            "max_completion_tokens": 65536, "reasoning_efforts": ["low", "medium", "high"],
+                            "reasoning_format": null, "strict_schema": true},
+    "openai/gpt-oss-safeguard-20b": {"rpm": 30, "rpd": 1000, "tpm": 8000, "tpd": 200000, "status": "preview",
+                                     "max_completion_tokens": null, "reasoning_efforts": ["low", "medium", "high"],
+                                     "reasoning_format": null, "strict_schema": false},
+    "qwen/qwen3.8-27b": {"rpm": 30, "rpd": 1000, "tpm": 8000, "tpd": 200000, "status": "preview",
+                         "max_completion_tokens": 16384, "reasoning_efforts": ["none", "low", "medium", "high"],
+                         "reasoning_format": "parsed", "strict_schema": true}
+  }
+}

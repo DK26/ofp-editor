@@ -22,8 +22,11 @@ budget.py) and reads its key only from the environment variable named by
 ``--api-key-env`` (cloud_run.py holds its flags and run-time guards).
 ``--free-only`` runs OpenRouter's ``:free`` models with a cap of 0, rate caps
 and a zero-spend check on every response (free_mode.py; runbook in
-cloud/README.md). ``--key-status`` runs nothing but one ``GET <base>/key``
-and prints what the key allows (key_status.py).
+cloud/README.md). ``--provider groq|cloudflare`` runs Groq's free plan or
+Cloudflare Workers AI's daily free allocation the same way (providers.py,
+provider_gate.py, provider_backend.py). ``--key-status`` runs nothing but one
+read of the key's record and prints what the key allows (key_status.py;
+provider_status.py for Groq and Cloudflare).
 
 How it fits
 -----------
@@ -97,6 +100,8 @@ import uuid
 import cloud_run
 import key_status
 import logprob_pick
+import provider_status
+import providers
 import run_cli
 import run_preset
 import scaffold_run
@@ -124,9 +129,10 @@ def main(argv=None):
     ap = run_cli.build_parser()
     args = ap.parse_args(argv)
     if args.key_status:
-        # Read-only: one GET <base>/key, the key record's non-secret fields printed, and the exit code (key_status.py).
-        # Nothing below runs: no suite, no preset, no model request, no ledger, no lock.
-        return key_status.run(ap, args)
+        # Read-only: one GET <base>/key, the key record's non-secret fields printed, and the exit code (key_status.py);
+        # for Groq and Cloudflare their own reads (provider_status.py). Nothing below runs: no suite, no preset, no
+        # model request, no ledger, no lock.
+        return provider_status.run(ap, args) if providers.active(args) else key_status.run(ap, args)
     file_suite = None
     if args.suite_file is not None:
         file_suite = load_suite_file(ap, args)
@@ -138,6 +144,8 @@ def main(argv=None):
     # --preset: its knobs for this step kind become the flags that send them, before any check below reads a flag; a
     # knob run.py cannot honour, or a flag that contradicts one, stops the run here (exit 2, nothing sent).
     preset = run_preset.apply(ap, args, shape, sys.argv[1:] if argv is None else argv) if args.preset else None
+    # --provider groq|cloudflare implies the openai backend; D047 keeps the text and knowledge suites off both hosts.
+    providers.prepare(ap, args, shape)
     cloud = args.backend == "openai"
     if args.free_only and not cloud:
         ap.error("--free-only applies to --backend openai (OpenRouter's :free models)")
@@ -227,7 +235,8 @@ def main(argv=None):
     if cloud:
         schema_sent = bool(items) and "response_format" in make_payload(items[0], 0, args.model)[0]
         refusal = cloud_run.routing_refusal(urllib.parse.urlsplit(backend.base).hostname or "",
-                                            cloud_settings["extra_body"], schema_sent)
+                                            cloud_settings["extra_body"], schema_sent) or \
+            providers.schema_refusal(cloud_settings["provider"], schema_sent)
         if refusal:
             ap.error(refusal)
 

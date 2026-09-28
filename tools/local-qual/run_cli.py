@@ -276,6 +276,8 @@ def build_parser():
                          "limit, usage, free tier, management key, today's free-model requests and their UTC reset, "
                          "the per-key rate limit, and whether --free-only would accept the key; needs --api-key-env; "
                          "sends no model request, uses no quota, writes nothing and skips every other flag "
-                         "(key_status.py)")
+                         "(key_status.py). With --provider groq: one GET /models (the key accepted, the free-plan "
+                         "models listed, the limit headers); with --provider cloudflare: token verify and a model "
+                         "search (provider_status.py)")
     cloud_run.add_cloud_args(ap)
     return ap

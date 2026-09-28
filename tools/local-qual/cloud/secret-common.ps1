@@ -1,5 +1,11 @@
-# Shared helpers for the OpenRouter key scripts in this folder (set-openrouter-key.ps1, run-cloud.ps1,
-# remove-openrouter-key.ps1). Dot-sourced by them; it only defines functions.
+# Shared helpers for the key scripts in this folder (set-openrouter-key.ps1, set-provider-key.ps1, run-cloud.ps1,
+# remove-openrouter-key.ps1, remove-provider-key.ps1). Dot-sourced by them; it only defines functions.
+#
+# One store per provider, all in %LOCALAPPDATA%\plotroom-dev\secrets: openrouter.key, groq.key and cloudflare.key
+# (DPAPI blobs), and for Cloudflare cloudflare-account.key beside the token (the account id, a DPAPI blob too: not a
+# secret, but it identifies the owner's account, so it is kept out of command lines, records and the repository).
+# set-openrouter-key.ps1, set-groq-key.ps1 and set-cloudflare-token.ps1 write them (set-provider-key.ps1 -Provider
+# <name> calls the matching one); run-cloud.ps1 --provider <name> reads them.
 #
 # How the key is protected (Windows only):
 # * At rest it is a DPAPI blob. ConvertFrom-SecureString without -Key encrypts with the Windows Data Protection API
@@ -25,6 +31,45 @@ function Get-DefaultSecretPath {
 
 function Resolve-FullPath([string]$Path) {
     return [System.IO.Path]::GetFullPath($Path)
+}
+
+function Get-ProviderSpec([string]$Provider) {
+    # The store's settings per provider: the key file's name, the variable run-cloud.ps1 sets for run.py, whether an
+    # account id is stored beside the key, and the scripts that store and remove it. Names are lower case, as run.py's
+    # --provider takes them. The message never repeats the value, which could be a pasted key.
+    switch -CaseSensitive ($Provider) {
+        'openrouter' {
+            return @{ Name = 'openrouter'; Title = 'OpenRouter'; File = 'openrouter.key'; EnvName = 'OPENROUTER_API_KEY'
+                Account = $false; Store = 'set-openrouter-key.ps1'; Remove = 'remove-openrouter-key.ps1' }
+        }
+        'groq' {
+            return @{ Name = 'groq'; Title = 'Groq'; File = 'groq.key'; EnvName = 'GROQ_API_KEY'; Account = $false
+                Store = 'set-groq-key.ps1'; Remove = 'remove-groq-key.ps1' }
+        }
+        'cloudflare' {
+            return @{ Name = 'cloudflare'; Title = 'Cloudflare'; File = 'cloudflare.key'; EnvName = 'CLOUDFLARE_API_TOKEN'
+                Account = $true; AccountEnv = 'CLOUDFLARE_ACCOUNT_ID'; Store = 'set-cloudflare-token.ps1'
+                Remove = 'remove-cloudflare-token.ps1' }
+        }
+    }
+    throw 'unknown provider: use openrouter, groq or cloudflare (lower case)'
+}
+
+function Get-ProviderSecretPath([string]$Provider) {
+    # %LOCALAPPDATA% is per user and outside every repository; openrouter.key is Get-DefaultSecretPath's file.
+    if (-not $env:LOCALAPPDATA) { throw 'LOCALAPPDATA is not set; pass -SecretPath' }
+    return (Join-Path $env:LOCALAPPDATA ('plotroom-dev\secrets\' + (Get-ProviderSpec $Provider).File))
+}
+
+function Get-AccountPath([string]$KeyPath) {
+    # The Cloudflare account id's DPAPI file: cloudflare-account.key in the token file's folder (the contract of
+    # set-cloudflare-token.ps1 and remove-cloudflare-token.ps1).
+    return (Join-Path (Split-Path -Parent $KeyPath) 'cloudflare-account.key')
+}
+
+function Test-AccountIdShape([string]$Id) {
+    # A Cloudflare account id as stored: 32 lower-case hexadecimal characters.
+    return ($Id -cmatch '^[0-9a-f]{32}$')
 }
 
 function Find-GitTree([string]$Path) {

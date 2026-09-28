@@ -93,23 +93,35 @@ def t53_dpapi_key_scripts_round_trip():
     child process through its environment only; refusals start no child; run.py's --output alias passes through
     ``powershell -File`` (where --out cannot, see t62); ``--key-status`` runs through the launcher without
     ``--free-only`` and shows neither the key nor its label (test_key_status.py covers the command itself);
-    remove-openrouter-key.ps1 deletes the key.
+    remove-openrouter-key.ps1 deletes the key. Steps 16-22 do the same for Groq and Cloudflare: set-provider-key.ps1
+    (the account id beside the token), run-cloud.ps1 --provider (one key per child, the account id in its variable,
+    the other providers' variables taken out, every key prefix, the account id and keys stored for other providers
+    refused in the arguments), --provider through ``powershell -File``, --key-status through the launcher against the
+    mock, and remove-provider-key.ps1.
 
-    Why: the key must never be plaintext on disk, in a command line or in this session, and the launcher must work
+    Why: a key must never be plaintext on disk, in a command line or in this session, and the launcher must work
     exactly as the runbook starts it.
 
-    How: a random dummy key only; the PowerShell side is dpapi_round_trip.ps1 (15 PASS/FAIL lines), with probe_env.py
-    standing in for run.py where the test needs to see what the child received. The mock's key record carries a
-    masked copy of the dummy as its label, as OpenRouter's does; it is added to the final sweep.
+    How: random dummy keys and a random dummy account id only; the PowerShell side is dpapi_round_trip.ps1 (22
+    PASS/FAIL lines), with probe_env.py standing in for run.py where the test needs to see what the child received.
+    The mock's key record carries a masked copy of the dummy as its label, as OpenRouter's does; every dummy is added
+    to the final sweep.
     """
     if os.name != "nt":
         return "skipped (not Windows)"
+    import string
     dummy = "sk-or-v1-" + secrets.token_hex(32)
     masked = dummy[:12] + "..." + dummy[-3:]
+    alnum = string.ascii_letters + string.digits
+    groq = "gsk_" + "".join(secrets.choice(alnum) for _ in range(52))
+    token = "cfat_" + "".join(secrets.choice(alnum) for _ in range(48))
+    account = secrets.token_hex(16)
     free_state(label=masked)
-    SWEEP.extend([dummy, masked])
-    env = dict(os.environ, CLOUDQUAL_DUMMY_KEY=dummy, PYTHONIOENCODING="utf-8")
-    for k in (ENV_NAME, "OPENROUTER_API_KEY", "LLAMA_API_KEY"):
+    SWEEP.extend([dummy, masked, groq, token, account])
+    env = dict(os.environ, CLOUDQUAL_DUMMY_KEY=dummy, CLOUDQUAL_DUMMY_GROQ=groq, CLOUDQUAL_DUMMY_CF=token,
+               CLOUDQUAL_DUMMY_ACCOUNT=account, PYTHONIOENCODING="utf-8")
+    for k in (ENV_NAME, "OPENROUTER_API_KEY", "LLAMA_API_KEY", "GROQ_API_KEY", "CLOUDFLARE_API_TOKEN",
+              "CLOUDFLARE_ACCOUNT_ID"):
         env.pop(k, None)
     work = out("secrets")
     p = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File",
@@ -120,11 +132,19 @@ def t53_dpapi_key_scripts_round_trip():
     lines = [ln for ln in p.stdout.splitlines() if ln.startswith(("PASS ", "FAIL "))]
     fails = [ln for ln in lines if ln.startswith("FAIL ")]
     auth = [r["headers"].get("Authorization") for r in STATE.requests if r["path"].endswith("/chat/completions")]
-    check(p.returncode == 0 and len(lines) == 15 and not fails, f"exit {p.returncode}; {fails or p.stderr[-400:]}")
-    # One chat call in all: the end-to-end run's (step 8); the key-status run (step 15) sends none.
+    check(p.returncode == 0 and len(lines) == 22 and not fails, f"exit {p.returncode}; {fails or p.stderr[-400:]}")
+    # One chat call in all: the end-to-end run's (step 8); the key-status runs (steps 15 and 21) send none.
     check(auth == [f"Bearer {dummy}"], f"the run launched by run-cloud.ps1 sent {len(auth)} calls with the stored key: "
                                        f"{[a == f'Bearer {dummy}' for a in auth]}")
-    check(dummy not in p.stdout + p.stderr and masked not in p.stdout + p.stderr, "the dummy key or its label was printed")
+    # Step 21: Groq's model list read with the stored Groq key, Cloudflare's token verify with the stored token at the
+    # stored account's path.
+    gets = [(r["path"], r["headers"].get("Authorization")) for r in STATE.requests if r["body"] is None]
+    check(any(path == "/api/v1/models" and a == f"Bearer {groq}" for path, a in gets)
+          and any(path == f"/client/v4/accounts/{account}/tokens/verify" and a == f"Bearer {token}" for path, a in gets),
+          "step 21's key-status reads did not carry the stored Groq key and Cloudflare token")
+    printed = p.stdout + p.stderr
+    check(not any(s in printed for s in (dummy, masked, groq, token, account)),
+          "a dummy key, the label or the account id was printed")
     return "; ".join(ln[5:].split(":", 1)[0] for ln in lines) + " all PASS; " + " | ".join(
         ln.split(": ", 1)[1] for ln in lines[:2] + lines[3:5])
 
@@ -291,7 +311,8 @@ def t57_key_variable_leaves_the_run_environment():
 
 def t58_key_scripts_under_powershell_tracing():
     """With Set-PSDebug -Trace 2 on in the calling session (the scripts run in-process), neither storing a key with a
-    trailing space nor launching a run prints any 16-character piece of the key to the console.
+    trailing space (set-openrouter-key.ps1, and a Groq key through set-provider-key.ps1) nor launching a run prints
+    any 16-character piece of the key to the console.
 
     Why: trace level 2 prints every variable assignment with its value (the first 55 characters of the key, most of
     its secret part), and a transcript would save it to disk.
@@ -301,9 +322,12 @@ def t58_key_scripts_under_powershell_tracing():
     """
     if os.name != "nt":
         return "skipped (not Windows)"
+    import string
     found = []
-    for which in ("set", "run"):
-        dummy = "sk-or-v1-" + secrets.token_hex(32)
+    for which in ("set", "run", "set-provider"):
+        prefix = "gsk_" if which == "set-provider" else "sk-or-v1-"
+        dummy = prefix + ("".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(52))
+                          if which == "set-provider" else secrets.token_hex(32))
         SWEEP.append(dummy)
         env = dict(os.environ, PROBE_DUMMY=dummy)
         p = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File",
@@ -311,7 +335,7 @@ def t58_key_scripts_under_powershell_tracing():
                             sys.executable, "-Which", which], env=env, capture_output=True, text=True,
                            encoding="utf-8", errors="replace", timeout=300)
         text = p.stdout + p.stderr
-        secret = dummy[len("sk-or-v1-"):]
+        secret = dummy[len(prefix):]
         pieces = sum(1 for i in range(len(secret) - 15) if secret[i:i + 16] in text)
         traced = text.count("DEBUG:")
         found.append((which, p.returncode, traced, pieces))

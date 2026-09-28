@@ -70,7 +70,7 @@ EXIT_UNREACHABLE = 3
 # paid-run command line with --key-status added still works and says what it did not do. (--api-key and --dry-run
 # are refused before this list is consulted.)
 USED_FLAGS = frozenset(("key_status", "backend", "base_url", "api_key_env", "timeout", "max_key_headroom_usd",
-                        "allow_key_headroom", "daily_reserve"))
+                        "allow_key_headroom", "daily_reserve", "provider"))
 # The most characters of a response body a failure line shows, after redaction (the rest is cut, marked "...").
 MAX_SHOWN = 200
 # A "label" pair in a body that is not valid JSON; its value is scrubbed before anything is shown.

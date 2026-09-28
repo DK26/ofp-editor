@@ -40,6 +40,17 @@ redirect with the key), ``key_queue`` (scripted ``GET /key`` responses, consumed
 with the same ``"ECHO_AUTH"`` body; the key-status failure tests) and ``delay_s`` (seconds each chat call waits,
 for the concurrency test). Every request (path, headers, parsed body) is appended to ``state.requests``.
 
+Groq and Cloudflare Workers AI (``run.py --provider``)
+------------------------------------------------------
+Both speak the same chat completions shape, so the chat route above serves them too (``cost_mode = "tokens"``: usage
+without a cost field, as both send). ``groq_limits`` ({"rpd", "tpm"}) makes every answered chat carry Groq's
+``x-ratelimit-*`` headers (requests per day and tokens per minute, remaining counts and Go-style reset durations);
+``groq_models`` (a list of model objects) makes ``GET <prefix>/models`` answer Groq's model list instead of the
+OpenRouter catalogue. For Cloudflare, ``GET .../tokens/verify`` answers ``cf_verify`` (default: an active token) and
+``GET .../ai/models/search?search=<text>`` lists the names in ``cf_models`` that contain the search text, both in
+Cloudflare's v4 envelope. ``get_queue`` holds scripted responses for every GET except ``/key`` (first in, first out,
+the same ``"ECHO_AUTH"`` body as ``queue``), for the key-status failure tests.
+
 Run standalone (``python mock_server.py --port 8765``) or in-process (``start()``). Standard library only.
 """
 import argparse
@@ -49,6 +60,7 @@ import json
 import math
 import threading
 import time
+import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 # Every parameter the default free endpoint supports (OpenRouter's supported_parameters names).
@@ -157,6 +169,12 @@ class MockState:
         self.external_use = None  # (after_n_chats, extra requests another client used)
         self.key_usage_per_chat = 0.0
         self.served_model = None
+        # Groq and Cloudflare (see the module docs); None or empty: the OpenRouter-shaped behaviour above.
+        self.groq_limits = None
+        self.groq_models = None
+        self.get_queue = []
+        self.cf_verify = None
+        self.cf_models = None
 
     def reset(self):
         self.__init__()
@@ -226,6 +244,28 @@ class Handler(BaseHTTPRequestHandler):
             if STATE.key_redirect:
                 return self._send(302, {"error": {"code": 302, "message": "moved"}}, {"Location": STATE.key_redirect})
             return self._send(200, {"data": STATE.key_record()})
+        with STATE.lock:
+            scripted = STATE.get_queue.pop(0) if STATE.get_queue else None
+        if scripted is not None:
+            out = scripted.get("body")
+            if out == "ECHO_AUTH":
+                out = {"error": {"code": scripted.get("status", 500),
+                                 "message": "lookup failed; you sent " + str(self.headers.get("Authorization"))}}
+            return self._send(scripted.get("status", 200), out, scripted.get("headers"))
+        path = urllib.parse.urlsplit(rel).path
+        if path.endswith("/tokens/verify"):
+            # Cloudflare's token check (v4 envelope); the default is an active token with no expiry.
+            verify = STATE.cf_verify or {"id": "mock-token-id", "status": "active", "expires_on": None,
+                                         "not_before": None}
+            return self._send(200, {"success": True, "errors": [], "messages": [], "result": verify})
+        if path.endswith("/ai/models/search"):
+            # Cloudflare's model catalogue: every name in cf_models that contains the search text.
+            wanted = (urllib.parse.parse_qs(urllib.parse.urlsplit(rel).query).get("search") or [""])[0]
+            found = [{"id": f"mock-{i}", "name": name, "description": "", "task": {"name": "Text Generation"}}
+                     for i, name in enumerate(STATE.cf_models or []) if wanted in name]
+            return self._send(200, {"success": True, "errors": [], "messages": [], "result": found})
+        if rel == "/models" and STATE.groq_models is not None:
+            return self._send(200, {"object": "list", "data": copy.deepcopy(STATE.groq_models)})
         if rel == "/models":
             return self._send(200, {"data": [copy.deepcopy(v["model"]) for v in STATE.catalogue.values()]})
         if rel.startswith("/models/") and rel.endswith("/endpoints"):
@@ -266,7 +306,23 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(400, {"error": {"code": 400, "message": "Provider returned error",
                                               "metadata": {"provider_name": STATE.provider,
                                                            "raw": "response_format json_schema is not supported"}}})
-        return self._send(200, self.completion(body))
+        resp = self.completion(body)
+        return self._send(200, resp, self.groq_headers(resp))
+
+    def groq_headers(self, resp):
+        """Groq's rate-limit headers for one answered chat (none unless ``groq_limits`` is set): requests per day
+        (limit, remaining after this request, reset as a Go duration) and tokens per minute (limit, remaining after
+        this reply's tokens, reset), as https://console.groq.com/docs/rate-limits describes them."""
+        lim = STATE.groq_limits
+        if not lim:
+            return {}
+        used = (resp.get("usage") or {}).get("total_tokens") or 0
+        return {"x-ratelimit-limit-requests": str(lim["rpd"]),
+                "x-ratelimit-remaining-requests": str(max(0, lim["rpd"] - STATE.count())),
+                "x-ratelimit-reset-requests": "2m59.56s",
+                "x-ratelimit-limit-tokens": str(lim["tpm"]),
+                "x-ratelimit-remaining-tokens": str(max(0, lim["tpm"] - used)),
+                "x-ratelimit-reset-tokens": "7.66s"}
 
     def completion(self, body):
         """A chat completion for `body` with usage, cost and provider, like OpenRouter's."""

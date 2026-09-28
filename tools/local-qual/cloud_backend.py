@@ -5,9 +5,12 @@ What it owns
 ------------
 ``OpenAICompatBackend``: any OpenAI-compatible ``POST <base>/chat/completions``
 endpoint, local or cloud, for example OpenRouter (``https://openrouter.ai/api/v1``)
-or a provider's own API; plus its helpers (usage parsing, provider matching,
-error classification). The checks on the base URL, the key and
-``--extra-body``, and the redirect-refusing opener, are in cloud_guard.py.
+or a provider's own API. The reply helpers (usage parsing, error bodies,
+Retry-After, the key-shape scrub) are in cloud_reply.py; the checks on the base
+URL, the key and ``--extra-body``, and the redirect-refusing opener, are in
+cloud_guard.py. Three small hooks (``_classify_429``, ``_response_stop`` and
+``redact``) are what provider_backend.py overrides for Groq and Cloudflare; here
+they keep OpenRouter's rules.
 The key comes from an environment variable, is never written anywhere and
 never follows a redirect;
 every attempt is paid for out of a hard budget (budget.py) that refuses to send
@@ -40,6 +43,9 @@ import urllib.request
 from cloud_guard import (DROPPABLE_PARAMS, FORBIDDEN_EXTRA, STRIPPABLE_KEYWORDS, check_base_url,  # noqa: F401
                          check_extra_body, check_key, get_capped, normalise_schema, opener, provider_matches,
                          read_capped, redirect_host)
+from cloud_reply import (OPENROUTER_KEY, code_and_message, embedded_error, error_text, is_redirect,  # noqa: F401
+                         json_or_none, num, retry_after_seconds, retryable, scrub_key_shapes, think_blocks,
+                         usage_fields)
 from free_mode import NO_ROUTE_HINT, key_summary, no_route, paid_signal
 from rate_gate import classify_429, daily_resume_time, rate_limit_label
 
@@ -60,129 +66,18 @@ _SCHEMA_WORDS = ("response_format", "json_schema", "json schema", "structured ou
                  "structured-output", "schema")
 # Marker for an attempt that failed while the request was being built or sent locally (see _post).
 _LOCAL_FAILURE = "local-failure"
-# Anything shaped like an OpenRouter key ("sk-or-v1-<hex>"), redacted wherever it appears: a provider may echo another
-# key, and GET /key's "label" is a partly masked key. The key in use is also redacted verbatim (whatever its shape).
-_OPENROUTER_KEY = re.compile(r"sk-or-[A-Za-z0-9_.-]{4,}")
-
-
-def _num(value):
-    """A finite, non-negative number from untrusted JSON, or None (bools, strings, NaN and negatives are rejected)."""
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        return None
-    return value if math.isfinite(value) and value >= 0 else None
-
-
-def usage_fields(usage):
-    """Pick the accounting numbers out of an OpenAI-style ``usage`` object (untrusted: every field is checked).
-
-    OpenRouter returns usage on every response, counted with the model's own tokenizer: ``cost`` (in credits,
-    which are US dollars), prompt and completion tokens, ``prompt_tokens_details.cached_tokens`` and
-    ``cache_write_tokens``, and ``completion_tokens_details.reasoning_tokens``, which are billed as output
-    (https://openrouter.ai/docs/use-cases/usage-accounting and /docs/use-cases/reasoning-tokens, read
-    2026-09-27). ``cost_details.upstream_inference_cost`` is the provider's own bill, and ``is_byok`` says whether the
-    request ran on the user's own provider key (BYOK). Only then is the upstream cost money spent on top of ``cost``;
-    on every other request OpenRouter reports the same amount in both fields (doc 54 §4.2: all 3,494 answered calls
-    of the first screening round had ``is_byok`` false and ``upstream_inference_cost`` equal to ``cost``).
-    ``is_byok`` counts only as the JSON value true: a string or a number from an untrusted body is not a BYOK flag.
-    """
-    u = usage if isinstance(usage, dict) else {}
-    ptd = u.get("prompt_tokens_details") if isinstance(u.get("prompt_tokens_details"), dict) else {}
-    ctd = u.get("completion_tokens_details") if isinstance(u.get("completion_tokens_details"), dict) else {}
-    cd = u.get("cost_details") if isinstance(u.get("cost_details"), dict) else {}
-    completion, reasoning = _num(u.get("completion_tokens")), _num(ctd.get("reasoning_tokens"))
-    return {
-        "prompt_tokens": _num(u.get("prompt_tokens")), "completion_tokens": completion,
-        "reasoning_tokens": reasoning,
-        "visible_tokens": (completion - reasoning) if completion is not None and reasoning is not None else completion,
-        "cached_tokens": _num(ptd.get("cached_tokens")), "cache_write_tokens": _num(ptd.get("cache_write_tokens")),
-        "cost": _num(u.get("cost")), "upstream_cost": _num(cd.get("upstream_inference_cost")),
-        "is_byok": u.get("is_byok") is True,
-    }
-
-
-def _json_or_none(raw):
-    try:
-        return json.loads(raw) if raw and raw.strip() else None
-    except (ValueError, RecursionError):  # RecursionError: nested deeper than the reader goes, a few KB suffice (t76)
-        return None
-
-
-def _code_and_message(err):
-    if isinstance(err, dict):
-        code = err.get("code")
-        try:
-            code = int(code) if code is not None and not isinstance(code, bool) else None
-        except (TypeError, ValueError, OverflowError):  # OverflowError: json reads 1e999 and Infinity as inf (t76)
-            code = None
-        text = str(err.get("message") or "")
-        meta = err.get("metadata")
-        if isinstance(meta, dict) and meta:
-            # OpenRouter puts the upstream provider's name and raw error here, which is what explains a
-            # schema rejection; keep it short.
-            text += " | metadata: " + json.dumps(meta, ensure_ascii=False)[:300]
-        return code, text[:600]
-    return None, str(err)[:600]
-
-
-def _embedded_error(data):
-    """(code, message) when a 200 body is really an error, else None.
-
-    A non-streaming response can report a provider failure with HTTP 200 (a top-level ``error``, or a choice
-    with ``finish_reason: "error"``); it must never be scored as content.
-    """
-    if data.get("error"):
-        return _code_and_message(data["error"])
-    choices = data.get("choices")
-    if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
-        return None, "the response has no choices"
-    first = choices[0]
-    if first.get("error"):
-        return _code_and_message(first["error"])
-    if first.get("finish_reason") == "error":
-        return None, "finish_reason is error"
-    return None
-
-
-def _error_text(data, raw):
-    if isinstance(data, dict) and data.get("error"):
-        return _code_and_message(data["error"])[1]
-    return (raw or "").strip()[:600]
-
-
-def _retryable(status):
-    """Timeout, rate limit and the 5xx family (a CDN in front of a provider also sends 52x codes)."""
-    return status in (408, 429) or (isinstance(status, int) and 500 <= status <= 599)
-
-
-def _is_redirect(status):
-    return isinstance(status, int) and 300 <= status <= 399
-
-
-def _think_blocks(content):
-    """The reasoning text a model put inside ``<think>`` tags in its content (an unclosed leading block counts)."""
-    blocks = re.findall(r"<think>(.*?)</think>", content, re.S)
-    rest = re.sub(r"<think>.*?</think>", "", content, flags=re.S)
-    if rest.lstrip().startswith("<think>"):
-        blocks.append(rest.lstrip()[len("<think>"):])
-    return blocks
-
-
-def _retry_after_seconds(headers):
-    """Seconds from a Retry-After header (delta-seconds or an HTTP date), or None."""
-    value = (headers or {}).get("retry-after")
-    if value is None:
-        return None
-    try:
-        return max(0.0, float(value))
-    except ValueError:
-        pass
-    try:
-        from email.utils import parsedate_to_datetime
-        import datetime
-        when = parsedate_to_datetime(value)
-        return max(0.0, (when - datetime.datetime.now(when.tzinfo)).total_seconds())
-    except (TypeError, ValueError, IndexError, OverflowError):
-        return None
+# The reply helpers live in cloud_reply.py; this module keeps its earlier private names for them, and re-exports
+# usage_fields (budget.py imports it from here).
+_OPENROUTER_KEY = OPENROUTER_KEY
+_num = num
+_json_or_none = json_or_none
+_code_and_message = code_and_message
+_embedded_error = embedded_error
+_error_text = error_text
+_retryable = retryable
+_is_redirect = is_redirect
+_think_blocks = think_blocks
+_retry_after_seconds = retry_after_seconds
 
 
 class OpenAICompatBackend:
@@ -254,13 +149,27 @@ class OpenAICompatBackend:
     # ── Secrets ──────────────────────────────────────────────────────────────
 
     def redact(self, text):
-        """Remove the key (verbatim) and anything shaped like an OpenRouter key from a string that may reach a
-        record, a log line or the console."""
+        """Remove the key (verbatim) and anything shaped like an OpenRouter, Groq or Cloudflare key from a string that
+        may reach a record, a log line or the console (cloud_reply.scrub_key_shapes)."""
         if not isinstance(text, str):
             return text
         if self._key:
             text = text.replace(self._key, "[REDACTED]")
-        return _OPENROUTER_KEY.sub("[REDACTED]", text) if "sk-or-" in text else text
+        return scrub_key_shapes(text)
+
+    # ── Hooks provider_backend.py overrides (Groq, Cloudflare); OpenRouter's rules here ──
+
+    def _classify_429(self, headers, data, now, retry_after=None):
+        """(kind, wait) of a 429 while a gate is attached: rate_gate.classify_429, OpenRouter's rules."""
+        return classify_429(headers, data, now, retry_after)
+
+    def _response_stop(self, data, answered):
+        """(fatal kind, error) when an HTTP 200 must stop the run before any retry, else None: in free mode, the
+        zero-spend check (free_mode.paid_signal: usage.cost exactly 0, the requested :free model)."""
+        if self.free_target is None:
+            return None
+        why = paid_signal(data, self.free_target, answered=answered)
+        return ("not_free", f"zero-spend guard: {why}") if why else None
 
     # ── Request ──────────────────────────────────────────────────────────────
 
@@ -394,14 +303,14 @@ class OpenAICompatBackend:
                 sources.append(source)
                 if embedded is not None:
                     error = f"provider error inside HTTP 200 (code {embedded[0]}): {embedded[1]}"
-                if self.free_target is not None:
-                    # ── Zero-spend check (free mode): charged, or another model, stops the run before any retry ──
-                    why = paid_signal(data, self.free_target, answered=embedded is None)
-                    if why:
-                        error = f"zero-spend guard: {why}"
-                        resp = data if embedded is None else None
-                        fatal, exhausted = "not_free", False
-                        break
+                # ── Zero-spend check (free mode; a provider's gate): charged, another model, a paid tier or a count
+                #    over the worst case stops the run before any retry ──
+                stop = self._response_stop(data, answered=embedded is None)
+                if stop:
+                    fatal, error = stop
+                    resp = data if embedded is None else None
+                    exhausted = False
+                    break
                 if budget is not None and cost > reservation * (1 + 1e-9) + 1e-12:
                     # ── Cost anomaly: stop now, before any retry can spend again at the wrong price ──
                     resp = data if embedded is None else None
@@ -420,7 +329,7 @@ class OpenAICompatBackend:
                 if code == 429 and self.gate is not None:
                     # A 429 inside a 200 is classified and counted in the streak like the HTTP status; its record names
                     # the kind (and the body's limit_source, which the metadata excerpt above can cut off).
-                    kind = classify_429(headers, data, time.time())[0]
+                    kind = self._classify_429(headers, data, time.time())[0]
                     error += f"; {rate_limit_label(kind, data)}"
                     if kind == "daily":
                         # As terminal as the daily quota's HTTP status: a retry only burns the quota.
@@ -483,7 +392,7 @@ class OpenAICompatBackend:
                 costs.append(0.0)
                 sources.append("unbilled")
                 now = time.time()
-                kind, wait = classify_429(headers, data, now, _retry_after_seconds(headers))
+                kind, wait = self._classify_429(headers, data, now, _retry_after_seconds(headers))
                 error = f"HTTP 429 ({rate_limit_label(kind, data)}): {_error_text(data, raw)}"
                 if kind == "daily":
                     # Untrusted reset: an absurd one resumes at the next 00:00 UTC, formatted without raising.
