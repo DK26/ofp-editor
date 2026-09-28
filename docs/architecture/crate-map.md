@@ -80,6 +80,8 @@ source it names (enabled source, offline refusal, user-started; [agent-runtime.m
 ```toml
 [workspace.lints.rust]
 unsafe_code = "forbid"
+unused_must_use = "deny"   # a discarded witness is an error, not a warning an errors-only agent never sees
+deprecated = "deny"
 
 [workspace.lints.clippy]
 indexing_slicing = "deny"
@@ -90,14 +92,35 @@ panic = "deny"
 unreachable = "deny"
 todo = "deny"
 unimplemented = "deny"
+let_underscore_must_use = "deny"            # `let _ =` cannot discard a witness
+allow_attributes_without_reason = "deny"    # every suppression says why
 ```
 
 - Every crate sets `lints.workspace = true`; format crates add `arithmetic_side_effects = "deny"` so untrusted-offset arithmetic uses
   `checked_*`/`saturating_*` (`AGENTS.md` integer overflow rule).
+- The guidance lints (`unused_must_use`, `deprecated`, `let_underscore_must_use`, `allow_attributes_without_reason`) follow
+  `AGENTS.md` "Diagnostics as Guidance". CI already fails on warnings, so they change what an agent sees while editing, not what can
+  merge (doc 62 §4.3).
+- Suppressions are `#[expect(lint, reason = "…")]`; `#[allow(lint, reason = "…")]` only where a lint fires on some targets or feature
+  sets. Capability lints are silenced only inside the crates §2.3 names.
 - Test code is exempt through clippy's test allowances where a configuration key exists (for example `allow-unwrap-in-tests`,
-  `allow-expect-in-tests`) and `#[cfg_attr(test, allow(...))]` elsewhere. Whether `indexing_slicing` also catches `Index` on maps is
-  [U]; if not, a review grep or small custom lint covers it ([testing-strategy.md §16](testing-strategy.md)).
-- Per-crate `clippy.toml` `disallowed-methods` and `disallowed-types` implement §2.3.
+  `allow-expect-in-tests`) and `#[cfg_attr(test, allow(lint, reason = "…"))]` elsewhere.
+- `indexing_slicing` does **not** flag `Index` on maps: it flagged `v[0]` on a `Vec` but not `m[k]` on a `HashMap<String, u32>`,
+  because clippy lints an indexed type only when its inherent `get` returns `Option` of the index type or a type parameter (doc 62
+  §3.2, probe at clippy `57785c2b`) [V]. `AGENTS.md`'s "any type" rule for maps therefore needs a small custom check (an `xtask`
+  check or a dylint lint; which one is [U]); until it exists, review greps for `[&` on map-typed values.
+- Per-crate `clippy.toml` `disallowed-methods` and `disallowed-types` implement §2.3. Each entry's `reason` is an instruction that
+  names the sanctioned API, and it has no `replacement` unless the call shape is identical: clippy turns a `replacement` into a spanned
+  help, which errors-only agent feeds drop, while a bare `reason` stays a note on the error (doc 62 §3.1–§3.2). For example:
+
+  ```toml
+  disallowed-methods = [
+    { path = "std::process::Command::new", reason = "Wilco crates never spawn processes (AGENTS.md product scope); ask the user to launch Preview through plotroom-preview instead" },
+  ]
+  ```
+
+- Crates that define witness, guard, typestate or sealed-trait APIs carry `trybuild` UI tests in `tests/ui/`, one case per misuse,
+  with committed `.stderr` snapshots (`AGENTS.md` "Negative Compile Tests"; [testing-strategy.md §14](testing-strategy.md)).
 
 ### 2.5 `xtask layers` and cargo-deny
 
@@ -307,3 +330,9 @@ marks and island names in crate, module, format, sidecar and generated-header na
 - Folded from `OWNER-QUESTIONS.md` (answers of 2026-09-27) and the owner's runtime decision (D022 amendment note): §9
   (`plotroom-campaign-flow`, OWQ-13), §10 (`plotroom-model-manager`, `plotroom-mcp`), §11 (`plotroom-cli`, OWQ-14), §12, §14
   (OWQ-01, OWQ-03, OWQ-04), §16. No crate, layer or landing milestone changed.
+
+### Type-driven guidance folded (2026-09-28)
+
+- §2.4 follows `AGENTS.md`'s amendment of 2026-09-28 ("Diagnostics as Guidance", "Negative Compile Tests", applied under the
+  owner's go-ahead): four guidance lints at deny, reasons on suppressions and `clippy.toml` entries, the map-indexing answer from doc 62
+  §3.2, and trybuild UI tests in guard crates. No crate, layer or capability changed.

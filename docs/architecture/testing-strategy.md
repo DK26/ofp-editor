@@ -216,10 +216,12 @@ through the Preview harness on Remastered and CE, plus the manual 1.99 backend
 | Gate | Runs |
 | --- | --- |
 | `cargo fmt --all --check`; `cargo clippy --workspace --all-targets --locked -- -D warnings`; `cargo test --workspace --locked`, doctests included (never `no_run` or `ignore`) | Windows, Ubuntu, macOS |
-| Workspace lints: `unsafe_code = "forbid"`; clippy `indexing_slicing`, `string_slice`, `unwrap_used`, `expect_used`, `panic`, `unreachable`, `todo`, `unimplemented` at deny in production code; `arithmetic_side_effects` in format crates ([crate-map.md §2.4](crate-map.md)) | With clippy |
+| Workspace lints: `unsafe_code = "forbid"`; `unused_must_use` and `deprecated` at deny; clippy `indexing_slicing`, `string_slice`, `unwrap_used`, `expect_used`, `panic`, `unreachable`, `todo`, `unimplemented`, `let_underscore_must_use` and `allow_attributes_without_reason` at deny in production code; `arithmetic_side_effects` in format crates ([crate-map.md §2.4](crate-map.md)) | With clippy |
+| Map-indexing check: a small custom check for `Index` on maps, which `indexing_slicing` misses ([crate-map.md §2.4](crate-map.md); doc 62 §3.2) | With clippy, once it exists |
+| Negative compile tests: `trybuild` UI tests in `tests/ui/` for every witness, guard, typestate and sealed-trait misuse, with committed `.stderr` snapshots (`AGENTS.md` "Negative Compile Tests") | One job on a pinned toolchain, because compiler text changes between releases (which OS: doc 62 OQ5); snapshots change only with a toolchain bump or a reviewed guidance change |
 | `xtask layers`: the declared layer table against `cargo metadata`; the evidence test is that a deliberately bad edge fails | Every push |
 | `cargo-deny`: licence allowlist (GPL-3.0-compatible; bans GPL-2.0-only crates), advisories, banned crates and features per layer | Every push |
-| Per-crate clippy `disallowed-methods`/`disallowed-types` for `std::fs`, `std::process`, `std::net`, `std::env::var` outside the edge crates | With clippy |
+| Per-crate clippy `disallowed-methods`/`disallowed-types` for `std::fs`, `std::process`, `std::net`, `std::env::var` outside the edge crates; each `reason` names the sanctioned API, with no `replacement` unless the call shape is identical ([crate-map.md §2.4](crate-map.md)) | With clippy |
 | REUSE/SPDX check; `Derived-From:` headers on ported files; DG018 records for third-party ports | Every push |
 | Public-hygiene grep: third-party marks and island names in crate, module, format, sidecar and generated-header names; private project names | Every push |
 | `xtask` drift checks: generated code registry, script catalog against its pinned inputs, Standing Orders index, skill index, provenance records | Every push |
@@ -238,9 +240,16 @@ nightly. Property tests use seeded, bounded configurations.
 
 ## 16. Open questions
 
-1. Whether clippy's `indexing_slicing` covers `Index` impls on maps (`map[&key]`); if not, a review grep or a small custom lint
-   enforces `AGENTS.md`'s "any type" rule.
+1. *Answered (2026-09-28, doc 62 §3.2):* clippy's `indexing_slicing` does not cover `Index` on maps (`map[&key]`), so a small custom
+   check enforces `AGENTS.md`'s "any type" rule ([crate-map.md §2.4](crate-map.md)). Still open: an `xtask` check or a dylint lint.
 2. Which clippy configuration keys exempt test code for each lint, and where `cfg_attr(test, allow(...))` is needed instead.
 3. A Metal runner for macOS golden images.
 4. The corpus size and composition for re-match threshold measurements (doc 45 OQ9).
 5. How long CI may run on three OSes before tiers are rebalanced.
+
+## Verification notes
+
+### Type-driven guidance folded (2026-09-28)
+
+- §14 follows `AGENTS.md`'s amendment of 2026-09-28 (doc 62 §8, applied under the owner's go-ahead): the lint row lists the four
+  guidance lints; new rows for the map-indexing check and the pinned trybuild UI-test job; §16 item 1 is answered by doc 62 §3.2's probe.

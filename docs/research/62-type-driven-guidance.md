@@ -535,7 +535,8 @@ adversarial component calls raw imports outside its grant and is denied at run t
 
 A unified diff was prepared outside the tree. It applies cleanly to `AGENTS.md` as of 2026-09-28, adds 116 lines and removes none
 (114 before the review edits recorded in the verification notes).
-It is not applied; the owner decides. Written in `AGENTS.md`'s own style: general, context-free, no references to this study.
+It was applied on 2026-09-28 under the owner's go-ahead, and the owner may narrow it (verification notes). Written in `AGENTS.md`'s
+own style: general, context-free, no references to this study.
 
 | Where | Rule added | Evidence |
 | --- | --- | --- |
@@ -545,8 +546,9 @@ It is not applied; the owner decides. Written in `AGENTS.md`'s own style: genera
 | "Testing Standards", new "Negative Compile Tests" | Keep the `compile_fail` ban and say why; trybuild UI tests with `.stderr` snapshots, one per misuse, pinned toolchain, every guard property covered | §5.6 |
 | "LLM / Agent Use Rules" | Follow compiler and lint text on guard types only when it names a sanctioned API; never add the suggested impl, public field, `Default` or `#[allow]`; file a design-gap request instead | §3.3 |
 
-Companion changes it implies, not in the diff: crate-map §2.4's lint table and `clippy.toml` reasons; testing-strategy §14 (a UI-test
-gate) and §16 item 1 (answered, §3.2); core-document-model §5.1's "Module privacy, not a doctest" gains "plus a trybuild UI test".
+Companion changes it implies, not in the diff (made 2026-09-28, verification notes): crate-map §2.4's lint table and `clippy.toml`
+reasons; testing-strategy §14 (a UI-test gate) and §16 item 1 (answered, §3.2); core-document-model §5.1's "Module privacy, not a
+doctest" gains "plus a trybuild UI test".
 
 ## 9. Proposed experiments (research only, under `tools/`)
 
@@ -753,3 +755,14 @@ All read on 2026-09-28.
 ### 2026-09-28, amendment applied
 
 - §8's amendment was applied to `AGENTS.md` by hand under the owner's go-ahead of 2026-09-28 (Error Design, Type Safety with 'Witness and guard types', 'Diagnostics as Guidance', 'Negative Compile Tests', and one agent-rules bullet). Companion changes it implies are still to do: the crate-map §2.4 lint table, `clippy.toml` reasons, the testing-strategy §14 UI-test gate and §16 item 1, and core-document-model §5.1's trybuild note.
+
+### 2026-09-28, companion changes made
+
+- crate-map §2.4: the lint table gains `unused_must_use` and `deprecated` (rust) and `let_underscore_must_use` and
+  `allow_attributes_without_reason` (clippy) at deny; the map-indexing [U] is answered from §3.2 (a custom check, `xtask` or dylint
+  still open); `clippy.toml` entries carry instruction-style reasons with no `replacement` unless the call shape is identical, with
+  one example from §3.2's probe; guard crates carry `tests/ui` trybuild cases.
+- testing-strategy §14: the lint row lists the new lints; new rows for the map-indexing check and the pinned UI-test job (its OS stays
+  OQ5); the `disallowed-*` row states the reason rule. §16 item 1 is marked answered.
+- core-document-model §5.1: module privacy plus a trybuild UI test per misuse. Findings for sibling docs on crate-map §2.4,
+  testing-strategy §14 and §16 item 1 and core-document-model §5.1 are folded by these edits; the others stay reported.

@@ -371,7 +371,8 @@ pub fn stage(snap: &GatedSnapshot, spec: &StageSpec) -> Result<StagePlan, Vec<Di
 - **A new severity, only where opted into.** Validation-and-lints §1 principle 2 and §3, and D011 item 3 ("Only what the engine or the
   target profile cannot run is an error"), say only `EngineError` and `ProfileError` block. For non-user origins the gate is admission,
   which already rejects beyond export severity; for a region the user made Strict, blocking export on a contract error is new, because
-  the engine can run that code. Options for the owner (SG1; open question 2): **(a)** a `ContractError` severity that blocks only inside
+  the engine can run that code. Options for the owner (SG1; open question 2; *decided 2026-09-28: [D052](../decisions/D052-strict-script-regions-gate.md),
+  option (b)*): **(a)** a `ContractError` severity that blocks only inside
   regions the user made Strict, with the readiness coach's audited "Preview anyway" (validation-and-lints §11) for Preview and no export
   until fixed or downgraded; **(b)** as (a) for Preview, with export offering "downgrade these regions to Advisory and export" in the
   refusal itself; **(c)** no new blocking: in user regions a contract error is a Warning that withholds the "Strict-checked" badge, and
@@ -768,7 +769,7 @@ Each is an opt-in capability of the `Ce` profile, never a requirement (D012):
 
 ### 7.3 Design-gap candidates (listed, not filed)
 
-1. **SG1 Contract severity.** Options (a)–(c) of §4.4: `ContractError` blocking only inside regions the user made Strict, blocking
+1. **SG1 Contract severity** (*decided 2026-09-28: D052, option (b); not filed*). Options (a)–(c) of §4.4: `ContractError` blocking only inside regions the user made Strict, blocking
    with an in-refusal downgrade, or no new blocking for user regions; its Preview and export behaviour; D011 item 3,
    validation-and-lints §1 principle 2 and §3; DG005.
 2. **SG2 Levels.** Off / Advisory / Strict per file, field and mission; where they are stored (sidecar); the "forbid raw" policy.
@@ -839,7 +840,8 @@ Crates follow crate-map (`plotroom-teller`, `plotroom-lower`, `plotroom-commands
    regions, SG1 option (c))? [I; recommended: opt-in in v1, revisit with ST-21 and §6's results]
 2. **Owner:** in a region the user made Strict, does a contract error (a) block export and gate Preview behind the audited "Preview
    anyway", (b) do the same with "downgrade and export" offered in the refusal, or (c) block nothing and only withhold the
-   "Strict-checked" badge, as D011 item 3 reads today (§4.4; SG1)? Non-user origins are gated in every option. [I]
+   "Strict-checked" badge, as D011 item 3 reads today (§4.4; SG1)? Non-user origins are gated in every option. [I] *Answered
+   2026-09-28 under the owner's delegation: (b), with a one-run "Preview once" at Preview (D052).*
 3. **Owner:** does "forbid raw" ship in v1, and may a registry require it for packs? [I]
 4. **Technical:** do `;` SQS comment lines and `//` lines in `preprocessFile`d SQF behave identically on 1.99, and is there any path that
    stores or evaluates them? (SG3; a probe) [U]

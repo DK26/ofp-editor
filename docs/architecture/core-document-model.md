@@ -151,7 +151,9 @@ pub struct LiveTx<'store> { store: &'store mut ProjectStore, token: GroupToken }
 pub struct Scratch { base: Arc<Snapshot>, overlay: Vec<Recorded> }                // a fork for proposals, dialogs, import
 ```
 
-- Module privacy, not a doctest, enforces the single path (`AGENTS.md` bans `compile_fail` doctests; doc 45 §2.1).
+- Module privacy, not a doctest, enforces the single path (`AGENTS.md` bans `compile_fail` doctests; doc 45 §2.1), plus a `trybuild`
+  UI test per misuse (building `LiveTx` outside its module, mutating through a `Guarded<T>`), which proves the path is closed and pins
+  the compiler's guidance text (`AGENTS.md` "Negative Compile Tests"; doc 62 §5.5–§5.6).
 - `LiveTx` applies ops to the live store inside the open group. `Scratch` forks an `Arc<Snapshot>`; dialogs, importers, generators
   and Wilco ghosts build on it, and applying replays **the same op list** on the live store in one group, so what the user previewed
   is exactly what lands (doc 45 §2.1, Tiled's pattern).
