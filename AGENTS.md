@@ -171,6 +171,32 @@ making faster, more useful, and more fun.
   editing (drag on the map, rewire in the graph, pick from menus, visual
   condition builder) over raw text, with raw text always available.
 
+## Friction Review (Required)
+
+Every design and every implementation change must actively look for friction
+and reduce or remove it. Friction is anything that makes a correct action
+slower, harder, more confusing or more error-prone than it needs to be.
+
+- **Three audiences.** Check the change from the point of view of people using
+  the editor, of models using its APIs and tools (Wilco and external agents),
+  and of contributors and coding agents building Plotroom (build, tests,
+  tooling, rules, review).
+- **Look for concrete signs:** extra steps or clicks, waits without feedback,
+  confirmations that add no information, setup the product could do itself,
+  unclear or misleading errors, silent failures, surprising defaults, terms a
+  newcomer would not know, and inputs that are easy to get wrong.
+- **Remove before explaining.** Prefer eliminating a step, choosing a safe
+  default or making the wrong input impossible over documenting a workaround.
+  When friction cannot be removed, make it visible and explain the next
+  action at the point where it occurs.
+- **Measure where possible:** steps, clicks, waits, confirmations, error and
+  repair rates, and tokens or calls for model-facing flows.
+- **Record it.** Friction found but not fixed goes into the friction register
+  under `docs/friction/` with its audience, severity, evidence and proposed
+  removal, and design documents note the frictions they introduce or remove.
+- Reducing friction never weakens the product invariants above: product
+  scope, typed undoable commands, validation and the glass box stay intact.
+
 ## Naming and Trademarks (Required)
 
 - The product name is **Plotroom**. The descriptor "Mission & Campaign
