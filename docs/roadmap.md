@@ -119,6 +119,11 @@ milestone; a milestone closes when all lanes' exit evidence is in.
 | **F** Design and docs | DGs, decisions, doc folds, register, outreach prep | `docs/README.md`, file architecture §8 candidates, doc folds | DG005 registry live | DG017 | OWQ-07 clearance and rename; OWQ-09 reports; OWQ-10 letter | DG003/007/031–033 | DG004/008/035 | DG006, DG012, DG019–DG027 | OWQ-01 (b) wording, legal review |
 | **G** Campaign | Campaign model, compiler, simulator, flow | — | — | — | — | Grey Heron fixture design | All of M5 | Flow with models | Import corpus |
 
+**Priority (D058, owner, 2026-09-28).** The editor comes first: lanes A, B and C (with F in support) have priority through M0–M3.
+Lane D starts no new work; when harness testing resumes it uses cloud models (OpenRouter, Groq, Cloudflare Workers AI), and local
+small-model work (SP-11, local qualification and tuning) moves to a final optimization phase. No agent-started model runs on the
+owner's GPU.
+
 ## 7. What v1 is (definition of done, proposal)
 
 v1.0 ships when each of D004's four things has its evidence (details in
