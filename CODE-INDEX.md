@@ -23,6 +23,7 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 | Record a limitation of the game engine | [`docs/upstream/README.md`](docs/upstream/README.md) (engine-requests register) |
 | Look up editor concepts and engine facts | [`skills/standing-orders/`](skills/standing-orders/SKILL.md), [`skills/mission-primer/`](skills/mission-primer/SKILL.md), docs 03, 04 and 18 |
 | Measure a local model or estimate model cost | [`tools/local-qual/`](tools/local-qual/README.md), [`tools/cost-model/`](tools/cost-model/cost_model.py) |
+| Simulate free-tier rate limits and upstream 429s over a user day | [`tools/quota-sim/`](tools/quota-sim/README.md) |
 
 ## 2. Repository layout (current)
 
@@ -58,7 +59,10 @@ Source navigation index for **Plotroom — Mission & Campaign Editor for Arma: C
 │   │                      backends.py (Ollama and llama-server clients), suites/ (pick, pick-hard, fill, explain, text,
 │   │                      knowledge .json); results/ is git-ignored. A cloud-backend patch (doc 48) is pending and will
 │   │                      change this file list
-│   └── cost-model/        cost_model.py (its JSON output is git-ignored; feeds docs/research/data/cost-model.csv)
+│   ├── cost-model/        cost_model.py (its JSON output is git-ignored; feeds docs/research/data/cost-model.csv)
+│   └── quota-sim/         README.md, quota_sim.py (day replay, strategies S0-S6, CLI), quota_pools.py (pools, congestion,
+│                          endpoints), quota_report.py (metrics, grid, Markdown), test_quota_sim.py, data/ (workload.json,
+│                          limits.json: inputs); results go to a path the caller names
 └── private/               git-ignored local notes; never cite, link or copy from it
 ```
 
@@ -327,3 +331,9 @@ Not newtypes: `DiagCode` is a generated enum (`plotroom-diag`, from the DG005 re
   it: `plotroom-campaign-flow`, `plotroom-model-manager`, `plotroom-mcp`, `plotroom-plugin-host`, `plotroom-registry` and
   `plotroom-cli` name the record that settles them (D036, D037, D043, D038) in their "Owns" cells instead, and the later-crates line
   and the `RegionId` note point to D031 and D034. This resolves the note above. No crate, layer, landing milestone or newtype changed.
+
+### `tools/quota-sim` (2026-09-28)
+
+- A new research tool: a seeded replay of four user days against the free tiers of doc 50 and a congestion model calibrated on one
+  observed upstream-throttling window, for the planned rate-limit doc (52). Its `data/` files are inputs (like `local-qual/suites/`);
+  it writes results only where the caller points it. §1 and §2 list it. No crate, module boundary or newtype changed.

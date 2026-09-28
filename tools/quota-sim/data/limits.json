@@ -1,0 +1,189 @@
+{
+ "as_of": "2026-09-28",
+ "what": "Quota pools, endpoints, upstream-congestion profiles and routing plans for tools/quota-sim.",
+ "status": "Research data, not a decision. No model was run and no keyed API was called to compile it.",
+ "tags": "[V] verified at the cited source on the given date; [V-obs] Plotroom's own run records (not in the repository); [V-3p] third-party figure; [I] our inference or arithmetic; [U] unknown placeholder.",
+ "scope_rule": "Every cloud pool is one account on the user's own sign-in, one account per provider (doc 50 section 1.3; D008). No Plotroom-owned key, proxy or shared account appears anywhere. Every cloud endpoint is unqualified (doc 50 section 5.1; D044): the step-kind readings below are screening plausibility ('plausible'), standing in for a qualification the simulator cannot make.",
+ "day_assumption": "A simulated day starts after 00:00 UTC and ends before the next reset; the user spent no quota earlier that UTC day, and none of the month's Hugging Face credits. [I]",
+ "pools": {
+  "openrouter-free": {
+   "service": "OpenRouter :free variants",
+   "rpm": 20,
+   "rpd": {"free50": 50, "credits10": 1000},
+   "scope": "account, shared by every :free model; more keys or accounts do not raise it",
+   "reset": "00:00 UTC",
+   "upstream_429_counts_daily": false,
+   "source": "docs/research/data/free-llm-services.csv (read 2026-09-27; terms re-read 2026-09-28); doc 48 section 6.0 (read 2026-09-27); limits page re-read 2026-09-27 about 21:50 UTC [V]. Upstream 429s did not raise the daily counter: [V-obs, n = 12, 2026-09-27]. The 1,000/day tier needs 10 credits bought once (about 10.80 USD with the card fee) [V per doc 50 section 5.3]."
+  },
+  "groq-gpt-oss-20b": {
+   "service": "Groq Free plan, openai/gpt-oss-20b",
+   "rpm": 30, "rpd": 1000, "tpm": 8000, "tpd": 200000,
+   "scope": "per model, per organisation",
+   "source": "console.groq.com/docs/rate-limits re-read 2026-09-27 about 21:50 UTC [V]; per-model reading of the organisation scope [I]"
+  },
+  "groq-gpt-oss-120b": {
+   "service": "Groq Free plan, openai/gpt-oss-120b",
+   "rpm": 30, "rpd": 1000, "tpm": 8000, "tpd": 200000,
+   "scope": "per model, per organisation",
+   "source": "as groq-gpt-oss-20b [V 2026-09-27]"
+  },
+  "groq-qwen3.8-27b": {
+   "service": "Groq Free plan, qwen/qwen3.8-27b",
+   "rpm": 30, "rpd": 1000, "tpm": 8000, "tpd": 200000,
+   "scope": "per model, per organisation",
+   "source": "as groq-gpt-oss-20b [V 2026-09-27]"
+  },
+  "cloudflare-neurons": {
+   "service": "Cloudflare Workers AI daily free allowance",
+   "rpm": 300,
+   "neurons_per_day": 10000,
+   "scope": "account; one neuron pool for all models [I that the pool is shared]; whether 300/min is per account [U]",
+   "reset": "00:00 UTC",
+   "source": "Workers AI pricing and limits pages (updated 2026-09-17), re-read 2026-09-27 about 21:50 UTC [V]"
+  },
+  "hf-credits": {
+   "service": "Hugging Face Inference Providers, routed monthly credits",
+   "usd_per_month": 0.10,
+   "scope": "user account; credits apply only to requests routed by Hugging Face; request-rate limits unpublished [U]",
+   "reset": "monthly (day [U])",
+   "source": "HF pricing page re-read 2026-09-27 about 21:50 UTC [V]; an L1 sign-in only after doc 50's spike"
+  },
+  "openrouter-paid": {
+   "service": "Paid pinned endpoint on the same OpenRouter account (S6 only)",
+   "usd_cap_per_day": 0.25,
+   "scope": "the user's hard cap per day [I: a user setting, placeholder value]; funded by the 10 credits bought once (S5), so a free user who has bought them spends nothing new until they run out",
+   "source": "hard caps end in a resumable BudgetLimited state (doc 40 section 6; doc 38 section 3.4) [V per docs]; a negative balance returns 402 even on free models (doc 48 section 6.0) [V], which the cap prevents"
+  }
+ },
+ "endpoints": {
+  "or-qwen3.8-27b-free": {
+   "provider": "openrouter", "pool": "openrouter-free", "host": "openrouter-free:modelrun", "congestion": "openrouter-free",
+   "model": "qwen/qwen3.8-27b:free (ModelRun fp4; ZDR per request; reasoning off)",
+   "kinds": {"PICK": "plausible", "FILL": "plausible", "TEXT": "plausible", "COMPOSE": "plausible", "EXPLAIN": "plausible"},
+   "reasoning_tokens": 0, "cache_credit": false,
+   "source": "limits research table 2026-09-27 (structured_outputs listed; one correct strict Pick of one answered) [V; V-obs n = 1]"
+  },
+  "or-gemma-4-26b-a4b-free": {
+   "provider": "openrouter", "pool": "openrouter-free", "host": "openrouter-free:google-ai-studio", "congestion": "openrouter-free",
+   "model": "google/gemma-4-26b-a4b-it:free (Google AI Studio; privacy tier 1: prompts kept 55 days, no training)",
+   "kinds": {"PICK": "plausible", "FILL": "weak", "TEXT": "plausible", "COMPOSE": "plausible", "EXPLAIN": "plausible"},
+   "reasoning_tokens": 0, "cache_credit": false,
+   "excluded_by": "D046 item 2 (zdr: true and data_collection: 'deny' by default; this host keeps prompts 55 days) and D045 item 7 (Google AI Studio's free tier is never a preset). Kept here to document why it is out; no routing plan may name it (a unit test checks it).",
+   "source": "response_format only, no enforced schema [V endpoint read 2026-09-27]; step kinds [I]"
+  },
+  "groq-gpt-oss-20b": {
+   "provider": "groq", "pool": "groq-gpt-oss-20b", "host": "groq", "congestion": "other-free",
+   "model": "openai/gpt-oss-20b (strict: true; reasoning mandatory, lowest 'low')",
+   "kinds": {"PICK": "plausible", "FILL": "plausible", "TEXT": "weak", "COMPOSE": "plausible", "EXPLAIN": "plausible"},
+   "reasoning_tokens": 300, "cache_credit": true,
+   "source": "strict constrained decoding [V per doc 50]; 'cached tokens do not count towards your rate limits', caching automatic on gpt-oss [V]; 300 reasoning tokens per call at 'low' [I, as doc 50 assumes]"
+  },
+  "groq-gpt-oss-120b": {
+   "provider": "groq", "pool": "groq-gpt-oss-120b", "host": "groq", "congestion": "other-free",
+   "model": "openai/gpt-oss-120b (strict: true; reasoning mandatory, lowest 'low')",
+   "kinds": {"PICK": "plausible", "FILL": "plausible", "TEXT": "plausible", "COMPOSE": "plausible", "EXPLAIN": "plausible"},
+   "reasoning_tokens": 300, "cache_credit": true,
+   "source": "as groq-gpt-oss-20b [V per doc 50; I step kinds]"
+  },
+  "groq-qwen3.8-27b": {
+   "provider": "groq", "pool": "groq-qwen3.8-27b", "host": "groq", "congestion": "other-free",
+   "model": "qwen/qwen3.8-27b (strict: true; reasoning off)",
+   "kinds": {"PICK": "plausible", "FILL": "plausible", "TEXT": "plausible", "COMPOSE": "plausible", "EXPLAIN": "plausible"},
+   "reasoning_tokens": 0, "cache_credit": false,
+   "source": "same weights as the OpenRouter :free Qwen; Groq precision [U]; no cache credit assumed [I]"
+  },
+  "cf-granite-4.0-h-micro": {
+   "provider": "cloudflare", "pool": "cloudflare-neurons", "host": "cloudflare", "congestion": "other-free",
+   "model": "@cf/ibm-granite/granite-4.0-h-micro",
+   "kinds": {"PICK": "plausible", "FILL": "weak", "TEXT": "weak", "COMPOSE": "no", "EXPLAIN": "plausible"},
+   "neurons_per_mtok": [1542, 10158],
+   "reasoning_tokens": 0, "cache_credit": false,
+   "source": "neuron rates, Workers AI pricing page (updated 2026-09-17) [V]; JSON mode not guaranteed [V per doc 50]; step kinds [I per doc 53]"
+  },
+  "cf-gemma-4-26b-a4b": {
+   "provider": "cloudflare", "pool": "cloudflare-neurons", "host": "cloudflare", "congestion": "other-free",
+   "model": "@cf/google/gemma-4-26b-a4b-it",
+   "kinds": {"PICK": "plausible", "FILL": "weak", "TEXT": "plausible", "COMPOSE": "plausible", "EXPLAIN": "plausible"},
+   "neurons_per_mtok": [9091, 27273],
+   "reasoning_tokens": 0, "cache_credit": false,
+   "source": "as cf-granite-4.0-h-micro [V rates; I step kinds]"
+  },
+  "hf-qwen3-4b-2507": {
+   "provider": "huggingface", "pool": "hf-credits", "host": "hf-router:nscale", "congestion": "other-free",
+   "model": "Qwen/Qwen3-4B-Instruct-2507 at nscale via the HF router",
+   "kinds": {"PICK": "plausible", "FILL": "weak", "TEXT": "weak", "COMPOSE": "no", "EXPLAIN": "unknown"},
+   "usd_per_mtok": [0.01, 0.03],
+   "reasoning_tokens": 0, "cache_credit": false,
+   "source": "price and schema flag, HF router snapshot 2026-09-27 [V-3p]; step kinds from local Q4 preliminary Pick results [I]"
+  },
+  "or-paid-gemma-4-26b-a4b": {
+   "provider": "openrouter", "pool": "openrouter-paid", "host": "paid:deepinfra", "congestion": "paid",
+   "model": "google/gemma-4-26b-a4b-it, deepinfra/fp8, pinned, on OpenRouter's ZDR list",
+   "kinds": {"PICK": "plausible", "FILL": "plausible", "TEXT": "plausible", "COMPOSE": "plausible", "EXPLAIN": "plausible"},
+   "usd_per_mtok": [0.07, 0.34],
+   "reasoning_tokens": 0, "cache_credit": false,
+   "source": "doc 50 section 5.3 (prices 2026-09-27) [V]; schema flag true at deepinfra [V per the limits research table]; step kinds [I]"
+  },
+  "local-gpu-4b": {
+   "provider": "local", "local": true,
+   "model": "a 3-4B session model on an 8 GB GPU (Gemma 4 E4B QAT or Qwen3.5-4B, Q4), one request at a time",
+   "kinds": {"PICK": "measured-pass", "FILL": "measured-pass", "TEXT": "weak", "COMPOSE": "no", "EXPLAIN": "measured-weak"},
+   "latency_s": {"pick": 2.7, "fill_enum": 3.0, "extract": 3.0},
+   "source": "step kinds from docs 44/46 [V per docs]; latency: product-capsule Pick estimate 2.7-5.3 s from measured prompt and generation rates (lower bound used) [I on V]; Fill [I]"
+  },
+  "local-cpu-tiny": {
+   "provider": "local", "local": true,
+   "model": "a tiny (<= 1-2B) CPU model, first stage of doc 53's confidence cascade, one request at a time",
+   "kinds": {"PICK": "plausible", "FILL": "plausible", "TEXT": "no", "COMPOSE": "no", "EXPLAIN": "no"},
+   "latency_s": {"pick": 1.5, "fill_enum": 3.0, "extract": 3.0},
+   "source": "doc 53 section 4.3: a tiny CPU model answers in 0.5-3 s; escalates 13-33% [V range per doc 53]; unmeasured on our suites, needs an owner decision (two-stage role binding) [I]; Fill as per-field Picks (doc 53 section 4.4) [I]"
+  }
+ },
+ "congestion_profiles": {
+  "observed": {
+   "mean_congested_s": 1200, "mean_clear_s": 90, "p429_congested": 0.97, "p429_clear": 0.05,
+   "tag": "[V-obs] calibrated to the one observed window (2026-09-27 20:17-20:35 UTC, qwen3.8-27b:free): 12 of 13 attempts (0.92) were upstream 429s and the throttling outlasted 15 min; a stationary congested share of 1200 / 1290 = 0.93 gives an attempt failure share of 0.93 x 0.97 + 0.07 x 0.05 = 0.91 (unit-tested). Episode and gap lengths [I]; one window only [U] for other hours and hosts."
+  },
+  "moderate": {
+   "mean_congested_s": 600, "mean_clear_s": 1800, "p429_congested": 0.9, "p429_clear": 0.02,
+   "tag": "[U] placeholder: the host is congested a quarter of the time, in 10-minute episodes"
+  },
+  "low": {
+   "mean_congested_s": 120, "mean_clear_s": 7200, "p429_congested": 0.9, "p429_clear": 0.005,
+   "tag": "[U] placeholder for dedicated free capacity (Groq, Cloudflare, the HF router): never called by Plotroom"
+  },
+  "paid": {
+   "mean_congested_s": 60, "mean_clear_s": 36000, "p429_congested": 0.5, "p429_clear": 0.001,
+   "tag": "[U] placeholder for a paid pinned endpoint. It matches 9 of the 11 paid pinned hosts screened on 2026-09-27 (22:18-23:30 UTC; 3 upstream 429s in 2,296 attempts) and is optimistic for the other 2, which refused 23% and 32% of their attempts for 7-10 minutes [V-obs]."
+  },
+  "fail_latency_s": [0.35, 0.56],
+  "fail_latency_tag": "[V-obs] upstream 429s came back in 0.35-0.56 s"
+ },
+ "congestion_levels": {
+  "note": "A scenario's level maps each endpoint's congestion class to a profile. 'observed' applies the one measured window to OpenRouter :free hosts only, because only they were measured; 'stress' also throttles every other free host [U] to test what S5 and S6 add.",
+  "none": {"openrouter-free": "low", "other-free": "low", "paid": "paid"},
+  "moderate": {"openrouter-free": "moderate", "other-free": "low", "paid": "paid"},
+  "observed": {"openrouter-free": "observed", "other-free": "low", "paid": "paid"},
+  "stress": {"openrouter-free": "observed", "other-free": "moderate", "paid": "paid"}
+ },
+ "routing_plans": {
+  "note": "Preference order per step kind [I]: strict-schema and ZDR endpoints first for Pick and Fill, the largest plausible writers first for text. Only 'plausible' or 'measured-pass' entries may appear, and no endpoint with 'excluded_by' (unit tests check both). Content-policy bands (D047) are not modelled: filtering them first can only shrink these lists.",
+  "single": {
+   "PICK": ["or-qwen3.8-27b-free"], "FILL": ["or-qwen3.8-27b-free"], "TEXT": ["or-qwen3.8-27b-free"],
+   "COMPOSE": ["or-qwen3.8-27b-free"], "EXPLAIN": ["or-qwen3.8-27b-free"]
+  },
+  "multi": {
+   "PICK": ["groq-gpt-oss-20b", "groq-qwen3.8-27b", "or-qwen3.8-27b-free", "hf-qwen3-4b-2507", "cf-granite-4.0-h-micro", "cf-gemma-4-26b-a4b", "groq-gpt-oss-120b"],
+   "FILL": ["groq-gpt-oss-20b", "groq-qwen3.8-27b", "groq-gpt-oss-120b", "or-qwen3.8-27b-free"],
+   "TEXT": ["or-qwen3.8-27b-free", "groq-qwen3.8-27b", "groq-gpt-oss-120b", "cf-gemma-4-26b-a4b"],
+   "COMPOSE": ["groq-gpt-oss-120b", "groq-qwen3.8-27b", "or-qwen3.8-27b-free", "cf-gemma-4-26b-a4b", "groq-gpt-oss-20b"],
+   "EXPLAIN": ["groq-gpt-oss-120b", "groq-qwen3.8-27b", "or-qwen3.8-27b-free", "cf-gemma-4-26b-a4b", "cf-granite-4.0-h-micro", "groq-gpt-oss-20b"]
+  },
+  "paid_fallback": "or-paid-gemma-4-26b-a4b"
+ },
+ "not_simulated": {
+  "Ollama Cloud Free": "1 concurrent request; allowance and starter models unpublished [U]",
+  "OVHcloud anonymous": "2 requests/min per IP per model; screening only, no preset without OVHcloud's written agreement (doc 50)",
+  "Google AI Studio, Mistral, Z.ai, NVIDIA trial, Cerebras, Cohere": "no preset under doc 50 (training, terms, trials or content policy)"
+ }
+}

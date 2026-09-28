@@ -1,0 +1,1700 @@
+{
+ "as_of": "2026-09-28",
+ "what": "Sim-ready workload for tools/quota-sim: Wilco's workflows as layers of decision groups, and four user days.",
+ "source": "Decision groups, capsule token sizes and repair rates: tools/cost-model/cost_model.py (as_of 2026-09-27). Layer order and user days: the research workload profile for the rate-limit question (2026-09-28), our reading of doc 25 section 4.1 and doc 38 section 8 [I]. Lean token sizes: doc 48 section 1.2 battery means [V]. Designed cached share: arithmetic on the cost model's capsule layout (doc 40 section 4.1) [I]: the read share of strategy C's input tokens on deepseek-flash (automatic prefix caching, the closest cost-model analogue of Groq's), at Standard K (designed_cached_share) and at K = 1 (designed_cached_share_k1, used by every strategy that runs K = 1 on the cloud; lower because no per-decision breakpoint is shared by sibling samples). A unit test recomputes both from the cost model.",
+ "tags": "[V] verified; [V-obs] Plotroom's own run records (not in the repository); [I] inference or arithmetic; [U] unknown.",
+ "constants": {
+  "finding_tokens": 150,
+  "variant_note_tokens": 20,
+  "repair_rate": {
+   "pick": 0.03,
+   "fill_enum": 0.08,
+   "extract": 0.1,
+   "fill_text": 0.12,
+   "compose": 0.25,
+   "explain": 0.05
+  },
+  "repair_rate_tag": "[U] cost model placeholders, not measured",
+  "presets": {
+   "standard": {
+    "K_pick": 3,
+    "K_creative": 2,
+    "R": 2
+   },
+   "quick": {
+    "K_pick": 1,
+    "K_creative": 1,
+    "R": 1
+   }
+  },
+  "P_REASK": 0.2,
+  "P_CASCADE": 0.23,
+  "cascade_tag": "doc 53 section 4.3: tiny local stage re-asks 20% [U] and escalates 13-33% (23% midpoint) [V range, I point]. The 13-33% range was measured on 3-4B models (Granite 4.1 3B, Qwen3.5-4B; n = 30 menus, in-sample), not on a 0.4-1B model, which would likely escalate more [U].",
+  "latency_cloud_s": {
+   "pick": 1.0,
+   "fill_enum": 1.4,
+   "extract": 1.6,
+   "fill_text": 2.0,
+   "compose": 4.0,
+   "explain": 2.5
+  },
+  "latency_cloud_tag": "[I] first chunk 0.73-3.14 s on doc 48 section 1.1 candidates plus short outputs",
+  "cloud_concurrency": 8,
+  "concurrency_tag": "doc 38 section 4.5: <= 8 concurrent model calls [I placeholder]; local 1"
+ },
+ "step_kind_map": {
+  "pick": "PICK",
+  "fill_enum": "FILL",
+  "extract": "FILL",
+  "fill_text": "TEXT",
+  "compose": "COMPOSE",
+  "explain": "EXPLAIN"
+ },
+ "workloads": {
+  "campaign-from-brief": {
+   "desc": "8-mission campaign, doc 25 \u00a74.1/\u00a74.5 (S6, S8 deterministic; S9 excluded)",
+   "interactive": false,
+   "designed_cached_share": 0.658,
+   "designed_cached_share_k1": 0.439,
+   "kind": "layers",
+   "layers": [
+    {
+     "label": "S0 intake Fills",
+     "phase": "foreground",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S0 intake Fill (quote-checked)",
+       "decision_kind": "s0",
+       "shape": "extract",
+       "role": "router",
+       "n": 5,
+       "Kc": "one",
+       "bulk": false,
+       "tin": 1470,
+       "tout": 120,
+       "lean_in": 431,
+       "lean_out": 50
+      }
+     ]
+    },
+    {
+     "label": "S1 premise cards",
+     "phase": "foreground",
+     "gate_s": 120,
+     "gate": "premise pick (user)",
+     "items": [
+      {
+       "group": "S1 premise cards",
+       "decision_kind": "s1",
+       "shape": "fill_text",
+       "role": "writer",
+       "n": 3,
+       "Kc": "one",
+       "bulk": false,
+       "tin": 2140,
+       "tout": 250,
+       "lean_in": 162,
+       "lean_out": 19
+      }
+     ]
+    },
+    {
+     "label": "S2 bible rows",
+     "phase": "background",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S2 bible rows",
+       "decision_kind": "s2row",
+       "shape": "fill_text",
+       "role": "writer",
+       "n": 10,
+       "Kc": "creative",
+       "bulk": false,
+       "tin": 2640,
+       "tout": 150,
+       "lean_in": 162,
+       "lean_out": 19
+      }
+     ]
+    },
+    {
+     "label": "S2 home-town picks",
+     "phase": "background",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S2 home-town picks",
+       "decision_kind": "s2pick",
+       "shape": "pick",
+       "role": "router",
+       "n": 5,
+       "Kc": "pick",
+       "bulk": false,
+       "tin": 2320,
+       "tout": 45,
+       "lean_in": 312,
+       "lean_out": 7
+      }
+     ]
+    },
+    {
+     "label": "S3 graph-shape pick",
+     "phase": "background",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S3 graph-shape pick",
+       "decision_kind": "s3shape",
+       "shape": "pick",
+       "role": "router",
+       "n": 1,
+       "Kc": "pick",
+       "bulk": false,
+       "tin": 2420,
+       "tout": 45,
+       "lean_in": 312,
+       "lean_out": 7
+      }
+     ]
+    },
+    {
+     "label": "S3 beat picks",
+     "phase": "background",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S3 beat picks",
+       "decision_kind": "s3beat",
+       "shape": "pick",
+       "role": "router",
+       "n": 8,
+       "Kc": "pick",
+       "bulk": false,
+       "tin": 2420,
+       "tout": 45,
+       "lean_in": 312,
+       "lean_out": 7
+      }
+     ]
+    },
+    {
+     "label": "S3 node names",
+     "phase": "background",
+     "gate_s": 300,
+     "gate": "outline approval (user, Standard)",
+     "items": [
+      {
+       "group": "S3 node names",
+       "decision_kind": "s3names",
+       "shape": "fill_text",
+       "role": "writer",
+       "n": 1,
+       "Kc": "creative",
+       "bulk": false,
+       "tin": 2540,
+       "tout": 120,
+       "lean_in": 162,
+       "lean_out": 19
+      }
+     ]
+    },
+    {
+     "label": "S4 consequence-archetype picks",
+     "phase": "background",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S4 consequence-archetype picks",
+       "decision_kind": "s4pick",
+       "shape": "pick",
+       "role": "router",
+       "n": 4,
+       "Kc": "pick",
+       "bulk": false,
+       "tin": 2520,
+       "tout": 45,
+       "lean_in": 312,
+       "lean_out": 7
+      }
+     ]
+    },
+    {
+     "label": "S4 guard constants",
+     "phase": "background",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S4 guard constants",
+       "decision_kind": "s4fill",
+       "shape": "fill_enum",
+       "role": "router",
+       "n": 4,
+       "Kc": "one",
+       "bulk": false,
+       "tin": 2780,
+       "tout": 70,
+       "lean_in": 431,
+       "lean_out": 50
+      }
+     ]
+    },
+    {
+     "label": "S5 site picks (1 per mission)",
+     "phase": "background",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S5 concept picks (6 kinds x 8 missions)",
+       "decision_kind": "s5pick",
+       "shape": "pick",
+       "role": "router",
+       "n": 8,
+       "Kc": "pick",
+       "bulk": false,
+       "tin": 2620,
+       "tout": 45,
+       "lean_in": 312,
+       "lean_out": 7
+      }
+     ]
+    },
+    {
+     "label": "S5 template picks (1 per mission)",
+     "phase": "background",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S5 concept picks (6 kinds x 8 missions)",
+       "decision_kind": "s5pick",
+       "shape": "pick",
+       "role": "router",
+       "n": 8,
+       "Kc": "pick",
+       "bulk": false,
+       "tin": 2620,
+       "tout": 45,
+       "lean_in": 312,
+       "lean_out": 7
+      }
+     ]
+    },
+    {
+     "label": "S5 other concept picks (4 per mission)",
+     "phase": "background",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S5 concept picks (6 kinds x 8 missions)",
+       "decision_kind": "s5pick",
+       "shape": "pick",
+       "role": "router",
+       "n": 32,
+       "Kc": "pick",
+       "bulk": false,
+       "tin": 2620,
+       "tout": 45,
+       "lean_in": 312,
+       "lean_out": 7
+      }
+     ]
+    },
+    {
+     "label": "S5 concept enum fills",
+     "phase": "background",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S5 concept enum fills",
+       "decision_kind": "s5fill",
+       "shape": "fill_enum",
+       "role": "router",
+       "n": 8,
+       "Kc": "one",
+       "bulk": false,
+       "tin": 2880,
+       "tout": 70,
+       "lean_in": 431,
+       "lean_out": 50
+      }
+     ]
+    },
+    {
+     "label": "S7 text slots (22 x 8, all independent)",
+     "phase": "background",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S7 text slots (22 x 8 missions)",
+       "decision_kind": "s7",
+       "shape": "fill_text",
+       "role": "writer",
+       "n": 176,
+       "Kc": "creative",
+       "bulk": true,
+       "tin": 3040,
+       "tout": 110,
+       "lean_in": 162,
+       "lean_out": 19
+      }
+     ]
+    }
+   ]
+  },
+  "populate-town": {
+   "desc": "doc 38 \u00a78.2 (chat start: IntentFill, then one composition Pick)",
+   "interactive": true,
+   "designed_cached_share": 0.479,
+   "designed_cached_share_k1": 0.0,
+   "kind": "layers",
+   "layers": [
+    {
+     "label": "IntentFill",
+     "phase": "interactive",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "IntentFill (chat start)",
+       "decision_kind": "intent",
+       "shape": "extract",
+       "role": "router",
+       "n": 1,
+       "Kc": "one",
+       "bulk": false,
+       "tin": 1260,
+       "tout": 120,
+       "lean_in": 431,
+       "lean_out": 50
+      }
+     ]
+    },
+    {
+     "label": "composition Pick",
+     "phase": "interactive",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "composition Pick (+probability-of-presence reference)",
+       "decision_kind": "comp",
+       "shape": "pick",
+       "role": "router",
+       "n": 1,
+       "Kc": "pick",
+       "bulk": false,
+       "tin": 2927,
+       "tout": 45,
+       "lean_in": 312,
+       "lean_out": 7
+      }
+     ]
+    }
+   ]
+  },
+  "write-briefing": {
+   "desc": "doc 38 \u00a78.3, 11 slots mapped in parallel",
+   "interactive": true,
+   "designed_cached_share": 0.687,
+   "designed_cached_share_k1": 0.51,
+   "kind": "layers",
+   "layers": [
+    {
+     "label": "briefing slot Fills",
+     "phase": "interactive",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "briefing slot Fills",
+       "decision_kind": "brief",
+       "shape": "fill_text",
+       "role": "writer",
+       "n": 11,
+       "Kc": "creative",
+       "bulk": true,
+       "tin": 3220,
+       "tout": 90,
+       "lean_in": 162,
+       "lean_out": 19
+      }
+     ]
+    }
+   ]
+  },
+  "cutscene-director": {
+   "desc": "doc 32 \u00a75.3 30-second intro",
+   "interactive": true,
+   "designed_cached_share": 0.522,
+   "designed_cached_share_k1": 0.233,
+   "kind": "layers",
+   "layers": [
+    {
+     "label": "IntentFill",
+     "phase": "interactive",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "IntentFill",
+       "decision_kind": "intent",
+       "shape": "extract",
+       "role": "router",
+       "n": 1,
+       "Kc": "one",
+       "bulk": false,
+       "tin": 1280,
+       "tout": 120,
+       "lean_in": 431,
+       "lean_out": 50
+      }
+     ]
+    },
+    {
+     "label": "shot template picks + music pick",
+     "phase": "interactive",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "cine.suggest template picks (4 shots)",
+       "decision_kind": "cpick",
+       "shape": "pick",
+       "role": "router",
+       "n": 4,
+       "Kc": "pick",
+       "bulk": false,
+       "tin": 2230,
+       "tout": 45,
+       "lean_in": 312,
+       "lean_out": 7
+      },
+      {
+       "group": "music pick",
+       "decision_kind": "mpick",
+       "shape": "pick",
+       "role": "router",
+       "n": 1,
+       "Kc": "pick",
+       "bulk": false,
+       "tin": 2230,
+       "tout": 45,
+       "lean_in": 312,
+       "lean_out": 7
+      }
+     ]
+    },
+    {
+     "label": "per-shot fills + title + radio chatter Compose",
+     "phase": "interactive",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "cine.fill per shot (subject, mood, duration, caption)",
+       "decision_kind": "cfill",
+       "shape": "fill_enum",
+       "role": "router",
+       "n": 4,
+       "Kc": "one",
+       "bulk": false,
+       "tin": 2490,
+       "tout": 90,
+       "lean_in": 431,
+       "lean_out": 50
+      },
+      {
+       "group": "title card text",
+       "decision_kind": "title",
+       "shape": "fill_text",
+       "role": "writer",
+       "n": 1,
+       "Kc": "creative",
+       "bulk": false,
+       "tin": 2350,
+       "tout": 40,
+       "lean_in": 162,
+       "lean_out": 19
+      },
+      {
+       "group": "screenplay.write radio chatter (Compose, 4 lines)",
+       "decision_kind": "screen",
+       "shape": "compose",
+       "role": "writer",
+       "n": 1,
+       "Kc": "creative",
+       "bulk": false,
+       "tin": 3840,
+       "tout": 250,
+       "lean_in": 3840,
+       "lean_out": 250
+      }
+     ]
+    },
+    {
+     "label": "critique",
+     "phase": "interactive",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "cine.critique (phrase lint findings)",
+       "decision_kind": "crit",
+       "shape": "explain",
+       "role": "explainer",
+       "n": 1,
+       "Kc": "one",
+       "bulk": false,
+       "tin": 2910,
+       "tout": 200,
+       "lean_in": 305,
+       "lean_out": 84
+      }
+     ]
+    }
+   ]
+  },
+  "session-30min": {
+   "desc": "12 requests over 30 min (4 explain/teach, 5 small edits, 3 lint fixes x 2 findings)",
+   "interactive": true,
+   "designed_cached_share": 0.673,
+   "designed_cached_share_k1": 0.577,
+   "kind": "session",
+   "spacing_s": 150,
+   "requests": [
+    {
+     "label": "request 1 (edit)",
+     "layers": [
+      {
+       "label": "edit L1",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "IntentFill per request",
+         "decision_kind": "intent",
+         "shape": "extract",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 1270,
+         "tout": 120,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      },
+      {
+       "label": "edit L2",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "edit Picks",
+         "decision_kind": "editpick",
+         "shape": "pick",
+         "role": "router",
+         "n": 1,
+         "Kc": "pick",
+         "bulk": false,
+         "tin": 2120,
+         "tout": 45,
+         "lean_in": 312,
+         "lean_out": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "request 2 (explain)",
+     "layers": [
+      {
+       "label": "explain L1",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "IntentFill per request",
+         "decision_kind": "intent",
+         "shape": "extract",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 1270,
+         "tout": 120,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      },
+      {
+       "label": "explain L2",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "explain/teach answers",
+         "decision_kind": "explainer",
+         "shape": "explain",
+         "role": "explainer",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 3660,
+         "tout": 250,
+         "lean_in": 305,
+         "lean_out": 84
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "request 3 (lintfix)",
+     "layers": [
+      {
+       "label": "lintfix L1",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "IntentFill per request",
+         "decision_kind": "intent",
+         "shape": "extract",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 1270,
+         "tout": 120,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      },
+      {
+       "label": "lintfix L2",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "lint-fix Picks among computed fixes",
+         "decision_kind": "fixpick",
+         "shape": "pick",
+         "role": "router",
+         "n": 2,
+         "Kc": "pick",
+         "bulk": false,
+         "tin": 2020,
+         "tout": 45,
+         "lean_in": 312,
+         "lean_out": 7
+        },
+        {
+         "group": "finding explanations",
+         "decision_kind": "explainer",
+         "shape": "explain",
+         "role": "explainer",
+         "n": 2,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 2550,
+         "tout": 120,
+         "lean_in": 305,
+         "lean_out": 84
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "request 4 (edit)",
+     "layers": [
+      {
+       "label": "edit L1",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "IntentFill per request",
+         "decision_kind": "intent",
+         "shape": "extract",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 1270,
+         "tout": 120,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      },
+      {
+       "label": "edit L2",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "edit Picks",
+         "decision_kind": "editpick",
+         "shape": "pick",
+         "role": "router",
+         "n": 1,
+         "Kc": "pick",
+         "bulk": false,
+         "tin": 2120,
+         "tout": 45,
+         "lean_in": 312,
+         "lean_out": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "request 5 (explain)",
+     "layers": [
+      {
+       "label": "explain L1",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "IntentFill per request",
+         "decision_kind": "intent",
+         "shape": "extract",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 1270,
+         "tout": 120,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      },
+      {
+       "label": "explain L2",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "explain/teach answers",
+         "decision_kind": "explainer",
+         "shape": "explain",
+         "role": "explainer",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 3660,
+         "tout": 250,
+         "lean_in": 305,
+         "lean_out": 84
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "request 6 (edit+fill)",
+     "layers": [
+      {
+       "label": "edit+fill L1",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "IntentFill per request",
+         "decision_kind": "intent",
+         "shape": "extract",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 1270,
+         "tout": 120,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      },
+      {
+       "label": "edit+fill L2",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "edit Picks",
+         "decision_kind": "editpick",
+         "shape": "pick",
+         "role": "router",
+         "n": 1,
+         "Kc": "pick",
+         "bulk": false,
+         "tin": 2120,
+         "tout": 45,
+         "lean_in": 312,
+         "lean_out": 7
+        }
+       ]
+      },
+      {
+       "label": "edit+fill L3",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "edit parameter Fills",
+         "decision_kind": "editfill",
+         "shape": "fill_enum",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 2380,
+         "tout": 70,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "request 7 (lintfix)",
+     "layers": [
+      {
+       "label": "lintfix L1",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "IntentFill per request",
+         "decision_kind": "intent",
+         "shape": "extract",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 1270,
+         "tout": 120,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      },
+      {
+       "label": "lintfix L2",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "lint-fix Picks among computed fixes",
+         "decision_kind": "fixpick",
+         "shape": "pick",
+         "role": "router",
+         "n": 2,
+         "Kc": "pick",
+         "bulk": false,
+         "tin": 2020,
+         "tout": 45,
+         "lean_in": 312,
+         "lean_out": 7
+        },
+        {
+         "group": "finding explanations",
+         "decision_kind": "explainer",
+         "shape": "explain",
+         "role": "explainer",
+         "n": 2,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 2550,
+         "tout": 120,
+         "lean_in": 305,
+         "lean_out": 84
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "request 8 (explain)",
+     "layers": [
+      {
+       "label": "explain L1",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "IntentFill per request",
+         "decision_kind": "intent",
+         "shape": "extract",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 1270,
+         "tout": 120,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      },
+      {
+       "label": "explain L2",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "explain/teach answers",
+         "decision_kind": "explainer",
+         "shape": "explain",
+         "role": "explainer",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 3660,
+         "tout": 250,
+         "lean_in": 305,
+         "lean_out": 84
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "request 9 (edit)",
+     "layers": [
+      {
+       "label": "edit L1",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "IntentFill per request",
+         "decision_kind": "intent",
+         "shape": "extract",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 1270,
+         "tout": 120,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      },
+      {
+       "label": "edit L2",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "edit Picks",
+         "decision_kind": "editpick",
+         "shape": "pick",
+         "role": "router",
+         "n": 1,
+         "Kc": "pick",
+         "bulk": false,
+         "tin": 2120,
+         "tout": 45,
+         "lean_in": 312,
+         "lean_out": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "request 10 (edit+fill)",
+     "layers": [
+      {
+       "label": "edit+fill L1",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "IntentFill per request",
+         "decision_kind": "intent",
+         "shape": "extract",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 1270,
+         "tout": 120,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      },
+      {
+       "label": "edit+fill L2",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "edit Picks",
+         "decision_kind": "editpick",
+         "shape": "pick",
+         "role": "router",
+         "n": 1,
+         "Kc": "pick",
+         "bulk": false,
+         "tin": 2120,
+         "tout": 45,
+         "lean_in": 312,
+         "lean_out": 7
+        }
+       ]
+      },
+      {
+       "label": "edit+fill L3",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "edit parameter Fills",
+         "decision_kind": "editfill",
+         "shape": "fill_enum",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 2380,
+         "tout": 70,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "request 11 (lintfix)",
+     "layers": [
+      {
+       "label": "lintfix L1",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "IntentFill per request",
+         "decision_kind": "intent",
+         "shape": "extract",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 1270,
+         "tout": 120,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      },
+      {
+       "label": "lintfix L2",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "lint-fix Picks among computed fixes",
+         "decision_kind": "fixpick",
+         "shape": "pick",
+         "role": "router",
+         "n": 2,
+         "Kc": "pick",
+         "bulk": false,
+         "tin": 2020,
+         "tout": 45,
+         "lean_in": 312,
+         "lean_out": 7
+        },
+        {
+         "group": "finding explanations",
+         "decision_kind": "explainer",
+         "shape": "explain",
+         "role": "explainer",
+         "n": 2,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 2550,
+         "tout": 120,
+         "lean_in": 305,
+         "lean_out": 84
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "request 12 (explain)",
+     "layers": [
+      {
+       "label": "explain L1",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "IntentFill per request",
+         "decision_kind": "intent",
+         "shape": "extract",
+         "role": "router",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 1270,
+         "tout": 120,
+         "lean_in": 431,
+         "lean_out": 50
+        }
+       ]
+      },
+      {
+       "label": "explain L2",
+       "phase": "interactive",
+       "gate_s": 0,
+       "gate": null,
+       "items": [
+        {
+         "group": "explain/teach answers",
+         "decision_kind": "explainer",
+         "shape": "explain",
+         "role": "explainer",
+         "n": 1,
+         "Kc": "one",
+         "bulk": false,
+         "tin": 3660,
+         "tout": 250,
+         "lean_in": 305,
+         "lean_out": 84
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "briefing-reroll-3": {
+   "desc": "re-roll 3 briefing slots",
+   "interactive": true,
+   "designed_cached_share": 0.687,
+   "designed_cached_share_k1": 0.51,
+   "kind": "layers",
+   "layers": [
+    {
+     "label": "3 slot Fills",
+     "phase": "interactive",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "briefing slot Fills",
+       "decision_kind": "brief",
+       "shape": "fill_text",
+       "role": "writer",
+       "n": 3,
+       "Kc": "creative",
+       "bulk": true,
+       "tin": 3220,
+       "tout": 90,
+       "lean_in": 162,
+       "lean_out": 19
+      }
+     ]
+    }
+   ]
+  },
+  "cutscene-rerun": {
+   "desc": "re-run the radio-chatter Compose and the critique",
+   "interactive": true,
+   "designed_cached_share": 0.522,
+   "designed_cached_share_k1": 0.233,
+   "kind": "layers",
+   "layers": [
+    {
+     "label": "Compose",
+     "phase": "interactive",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "screenplay.write radio chatter (Compose, 4 lines)",
+       "decision_kind": "screen",
+       "shape": "compose",
+       "role": "writer",
+       "n": 1,
+       "Kc": "creative",
+       "bulk": false,
+       "tin": 3840,
+       "tout": 250,
+       "lean_in": 3840,
+       "lean_out": 250
+      }
+     ]
+    },
+    {
+     "label": "critique",
+     "phase": "interactive",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "cine.critique (phrase lint findings)",
+       "decision_kind": "crit",
+       "shape": "explain",
+       "role": "explainer",
+       "n": 1,
+       "Kc": "one",
+       "bulk": false,
+       "tin": 2910,
+       "tout": 200,
+       "lean_in": 305,
+       "lean_out": 84
+      }
+     ]
+    }
+   ]
+  },
+  "mission-text-reroll": {
+   "desc": "re-roll one mission's 22 S7 text slots",
+   "interactive": false,
+   "designed_cached_share": 0.658,
+   "designed_cached_share_k1": 0.439,
+   "kind": "layers",
+   "layers": [
+    {
+     "label": "22 text slots",
+     "phase": "background",
+     "gate_s": 0,
+     "gate": null,
+     "items": [
+      {
+       "group": "S7 text slots (22 x 8 missions)",
+       "decision_kind": "s7",
+       "shape": "fill_text",
+       "role": "writer",
+       "n": 22,
+       "Kc": "creative",
+       "bulk": true,
+       "tin": 3040,
+       "tout": 110,
+       "lean_in": 162,
+       "lean_out": 19
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "user_days": {
+  "light-session": {
+   "desc": "30 minutes of tweaks: one session-30min (12 requests: 4 explain/teach, 5 small edits, 3 lint fixes with 2 findings each)",
+   "planned_hours": 0.5,
+   "blocks": [
+    {
+     "workload": "session-30min",
+     "start_s": 0
+    }
+   ]
+  },
+  "mission-build": {
+   "desc": "about 2.5 h building one mission: a 30-min tweak session, populate 3 towns, write the briefing and re-roll 3 slots, direct the intro cutscene and re-run its radio chatter and critique, then a second 30-min session",
+   "planned_hours": 2.5,
+   "blocks": [
+    {
+     "workload": "session-30min",
+     "start_s": 0
+    },
+    {
+     "workload": "populate-town",
+     "start_s": 1800
+    },
+    {
+     "workload": "populate-town",
+     "start_s": 2100
+    },
+    {
+     "workload": "populate-town",
+     "start_s": 2400
+    },
+    {
+     "workload": "write-briefing",
+     "start_s": 3000
+    },
+    {
+     "workload": "briefing-reroll-3",
+     "start_s": 3600
+    },
+    {
+     "workload": "cutscene-director",
+     "start_s": 4200
+    },
+    {
+     "workload": "cutscene-rerun",
+     "start_s": 4800
+    },
+    {
+     "workload": "session-30min",
+     "start_s": 5400
+    }
+   ]
+  },
+  "campaign-from-brief": {
+   "desc": "about 3 h: one 8-mission campaign from a brief at Standard (premise pick and outline approval by the user), then review: two 30-min sessions, 2 missions' text re-rolled, 2 towns touched up",
+   "planned_hours": 3.0,
+   "blocks": [
+    {
+     "workload": "campaign-from-brief",
+     "start_s": 0
+    },
+    {
+     "workload": "session-30min",
+     "start_s": 1800
+    },
+    {
+     "workload": "mission-text-reroll",
+     "start_s": 3600
+    },
+    {
+     "workload": "mission-text-reroll",
+     "start_s": 4200
+    },
+    {
+     "workload": "populate-town",
+     "start_s": 4800
+    },
+    {
+     "workload": "populate-town",
+     "start_s": 5100
+    },
+    {
+     "workload": "session-30min",
+     "start_s": 7200
+    }
+   ]
+  },
+  "heavy-creator": {
+   "desc": "about 8 h: a campaign from a brief, two full mission builds, eight 30-min tweak sessions (4 h) and 3 missions' text re-rolled",
+   "planned_hours": 8.0,
+   "blocks": [
+    {
+     "workload": "campaign-from-brief",
+     "start_s": 0
+    },
+    {
+     "workload": "session-30min",
+     "start_s": 1800
+    },
+    {
+     "workload": "mission-text-reroll",
+     "start_s": 3600
+    },
+    {
+     "workload": "mission-text-reroll",
+     "start_s": 3900
+    },
+    {
+     "workload": "mission-text-reroll",
+     "start_s": 4200
+    },
+    {
+     "workload": "session-30min",
+     "start_s": 5400
+    },
+    {
+     "workload": "populate-town",
+     "start_s": 7200
+    },
+    {
+     "workload": "populate-town",
+     "start_s": 7500
+    },
+    {
+     "workload": "populate-town",
+     "start_s": 7800
+    },
+    {
+     "workload": "write-briefing",
+     "start_s": 8400
+    },
+    {
+     "workload": "briefing-reroll-3",
+     "start_s": 9000
+    },
+    {
+     "workload": "cutscene-director",
+     "start_s": 9600
+    },
+    {
+     "workload": "cutscene-rerun",
+     "start_s": 10200
+    },
+    {
+     "workload": "session-30min",
+     "start_s": 10800
+    },
+    {
+     "workload": "session-30min",
+     "start_s": 12600
+    },
+    {
+     "workload": "populate-town",
+     "start_s": 14400
+    },
+    {
+     "workload": "populate-town",
+     "start_s": 14700
+    },
+    {
+     "workload": "populate-town",
+     "start_s": 15000
+    },
+    {
+     "workload": "write-briefing",
+     "start_s": 15600
+    },
+    {
+     "workload": "briefing-reroll-3",
+     "start_s": 16200
+    },
+    {
+     "workload": "cutscene-director",
+     "start_s": 16800
+    },
+    {
+     "workload": "cutscene-rerun",
+     "start_s": 17400
+    },
+    {
+     "workload": "session-30min",
+     "start_s": 18000
+    },
+    {
+     "workload": "session-30min",
+     "start_s": 19800
+    },
+    {
+     "workload": "session-30min",
+     "start_s": 23400
+    },
+    {
+     "workload": "session-30min",
+     "start_s": 25200
+    }
+   ]
+  }
+ },
+ "crosscheck": {
+  "note": "Expected calls per workflow run from the research profile (calls = n x K x (1 + r + r^2) at Standard; R = 1 at Quick). B = all cloud at Standard; B-quick = K 1/1, R 1; F = Pick/Fill local; F-cascade = doc 53 section 4.3 cascade. The simulator's expected_calls() must reproduce these. unthrottled_day_span_s: the profile's replay of each day at B with no limits (8 concurrent cloud calls, user gates included).",
+  "rows": {
+   "campaign-from-brief": {
+    "B": {
+     "cloud": 650.4,
+     "local": 0.0
+    },
+    "B-quick": {
+     "cloud": 299.2,
+     "local": 0.0
+    },
+    "F": {
+     "cloud": 427.7,
+     "local": 222.7
+    },
+    "F-cascade": {
+     "cloud": 447.6,
+     "local": 104.0
+    }
+   },
+   "populate-town": {
+    "B": {
+     "cloud": 4.2,
+     "local": 0.0
+    },
+    "B-quick": {
+     "cloud": 2.1,
+     "local": 0.0
+    },
+    "F": {
+     "cloud": 0.0,
+     "local": 4.2
+    },
+    "F-cascade": {
+     "cloud": 0.5,
+     "local": 2.6
+    }
+   },
+   "write-briefing": {
+    "B": {
+     "cloud": 25.0,
+     "local": 0.0
+    },
+    "B-quick": {
+     "cloud": 12.3,
+     "local": 0.0
+    },
+    "F": {
+     "cloud": 25.0,
+     "local": 0.0
+    },
+    "F-cascade": {
+     "cloud": 25.0,
+     "local": 0.0
+    }
+   },
+   "cutscene-director": {
+    "B": {
+     "cloud": 26.9,
+     "local": 0.0
+    },
+    "B-quick": {
+     "cloud": 14.0,
+     "local": 0.0
+    },
+    "F": {
+     "cloud": 5.9,
+     "local": 20.9
+    },
+    "F-cascade": {
+     "cloud": 8.4,
+     "local": 12.7
+    }
+   },
+   "session-30min": {
+    "B": {
+     "cloud": 60.0,
+     "local": 0.0
+    },
+    "B-quick": {
+     "cloud": 37.2,
+     "local": 0.0
+    },
+    "F": {
+     "cloud": 10.5,
+     "local": 49.5
+    },
+    "F-cascade": {
+     "cloud": 16.7,
+     "local": 32.2
+    }
+   },
+   "briefing-reroll-3": {
+    "B": {
+     "cloud": 6.8,
+     "local": 0.0
+    },
+    "B-quick": {
+     "cloud": 3.4,
+     "local": 0.0
+    },
+    "F": {
+     "cloud": 6.8,
+     "local": 0.0
+    },
+    "F-cascade": {
+     "cloud": 6.8,
+     "local": 0.0
+    }
+   },
+   "cutscene-rerun": {
+    "B": {
+     "cloud": 3.7,
+     "local": 0.0
+    },
+    "B-quick": {
+     "cloud": 2.3,
+     "local": 0.0
+    },
+    "F": {
+     "cloud": 3.7,
+     "local": 0.0
+    },
+    "F-cascade": {
+     "cloud": 3.7,
+     "local": 0.0
+    }
+   },
+   "mission-text-reroll": {
+    "B": {
+     "cloud": 49.9,
+     "local": 0.0
+    },
+    "B-quick": {
+     "cloud": 24.6,
+     "local": 0.0
+    },
+    "F": {
+     "cloud": 49.9,
+     "local": 0.0
+    },
+    "F-cascade": {
+     "cloud": 49.9,
+     "local": 0.0
+    }
+   }
+  },
+  "unthrottled_day_span_s": {
+   "light-session": 1657,
+   "mission-build": 7054,
+   "campaign-from-brief": 8854,
+   "heavy-creator": 26854
+  }
+ },
+ "observed_free_endpoint": {
+  "endpoint": "qwen/qwen3.8-27b:free on OpenRouter, one upstream host (fp4), reasoning off, ZDR per request",
+  "window_utc": "2026-09-27 20:17:50 to 20:35:26 (17.6 min)",
+  "attempts": 13,
+  "http_200": 1,
+  "http_429_upstream": 12,
+  "pattern": "3 quick 429s, 1 answer (804 ms), 3 quick 429s, then one probe every ~3 min, 6 in a row all 429; 429s returned in 0.35-0.56 s; retry-after hints 0.12-0.77 s, far shorter than the throttling",
+  "quota_effect": "upstream 429s did not raise the account's free-request counter (4 -> 5 after the one 200, then 5) [V-obs, n=12]",
+  "tag": "[V-obs]"
+ }
+}
